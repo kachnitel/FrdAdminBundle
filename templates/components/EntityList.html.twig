@@ -34,7 +34,7 @@
         </thead>
         <tbody>
             {% for entity in this.entities %}
-                {{ block('table_row') }}
+                {{ block('table_row', {entity: entity}) }}
             {% else %}
                 <tr>
                     <td colspan="100" class="text-center text-muted py-4">
@@ -75,7 +75,11 @@
             <th>
                 {% if this.filterMetadata[column] is defined %}
                     {% set filter = this.filterMetadata[column] %}
-                    {{ block('column_filter_' ~ filter.type, '@FrdAdmin/filters/_default.html.twig') }}
+                    {{ block('column_filter_' ~ filter.type, '@FrdAdmin/filters/_default.html.twig', {
+                        column: column,
+                        filter: filter,
+                        columnFilters: this.columnFilters
+                    }) }}
                 {% endif %}
             </th>
         {% endfor %}
