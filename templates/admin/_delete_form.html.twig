@@ -1,0 +1,13 @@
+{#
+ # Delete button/form template with CSRF protection.
+ #
+ # Variables:
+ # @var object entity - The entity to delete
+ #}
+
+{% if entity is defined and entity|admin_has_route('delete') and admin_route_accessible(entity|admin_get_route('delete')) %}
+  <form method="post" action="{{ admin_object_path(entity, 'delete') }}" onsubmit="return confirm('Are you sure you want to delete this item?');" class="d-inline">
+    <input type="hidden" name="_token" value="{{ csrf_token(entity|admin_get_route('delete') ~ '-' ~ entity.id) }}">
+    <button class="btn btn-danger">Delete</button>
+  </form>
+{% endif %}

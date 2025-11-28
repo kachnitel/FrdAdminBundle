@@ -1,0 +1,16 @@
+{#
+ # Generic form rendering template.
+ #
+ # Variables:
+ # @var FormView form - The form to render
+ # @var string|null formTheme - Optional form theme to apply
+ # @var string|null formId - Optional form ID override
+ #}
+
+{% if formTheme is defined %}
+  {% form_theme form formTheme %}
+{% endif %}
+
+{{ form_start(form, { attr: { class: 'admin-form', id: formId|default(form.vars.id) } }) }}
+  {{ form_widget(form) }}
+{{ form_end(form) }}

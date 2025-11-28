@@ -1,0 +1,17 @@
+{#
+ # Generic new entity template.
+ #
+ # Variables:
+ # @var FormView form - The form view
+ # @var array breadcrumbs - Breadcrumb navigation array
+ #}
+
+{% block title %}New{% endblock %}
+
+{% block header_buttons %}
+  {{ include('@FrdAdmin/admin/_save_button.html.twig', {}, ignore_missing = true) }}
+{% endblock %}
+
+{% block content %}
+  {{ include('@FrdAdmin/admin/_form.html.twig') }}
+{% endblock %}

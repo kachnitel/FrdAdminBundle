@@ -1,0 +1,10 @@
+{#
+ # Default collection preview template - shows count.
+ #
+ # Variables:
+ # @var object entity - The root entity being displayed
+ # @var Collection value - The collection value
+ # @var string property - The property name being displayed
+ #}
+
+{{ value|length }} item{{ value|length != 1 ? 's' : '' }}

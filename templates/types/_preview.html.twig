@@ -1,0 +1,11 @@
+{#
+ # Default fallback preview template for any property.
+ #
+ # Variables:
+ # @var object entity - The root entity being displayed
+ # @var mixed value - The value to be displayed
+ # @var string property - The property name being displayed
+ # @var bool|null cell - Whether this is being rendered in a table cell
+ #}
+
+{{ value is iterable ? value|json_encode : value }}

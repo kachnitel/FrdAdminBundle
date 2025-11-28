@@ -1,0 +1,80 @@
+{#
+ # Generic entity list template with DataTables support.
+ #
+ # Variables:
+ # @var object[] entities - Array of entities to display
+ # @var string entityClass - Full class name of the entity
+ # @var string|null title - Optional custom title
+ # @var bool|null datatables - Enable/disable DataTables (default: true)
+ #}
+
+{% if datatables is not defined %}
+  {% set datatables = true %}
+{% endif %}
+
+{% set entityShortClass = entityClass|replace({ 'App\\Entity\\': '' }) %}
+
+{% block title %}
+  {{ title|default(entityShortClass ~ ' List') }}
+{% endblock %}
+
+{% block header_buttons %}
+  {% if entityClass|admin_has_route('new') and admin_route_accessible(entityClass|admin_get_route('new')) %}
+    <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="btn btn-primary">
+      New {{ entityShortClass }}
+    </a>
+  {% endif %}
+{% endblock %}
+
+{% block table_header %}
+  <tr>
+    {% for column in admin_get_entity_columns(entityClass) %}
+      <th>{{ column|humanize }}</th>
+    {% endfor %}
+    <th>Actions</th>
+  </tr>
+{% endblock %}
+
+{% block table_row %}
+  <tr>
+    {% for property, value in admin_get_entity_data(entity) %}
+      <td>
+        {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
+        {{ include([
+          '@types/' ~ entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
+          '@types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+          '@types/' ~ templateName
+        ], { cell: true }, ignore_missing = true) }}
+      </td>
+    {% endfor %}
+
+    <td class="actions">
+      {% block row_actions %}
+        {% if entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
+          <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary" title="View">
+            Show
+          </a>
+        {% endif %}
+
+        {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
+          <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary" title="Edit">
+            Edit
+          </a>
+        {% endif %}
+      {% endblock %}
+    </td>
+  </tr>
+{% endblock %}
+
+{% block content %}
+  <table class="{{ datatables ? 'datatable ' : '' }}table table-hover">
+    <thead>
+      {{ block('table_header') }}
+    </thead>
+    <tbody>
+      {% for entity in entities %}
+        {{ block('table_row') }}
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

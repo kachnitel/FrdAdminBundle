@@ -1,0 +1,45 @@
+{#
+ # Generic entity detail/show template.
+ #
+ # Variables:
+ # @var object entity - The entity to display
+ # @var string entityClass - Full class name of the entity
+ # @var array breadcrumbs - Breadcrumb navigation array
+ #}
+
+{% block title %}
+  {{ entity.name|default(entity.label|default('#' ~ entity.id)) }}
+{% endblock %}
+
+{% block header_buttons %}
+  {{ include('@FrdAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
+
+  {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
+    <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-primary">
+      Edit
+    </a>
+  {% endif %}
+{% endblock %}
+
+{% block property_cell %}
+  {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
+
+  {{ include([
+    '@types/' ~ entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
+    '@types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+    '@types/' ~ templateName
+  ], {}, ignore_missing = true) }}
+{% endblock %}
+
+{% block content %}
+  <table class="table">
+    <tbody>
+      {% for property, value in admin_get_entity_data(entity) %}
+        <tr>
+          <th>{{ property|humanize }}</th>
+          <td>{{ block('property_cell') }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
