@@ -5,7 +5,22 @@
  # Variables available in each block:
  # @var string column - Column name
  # @var array filter - Filter metadata (type, label, etc.)
+ # @var string filterType - The filter type to render
  #}
+
+{% if filterType == 'text' %}
+    {{ block('column_filter_text') }}
+{% elseif filterType == 'number' %}
+    {{ block('column_filter_number') }}
+{% elseif filterType == 'date' %}
+    {{ block('column_filter_date') }}
+{% elseif filterType == 'boolean' %}
+    {{ block('column_filter_boolean') }}
+{% elseif filterType == 'enum' %}
+    {{ block('column_filter_enum') }}
+{% elseif filterType == 'relation' %}
+    {{ block('column_filter_relation') }}
+{% endif %}
 
 {# Text filter - simple input #}
 {% block column_filter_text %}

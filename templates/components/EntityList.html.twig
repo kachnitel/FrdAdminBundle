@@ -34,7 +34,32 @@
         </thead>
         <tbody>
             {% for entity in this.entities %}
-                {{ block('table_row', {entity: entity}) }}
+                <tr>
+                    {% for property, value in admin_get_entity_data(entity) %}
+                        <td>
+                            {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
+                            {{ include([
+                                '@types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
+                                '@types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+                                '@types/' ~ templateName
+                            ], { cell: true }, ignore_missing = true) }}
+                        </td>
+                    {% endfor %}
+
+                    <td class="actions">
+                        {% if entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
+                            <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
+                                <span class="material-icons">visibility</span>
+                            </a>
+                        {% endif %}
+
+                        {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
+                            <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
+                                <span class="material-icons">edit</span>
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
             {% else %}
                 <tr>
                     <td colspan="100" class="text-center text-muted py-4">
@@ -75,11 +100,12 @@
             <th>
                 {% if this.filterMetadata[column] is defined %}
                     {% set filter = this.filterMetadata[column] %}
-                    {{ block('column_filter_' ~ filter.type, '@FrdAdmin/filters/_default.html.twig', {
+                    {% include '@FrdAdmin/filters/_default.html.twig' with {
                         column: column,
                         filter: filter,
-                        columnFilters: this.columnFilters
-                    }) }}
+                        columnFilters: this.columnFilters,
+                        filterType: filter.type
+                    } only %}
                 {% endif %}
             </th>
         {% endfor %}
