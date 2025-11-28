@@ -1,0 +1,33 @@
+{#
+ # LiveComponent-powered entity list template.
+ # Use this instead of index.html.twig for reactive lists.
+ #
+ # Variables:
+ # @var string entityClass - Full class name of the entity
+ # @var FilterInterface[] filters - Available filters
+ # @var string|null repositoryMethod - Custom repository method for query
+ #}
+
+{% set entityShortClass = entityClass|replace({ 'App\\Entity\\': '' }) %}
+
+{% block title %}
+    {{ title|default(entityShortClass ~ ' List') }}
+{% endblock %}
+
+{% block header_buttons %}
+    {% if entityClass|admin_has_route('new') and admin_route_accessible(entityClass|admin_get_route('new')) %}
+        <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="btn btn-primary">
+            New {{ entityShortClass }}
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% component AdminEntityList with {
+        entityClass: entityClass,
+        repositoryMethod: repositoryMethod|default(null),
+        filters: filters|default([])
+    } %}
+        {# Override blocks from component template as needed #}
+    {% endcomponent %}
+{% endblock %}

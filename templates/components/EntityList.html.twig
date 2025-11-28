@@ -1,0 +1,124 @@
+{#
+ # LiveComponent template for reactive entity lists.
+ #
+ # Props:
+ # @var string entityClass - Entity class name
+ # @var string search - Search query
+ # @var string sortBy - Sort field
+ # @var string sortDirection - ASC or DESC
+ # @var array filters - Active filter values
+ #}
+
+<div {{ attributes }}>
+    {# Search and Filters #}
+    <div class="admin-list-controls mb-3">
+        <div class="row">
+            {# Search #}
+            <div class="col-md-4">
+                <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Search..."
+                    data-model="search"
+                >
+            </div>
+
+            {# Filters #}
+            {% for filter in this.availableFilters %}
+                <div class="col-md-2">
+                    {% if filter.type == 'select' %}
+                        <select class="form-control" data-model="filters.{{ filter.name }}">
+                            <option value="">{{ filter.label }}</option>
+                            {% for value, label in filter.options %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    {% elseif filter.type == 'date' %}
+                        <input
+                            type="date"
+                            class="form-control"
+                            placeholder="{{ filter.label }}"
+                            data-model="filters.{{ filter.name }}"
+                        >
+                    {% else %}
+                        <input
+                            type="text"
+                            class="form-control"
+                            placeholder="{{ filter.label }}"
+                            data-model="filters.{{ filter.name }}"
+                        >
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Entity List Table #}
+    <table class="table table-hover">
+        <thead>
+            {{ block('table_header') }}
+        </thead>
+        <tbody>
+            {% for entity in this.entities %}
+                {{ block('table_row') }}
+            {% else %}
+                <tr>
+                    <td colspan="100" class="text-center text-muted">
+                        No {{ entityClass|replace({'App\\Entity\\': ''}) }} found.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# Default blocks that can be overridden #}
+{% block table_header %}
+    <tr>
+        {% for column in admin_get_entity_columns(entityClass) %}
+            <th>
+                <button
+                    type="button"
+                    class="btn btn-link p-0 text-decoration-none"
+                    data-action="live#action"
+                    data-live-action-param="$set('sortBy', '{{ column }}'), $set('sortDirection', sortBy === '{{ column }}' && sortDirection === 'ASC' ? 'DESC' : 'ASC')"
+                >
+                    {{ column|humanize }}
+                    {% if sortBy == column %}
+                        <span class="sort-indicator">{{ sortDirection == 'ASC' ? '▲' : '▼' }}</span>
+                    {% endif %}
+                </button>
+            </th>
+        {% endfor %}
+        <th>Actions</th>
+    </tr>
+{% endblock %}
+
+{% block table_row %}
+    <tr>
+        {% for property, value in admin_get_entity_data(entity) %}
+            <td>
+                {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
+                {{ include([
+                    '@types/' ~ entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
+                    '@types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+                    '@types/' ~ templateName
+                ], { cell: true }, ignore_missing = true) }}
+            </td>
+        {% endfor %}
+
+        <td class="actions">
+            {% if entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
+                <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
+                    Show
+                </a>
+            {% endif %}
+
+            {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
+                <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
+                    Edit
+                </a>
+            {% endif %}
+        </td>
+    </tr>
+{% endblock %}
