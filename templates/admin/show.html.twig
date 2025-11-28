@@ -6,12 +6,13 @@
  # @var string entityClass - Full class name of the entity
  # @var array breadcrumbs - Breadcrumb navigation array
  #}
+{% extends 'layout.html.twig' %}
 
-{% block title %}
+{% block headerTitle %}
   {{ entity.name|default(entity.label|default('#' ~ entity.id)) }}
 {% endblock %}
 
-{% block header_buttons %}
+{% block headerButtons %}
   {{ include('@FrdAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
 
   {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}

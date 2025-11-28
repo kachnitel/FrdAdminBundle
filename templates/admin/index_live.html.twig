@@ -7,14 +7,15 @@
  # @var FilterInterface[] filters - Available filters
  # @var string|null repositoryMethod - Custom repository method for query
  #}
+{% extends 'layout.html.twig' %}
 
 {% set entityShortClass = entityClass|replace({ 'App\\Entity\\': '' }) %}
 
-{% block title %}
+{% block headerTitle %}
     {{ title|default(entityShortClass ~ ' List') }}
 {% endblock %}
 
-{% block header_buttons %}
+{% block headerButtons %}
     {% if entityClass|admin_has_route('new') and admin_route_accessible(entityClass|admin_get_route('new')) %}
         <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="btn btn-primary">
             New {{ entityShortClass }}

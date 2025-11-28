@@ -6,10 +6,11 @@
  # @var FormView form - The form view
  # @var array breadcrumbs - Breadcrumb navigation array
  #}
+{% extends 'layout.html.twig' %}
 
-{% block title %}Edit{% endblock %}
+{% block headerTitle %}Edit{% endblock %}
 
-{% block header_buttons %}
+{% block headerButtons %}
   {{ include('@FrdAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
   {{ include('@FrdAdmin/admin/_save_button.html.twig', {}, ignore_missing = true) }}
 {% endblock %}
