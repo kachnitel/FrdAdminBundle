@@ -1,69 +1,43 @@
 {#
- # LiveComponent template for reactive entity lists.
+ # LiveComponent template for reactive entity lists with per-column filters.
  #
  # Props:
  # @var string entityClass - Entity class name
- # @var string search - Search query
+ # @var string search - Global search query
  # @var string sortBy - Sort field
  # @var string sortDirection - ASC or DESC
- # @var array filters - Active filter values
+ # @var array columnFilters - Per-column filter values
  #}
 
 <div {{ attributes }}>
-    {# Search and Filters #}
-    <div class="admin-list-controls mb-3">
-        <div class="row">
-            {# Search #}
-            <div class="col-md-4">
-                <input
-                    type="text"
-                    class="form-control"
-                    placeholder="Search..."
-                    data-model="search"
-                >
-            </div>
-
-            {# Filters #}
-            {% for filter in this.availableFilters %}
-                <div class="col-md-2">
-                    {% if filter.type == 'select' %}
-                        <select class="form-control" data-model="filters.{{ filter.name }}">
-                            <option value="">{{ filter.label }}</option>
-                            {% for value, label in filter.options %}
-                                <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    {% elseif filter.type == 'date' %}
-                        <input
-                            type="date"
-                            class="form-control"
-                            placeholder="{{ filter.label }}"
-                            data-model="filters.{{ filter.name }}"
-                        >
-                    {% else %}
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="{{ filter.label }}"
-                            data-model="filters.{{ filter.name }}"
-                        >
-                    {% endif %}
-                </div>
-            {% endfor %}
+    {# Global Search #}
+    {% if block('search') is defined %}
+        <div class="admin-global-search mb-3">
+            {{ block('search') }}
         </div>
-    </div>
+    {% else %}
+        <div class="admin-global-search mb-3">
+            <input
+                type="text"
+                class="form-control"
+                placeholder="Global search across all columns..."
+                data-model="search"
+            >
+        </div>
+    {% endif %}
 
     {# Entity List Table #}
     <table class="table table-hover">
         <thead>
             {{ block('table_header') }}
+            {{ block('table_filters') }}
         </thead>
         <tbody>
             {% for entity in this.entities %}
                 {{ block('table_row') }}
             {% else %}
                 <tr>
-                    <td colspan="100" class="text-center text-muted">
+                    <td colspan="100" class="text-center text-muted py-4">
                         No {{ entityClass|replace({'App\\Entity\\': ''}) }} found.
                     </td>
                 </tr>
@@ -72,10 +46,10 @@
     </table>
 </div>
 
-{# Default blocks that can be overridden #}
+{# Table header with sortable columns #}
 {% block table_header %}
     <tr>
-        {% for column in admin_get_entity_columns(entityClass) %}
+        {% for column in this.columns %}
             <th>
                 <button
                     type="button"
@@ -94,6 +68,22 @@
     </tr>
 {% endblock %}
 
+{# Per-column filter row #}
+{% block table_filters %}
+    <tr class="filters">
+        {% for column in this.columns %}
+            <th>
+                {% if this.filterMetadata[column] is defined %}
+                    {% set filter = this.filterMetadata[column] %}
+                    {{ block('column_filter_' ~ filter.type, '@FrdAdmin/filters/_default.html.twig') }}
+                {% endif %}
+            </th>
+        {% endfor %}
+        <th></th>
+    </tr>
+{% endblock %}
+
+{# Table row with cell rendering #}
 {% block table_row %}
     <tr>
         {% for property, value in admin_get_entity_data(entity) %}

@@ -22,3 +22,8 @@ services:
     Frd\AdminBundle\Twig\Runtime\:
         resource: '../src/Twig/Runtime'
         tags: ['twig.runtime']
+
+    # LiveComponents
+    Frd\AdminBundle\Twig\Components\:
+        resource: '../src/Twig/Components'
+        tags: ['twig.component']

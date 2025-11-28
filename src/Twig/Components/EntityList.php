@@ -4,13 +4,14 @@ namespace Frd\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
-use Frd\AdminBundle\Service\Filter\FilterInterface;
+use Frd\AdminBundle\Attribute\ColumnFilter;
+use Frd\AdminBundle\Service\FilterMetadataProvider;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
 /**
- * LiveComponent for reactive entity lists with search, filter, and sorting.
+ * LiveComponent for reactive entity lists with per-column search/filter and sorting.
  */
 #[AsLiveComponent('AdminEntityList', template: '@FrdAdmin/components/EntityList.html.twig')]
 class EntityList
@@ -26,8 +27,12 @@ class EntityList
     #[LiveProp(writable: true)]
     public string $sortDirection = 'DESC';
 
+    /**
+     * Column-specific filter values.
+     * Format: ['columnName' => 'filterValue', ...]
+     */
     #[LiveProp(writable: true)]
-    public array $filters = [];
+    public array $columnFilters = [];
 
     #[LiveProp]
     public string $entityClass;
@@ -35,19 +40,21 @@ class EntityList
     #[LiveProp]
     public ?string $repositoryMethod = null;
 
-    /** @var FilterInterface[] */
-    private array $availableFilters = [];
+    /** @var array<string, array> Column filter metadata */
+    private array $filterMetadata = [];
 
     public function __construct(
-        private EntityManagerInterface $em
+        private EntityManagerInterface $em,
+        private FilterMetadataProvider $filterMetadataProvider
     ) {}
 
     /**
-     * Set available filters for this list.
+     * Mount hook - called when component is initialized.
      */
-    public function setFilters(array $filters): void
+    public function mount(): void
     {
-        $this->availableFilters = $filters;
+        // Auto-detect filter metadata from entity
+        $this->filterMetadata = $this->filterMetadataProvider->getFilters($this->entityClass);
     }
 
     /**
@@ -64,15 +71,15 @@ class EntityList
             $qb = $repository->createQueryBuilder('e');
         }
 
-        // Apply search
+        // Apply global search (searches all text fields)
         if ($this->search) {
-            $this->applySearch($qb);
+            $this->applyGlobalSearch($qb);
         }
 
-        // Apply filters
-        foreach ($this->filters as $filterName => $filterValue) {
-            if (isset($this->availableFilters[$filterName]) && $filterValue !== null && $filterValue !== '') {
-                $this->availableFilters[$filterName]->apply($qb, $filterValue);
+        // Apply column-specific filters
+        foreach ($this->columnFilters as $column => $value) {
+            if (isset($this->filterMetadata[$column]) && $value !== null && $value !== '') {
+                $this->applyColumnFilter($qb, $column, $value, $this->filterMetadata[$column]);
             }
         }
 
@@ -83,17 +90,26 @@ class EntityList
     }
 
     /**
-     * Get available filters.
+     * Get filter metadata for template rendering.
      */
-    public function getAvailableFilters(): array
+    public function getFilterMetadata(): array
     {
-        return $this->availableFilters;
+        return $this->filterMetadata;
     }
 
     /**
-     * Apply search across searchable fields.
+     * Get columns for display.
      */
-    private function applySearch(QueryBuilder $qb): void
+    public function getColumns(): array
+    {
+        $metadata = $this->em->getClassMetadata($this->entityClass);
+        return array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
+    }
+
+    /**
+     * Apply global search across all text fields.
+     */
+    private function applyGlobalSearch(QueryBuilder $qb): void
     {
         $metadata = $this->em->getClassMetadata($this->entityClass);
         $searchableFields = [];
@@ -112,10 +128,62 @@ class EntityList
 
         $orX = $qb->expr()->orX();
         foreach ($searchableFields as $field) {
-            $orX->add($qb->expr()->like('e.' . $field, ':search'));
+            $orX->add($qb->expr()->like('e.' . $field, ':globalSearch'));
         }
 
         $qb->andWhere($orX)
-            ->setParameter('search', '%' . $this->search . '%');
+            ->setParameter('globalSearch', '%' . $this->search . '%');
+    }
+
+    /**
+     * Apply a column-specific filter.
+     */
+    private function applyColumnFilter(QueryBuilder $qb, string $column, mixed $value, array $metadata): void
+    {
+        $type = $metadata['type'];
+        $operator = $metadata['operator'] ?? '=';
+        $paramName = 'filter_' . str_replace('.', '_', $column);
+
+        switch ($type) {
+            case ColumnFilter::TYPE_TEXT:
+                if ($operator === 'LIKE') {
+                    $qb->andWhere($qb->expr()->like('e.' . $column, ':' . $paramName))
+                        ->setParameter($paramName, '%' . $value . '%');
+                } else {
+                    $qb->andWhere('e.' . $column . ' ' . $operator . ' :' . $paramName)
+                        ->setParameter($paramName, $value);
+                }
+                break;
+
+            case ColumnFilter::TYPE_NUMBER:
+            case ColumnFilter::TYPE_BOOLEAN:
+            case ColumnFilter::TYPE_ENUM:
+                $qb->andWhere('e.' . $column . ' ' . $operator . ' :' . $paramName)
+                    ->setParameter($paramName, $value);
+                break;
+
+            case ColumnFilter::TYPE_DATE:
+                // Parse date value
+                $dateValue = $value instanceof \DateTimeInterface ? $value : new \DateTime($value);
+                $qb->andWhere('e.' . $column . ' ' . $operator . ' :' . $paramName)
+                    ->setParameter($paramName, $dateValue);
+                break;
+
+            case ColumnFilter::TYPE_RELATION:
+                // Search in related entity's configured fields
+                $searchFields = $metadata['searchFields'] ?? ['id'];
+                $alias = 'rel_' . $column;
+
+                $qb->leftJoin('e.' . $column, $alias);
+
+                $orX = $qb->expr()->orX();
+                foreach ($searchFields as $field) {
+                    $orX->add($qb->expr()->like($alias . '.' . $field, ':' . $paramName));
+                }
+
+                $qb->andWhere($orX)
+                    ->setParameter($paramName, '%' . $value . '%');
+                break;
+        }
     }
 }
