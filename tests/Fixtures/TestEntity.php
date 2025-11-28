@@ -1,0 +1,119 @@
+<?php
+
+namespace Frd\AdminBundle\Tests\Fixtures;
+
+use Doctrine\ORM\Mapping as ORM;
+use Frd\AdminBundle\Attribute\ColumnFilter;
+
+enum TestStatus: string
+{
+    case ACTIVE = 'active';
+    case INACTIVE = 'inactive';
+}
+
+#[ORM\Entity]
+class TestEntity
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id = null;
+
+    #[ORM\Column(type: 'string', length: 255)]
+    #[ColumnFilter(type: ColumnFilter::TYPE_TEXT, placeholder: 'Search name...')]
+    private string $name = '';
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
+
+    #[ORM\Column(type: 'integer')]
+    #[ColumnFilter(type: ColumnFilter::TYPE_NUMBER)]
+    private int $quantity = 0;
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    private string $price = '0.00';
+
+    #[ORM\Column(type: 'datetime')]
+    #[ColumnFilter(type: ColumnFilter::TYPE_DATE)]
+    private \DateTimeInterface $createdAt;
+
+    #[ORM\Column(type: 'boolean')]
+    #[ColumnFilter(type: ColumnFilter::TYPE_BOOLEAN)]
+    private bool $active = true;
+
+    #[ORM\Column(type: 'string', enumType: TestStatus::class)]
+    private TestStatus $status = TestStatus::ACTIVE;
+
+    #[ORM\ManyToOne(targetEntity: RelatedEntity::class)]
+    #[ColumnFilter(
+        type: ColumnFilter::TYPE_RELATION,
+        searchFields: ['name', 'email'],
+        placeholder: 'Search related...'
+    )]
+    private ?RelatedEntity $relatedEntity = null;
+
+    #[ORM\Column(type: 'string')]
+    #[ColumnFilter(enabled: false)]
+    private string $disabledFilter = '';
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function getQuantity(): int
+    {
+        return $this->quantity;
+    }
+
+    public function getPrice(): string
+    {
+        return $this->price;
+    }
+
+    public function getCreatedAt(): \DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
+    public function getStatus(): TestStatus
+    {
+        return $this->status;
+    }
+
+    public function getRelatedEntity(): ?RelatedEntity
+    {
+        return $this->relatedEntity;
+    }
+
+    public function getDisabledFilter(): string
+    {
+        return $this->disabledFilter;
+    }
+}
