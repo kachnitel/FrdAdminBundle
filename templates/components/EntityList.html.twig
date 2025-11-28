@@ -112,33 +112,3 @@
         <th></th>
     </tr>
 {% endblock %}
-
-{# Table row with cell rendering #}
-{% block table_row %}
-    <tr>
-        {% for property, value in admin_get_entity_data(entity) %}
-            <td>
-                {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
-                {{ include([
-                    '@types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
-                    '@types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
-                    '@types/' ~ templateName
-                ], { cell: true }, ignore_missing = true) }}
-            </td>
-        {% endfor %}
-
-        <td class="actions">
-            {% if entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
-                <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
-                    <span class="material-icons">visibility</span>
-                </a>
-            {% endif %}
-
-            {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
-                <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
-                    <span class="material-icons">edit</span>
-                </a>
-            {% endif %}
-        </td>
-    </tr>
-{% endblock %}
