@@ -128,6 +128,21 @@ class FilterMetadataProvider
                         }
                     }
                 }
+
+                // If manually set to relation, ensure relation metadata is set
+                if ($instance->type === ColumnFilter::TYPE_RELATION && !isset($config['targetEntity'])) {
+                    // Get relation metadata if this is actually an association
+                    if ($metadata->hasAssociation($propertyName)) {
+                        $targetClass = $metadata->getAssociationTargetClass($propertyName);
+                        $config['targetEntity'] = (new \ReflectionClass($targetClass))->getShortName();
+                        $config['targetClass'] = $targetClass;
+                        if (!empty($instance->searchFields)) {
+                            $config['searchFields'] = $instance->searchFields;
+                        } else {
+                            $config['searchFields'] = ['name', 'id'];
+                        }
+                    }
+                }
             }
             if ($instance->operator) {
                 $config['operator'] = $instance->operator;
@@ -137,6 +152,9 @@ class FilterMetadataProvider
             }
             if ($instance->priority !== null) {
                 $config['priority'] = $instance->priority;
+            }
+            if (!empty($instance->searchFields)) {
+                $config['searchFields'] = $instance->searchFields;
             }
         }
 

@@ -96,12 +96,23 @@
 
 {# Relation filter - text search across related entity fields #}
 {% block column_filter_relation %}
-    <input
-        type="text"
-        class="form-control form-control-sm"
-        placeholder="{{ filter.placeholder|default('Search ' ~ filter.targetEntity) }}"
-        data-model="columnFilters.{{ column }}"
-        value="{{ columnFilters[column]|default('') }}"
-        title="Searches: {{ filter.searchFields|join(', ') }}"
-    >
+    {% if filter.targetEntity is defined and filter.searchFields is defined %}
+        <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="{{ filter.placeholder|default('Search ' ~ filter.targetEntity) }}"
+            data-model="columnFilters.{{ column }}"
+            value="{{ columnFilters[column]|default('') }}"
+            title="Searches: {{ filter.searchFields|join(', ') }}"
+        >
+    {% else %}
+        {# Fallback to simple text input if relation metadata not provided #}
+        <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="{{ filter.placeholder|default(filter.label) }}"
+            data-model="columnFilters.{{ column }}"
+            value="{{ columnFilters[column]|default('') }}"
+        >
+    {% endif %}
 {% endblock %}
