@@ -27,5 +27,12 @@ class FrdAdminBundle extends AbstractBundle
                 $this->getPath() . '/templates' => 'FrdAdmin',
             ],
         ]);
+
+        // Register LiveComponent namespace
+        $container->extension('twig_component', [
+            'defaults' => [
+                'Frd\\AdminBundle\\Twig\\Components\\' => 'components/',
+            ],
+        ]);
     }
 }
