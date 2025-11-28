@@ -58,7 +58,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
      */
     public function hasRoute(object|string $object, string $name): bool
     {
-        $routes = $this->attributeHelper->getAttribute($object, AdminRoutes::class);
+        $routes = $this->getRoutesAttribute($object);
 
         if (!$routes) {
             return false;
@@ -72,13 +72,33 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
      */
     public function getRoute(object|string $object, string $name): ?string
     {
-        $routes = $this->attributeHelper->getAttribute($object, AdminRoutes::class);
+        $routes = $this->getRoutesAttribute($object);
 
         if (!$routes) {
             return null;
         }
 
         return $routes->get($name);
+    }
+
+    /**
+     * Get routes attribute - checks both AdminRoutes and App\Attributes\Entity\Routes.
+     */
+    private function getRoutesAttribute(object|string $object): ?object
+    {
+        // First try AdminRoutes
+        $routes = $this->attributeHelper->getAttribute($object, AdminRoutes::class);
+
+        if ($routes) {
+            return $routes;
+        }
+
+        // Fallback to app's Routes attribute if it exists
+        if (class_exists('App\Attributes\Entity\Routes')) {
+            return $this->attributeHelper->getAttribute($object, 'App\Attributes\Entity\Routes');
+        }
+
+        return null;
     }
 
     /**
