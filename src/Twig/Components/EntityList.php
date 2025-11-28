@@ -40,22 +40,13 @@ class EntityList
     #[LiveProp]
     public ?string $repositoryMethod = null;
 
-    /** @var array<string, array> Column filter metadata */
-    private array $filterMetadata = [];
+    /** @var array<string, array>|null Column filter metadata (lazy-loaded) */
+    private ?array $filterMetadata = null;
 
     public function __construct(
         private EntityManagerInterface $em,
         private FilterMetadataProvider $filterMetadataProvider
     ) {}
-
-    /**
-     * Mount hook - called when component is initialized.
-     */
-    public function mount(): void
-    {
-        // Auto-detect filter metadata from entity
-        $this->filterMetadata = $this->filterMetadataProvider->getFilters($this->entityClass);
-    }
 
     /**
      * Get filtered and sorted entities.
@@ -77,9 +68,10 @@ class EntityList
         }
 
         // Apply column-specific filters
+        $filterMetadata = $this->getFilterMetadata();
         foreach ($this->columnFilters as $column => $value) {
-            if (isset($this->filterMetadata[$column]) && $value !== null && $value !== '') {
-                $this->applyColumnFilter($qb, $column, $value, $this->filterMetadata[$column]);
+            if (isset($filterMetadata[$column]) && $value !== null && $value !== '') {
+                $this->applyColumnFilter($qb, $column, $value, $filterMetadata[$column]);
             }
         }
 
@@ -91,9 +83,13 @@ class EntityList
 
     /**
      * Get filter metadata for template rendering.
+     * Lazy-loads metadata to avoid accessing entityClass before hydration.
      */
     public function getFilterMetadata(): array
     {
+        if ($this->filterMetadata === null) {
+            $this->filterMetadata = $this->filterMetadataProvider->getFilters($this->entityClass);
+        }
         return $this->filterMetadata;
     }
 
