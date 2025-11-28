@@ -68,19 +68,30 @@
 
 {# Enum filter - select dropdown #}
 {% block column_filter_enum %}
-    <select
-        class="form-control form-control-sm"
-        data-model="columnFilters.{{ column }}"
-    >
-        {% if filter.showAllOption|default(true) %}
-            <option value="">All</option>
-        {% endif %}
-        {% for case in enum(filter.enumClass).cases() %}
-            <option value="{{ case.value }}" {{ columnFilters[column]|default('') == case.value ? 'selected' : '' }}>
-                {{ case.displayValue is defined ? case.displayValue() : case.name }}
-            </option>
-        {% endfor %}
-    </select>
+    {% if filter.enumClass is defined %}
+        <select
+            class="form-control form-control-sm"
+            data-model="columnFilters.{{ column }}"
+        >
+            {% if filter.showAllOption|default(true) %}
+                <option value="">All</option>
+            {% endif %}
+            {% for case in enum(filter.enumClass).cases() %}
+                <option value="{{ case.value }}" {{ columnFilters[column]|default('') == case.value ? 'selected' : '' }}>
+                    {{ case.displayValue is defined ? case.displayValue() : case.name }}
+                </option>
+            {% endfor %}
+        </select>
+    {% else %}
+        {# Fallback to text input if enumClass not provided #}
+        <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="{{ filter.placeholder|default(filter.label) }}"
+            data-model="columnFilters.{{ column }}"
+            value="{{ columnFilters[column]|default('') }}"
+        >
+    {% endif %}
 {% endblock %}
 
 {# Relation filter - text search across related entity fields #}
