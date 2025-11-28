@@ -4,7 +4,6 @@
  #
  # Variables:
  # @var string entityClass - Full class name of the entity
- # @var FilterInterface[] filters - Available filters
  # @var string|null repositoryMethod - Custom repository method for query
  #}
 {% extends 'layout.html.twig' %}
@@ -16,9 +15,10 @@
 {% endblock %}
 
 {% block headerButtons %}
-    {% if entityClass|admin_has_route('new') and admin_route_accessible(entityClass|admin_get_route('new')) %}
-        <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="btn btn-primary">
-            New {{ entityShortClass }}
+    {% if entityClass|hasRoute('new') and isRouteAccessible(entityClass|getRoute('new')) %}
+        <a href="{{ objectPath(entityClass, 'new', { class: entityShortClass }) }}" class="btn btn-primary">
+            <span class="material-icons">add</span>
+            New
         </a>
     {% endif %}
 {% endblock %}
@@ -26,8 +26,7 @@
 {% block content %}
     {% component AdminEntityList with {
         entityClass: entityClass,
-        repositoryMethod: repositoryMethod|default(null),
-        filters: filters|default([])
+        repositoryMethod: repositoryMethod|default(null)
     } %}
         {# Override blocks from component template as needed #}
     {% endcomponent %}

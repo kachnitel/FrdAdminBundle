@@ -86,27 +86,27 @@
 {# Table row with cell rendering #}
 {% block table_row %}
     <tr>
-        {% for property, value in admin_get_entity_data(entity) %}
+        {% for property, value in getEntityData(entity) %}
             <td>
-                {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
+                {% set templateName = isCollection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
                 {{ include([
                     '@types/' ~ entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
-                    '@types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+                    '@types/' ~ getPropertyType(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
                     '@types/' ~ templateName
                 ], { cell: true }, ignore_missing = true) }}
             </td>
         {% endfor %}
 
         <td class="actions">
-            {% if entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
-                <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
-                    Show
+            {% if entity|hasRoute('show') and isRouteAccessible(entity|getRoute('show')) %}
+                <a href="{{ objectPath(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
+                    <span class="material-icons">visibility</span>
                 </a>
             {% endif %}
 
-            {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
-                <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
-                    Edit
+            {% if entity|hasRoute('edit') and isRouteAccessible(entity|getRoute('edit')) %}
+                <a href="{{ objectPath(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
+                    <span class="material-icons">edit</span>
                 </a>
             {% endif %}
         </td>
