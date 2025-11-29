@@ -19,7 +19,8 @@ class EnumFilter extends AbstractFilter
         $options = [];
         if (enum_exists($enumClass)) {
             foreach ($enumClass::cases() as $case) {
-                $options[$case->value] = method_exists($case, 'displayValue')
+                $key = $case instanceof \BackedEnum ? $case->value : $case->name;
+                $options[$key] = method_exists($case, 'displayValue')
                     ? $case->displayValue()
                     : $case->name;
             }

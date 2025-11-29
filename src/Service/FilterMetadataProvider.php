@@ -121,7 +121,7 @@ class FilterMetadataProvider
                 // If manually set to enum, ensure enumClass is set
                 if ($instance->type === ColumnFilter::TYPE_ENUM && !isset($config['enumClass'])) {
                     $propertyType = $property->getType();
-                    if ($propertyType && !$propertyType->isBuiltin()) {
+                    if ($propertyType instanceof \ReflectionNamedType && !$propertyType->isBuiltin()) {
                         $typeName = $propertyType->getName();
                         if (enum_exists($typeName)) {
                             $config['enumClass'] = $typeName;
@@ -175,7 +175,7 @@ class FilterMetadataProvider
 
         // Check if it's an enum
         $propertyType = $property->getType();
-        if ($propertyType && !$propertyType->isBuiltin()) {
+        if ($propertyType instanceof \ReflectionNamedType && !$propertyType->isBuiltin()) {
             $typeName = $propertyType->getName();
             if (enum_exists($typeName)) {
                 return [

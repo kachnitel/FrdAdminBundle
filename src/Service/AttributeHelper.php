@@ -19,7 +19,7 @@ class AttributeHelper
      */
     public function getAttribute(object|string $entity, string $attributeClass): mixed
     {
-        if (!is_object($entity) && !(is_string($entity) && class_exists($entity))) {
+        if (!is_object($entity) && !class_exists($entity)) {
             return null;
         }
 
@@ -37,7 +37,7 @@ class AttributeHelper
      */
     public function getPropertyAttribute(object|string $entity, string $property, string $attributeClass): mixed
     {
-        if (!is_object($entity) && !(is_string($entity) && class_exists($entity))) {
+        if (!is_object($entity) && !class_exists($entity)) {
             return null;
         }
 

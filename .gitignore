@@ -6,3 +6,9 @@ composer.lock
 /.idea/
 /.vscode/
 /.claude/
+
+# PHPStan
+.phpstan/
+
+# Auto-generated files
+config/reference.php

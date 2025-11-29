@@ -1,0 +1,21 @@
+parameters:
+    level: 4
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - tests/Functional/TestKernel.php
+    tmpDir: .phpstan
+    ignoreErrors:
+        # PHPUnit mock method false positives
+        - '#Call to an undefined method .+::(method|expects|with|willReturn|willReturnCallback)\(\)#'
+        # Test fixtures - properties set by Doctrine, not in tests
+        - '#Property Frd\\AdminBundle\\Tests\\Fixtures\\.+ is never assigned#'
+        # Incomplete tests have unreachable code after markTestIncomplete
+        - '#Unreachable statement - code above always terminates#'
+        # Test fixtures - properties only written by Doctrine
+        - '#Property .+ is never read, only written#'
+        # Match expression in tests handling various types
+        - '#Match expression does not handle remaining value#'
+        # Match arm false positive with constants
+        - '#Match arm comparison between .+ and .+ is always true#'
