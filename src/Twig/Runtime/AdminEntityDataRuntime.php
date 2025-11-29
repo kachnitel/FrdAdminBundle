@@ -18,6 +18,9 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
     /**
      * Get all field and association data for an entity.
+     *
+     * Note: Collection-valued associations are excluded to avoid memory issues.
+     * To display collections, use custom templates or the _collection.html.twig template.
      */
     public function getData(object $entity): array
     {
@@ -32,6 +35,12 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
         $associations = $metadata->getAssociationNames();
         foreach ($associations as $association) {
+            // Skip collection-valued associations to avoid loading large collections
+            // This prevents memory issues when displaying entities with many relations
+            if ($metadata->isCollectionValuedAssociation($association)) {
+                continue;
+            }
+
             $value = $this->getPropertyValue($entity, $association);
             $data[$association] = $this->normalizeValue($value);
         }
@@ -41,11 +50,22 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
     /**
      * Get column names for an entity class.
+     *
+     * Note: Collection-valued associations are excluded from columns.
      */
     public function getColumns(string $entityClass): array
     {
         $metadata = $this->em->getClassMetadata($entityClass);
-        return array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
+        $columns = $metadata->getFieldNames();
+
+        // Only include single-valued associations (ManyToOne, OneToOne)
+        foreach ($metadata->getAssociationNames() as $association) {
+            if (!$metadata->isCollectionValuedAssociation($association)) {
+                $columns[] = $association;
+            }
+        }
+
+        return $columns;
     }
 
     /**

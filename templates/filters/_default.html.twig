@@ -1,29 +1,15 @@
 {#
  # Default filter templates for per-column filtering.
- # Each block renders a specific filter type.
+ # Each renders the appropriate filter input based on type.
  #
- # Variables available in each block:
+ # Variables available:
  # @var string column - Column name
  # @var array filter - Filter metadata (type, label, etc.)
+ # @var array columnFilters - Current filter values
  # @var string filterType - The filter type to render
  #}
 
 {% if filterType == 'text' %}
-    {{ block('column_filter_text') }}
-{% elseif filterType == 'number' %}
-    {{ block('column_filter_number') }}
-{% elseif filterType == 'date' %}
-    {{ block('column_filter_date') }}
-{% elseif filterType == 'boolean' %}
-    {{ block('column_filter_boolean') }}
-{% elseif filterType == 'enum' %}
-    {{ block('column_filter_enum') }}
-{% elseif filterType == 'relation' %}
-    {{ block('column_filter_relation') }}
-{% endif %}
-
-{# Text filter - simple input #}
-{% block column_filter_text %}
     <input
         type="text"
         class="form-control form-control-sm"
@@ -31,10 +17,8 @@
         data-model="columnFilters.{{ column }}"
         value="{{ columnFilters[column]|default('') }}"
     >
-{% endblock %}
 
-{# Number filter - number input #}
-{% block column_filter_number %}
+{% elseif filterType == 'number' %}
     <input
         type="number"
         class="form-control form-control-sm"
@@ -42,20 +26,16 @@
         data-model="columnFilters.{{ column }}"
         value="{{ columnFilters[column]|default('') }}"
     >
-{% endblock %}
 
-{# Date filter - date input #}
-{% block column_filter_date %}
+{% elseif filterType == 'date' %}
     <input
         type="date"
         class="form-control form-control-sm"
         data-model="columnFilters.{{ column }}"
         value="{{ columnFilters[column]|default('') }}"
     >
-{% endblock %}
 
-{# Boolean filter - select dropdown #}
-{% block column_filter_boolean %}
+{% elseif filterType == 'boolean' %}
     <select
         class="form-control form-control-sm"
         data-model="columnFilters.{{ column }}"
@@ -64,10 +44,8 @@
         <option value="1" {{ columnFilters[column]|default('') == '1' ? 'selected' : '' }}>Yes</option>
         <option value="0" {{ columnFilters[column]|default('') == '0' ? 'selected' : '' }}>No</option>
     </select>
-{% endblock %}
 
-{# Enum filter - select dropdown #}
-{% block column_filter_enum %}
+{% elseif filterType == 'enum' %}
     {% if filter.enumClass is defined %}
         <select
             class="form-control form-control-sm"
@@ -83,7 +61,6 @@
             {% endfor %}
         </select>
     {% else %}
-        {# Fallback to text input if enumClass not provided #}
         <input
             type="text"
             class="form-control form-control-sm"
@@ -92,10 +69,8 @@
             value="{{ columnFilters[column]|default('') }}"
         >
     {% endif %}
-{% endblock %}
 
-{# Relation filter - text search across related entity fields #}
-{% block column_filter_relation %}
+{% elseif filterType == 'relation' %}
     {% if filter.targetEntity is defined and filter.searchFields is defined %}
         <input
             type="text"
@@ -106,7 +81,6 @@
             title="Searches: {{ filter.searchFields|join(', ') }}"
         >
     {% else %}
-        {# Fallback to simple text input if relation metadata not provided #}
         <input
             type="text"
             class="form-control form-control-sm"
@@ -115,4 +89,5 @@
             value="{{ columnFilters[column]|default('') }}"
         >
     {% endif %}
-{% endblock %}
+
+{% endif %}

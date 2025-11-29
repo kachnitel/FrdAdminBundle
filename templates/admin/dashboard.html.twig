@@ -1,0 +1,41 @@
+{% extends 'layout.html.twig' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block headerTitle %}
+  Administration Dashboard
+{% endblock %}
+
+{% block content %}
+  <div class="row g-4">
+    {% for entity in entities %}
+      <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+        <div class="card h-100 shadow-sm hover-shadow transition-all">
+          <div class="card-body text-center d-flex flex-column justify-content-center p-5">
+            <h3 class="h5 card-title text-secondary mb-3">
+              {{ entity.label }}
+            </h3>
+
+            {#
+               Links to the 'index' route defined in AdminEntityController
+               using the generated slug (e.g. 'work-station')
+            #}
+            <a href="{{ path('app_admin_entity_index', { entitySlug: entity.slug }) }}"
+               class="btn btn-outline-primary stretched-link">
+              Manage {{ entity.label }}s
+            </a>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="col-12">
+        <div class="alert alert-warning d-flex align-items-center">
+          <span class="material-icons me-2">warning</span>
+          <div>
+            No supported entities configured in <code>AdminEntityController::getSupportedEntities()</code>.
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

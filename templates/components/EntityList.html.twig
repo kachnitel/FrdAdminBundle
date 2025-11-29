@@ -29,8 +29,40 @@
     {# Entity List Table #}
     <table class="table table-hover">
         <thead>
-            {{ block('table_header') }}
-            {{ block('table_filters') }}
+            <tr>
+                {% for column in this.columns %}
+                    <th>
+                        <button
+                            type="button"
+                            class="btn btn-link p-0 text-decoration-none"
+                            data-action="live#action"
+                            data-live-action-param="$set('sortBy', '{{ column }}'), $set('sortDirection', sortBy === '{{ column }}' && sortDirection === 'ASC' ? 'DESC' : 'ASC')"
+                        >
+                            {{ column|humanize }}
+                            {% if sortBy == column %}
+                                <span class="sort-indicator">{{ sortDirection == 'ASC' ? '▲' : '▼' }}</span>
+                            {% endif %}
+                        </button>
+                    </th>
+                {% endfor %}
+                <th>Actions</th>
+            </tr>
+            <tr class="filters">
+                {% for column in this.columns %}
+                    <th>
+                        {% if this.filterMetadata[column] is defined %}
+                            {% set filter = this.filterMetadata[column] %}
+                            {% include '@FrdAdmin/filters/_default.html.twig' with {
+                                column: column,
+                                filter: filter,
+                                columnFilters: this.columnFilters,
+                                filterType: filter.type
+                            } only %}
+                        {% endif %}
+                    </th>
+                {% endfor %}
+                <th></th>
+            </tr>
         </thead>
         <tbody>
             {% for entity in this.entities %}
@@ -70,45 +102,3 @@
         </tbody>
     </table>
 </div>
-
-{# Table header with sortable columns #}
-{% block table_header %}
-    <tr>
-        {% for column in this.columns %}
-            <th>
-                <button
-                    type="button"
-                    class="btn btn-link p-0 text-decoration-none"
-                    data-action="live#action"
-                    data-live-action-param="$set('sortBy', '{{ column }}'), $set('sortDirection', sortBy === '{{ column }}' && sortDirection === 'ASC' ? 'DESC' : 'ASC')"
-                >
-                    {{ column|humanize }}
-                    {% if sortBy == column %}
-                        <span class="sort-indicator">{{ sortDirection == 'ASC' ? '▲' : '▼' }}</span>
-                    {% endif %}
-                </button>
-            </th>
-        {% endfor %}
-        <th>Actions</th>
-    </tr>
-{% endblock %}
-
-{# Per-column filter row #}
-{% block table_filters %}
-    <tr class="filters">
-        {% for column in this.columns %}
-            <th>
-                {% if this.filterMetadata[column] is defined %}
-                    {% set filter = this.filterMetadata[column] %}
-                    {% include '@FrdAdmin/filters/_default.html.twig' with {
-                        column: column,
-                        filter: filter,
-                        columnFilters: this.columnFilters,
-                        filterType: filter.type
-                    } only %}
-                {% endif %}
-            </th>
-        {% endfor %}
-        <th></th>
-    </tr>
-{% endblock %}
