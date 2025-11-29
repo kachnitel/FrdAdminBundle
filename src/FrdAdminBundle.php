@@ -15,6 +15,16 @@ class FrdAdminBundle extends AbstractBundle
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
+        // Store configuration as parameters
+        $builder->setParameter('frd_admin.entity_namespace', $config['entity_namespace']);
+        $builder->setParameter('frd_admin.form_namespace', $config['form_namespace']);
+        $builder->setParameter('frd_admin.form_suffix', $config['form_suffix']);
+        $builder->setParameter('frd_admin.route_prefix', $config['route_prefix']);
+        $builder->setParameter('frd_admin.dashboard_route', $config['dashboard_route']);
+        $builder->setParameter('frd_admin.required_role', $config['required_role']);
+        $builder->setParameter('frd_admin.entities', $config['entities'] ?? []);
+        $builder->setParameter('frd_admin.enable_generic_controller', $config['enable_generic_controller']);
+
         // Load services
         $container->import('../config/services.yaml');
     }
