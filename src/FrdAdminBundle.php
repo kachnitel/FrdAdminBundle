@@ -2,12 +2,57 @@
 
 namespace Frd\AdminBundle;
 
+use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 class FrdAdminBundle extends AbstractBundle
 {
+    public function configure(DefinitionConfigurator $definition): void
+    {
+        $definition->rootNode()
+            ->children()
+                ->scalarNode('entity_namespace')
+                    ->defaultValue('App\\Entity\\')
+                    ->info('Base namespace for entities')
+                ->end()
+                ->scalarNode('form_namespace')
+                    ->defaultValue('App\\Form\\')
+                    ->info('Base namespace for form types')
+                ->end()
+                ->scalarNode('form_suffix')
+                    ->defaultValue('FormType')
+                    ->info('Suffix for form type classes')
+                ->end()
+                ->scalarNode('route_prefix')
+                    ->defaultValue('app_admin_entity')
+                    ->info('Route prefix for generic entity CRUD operations')
+                ->end()
+                ->scalarNode('dashboard_route')
+                    ->defaultValue('app_admin_dashboard')
+                    ->info('Dashboard route name')
+                ->end()
+                ->scalarNode('required_role')
+                    ->defaultValue('ROLE_ADMIN')
+                    ->info('Required role for accessing admin')
+                ->end()
+                ->scalarNode('base_layout')
+                    ->defaultNull()
+                    ->info('Base layout template (defaults to none, templates extend app layout)')
+                ->end()
+                ->arrayNode('entities')
+                    ->info('List of entities to manage via the generic admin controller')
+                    ->defaultValue([])
+                    ->scalarPrototype()->end()
+                    ->example(['Region', 'FulfillmentMethod', 'WorkStation'])
+                ->end()
+                ->booleanNode('enable_generic_controller')
+                    ->defaultTrue()
+                    ->info('Enable the generic admin controller with dynamic routes')
+                ->end()
+            ->end();
+    }
     public function getPath(): string
     {
         return \dirname(__DIR__);
