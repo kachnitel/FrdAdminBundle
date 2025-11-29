@@ -31,7 +31,7 @@ class EntityList
      * Column-specific filter values.
      * Format: ['columnName' => 'filterValue', ...]
      */
-    #[LiveProp(writable: ['columnFilters.*'])]
+    #[LiveProp(writable: true)]
     public array $columnFilters = [];
 
     #[LiveProp]

@@ -14,7 +14,7 @@
         type="text"
         class="form-control form-control-sm"
         placeholder="{{ filter.placeholder|default(filter.label) }}"
-        data-model="columnFilters.{{ column }}"
+        data-model="columnFilters[{{ column }}]"
         value="{{ columnFilters[column]|default('') }}"
     >
 
@@ -23,7 +23,7 @@
         type="number"
         class="form-control form-control-sm"
         placeholder="{{ filter.placeholder|default(filter.label) }}"
-        data-model="columnFilters.{{ column }}"
+        data-model="columnFilters[{{ column }}]"
         value="{{ columnFilters[column]|default('') }}"
     >
 
@@ -31,14 +31,14 @@
     <input
         type="date"
         class="form-control form-control-sm"
-        data-model="columnFilters.{{ column }}"
+        data-model="columnFilters[{{ column }}]"
         value="{{ columnFilters[column]|default('') }}"
     >
 
 {% elseif filterType == 'boolean' %}
     <select
         class="form-control form-control-sm"
-        data-model="columnFilters.{{ column }}"
+        data-model="columnFilters[{{ column }}]"
     >
         <option value="">All</option>
         <option value="1" {{ columnFilters[column]|default('') == '1' ? 'selected' : '' }}>Yes</option>
@@ -49,7 +49,7 @@
     {% if filter.enumClass is defined %}
         <select
             class="form-control form-control-sm"
-            data-model="columnFilters.{{ column }}"
+            data-model="columnFilters[{{ column }}]"
         >
             {% if filter.showAllOption|default(true) %}
                 <option value="">All</option>
@@ -65,7 +65,7 @@
             type="text"
             class="form-control form-control-sm"
             placeholder="{{ filter.placeholder|default(filter.label) }}"
-            data-model="columnFilters.{{ column }}"
+            data-model="columnFilters[{{ column }}]"
             value="{{ columnFilters[column]|default('') }}"
         >
     {% endif %}
@@ -76,7 +76,7 @@
             type="text"
             class="form-control form-control-sm"
             placeholder="{{ filter.placeholder|default('Search ' ~ filter.targetEntity) }}"
-            data-model="columnFilters.{{ column }}"
+            data-model="columnFilters[{{ column }}]"
             value="{{ columnFilters[column]|default('') }}"
             title="Searches: {{ filter.searchFields|join(', ') }}"
         >
@@ -85,7 +85,7 @@
             type="text"
             class="form-control form-control-sm"
             placeholder="{{ filter.placeholder|default(filter.label) }}"
-            data-model="columnFilters.{{ column }}"
+            data-model="columnFilters[{{ column }}]"
             value="{{ columnFilters[column]|default('') }}"
         >
     {% endif %}
