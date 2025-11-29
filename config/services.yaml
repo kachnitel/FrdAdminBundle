@@ -27,3 +27,12 @@ services:
     Frd\AdminBundle\Twig\Components\:
         resource: '../src/Twig/Components'
         tags: ['twig.component']
+
+    # Generic Admin Controller (conditionally enabled via configuration)
+    Frd\AdminBundle\Controller\GenericAdminController:
+        arguments:
+            $supportedEntities: '%frd_admin.entities%'
+            $routePrefix: '%frd_admin.route_prefix%'
+            $dashboardRoute: '%frd_admin.dashboard_route%'
+            $entityNamespace: '%frd_admin.entity_namespace%'
+        tags: ['controller.service_arguments']

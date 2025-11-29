@@ -1,0 +1,47 @@
+# FRD Admin Bundle Configuration
+
+frd_admin:
+    # Base namespace for entities (default: 'App\Entity\')
+    entity_namespace: 'App\Entity\'
+
+    # Base namespace for form types (default: 'App\Form\')
+    form_namespace: 'App\Form\'
+
+    # Suffix for form type classes (default: 'FormType')
+    form_suffix: 'FormType'
+
+    # Route prefix for generic entity CRUD operations (default: 'app_admin_entity')
+    route_prefix: 'app_admin_entity'
+
+    # Dashboard route name (default: 'app_admin_dashboard')
+    dashboard_route: 'app_admin_dashboard'
+
+    # Required role for accessing admin (default: 'ROLE_ADMIN')
+    required_role: 'ROLE_ADMIN'
+
+    # Enable the generic admin controller with dynamic routes (default: true)
+    # Set to false if you want to use your own custom controller
+    enable_generic_controller: true
+
+    # List of entities to manage via the generic admin controller
+    # Entity names should be simple class names (without namespace)
+    # URLs will be automatically kebab-cased: WorkStation -> /admin/work-station
+    entities:
+        - Region
+        - FulfillmentMethod
+        - WorkStation
+        - SafetyIncident
+
+## How it works:
+##
+## The generic controller provides zero-code admin CRUD for configured entities:
+##   - Dashboard at /admin lists all entities
+##   - /admin/{entity-slug} shows entity list (LiveComponent with filters)
+##   - /admin/{entity-slug}/new creates new entity
+##   - /admin/{entity-slug}/{id} shows entity details
+##   - /admin/{entity-slug}/{id}/edit edits entity
+##   - DELETE /admin/{entity-slug}/{id} deletes entity
+##
+## Override for specific entities:
+##   Create your own controller extending AbstractAdminController
+##   and define routes with higher priority to override specific entities

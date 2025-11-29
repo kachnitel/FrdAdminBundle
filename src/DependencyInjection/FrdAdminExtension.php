@@ -22,7 +22,10 @@ class FrdAdminExtension extends Extension
         $container->setParameter('frd_admin.form_namespace', $config['form_namespace']);
         $container->setParameter('frd_admin.form_suffix', $config['form_suffix']);
         $container->setParameter('frd_admin.route_prefix', $config['route_prefix']);
+        $container->setParameter('frd_admin.dashboard_route', $config['dashboard_route']);
         $container->setParameter('frd_admin.required_role', $config['required_role']);
+        $container->setParameter('frd_admin.entities', $config['entities'] ?? []);
+        $container->setParameter('frd_admin.enable_generic_controller', $config['enable_generic_controller']);
 
         // Load services
         $loader = new YamlFileLoader(
