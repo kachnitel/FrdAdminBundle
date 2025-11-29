@@ -47,6 +47,7 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayNode('entities')
                     ->info('List of entities to manage via the generic admin controller')
+                    ->defaultValue([])
                     ->scalarPrototype()->end()
                     ->example(['Region', 'FulfillmentMethod', 'WorkStation'])
                 ->end()
