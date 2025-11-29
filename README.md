@@ -123,10 +123,6 @@ Or for specific entity properties:
 </a>
 ```
 
-## Documentation
-
-See [ADMIN_BUNDLE_EXTRACTION.md](ADMIN_BUNDLE_EXTRACTION.md) for detailed architecture and migration guide.
-
 ## Requirements
 
 - PHP 8.2 or higher

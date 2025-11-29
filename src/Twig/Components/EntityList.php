@@ -9,11 +9,13 @@ use Frd\AdminBundle\Service\FilterMetadataProvider;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
+use Symfony\UX\LiveComponent\Attribute\LiveListener;
+use Symfony\UX\LiveComponent\Attribute\LiveArg;
 
 /**
  * LiveComponent for reactive entity lists with per-column search/filter and sorting.
  */
-#[AsLiveComponent('AdminEntityList', template: '@FrdAdmin/components/EntityList.html.twig')]
+#[AsLiveComponent('FRD:Admin:EntityList', template: '@FrdAdmin/components/EntityList.html.twig')]
 class EntityList
 {
     use DefaultActionTrait;
@@ -79,6 +81,17 @@ class EntityList
         $qb->orderBy('e.' . $this->sortBy, $this->sortDirection);
 
         return $qb->getQuery()->getResult();
+    }
+
+
+    /**
+     * Listener for the child component's event.
+     * Updates the specific filter key and triggers a re-render.
+     */
+    #[LiveListener('filter:updated')]
+    public function onFilterUpdated(#[LiveArg] string $column, #[LiveArg] mixed $value): void
+    {
+        $this->columnFilters[$column] = $value;
     }
 
     /**

@@ -24,7 +24,7 @@
 {% endblock %}
 
 {% block content %}
-    {% component AdminEntityList with {
+    {% component 'FRD:Admin:EntityList' with {
         entityClass: entityClass,
         repositoryMethod: repositoryMethod|default(null)
     } %}

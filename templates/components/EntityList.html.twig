@@ -51,13 +51,14 @@
                 {% for column in this.columns %}
                     <th>
                         {% if this.filterMetadata[column] is defined %}
-                            {% set filter = this.filterMetadata[column] %}
-                            {% include '@FrdAdmin/filters/_default.html.twig' with {
-                                column: column,
-                                filter: filter,
-                                columnFilters: this.columnFilters,
-                                filterType: filter.type
-                            } only %}
+                            {#
+                             Pass the initial value so it persists on re-renders.
+                             #}
+                            <twig:FRD:Admin:ColumnFilter
+                                column="{{ column }}"
+                                value="{{ this.columnFilters[column] ?? '' }}"
+                                type="{{ this.filterMetadata[column].type|default('text') }}"
+                            />
                         {% endif %}
                     </th>
                 {% endfor %}
