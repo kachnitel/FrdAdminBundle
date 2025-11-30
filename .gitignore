@@ -6,6 +6,7 @@ composer.lock
 /.idea/
 /.vscode/
 /.claude/
+*~
 
 # PHPStan
 .phpstan/
