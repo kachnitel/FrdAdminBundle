@@ -7,6 +7,7 @@ use Doctrine\ORM\QueryBuilder;
 use Frd\AdminBundle\Attribute\ColumnFilter;
 use Frd\AdminBundle\Service\FilterMetadataProvider;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
+use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\LiveComponent\Attribute\LiveListener;
@@ -18,6 +19,9 @@ use Symfony\UX\LiveComponent\Attribute\LiveArg;
 #[AsLiveComponent('FRD:Admin:EntityList', template: '@FrdAdmin/components/EntityList.html.twig')]
 class EntityList
 {
+    public const SORT_ASC = 'ASC';
+    public const SORT_DESC = 'DESC';
+
     use DefaultActionTrait;
 
     #[LiveProp(writable: true)]
@@ -27,7 +31,7 @@ class EntityList
     public string $sortBy = 'id';
 
     #[LiveProp(writable: true)]
-    public string $sortDirection = 'DESC';
+    public string $sortDirection = self::SORT_DESC;
 
     /**
      * Column-specific filter values.
@@ -83,6 +87,17 @@ class EntityList
         return $qb->getQuery()->getResult();
     }
 
+    #[LiveAction]
+    public function sort(#[LiveArg] string $column): void
+    {
+        if ($column === $this->sortBy) {
+            $this->sortDirection = match($this->sortDirection) {
+                self::SORT_ASC => self::SORT_DESC,
+                default => self::SORT_ASC
+            };
+        }
+        $this->sortBy = $column;
+    }
 
     /**
      * Listener for the child component's event.
