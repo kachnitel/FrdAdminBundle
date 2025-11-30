@@ -7,7 +7,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\LiveComponent\ComponentToolsTrait;
 
-#[AsLiveComponent('FRD:Admin:ColumnFilter', template: '@FrdAdmin/components/EntityList.html.twig')]
+#[AsLiveComponent('FRD:Admin:ColumnFilter', template: '@FrdAdmin/components/ColumnFilter.html.twig')]
 class ColumnFilter
 {
     use DefaultActionTrait;
@@ -16,25 +16,18 @@ class ColumnFilter
     #[LiveProp]
     public string $column;
 
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, onUpdated: 'onUpdated')]
     public string $value = '';
 
     #[LiveProp]
     public string $type = 'text'; // text, number, date, etc.
 
-    /**
-     * Hook called automatically when any LiveProp is updated.
-     */
-    public function onUpdated(mixed $property): void
+    public function onUpdated(): void
     {
-        if ($property === 'value') {
-            // Emit event to parent (EntityList)
-            // 'up' means it bubbles up to parents
-            $this->emit('filter:updated', [
-                'column' => $this->column,
-                'value'  => $this->value,
-            ]);
-        }
+        // Emit event to parent (EntityList)
+        $this->emitUp('filter:updated', [
+            'column' => $this->column,
+            'value'  => $this->value,
+        ]);
     }
 }
-
