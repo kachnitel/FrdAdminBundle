@@ -53,6 +53,7 @@ class FrdAdminBundle extends AbstractBundle
                 ->end()
             ->end();
     }
+
     public function getPath(): string
     {
         return \dirname(__DIR__);

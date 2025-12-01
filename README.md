@@ -2,6 +2,21 @@
 
 Modern Symfony admin bundle powered by LiveComponents for managing Doctrine entities with extensive customization capabilities.
 
+## Development
+
+It's under development, more specifically extracting it from an existing, production application.
+
+TODO:
+- add "template to extend" in config (replace layout.html.twig)
+- eliminate hardcoded App\Entity and App\Form
+  - templates (entity)
+  - review in code - used as default throughout
+- make IDs link to "view"
+FIXME:
+- index of entities w/ relation
+- detail exception
+- Live test
+
 ## Features
 
 - 🚀 **LiveComponent-Ready**: Built for Symfony UX LiveComponents
