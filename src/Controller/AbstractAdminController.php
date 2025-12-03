@@ -61,8 +61,11 @@ abstract class AbstractAdminController extends AbstractController
             $this->em->persist($entity);
             $this->em->flush();
 
+            // Convert class name to entitySlug format (PascalCase -> kebab-case)
+            $entitySlug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
+
             return $this->redirectToRoute($this->getRoutePrefix() . '_index', [
-                'class' => $class
+                'entitySlug' => $entitySlug
             ], Response::HTTP_SEE_OTHER);
         }
 
@@ -112,8 +115,11 @@ abstract class AbstractAdminController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
 
+            // Convert class name to entitySlug format (PascalCase -> kebab-case)
+            $entitySlug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
+
             return $this->redirectToRoute($this->getRoutePrefix() . '_index', [
-                'class' => $class
+                'entitySlug' => $entitySlug
             ], Response::HTTP_SEE_OTHER);
         }
 
@@ -137,12 +143,15 @@ abstract class AbstractAdminController extends AbstractController
             throw $this->createNotFoundException('No ' . $class . ' found for id ' . $id);
         }
 
+        // Convert class name to entitySlug format (PascalCase -> kebab-case)
+        $entitySlug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
+
         return $this->doDelete(
             $request,
             $entity,
             $this->em,
             $this->redirectToRoute($this->getRoutePrefix() . '_index', [
-                'class' => $class
+                'entitySlug' => $entitySlug
             ], Response::HTTP_SEE_OTHER)
         );
     }
@@ -179,8 +188,11 @@ abstract class AbstractAdminController extends AbstractController
      */
     protected function getBreadcrumbs(string $class, ?object $entity = null): array
     {
+        // Convert class name to entitySlug format (PascalCase -> kebab-case)
+        $entitySlug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
+
         $breadcrumbs = [[
-            'url' => $this->generateUrl($this->getRoutePrefix() . '_index', ['class' => $class]),
+            'url' => $this->generateUrl($this->getRoutePrefix() . '_index', ['entitySlug' => $entitySlug]),
             'label' => $class
         ]];
 
@@ -189,7 +201,7 @@ abstract class AbstractAdminController extends AbstractController
             $breadcrumbs[] = [
                 'url' => $this->generateUrl($this->getRoutePrefix() . '_show', [
                     'id' => $entity->getId(),
-                    'class' => $class
+                    'entitySlug' => $entitySlug
                 ]),
                 'label' => $entityLabel
             ];
