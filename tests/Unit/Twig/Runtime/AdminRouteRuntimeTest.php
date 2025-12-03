@@ -57,7 +57,8 @@ class AdminRouteRuntimeTest extends TestCase
             ->method('getAttribute')
             ->willReturn($routes);
 
-        $this->assertFalse($this->runtime->hasRoute('TestEntity', 'delete'));
+        // Use a non-standard route name that's not in the generic admin routes
+        $this->assertFalse($this->runtime->hasRoute('TestEntity', 'custom_action'));
     }
 
     public function testHasRouteReturnsFalseWhenNoRoutesAttribute(): void
@@ -66,7 +67,8 @@ class AdminRouteRuntimeTest extends TestCase
             ->method('getAttribute')
             ->willReturn(null);
 
-        $this->assertFalse($this->runtime->hasRoute('TestEntity', 'index'));
+        // Use a non-standard route name that's not in the generic admin routes
+        $this->assertFalse($this->runtime->hasRoute('TestEntity', 'custom_action'));
     }
 
     public function testGetRouteReturnsRouteNameWhenExists(): void
@@ -191,9 +193,10 @@ class AdminRouteRuntimeTest extends TestCase
             ->willReturn(null);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Route "index" not found');
+        $this->expectExceptionMessage('Route "custom_action" not found');
 
-        $this->runtime->getPath('TestEntity', 'index');
+        // Use a non-standard route name that's not in the generic admin routes
+        $this->runtime->getPath('TestEntity', 'custom_action');
     }
 
     public function testIsRouteAccessibleReturnsTrueWhenRouteExists(): void

@@ -112,6 +112,12 @@ class TestEntity
         return $this->relatedEntity;
     }
 
+    public function setRelatedEntity(?RelatedEntity $relatedEntity): self
+    {
+        $this->relatedEntity = $relatedEntity;
+        return $this;
+    }
+
     public function getDisabledFilter(): string
     {
         return $this->disabledFilter;

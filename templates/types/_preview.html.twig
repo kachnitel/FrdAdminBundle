@@ -13,25 +13,18 @@
 {% if value is iterable %}
     {# 1. Handle Collections/Arrays #}
     {% if value is not empty %}
-        {{ value|length }} related items ({{ value|slice(0, 3)|map(v => v.id|default('?'))|join(', ') }}...)
+        {{ value|length }} related items ({{ value|slice(0, 3)|map(v => attribute(v, 'id', '?'))|join(', ') }}...)
     {% else %}
         -
     {% endif %}
 {% elseif value is object %}
     {# 2. Handle Single Related Entity #}
-    {# Try to get a human-readable display value, with safe fallback to avoid conversion errors #}
-    {% set display = null %}
-    {% if value.name is defined %}
-        {% set display = value.name %}
-    {% elseif value.label is defined %}
-        {% set display = value.label %}
-    {% elseif value.title is defined %}
-        {% set display = value.title %}
-    {% elseif value.id is defined %}
-        {% set display = '#' ~ value.id %}
-    {% else %}
-        {% set display = value.__class__|split('\\')|last ~ ' object' %}
-    {% endif %}
+    {# Use attribute() function for safe property access, especially with Doctrine proxies #}
+    {% set display = attribute(value, 'name', null)
+        ?? attribute(value, 'label', null)
+        ?? attribute(value, 'title', null)
+        ?? ('#' ~ attribute(value, 'id', null))
+        ?? (value.__class__|split('\\')|last ~ ' object') %}
 
     {% if value|admin_has_route('show') and admin_route_accessible(value|admin_get_route('show')) %}
         <a href="{{ admin_object_path(value, 'show') }}" title="{{ value.__class__ | split('\\') | last }}">{{ display }}</a>

@@ -4,6 +4,7 @@ namespace Frd\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Frd\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Frd\AdminBundle\Tests\Fixtures\TestEntity;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
@@ -88,5 +89,43 @@ class EntityListLiveComponentTest extends KernelTestCase
         $testComponent->set('sortDirection', 'DESC');
 
         $this->assertSame('DESC', $testComponent->component()->sortDirection);
+    }
+
+    public function testRenderingEntityWithRelationDoesNotThrowStringConversionError(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create a related entity
+        $related = new RelatedEntity();
+        $related->setName('Related Item');
+        $related->setEmail('test@example.com');
+        $em->persist($related);
+
+        // Create test entity with relation
+        $entity = new TestEntity();
+        $entity->setName('Test Entity with Relation');
+        $entity->setRelatedEntity($related); // Set the relation
+        $em->persist($entity);
+
+        $em->flush();
+        $em->clear(); // Clear to ensure proxy loading
+
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
+        );
+
+        // This should not throw "Object could not be converted to string" error
+        // The key assertion is that render() completes without throwing an exception
+        try {
+            $rendered = (string) $testComponent->render();
+            $this->assertIsString($rendered);
+            // Verify no error messages in output
+            $this->assertStringNotContainsString('could not be converted to string', $rendered);
+        } catch (\Throwable $e) {
+            $this->fail('Rendering entity with Doctrine proxy relation threw exception: ' . $e->getMessage());
+        }
     }
 }
