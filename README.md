@@ -17,10 +17,24 @@ TODO:
   - show
   - edit
 - pagination
-FIXME:
-- index of entities w/ relation
-- detail exception
-- Templates in app don't seem to override bundle's own
+- clean up datatables references (leftovers from project)
+## Overriding Templates
+
+To override bundle templates, create templates in your app following Symfony's standard bundle override convention:
+
+```
+templates/
+  bundles/
+    FrdAdminBundle/          # Bundle name (not the namespace!)
+      admin/
+        index_live.html.twig  # Override the index template
+      components/
+        EntityList.html.twig  # Override the entity list component
+      types/
+        _preview.html.twig    # Override default type rendering
+```
+
+Note: The directory name must be `FrdAdminBundle` (the full bundle class name without "Bundle" would be `FrdAdmin`, but Symfony requires the full class name for overrides).
 
 ## Features
 

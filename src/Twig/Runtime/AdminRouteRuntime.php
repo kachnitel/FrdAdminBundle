@@ -50,35 +50,62 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             $parameters['class'] = (new \ReflectionClass($class))->getShortName();
         }
 
+        // Auto-fill entitySlug parameter if route needs it (for GenericAdminController)
+        if (empty($parameters['entitySlug']) && $this->routeHasParameter($route, 'entitySlug')) {
+            $class = is_object($object) ? get_class($object) : $object;
+            $shortName = (new \ReflectionClass($class))->getShortName();
+            // Convert PascalCase to kebab-case (e.g., WorkStation -> work-station)
+            $parameters['entitySlug'] = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($shortName)));
+        }
+
         return $this->router->generate($route, $parameters);
     }
 
     /**
      * Check if an entity has a specific route defined.
+     * Returns true for generic admin routes even without AdminRoutes attribute.
      */
     public function hasRoute(object|string $object, string $name): bool
     {
         $routes = $this->getRoutesAttribute($object);
 
-        if (!$routes) {
-            return false;
+        if ($routes && $routes->has($name)) {
+            return true;
         }
 
-        return $routes->has($name);
+        // Check if generic admin route exists for this action
+        return $this->getGenericAdminRoute($name) !== null;
     }
 
     /**
      * Get the route name for an entity action.
+     * Falls back to generic admin routes if no AdminRoutes attribute is found.
      */
     public function getRoute(object|string $object, string $name): ?string
     {
         $routes = $this->getRoutesAttribute($object);
 
-        if (!$routes) {
-            return null;
+        if ($routes) {
+            return $routes->get($name);
         }
 
-        return $routes->get($name);
+        // Fallback to generic admin controller routes
+        return $this->getGenericAdminRoute($name);
+    }
+
+    /**
+     * Get generic admin controller route name for an action.
+     */
+    private function getGenericAdminRoute(string $action): ?string
+    {
+        return match($action) {
+            'index' => 'app_admin_entity_index',
+            'show' => 'app_admin_entity_show',
+            'edit' => 'app_admin_entity_edit',
+            'new' => 'app_admin_entity_new',
+            'delete' => 'app_admin_entity_delete',
+            default => null,
+        };
     }
 
     /**
@@ -94,9 +121,9 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         }
 
         // Fallback to app's Routes attribute if it exists
-        if (class_exists('App\Attributes\Entity\Routes')) {
-            return $this->attributeHelper->getAttribute($object, 'App\Attributes\Entity\Routes');
-        }
+        // if (class_exists('App\Attributes\Entity\Routes')) {
+        //     return $this->attributeHelper->getAttribute($object, 'App\Attributes\Entity\Routes');
+        // }
 
         return null;
     }
