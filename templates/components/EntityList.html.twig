@@ -77,12 +77,7 @@
                                 '@types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
                                 '@types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
                                 '@types/' ~ templateName
-                            ], {
-                                entity: entity,
-                                value: value,
-                                property: property,
-                                cell: true
-                            }, ignore_missing = true) }}
+                            ], { cell: true }, ignore_missing = true) }}
                         </td>
                     {% endfor %}
 
