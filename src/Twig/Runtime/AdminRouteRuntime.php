@@ -2,6 +2,7 @@
 
 namespace Frd\AdminBundle\Twig\Runtime;
 
+use Doctrine\Persistence\Proxy;
 use Frd\AdminBundle\Attribute\AdminRoutes;
 use Frd\AdminBundle\Service\AttributeHelper;
 use Symfony\Component\Routing\RouterInterface;
@@ -30,7 +31,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             throw new \Exception(sprintf(
                 'Route "%s" not found for object "%s"',
                 $routeName,
-                is_object($object) ? get_class($object) : $object
+                is_object($object) ? $this->getRealClass($object) : $object
             ));
         }
 
@@ -46,13 +47,13 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
 
         // Auto-fill class parameter if route needs it
         if (empty($parameters['class']) && $this->routeHasParameter($route, 'class')) {
-            $class = is_object($object) ? get_class($object) : $object;
+            $class = is_object($object) ? $this->getRealClass($object) : $object;
             $parameters['class'] = (new \ReflectionClass($class))->getShortName();
         }
 
         // Auto-fill entitySlug parameter if route needs it (for GenericAdminController)
         if (empty($parameters['entitySlug']) && $this->routeHasParameter($route, 'entitySlug')) {
-            $class = is_object($object) ? get_class($object) : $object;
+            $class = is_object($object) ? $this->getRealClass($object) : $object;
             $shortName = (new \ReflectionClass($class))->getShortName();
             // Convert PascalCase to kebab-case (e.g., WorkStation -> work-station)
             $parameters['entitySlug'] = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($shortName)));
@@ -160,5 +161,18 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
 
         $path = $routeObj->getPath();
         return str_contains($path, '{' . $parameter . '}');
+    }
+
+    /**
+     * Get the real class name of an object, handling Doctrine proxies.
+     */
+    private function getRealClass(object $object): string
+    {
+        // If it's a Doctrine proxy, get the parent class (the real entity class)
+        if ($object instanceof Proxy) {
+            return get_parent_class($object);
+        }
+
+        return get_class($object);
     }
 }
