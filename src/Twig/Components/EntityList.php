@@ -27,13 +27,13 @@ class EntityList
 
     use DefaultActionTrait;
 
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, url: true)]
     public string $search = '';
 
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, url: true)]
     public string $sortBy = 'id';
 
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, url: true)]
     public string $sortDirection = self::SORT_DESC;
 
     /**
@@ -42,13 +42,13 @@ class EntityList
      *
      * @var array<string, mixed>
      */
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, url: true)]
     public array $columnFilters = [];
 
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, url: true)]
     public int $page = 1;
 
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, url: true)]
     public int $itemsPerPage;
 
     #[LiveProp]

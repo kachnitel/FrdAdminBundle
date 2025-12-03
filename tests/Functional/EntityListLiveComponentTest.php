@@ -413,4 +413,191 @@ class EntityListLiveComponentTest extends KernelTestCase
         $this->assertGreaterThanOrEqual(1, $component->page);
         $this->assertLessThanOrEqual($component->getTotalPages(), $component->page);
     }
+
+    public function testComponentInitializesFromUrlSearchParam(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create test entities
+        for ($i = 1; $i <= 10; $i++) {
+            $entity = new TestEntity();
+            $entity->setName($i % 2 === 0 ? 'SearchMe ' . $i : 'Other ' . $i);
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        // Initialize component with search parameter
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: [
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
+                'search' => 'SearchMe'
+            ]
+        );
+
+        $component = $testComponent->component();
+        $this->assertSame('SearchMe', $component->search);
+
+        $entities = $component->getEntities();
+        $this->assertCount(5, $entities);
+
+        // All returned entities should match search
+        foreach ($entities as $entity) {
+            $this->assertStringContainsString('SearchMe', $entity->getName());
+        }
+    }
+
+    public function testComponentInitializesFromUrlSortParams(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create test entities
+        for ($i = 1; $i <= 5; $i++) {
+            $entity = new TestEntity();
+            $entity->setName('Entity ' . str_pad((string) $i, 2, '0', STR_PAD_LEFT));
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        // Initialize component with sort parameters
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: [
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
+                'sortBy' => 'name',
+                'sortDirection' => 'ASC'
+            ]
+        );
+
+        $component = $testComponent->component();
+        $this->assertSame('name', $component->sortBy);
+        $this->assertSame('ASC', $component->sortDirection);
+
+        $entities = $component->getEntities();
+        // Should be sorted by name ASC
+        $this->assertStringContainsString('Entity 01', $entities[0]->getName());
+        $this->assertStringContainsString('Entity 05', $entities[4]->getName());
+    }
+
+    public function testComponentInitializesFromUrlPaginationParams(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create 25 test entities
+        for ($i = 1; $i <= 25; $i++) {
+            $entity = new TestEntity();
+            $entity->setName('Entity ' . str_pad((string) $i, 2, '0', STR_PAD_LEFT));
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        // Initialize component with pagination parameters
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: [
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
+                'page' => 2,
+                'itemsPerPage' => 10
+            ]
+        );
+
+        $component = $testComponent->component();
+        $this->assertSame(2, $component->page);
+        $this->assertSame(10, $component->itemsPerPage);
+
+        $entities = $component->getEntities();
+        $this->assertCount(10, $entities); // Second page of 10
+        $this->assertSame(25, $component->getTotalItems());
+        $this->assertSame(3, $component->getTotalPages());
+    }
+
+    public function testComponentInitializesFromUrlColumnFiltersParam(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create test entities with different names
+        for ($i = 1; $i <= 10; $i++) {
+            $entity = new TestEntity();
+            $entity->setName($i <= 5 ? 'Alpha' . $i : 'Beta' . $i);
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        // Initialize component with column filter
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: [
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
+                'columnFilters' => ['name' => 'Alpha']
+            ]
+        );
+
+        $component = $testComponent->component();
+        $this->assertArrayHasKey('name', $component->columnFilters);
+        $this->assertSame('Alpha', $component->columnFilters['name']);
+
+        $entities = $component->getEntities();
+        $this->assertCount(5, $entities);
+
+        // All entities should have Alpha in name
+        foreach ($entities as $entity) {
+            $this->assertStringContainsString('Alpha', $entity->getName());
+        }
+    }
+
+    public function testComponentInitializesFromMultipleUrlParams(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create test entities
+        for ($i = 1; $i <= 30; $i++) {
+            $entity = new TestEntity();
+            $entity->setName($i % 2 === 0 ? 'Even' . $i : 'Odd' . $i);
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        // Initialize with multiple URL params at once
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: [
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
+                'search' => 'Even',
+                'sortBy' => 'name',
+                'sortDirection' => 'ASC',
+                'page' => 1,
+                'itemsPerPage' => 5
+            ]
+        );
+
+        $component = $testComponent->component();
+
+        // Verify all params were set
+        $this->assertSame('Even', $component->search);
+        $this->assertSame('name', $component->sortBy);
+        $this->assertSame('ASC', $component->sortDirection);
+        $this->assertSame(1, $component->page);
+        $this->assertSame(5, $component->itemsPerPage);
+
+        // Verify filtering works with all params
+        $entities = $component->getEntities();
+        $this->assertCount(5, $entities); // First page of 5
+        $this->assertSame(15, $component->getTotalItems()); // 15 even numbers
+        $this->assertSame(3, $component->getTotalPages());
+    }
 }
