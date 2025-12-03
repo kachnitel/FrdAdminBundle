@@ -35,11 +35,11 @@ class FrdAdminExtension extends Extension
         $loader->load('services.yaml');
 
         // Register Twig paths
-        $container->prependExtensionConfig('twig', [
-            'paths' => [
-                dirname(__DIR__, 2) . '/templates' => 'FrdAdmin',
-            ],
-        ]);
+        // $container->prependExtensionConfig('twig', [
+        //     'paths' => [
+        //         dirname(__DIR__, 2) . '/templates' => 'FrdAdmin',
+        //     ],
+        // ]);
     }
 
     public function getAlias(): string

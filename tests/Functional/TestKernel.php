@@ -16,7 +16,6 @@ use Symfony\UX\StimulusBundle\StimulusBundle;
 use Symfony\UX\TwigComponent\TwigComponentBundle;
 use Symfony\WebpackEncoreBundle\WebpackEncoreBundle;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
-// use Symfony\Bundle\AssetBundle\AssetBundle;
 
 class TestKernel extends Kernel
 {
@@ -36,7 +35,6 @@ class TestKernel extends Kernel
             new LiveComponentBundle(),
             new StimulusBundle(),
             new WebpackEncoreBundle(),
-            // new AssetBundle(),
 
             new FrdAdminBundle(),
         ];
@@ -44,33 +42,26 @@ class TestKernel extends Kernel
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void
     {
-        // This ensures the Twig path is based on the absolute bundle root.
-        $container->setParameter('frd_admin.bundle_dir', $this->getProjectDir());
-
         $container->loadFromExtension('framework', [
             'secret' => 'test-secret',
             'test' => true,
             'router' => ['utf8' => true],
             'http_method_override' => false,
-            'assets' => ['enabled' => true], // Needed for 'assets.packages' service
+            'assets' => ['enabled' => true],
         ]);
 
         $container->loadFromExtension('twig', [
-            'paths' => [
-                // Use the absolute path parameter to define the @FrdAdmin namespace
-                '%frd_admin.bundle_dir%/templates' => 'FrdAdmin',
-            ],
+            'default_path' => '%kernel.project_dir%/templates',
         ]);
 
-        // Needed for StimulusBundle
         $container->loadFromExtension('webpack_encore', [
             'output_path' => '%kernel.project_dir%/public/build',
         ]);
 
         $container->loadFromExtension('doctrine', [
             'dbal' => [
-                'driver' => 'pdo_sqlite',
-                'url' => 'sqlite:///:memory:',
+                // FIX: Use a file-based DB to persist across kernel reboots/connection closures
+                'url' => 'sqlite:///%kernel.cache_dir%/test.db',
             ],
             'orm' => [
                 'auto_generate_proxy_classes' => true,
@@ -89,7 +80,7 @@ class TestKernel extends Kernel
 
         $container->loadFromExtension('security', [
             'password_hashers' => [
-                'Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface' => 'plaintext',
+                'Symfony\\Component\\Security\\Core\\User\\PasswordAuthenticatedUserInterface' => 'plaintext',
             ],
             'providers' => [
                 'test' => ['memory' => null],
@@ -103,8 +94,12 @@ class TestKernel extends Kernel
         $container->loadFromExtension('twig_component', [
             'anonymous_template_directory' => 'components/',
             'defaults' => [
-                'Frd\\AdminBundle\\Twig\\Components\\' => 'components/',
+                'Frd\\\\AdminBundle\\\\Twig\\\\Components\\\\' => 'components/',
             ],
+        ]);
+
+        $container->loadFromExtension('frd_admin', [
+            'entity_namespace' => 'Frd\\AdminBundle\\Tests\\Fixtures\\',
         ]);
     }
 
@@ -116,7 +111,6 @@ class TestKernel extends Kernel
 
     public function getProjectDir(): string
     {
-        // Ensure this points to the root of your bundle (the directory containing src/ and tests/)
         return dirname(__DIR__, 2);
     }
 

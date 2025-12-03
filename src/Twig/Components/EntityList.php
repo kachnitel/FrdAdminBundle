@@ -44,6 +44,9 @@ class EntityList
     public string $entityClass;
 
     #[LiveProp]
+    public string $entityShortClass;
+
+    #[LiveProp]
     public ?string $repositoryMethod = null;
 
     /** @var array<string, array>|null Column filter metadata (lazy-loaded) */

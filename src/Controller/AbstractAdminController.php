@@ -35,7 +35,8 @@ abstract class AbstractAdminController extends AbstractController
 
         return $this->render($this->getIndexTemplate($class), [
             'entities' => $repository->findAll(),
-            'entityClass' => $this->getEntityNamespace() . $class
+            'entityClass' => $this->getEntityNamespace() . $class,
+            'entityShortClass' => $class
         ]);
     }
 

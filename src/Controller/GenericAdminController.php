@@ -75,6 +75,7 @@ class GenericAdminController extends AbstractAdminController
 
         return $this->render('@FrdAdmin/admin/index_live.html.twig', [
             'entityClass' => $this->entityNamespace . $entityName,
+            'entityShortClass' => $entityName
         ]);
     }
 

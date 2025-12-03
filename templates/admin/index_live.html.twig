@@ -4,11 +4,10 @@
  #
  # Variables:
  # @var string entityClass - Full class name of the entity
+ # @var string entityShortClass - Short class name of the entity
  # @var string|null repositoryMethod - Custom repository method for query
  #}
 {% extends 'layout.html.twig' %}
-
-{% set entityShortClass = entityClass|replace({ 'App\\Entity\\': '' }) %}
 
 {% block headerTitle %}
     {{ title|default(entityShortClass ~ ' List') }}
@@ -26,6 +25,7 @@
 {% block content %}
     {% component 'FRD:Admin:EntityList' with {
         entityClass: entityClass,
+        entityShortClass: entityShortClass,
         repositoryMethod: repositoryMethod|default(null)
     } %}
         {# Override blocks from component template as needed #}

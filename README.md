@@ -7,15 +7,20 @@ Modern Symfony admin bundle powered by LiveComponents for managing Doctrine enti
 It's under development, more specifically extracting it from an existing, production application.
 
 TODO:
+- make IDs link to "show"
 - add "template to extend" in config (replace layout.html.twig)
 - eliminate hardcoded App\Entity and App\Form
   - templates (entity)
   - review in code - used as default throughout
-- make IDs link to "view"
+- Live test
+  - index
+  - show
+  - edit
+- pagination
 FIXME:
 - index of entities w/ relation
 - detail exception
-- Live test
+- Templates in app don't seem to override bundle's own
 
 ## Features
 
@@ -97,7 +102,7 @@ class Product
 Create templates in your app to override bundle templates:
 
 ```twig
-{# templates/admin/product/index.html.twig #}
+{# templates/bundles/FrdAdminBundle/admin/product/index.html.twig #}
 {% extends '@FrdAdmin/admin/index.html.twig' %}
 
 {% block th %}
@@ -124,14 +129,14 @@ Create templates in your app to override bundle templates:
 Customize how specific types are displayed:
 
 ```twig
-{# templates/admin/types/datetime/_preview.html.twig #}
+{# templates/bundles/FrdAdminBundle/admin/types/datetime/_preview.html.twig #}
 {{ value ? value|date('Y-m-d H:i') }}
 ```
 
 Or for specific entity properties:
 
 ```twig
-{# templates/admin/types/App/Entity/User/_preview.html.twig #}
+{# templates/bundles/FrdAdminBundle/admin/types/App/Entity/User/_preview.html.twig #}
 <a href="{{ path('app_user_show', {id: value.id}) }}">
     <span class="material-icons">person</span>
     {{ value.name }}
