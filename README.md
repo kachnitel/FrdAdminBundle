@@ -17,9 +17,8 @@ TODO:
   - show
   - edit
 - pagination
-- clean up datatables references (leftovers from project)
+
 FIXME:
-- index of entities w/ relation throws `An exception has been thrown during the rendering of a template ("Object of class Proxies\__CG__\App\Entity\WorkShift could not be converted to string") in @FrdAdmin/components/EntityList.html.twig at line 72.`
 - Templates in app don't seem to override bundle's own
 ## Overriding Templates
 

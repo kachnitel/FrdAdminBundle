@@ -1,16 +1,11 @@
 {#
- # Generic entity list template with DataTables support.
+ # Generic entity list template.
  #
  # Variables:
  # @var object[] entities - Array of entities to display
  # @var string entityClass - Full class name of the entity
  # @var string|null title - Optional custom title
- # @var bool|null datatables - Enable/disable DataTables (default: true)
  #}
-
-{% if datatables is not defined %}
-  {% set datatables = true %}
-{% endif %}
 
 {% set entityShortClass = entityClass|replace({ 'App\\Entity\\': '' }) %}
 
@@ -41,10 +36,15 @@
       <td>
         {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
         {{ include([
-          '@types/' ~ entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
-          '@types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
-          '@types/' ~ templateName
-        ], { cell: true }, ignore_missing = true) }}
+          '@FrdAdmin/types/' ~ entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
+          '@FrdAdmin/types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+          '@FrdAdmin/types/' ~ templateName
+        ], {
+          entity: entity,
+          value: value,
+          property: property,
+          cell: true
+        }, ignore_missing = true) }}
       </td>
     {% endfor %}
 
@@ -67,7 +67,7 @@
 {% endblock %}
 
 {% block content %}
-  <table class="{{ datatables ? 'datatable ' : '' }}table table-hover">
+  <table class="table table-hover">
     <thead>
       {{ block('table_header') }}
     </thead>

@@ -18,7 +18,6 @@ class Admin
         private ?string $label = null,
         private ?string $icon = null,
         private ?string $formType = null,
-        private bool $enableDatatables = true,
         private bool $enableFilters = true,
         private bool $enableBatchActions = true,
     ) {}
@@ -36,11 +35,6 @@ class Admin
     public function getFormType(): ?string
     {
         return $this->formType;
-    }
-
-    public function isEnableDatatables(): bool
-    {
-        return $this->enableDatatables;
     }
 
     public function isEnableFilters(): bool
