@@ -5,6 +5,7 @@ namespace Frd\AdminBundle\Tests\Functional;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Frd\AdminBundle\Tests\Fixtures\RelatedEntity;
+use Frd\AdminBundle\Tests\Fixtures\TagEntity;
 use Frd\AdminBundle\Tests\Fixtures\TestEntity;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
@@ -121,7 +122,7 @@ class EntityListLiveComponentTest extends KernelTestCase
         // The key assertion is that render() completes without throwing an exception
         try {
             $rendered = (string) $testComponent->render();
-            $this->assertIsString($rendered);
+            $this->assertIsString($rendered); // @phpstan-ignore method.alreadyNarrowedType
             // Verify no error messages in output
             $this->assertStringNotContainsString('could not be converted to string', $rendered);
 
@@ -173,5 +174,47 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         // The rendered output should contain table cells with entity data
         $this->assertStringContainsString('Entity with Proxy Relation', $rendered);
+    }
+
+    public function testRenderingEntityWithCollectionShowsCount(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create test entity with collection of tags
+        $entity = new TestEntity();
+        $entity->setName('Entity with Tags');
+        $em->persist($entity);
+
+        // Add several tags to the entity
+        for ($i = 1; $i <= 3; $i++) {
+            $tag = new TagEntity();
+            $tag->setName('Tag ' . $i);
+            $entity->addTag($tag);
+            $em->persist($tag);
+        }
+
+        $em->flush();
+        $em->clear(); // Clear to ensure proxy loading
+
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
+        );
+
+        $rendered = (string) $testComponent->render();
+
+        // Verify the table has a column header for tags
+        $this->assertStringContainsString('Tags', $rendered);
+
+        // Verify the entity is rendered
+        $this->assertStringContainsString('Entity with Tags', $rendered);
+
+        // Verify collection count is displayed (not empty cell)
+        $this->assertStringContainsString('3 items', $rendered);
+
+        // Verify no errors
+        $this->assertStringNotContainsString('could not be converted', $rendered);
     }
 }

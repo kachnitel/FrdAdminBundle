@@ -35,14 +35,16 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
         $associations = $metadata->getAssociationNames();
         foreach ($associations as $association) {
-            // Skip collection-valued associations to avoid loading large collections
-            // This prevents memory issues when displaying entities with many relations
-            if ($metadata->isCollectionValuedAssociation($association)) {
-                continue;
-            }
-
             $value = $this->getPropertyValue($entity, $association);
-            $data[$association] = $this->normalizeValue($value);
+
+            // For collection-valued associations, return the collection object itself
+            // This allows templates to call count()/length without loading all entities
+            // Doctrine collections implement Countable and can count efficiently via SQL
+            if ($metadata->isCollectionValuedAssociation($association)) {
+                $data[$association] = $value; // Return collection as-is, don't normalize
+            } else {
+                $data[$association] = $this->normalizeValue($value);
+            }
         }
 
         return $data;

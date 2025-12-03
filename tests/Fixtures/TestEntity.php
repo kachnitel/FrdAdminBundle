@@ -2,6 +2,8 @@
 
 namespace Frd\AdminBundle\Tests\Fixtures;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Frd\AdminBundle\Attribute\ColumnFilter;
 
@@ -52,6 +54,12 @@ class TestEntity
     )]
     private ?RelatedEntity $relatedEntity = null;
 
+    /**
+     * @var Collection<int, TagEntity>
+     */
+    #[ORM\OneToMany(targetEntity: TagEntity::class, mappedBy: 'testEntity')]
+    private Collection $tags;
+
     #[ORM\Column(type: 'string')]
     #[ColumnFilter(enabled: false)]
     private string $disabledFilter = '';
@@ -59,6 +67,7 @@ class TestEntity
     public function __construct()
     {
         $this->createdAt = new \DateTime();
+        $this->tags = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -121,5 +130,34 @@ class TestEntity
     public function getDisabledFilter(): string
     {
         return $this->disabledFilter;
+    }
+
+    /**
+     * @return Collection<int, TagEntity>
+     */
+    public function getTags(): Collection
+    {
+        return $this->tags;
+    }
+
+    public function addTag(TagEntity $tag): self
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
+            $tag->setTestEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTag(TagEntity $tag): self
+    {
+        if ($this->tags->removeElement($tag)) {
+            if ($tag->getTestEntity() === $this) {
+                $tag->setTestEntity(null);
+            }
+        }
+
+        return $this;
     }
 }
