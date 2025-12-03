@@ -55,6 +55,22 @@ class Configuration implements ConfigurationInterface
                     ->defaultTrue()
                     ->info('Enable the generic admin controller with dynamic routes')
                 ->end()
+                ->arrayNode('pagination')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->integerNode('default_items_per_page')
+                            ->defaultValue(20)
+                            ->min(1)
+                            ->max(100)
+                            ->info('Default number of items per page')
+                        ->end()
+                        ->arrayNode('allowed_items_per_page')
+                            ->info('Allowed values for items per page dropdown')
+                            ->defaultValue([10, 20, 50, 100])
+                            ->integerPrototype()->end()
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;

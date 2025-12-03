@@ -28,6 +28,12 @@ services:
         resource: '../src/Twig/Components'
         tags: ['twig.component']
 
+    # EntityList component with pagination config
+    Frd\AdminBundle\Twig\Components\EntityList:
+        arguments:
+            $defaultItemsPerPage: '%frd_admin.pagination.default_items_per_page%'
+            $allowedItemsPerPage: '%frd_admin.pagination.allowed_items_per_page%'
+
     # Generic Admin Controller (conditionally enabled via configuration)
     Frd\AdminBundle\Controller\GenericAdminController:
         arguments:

@@ -217,4 +217,200 @@ class EntityListLiveComponentTest extends KernelTestCase
         // Verify no errors
         $this->assertStringNotContainsString('could not be converted', $rendered);
     }
+
+    public function testPaginationDefaultsToFirstPage(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create 25 test entities
+        for ($i = 1; $i <= 25; $i++) {
+            $entity = new TestEntity();
+            $entity->setName('Entity ' . $i);
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
+        );
+
+        $component = $testComponent->component();
+        $this->assertSame(1, $component->page);
+        $this->assertSame(20, $component->itemsPerPage); // Default
+
+        $entities = $component->getEntities();
+        $this->assertCount(20, $entities); // First page should have 20 items
+
+        // Verify pagination info
+        $this->assertSame(25, $component->getTotalItems());
+        $this->assertSame(2, $component->getTotalPages());
+    }
+
+    public function testPaginationNavigationBetweenPages(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create 25 test entities
+        for ($i = 1; $i <= 25; $i++) {
+            $entity = new TestEntity();
+            $entity->setName('Entity ' . str_pad((string) $i, 3, '0', STR_PAD_LEFT));
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'page' => 1]
+        );
+
+        // First page (default sort is ID DESC, so latest entities first)
+        $entities = $testComponent->component()->getEntities();
+        $this->assertCount(20, $entities);
+        $this->assertStringContainsString('Entity 025', $entities[0]->getName()); // Highest ID first
+
+        // Navigate to page 2
+        $testComponent->set('page', 2);
+        $entities = $testComponent->component()->getEntities();
+        $this->assertCount(5, $entities); // Remaining 5 items
+        $this->assertStringContainsString('Entity 005', $entities[0]->getName()); // Items 5-1
+    }
+
+    public function testPaginationWithCustomItemsPerPage(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create 15 test entities
+        for ($i = 1; $i <= 15; $i++) {
+            $entity = new TestEntity();
+            $entity->setName('Entity ' . $i);
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'itemsPerPage' => 5]
+        );
+
+        $component = $testComponent->component();
+        $this->assertSame(5, $component->itemsPerPage);
+
+        $entities = $component->getEntities();
+        $this->assertCount(5, $entities);
+
+        $this->assertSame(15, $component->getTotalItems());
+        $this->assertSame(3, $component->getTotalPages());
+    }
+
+    public function testPaginationWithSearchFiltersResults(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create 30 test entities, half with "Special" in name
+        for ($i = 1; $i <= 30; $i++) {
+            $entity = new TestEntity();
+            $entity->setName($i % 2 === 0 ? 'Special Entity ' . $i : 'Regular Entity ' . $i);
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: [
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
+                'search' => 'Special',
+                'itemsPerPage' => 10
+            ]
+        );
+
+        $component = $testComponent->component();
+        $entities = $component->getEntities();
+
+        // Should only get 10 items on first page of filtered results
+        $this->assertCount(10, $entities);
+
+        // Total should be 15 (half of 30)
+        $this->assertSame(15, $component->getTotalItems());
+        $this->assertSame(2, $component->getTotalPages());
+
+        // All entities should contain "Special"
+        foreach ($entities as $entity) {
+            $this->assertStringContainsString('Special', $entity->getName());
+        }
+    }
+
+    public function testPaginationWithEmptyResults(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
+        );
+
+        $component = $testComponent->component();
+        $this->assertSame(0, $component->getTotalItems());
+        $this->assertSame(0, $component->getTotalPages());
+        $this->assertCount(0, $component->getEntities());
+    }
+
+    public function testPaginationRendersPaginationControls(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create 25 test entities to trigger pagination
+        for ($i = 1; $i <= 25; $i++) {
+            $entity = new TestEntity();
+            $entity->setName('Entity ' . $i);
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
+        );
+
+        $rendered = (string) $testComponent->render();
+
+        // Verify pagination controls are rendered
+        $this->assertStringContainsString('Page 1 of 2', $rendered);
+        $this->assertStringContainsString('Showing 1-20 of 25', $rendered);
+    }
+
+    public function testPaginationInvalidPageDefaultsToOne(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create 10 test entities
+        for ($i = 1; $i <= 10; $i++) {
+            $entity = new TestEntity();
+            $entity->setName('Entity ' . $i);
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        // Try to access page 999
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'page' => 999]
+        );
+
+        $component = $testComponent->component();
+        // Should clamp to valid page
+        $this->assertGreaterThanOrEqual(1, $component->page);
+        $this->assertLessThanOrEqual($component->getTotalPages(), $component->page);
+    }
 }
