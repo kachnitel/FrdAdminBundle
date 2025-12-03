@@ -124,8 +124,54 @@ class EntityListLiveComponentTest extends KernelTestCase
             $this->assertIsString($rendered);
             // Verify no error messages in output
             $this->assertStringNotContainsString('could not be converted to string', $rendered);
+
+            // Verify the related entity name is rendered
+            $this->assertStringContainsString('Related Item', $rendered);
+
+            // Verify the table structure is correct
+            $this->assertStringContainsString('<table', $rendered);
+            $this->assertStringContainsString('Test Entity with Relation', $rendered);
         } catch (\Throwable $e) {
             $this->fail('Rendering entity with Doctrine proxy relation threw exception: ' . $e->getMessage());
         }
+    }
+
+    public function testRenderingEntityWithProxyRelationIncludesAllTemplateElements(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create related entity without __toString method
+        $related = new RelatedEntity();
+        $related->setName('Proxy Test Related');
+        $related->setEmail('proxy@test.com');
+        $em->persist($related);
+
+        // Create test entity with relation
+        $entity = new TestEntity();
+        $entity->setName('Entity with Proxy Relation');
+        $entity->setRelatedEntity($related);
+        $em->persist($entity);
+
+        $em->flush();
+        $em->clear(); // Force Doctrine to use proxies on next access
+
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
+        );
+
+        $rendered = (string) $testComponent->render();
+
+        // Verify related entity is rendered using its 'name' property
+        $this->assertStringContainsString('Proxy Test Related', $rendered);
+
+        // Verify no Doctrine proxy class names appear in the output
+        $this->assertStringNotContainsString('Proxies\\__CG__', $rendered);
+        $this->assertStringNotContainsString('could not be converted', $rendered);
+
+        // The rendered output should contain table cells with entity data
+        $this->assertStringContainsString('Entity with Proxy Relation', $rendered);
     }
 }

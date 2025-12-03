@@ -74,9 +74,9 @@
                         <td>
                             {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
                             {{ include([
-                                '@types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
-                                '@types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
-                                '@types/' ~ templateName
+                                '@FrdAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
+                                '@FrdAdmin/types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+                                '@FrdAdmin/types/' ~ templateName
                             ], {
                                 entity: entity,
                                 value: value,

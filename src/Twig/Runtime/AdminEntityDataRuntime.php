@@ -129,9 +129,18 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
     /**
      * Normalize a value for display (uses Symfony Serializer if available).
+     *
+     * For related entities (objects), we return them as-is so they can be
+     * rendered properly in templates with access to their properties.
      */
     private function normalizeValue(mixed $value): mixed
     {
+        // Don't normalize objects - let the template handle them
+        // This allows Doctrine proxies to work correctly
+        if (is_object($value)) {
+            return $value;
+        }
+
         if ($this->normalizer === null) {
             return $value;
         }

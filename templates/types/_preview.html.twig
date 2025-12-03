@@ -8,31 +8,37 @@
  # @var bool|null cell - Whether this is being rendered in a table cell
  #}
 
-{# FIXME: issue here trying to render show? #}
-
-{% if value is iterable %}
-    {# 1. Handle Collections/Arrays #}
+{% if value is null %}
+    <span class="text-muted">-</span>
+{% elseif value is iterable %}
+    {# Handle Collections/Arrays #}
     {% if value is not empty %}
-        {{ value|length }} related items ({{ value|slice(0, 3)|map(v => attribute(v, 'id', '?'))|join(', ') }}...)
+        {{ value|length }} related items
     {% else %}
-        -
+        <span class="text-muted">-</span>
     {% endif %}
-{% elseif value is object %}
-    {# 2. Handle Single Related Entity #}
-    {# Use attribute() function for safe property access, especially with Doctrine proxies #}
-    {% set display = attribute(value, 'name', null)
-        ?? attribute(value, 'label', null)
-        ?? attribute(value, 'title', null)
-        ?? ('#' ~ attribute(value, 'id', null))
-        ?? (value.__class__|split('\\')|last ~ ' object') %}
-
-    {% if value|admin_has_route('show') and admin_route_accessible(value|admin_get_route('show')) %}
-        <a href="{{ admin_object_path(value, 'show') }}" title="{{ value.__class__ | split('\\') | last }}">{{ display }}</a>
-    {% else %}
-        <span title="{{ value.__class__ | split('\\') | last }}">{{ display }}</span>
-    {% endif %}
-
+{% elseif value is same as(true) or value is same as(false) %}
+    {# Handle booleans #}
+    {{ value ? 'Yes' : 'No' }}
 {% else %}
-    {# 3. Handle Scalar Values (string, int, bool) #}
-    {{ value }}
+    {# Try to detect the type of value and render appropriately #}
+
+    {# Check if it's a PHP Enum (has 'value' or 'name' property but not 'id') #}
+    {% if value.value is defined and value.id is not defined %}
+        {{ value.value }}
+    {% elseif value.name is defined and value.value is not defined and value.id is not defined %}
+        {{value.name }}
+    {# Check if it's an entity/object with common display properties #}
+    {% elseif value.name is defined %}
+        {{ value.name }}
+    {% elseif value.label is defined %}
+        {{ value.label }}
+    {% elseif value.title is defined %}
+        {{ value.title }}
+    {% elseif value.id is defined %}
+        #{{ value.id }}
+    {% else %}
+        {# It's a scalar value (string, int, float, datetime, etc.) #}
+        {{ value }}
+    {% endif %}
 {% endif %}
