@@ -1,5 +1,14 @@
 # FRD Admin Bundle
 
+<!-- BADGES -->
+![Tests](<https://img.shields.io/badge/tests-79%20passed-brightgreen>)
+![Coverage](<https://img.shields.io/badge/coverage-39%25-red>)
+![Assertions](<https://img.shields.io/badge/assertions-282-blue>)
+![PHPStan](<https://img.shields.io/badge/PHPStan-level 6-brightgreen>)
+![PHP](<https://img.shields.io/badge/PHP->=8.2-777BB4?logo=php&logoColor=white>)
+![Symfony](<https://img.shields.io/badge/Symfony-6.4|7.0+-000000?logo=symfony&logoColor=white>)
+<!-- BADGES -->
+
 Modern Symfony admin bundle powered by LiveComponents for managing Doctrine entities with extensive customization capabilities.
 
 ## Documentation
@@ -81,6 +90,56 @@ For template customization, see the [Template Overrides Guide](docs/TEMPLATE_OVE
 - PHP 8.2 or higher
 - Symfony 6.4 or 7.0+
 - Doctrine ORM 2.0 or 3.0+
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+composer test
+
+# Run tests with coverage (requires Xdebug)
+composer coverage
+
+# View HTML coverage report
+open .coverage/index.html
+```
+
+### Code Quality
+
+```bash
+# Run PHPStan (level 6)
+composer phpstan
+
+# Update metrics and badges
+composer metrics
+```
+
+### Pre-commit Hook
+
+The project includes a pre-commit hook that automatically updates metrics before each commit:
+
+```bash
+# Install git hooks
+composer install-hooks
+
+# To skip hook temporarily
+git commit --no-verify
+```
+
+The hook will:
+- Run tests with coverage
+- Run PHPStan analysis
+- Update README badges
+- Fail the commit if tests or PHPStan fail
+
+### Metrics
+
+Project metrics are auto-generated and stored in `.metrics/`:
+- `badges.md` - Badge markdown for README
+- `metrics.json` - Machine-readable metrics
+- Coverage reports in `.coverage/` (gitignored)
 
 ## License
 

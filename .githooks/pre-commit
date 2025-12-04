@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# Pre-commit hook to update metrics before each commit.
+#
+# To install: .githooks/install-hooks.sh
+
+set -e
+
+# Only update metrics if relevant files changed
+RELEVANT_CHANGES=$(git diff --cached --name-only | grep -E '(src/|tests/|composer\.json|phpunit\.xml)' || true)
+
+if [ -z "$RELEVANT_CHANGES" ]; then
+    echo "⏩ No source changes, skipping metrics update"
+    exit 0
+fi
+
+echo "📊 Updating metrics before commit..."
+
+# Update metrics (this will fail if tests/phpstan fail)
+.metrics/update-metrics.sh
+
+# Stage the updated files
+git add README.md .metrics/badges.md .metrics/metrics.json 2>/dev/null || true
+
+echo "✅ Metrics updated and staged"

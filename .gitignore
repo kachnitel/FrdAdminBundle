@@ -11,5 +11,8 @@ composer.lock
 # PHPStan
 .phpstan/
 
+# Code coverage
+/.coverage/
+
 # Auto-generated files
 config/reference.php

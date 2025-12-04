@@ -3,10 +3,11 @@
   "description": "Modern Symfony admin bundle powered by LiveComponents for Doctrine entities with extensive customization",
   "type": "symfony-bundle",
   "license": "MIT",
+  "keywords": ["symfony", "admin", "crud", "doctrine", "live-component", "ux", "bundle"],
   "authors": [
     {
-      "name": "Flying Rubber Duck",
-      "email": "info@flyingrubberduck.com"
+      "name": "Ondrej Vana",
+      "email": "kachnitel@gmail.com"
     }
   ],
   "require": {
@@ -53,7 +54,10 @@
       "@phpunit"
     ],
     "phpstan": "phpstan analyse --memory-limit=1G",
-    "phpunit": "phpunit"
+    "phpunit": "phpunit",
+    "coverage": "XDEBUG_MODE=coverage phpunit --coverage-text --coverage-html=.coverage",
+    "metrics": ".metrics/update-metrics.sh",
+    "install-hooks": ".githooks/install-hooks.sh"
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
