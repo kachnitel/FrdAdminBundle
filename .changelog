@@ -1,0 +1,26 @@
+{
+  "headerTitle": "Changelog",
+  "headerDescription": "All notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).",
+  "types": {
+    "feat": "Added",
+    "fix": "Fixed",
+    "perf": "Performance",
+    "refactor": "Changed",
+    "revert": "Removed",
+    "docs": "Documentation",
+    "style": "Style",
+    "test": "Tests",
+    "build": "Build",
+    "ci": "CI/CD",
+    "chore": "Chore"
+  },
+  "hiddenTypes": ["chore", "style", "ci"],
+  "ignorePatterns": ["^WIP", "^wip"],
+  "ignoreTypes": [],
+  "preMajorTags": ["alpha", "beta", "rc"],
+  "postMajorTags": [],
+  "tagPrefix": "v",
+  "commitUrlFormat": "https://github.com/{{owner}}/{{repository}}/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}",
+  "issueUrlFormat": "https://github.com/{{owner}}/{{repository}}/issues/{{id}}"
+}

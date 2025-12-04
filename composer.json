@@ -33,7 +33,8 @@
     "symfony/stimulus-bundle": "^2.31",
     "symfony/webpack-encore-bundle": "^2.4",
     "symfony/var-exporter": "^7.0",
-    "symfony/console": "^7.4"
+    "symfony/console": "^7.4",
+    "marcocesarato/php-conventional-changelog": "^1.17"
   },
   "suggest": {
     "frd/entity-components-bundle": "For attachment, tag, and comment features"
@@ -57,7 +58,8 @@
     "phpunit": "phpunit",
     "coverage": "XDEBUG_MODE=coverage phpunit --coverage-text --coverage-html=.coverage",
     "metrics": ".metrics/update-metrics.sh",
-    "install-hooks": ".githooks/install-hooks.sh"
+    "install-hooks": ".githooks/install-hooks.sh",
+    "release": ".scripts/release.sh"
   },
   "minimum-stability": "dev",
   "prefer-stable": true,

@@ -2,7 +2,7 @@
 
 <!-- BADGES -->
 ![Tests](<https://img.shields.io/badge/tests-79%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-39%25-red>)
+![Coverage](<https://img.shields.io/badge/coverage-48%25-red>)
 ![Assertions](<https://img.shields.io/badge/assertions-282-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-level 6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP->=8.2-777BB4?logo=php&logoColor=white>)
@@ -140,6 +140,42 @@ Project metrics are auto-generated and stored in `.metrics/`:
 - `badges.md` - Badge markdown for README
 - `metrics.json` - Machine-readable metrics
 - Coverage reports in `.coverage/` (gitignored)
+
+### Creating Releases
+
+The project uses [Conventional Commits](https://www.conventionalcommits.org/) for automated changelog generation:
+
+```bash
+# Create a new release (patch/minor/major/beta/rc/alpha)
+composer release patch   # 1.0.0 -> 1.0.1
+composer release minor   # 1.0.0 -> 1.1.0
+composer release major   # 1.0.0 -> 2.0.0
+composer release beta    # 1.0.0 -> 1.0.1-beta.1
+
+# After reviewing, push to remote
+git push origin master --tags
+```
+
+The release script will:
+- Generate/update CHANGELOG.md from commit messages
+- Create a new version tag
+- Commit the changes
+
+**Commit Message Format:**
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`
+
+Examples:
+- `feat: Add user authentication`
+- `fix: Resolve pagination edge case`
+- `docs: Update installation guide`
 
 ## License
 
