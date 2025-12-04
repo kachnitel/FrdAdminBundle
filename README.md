@@ -2,41 +2,10 @@
 
 Modern Symfony admin bundle powered by LiveComponents for managing Doctrine entities with extensive customization capabilities.
 
-## Development
+## Documentation
 
-It's under development, more specifically extracting it from an existing, production application.
-
-TODO:
-- make IDs link to "show"
-- add "template to extend" in config (replace layout.html.twig)
-- eliminate hardcoded App\Entity and App\Form
-  - templates (entity)
-  - review in code - used as default throughout
-- Live test
-  - index
-  - show
-  - edit
-- pagination
-
-FIXME:
-- Templates in app don't seem to override bundle's own
-## Overriding Templates
-
-To override bundle templates, create templates in your app following Symfony's standard bundle override convention:
-
-```
-templates/
-  bundles/
-    FrdAdminBundle/          # Bundle name (not the namespace!)
-      admin/
-        index_live.html.twig  # Override the index template
-      components/
-        EntityList.html.twig  # Override the entity list component
-      types/
-        _preview.html.twig    # Override default type rendering
-```
-
-Note: The directory name must be `FrdAdminBundle` (the full bundle class name without "Bundle" would be `FrdAdmin`, but Symfony requires the full class name for overrides).
+- **[Configuration Guide](docs/CONFIGURATION.md)** - Complete guide to configuring entities with the `#[Admin]` attribute
+- **[Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md)** - How to customize the admin interface appearance
 
 ## Features
 
@@ -86,78 +55,25 @@ frd_admin:
     prefix: /admin
 ```
 
-### 3. Configure Your Entities
+### 3. Mark Entities with #[Admin] Attribute
 
-Use the `#[Admin]` attribute on your entities:
+Add the `#[Admin]` attribute to any Doctrine entity:
 
 ```php
 use Frd\AdminBundle\Attribute\Admin;
-use Frd\AdminBundle\Attribute\AdminRoutes;
 
-#[Admin(
-    label: 'Products',
-    icon: 'inventory'
-)]
-#[AdminRoutes([
-    'index' => 'app_product_index',
-    'new' => 'app_product_new',
-    'show' => 'app_product_show',
-    'edit' => 'app_product_edit',
-    'delete' => 'app_product_delete'
-])]
+#[Admin(label: 'Products', icon: 'inventory')]
 class Product
 {
     // ...
 }
 ```
 
-## Template Customization
+That's it! The entity will now appear in the admin dashboard.
 
-### Override Entity Templates
+For advanced configuration (columns, permissions, pagination, etc.), see the [Configuration Guide](docs/CONFIGURATION.md).
 
-Create templates in your app to override bundle templates:
-
-```twig
-{# templates/bundles/FrdAdminBundle/admin/product/index.html.twig #}
-{% extends '@FrdAdmin/admin/index.html.twig' %}
-
-{% block th %}
-    <tr>
-        <th>Name</th>
-        <th>Price</th>
-        <th>Stock</th>
-        <th>Actions</th>
-    </tr>
-{% endblock %}
-
-{% block tr %}
-    <tr>
-        <td>{{ entity.name }}</td>
-        <td>{{ entity.price }}</td>
-        <td>{{ entity.stock }}</td>
-        <td>{{ block('actions') }}</td>
-    </tr>
-{% endblock %}
-```
-
-### Type-Specific Rendering
-
-Customize how specific types are displayed:
-
-```twig
-{# templates/bundles/FrdAdminBundle/admin/types/datetime/_preview.html.twig #}
-{{ value ? value|date('Y-m-d H:i') }}
-```
-
-Or for specific entity properties:
-
-```twig
-{# templates/bundles/FrdAdminBundle/admin/types/App/Entity/User/_preview.html.twig #}
-<a href="{{ path('app_user_show', {id: value.id}) }}">
-    <span class="material-icons">person</span>
-    {{ value.name }}
-</a>
-```
+For template customization, see the [Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md).
 
 ## Requirements
 

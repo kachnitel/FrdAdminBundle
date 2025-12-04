@@ -273,6 +273,44 @@ class TemplateOverrideTest extends KernelTestCase
     }
 
     /**
+     * Test that entity-specific property overrides have highest priority.
+     *
+     * The fallback chain should be:
+     * 1. Entity-specific property: types/Frd/AdminBundle/Tests/Fixtures/TestEntity/name.html.twig
+     * 2. Type-specific: types/string/_preview.html.twig
+     * 3. Default: types/_preview.html.twig
+     */
+    public function testEntitySpecificPropertyOverrideHasHighestPriority(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        // Create entity with name property
+        $entity = new TestEntity();
+        $entity->setName('Test Entity Name');
+        $em->persist($entity);
+        $em->flush();
+
+        $testComponent = $this->createLiveComponent(
+            name: 'FRD:Admin:EntityList',
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
+        );
+
+        $rendered = (string) $testComponent->render();
+
+        // Verify entity-specific property override marker is present
+        $this->assertStringContainsString('<!-- TEST_OVERRIDE:ENTITY_SPECIFIC_PROPERTY -->', $rendered);
+
+        // Verify custom entity-specific rendering
+        $this->assertStringContainsString('<strong class="entity-specific-name">Test Entity Name</strong>', $rendered);
+
+        // Should NOT contain the default preview marker in the name column
+        // (entity-specific override takes precedence)
+        // Note: Other columns will still use the general preview template
+    }
+
+    /**
      * Test that template overrides don't break LiveComponent actions.
      *
      * This ensures that overriding templates maintains all LiveComponent

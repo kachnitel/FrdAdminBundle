@@ -34,10 +34,10 @@ services:
             $defaultItemsPerPage: '%frd_admin.pagination.default_items_per_page%'
             $allowedItemsPerPage: '%frd_admin.pagination.allowed_items_per_page%'
 
-    # Generic Admin Controller (conditionally enabled via configuration)
+    # Generic Admin Controller (auto-discovers entities via #[Admin] attribute)
     Frd\AdminBundle\Controller\GenericAdminController:
         arguments:
-            $supportedEntities: '%frd_admin.entities%'
+            $entityDiscovery: '@Frd\AdminBundle\Service\EntityDiscoveryService'
             $routePrefix: '%frd_admin.route_prefix%'
             $dashboardRoute: '%frd_admin.dashboard_route%'
             $entityNamespace: '%frd_admin.entity_namespace%'

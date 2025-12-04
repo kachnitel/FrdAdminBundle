@@ -24,7 +24,6 @@ class FrdAdminExtension extends Extension
         $container->setParameter('frd_admin.route_prefix', $config['route_prefix']);
         $container->setParameter('frd_admin.dashboard_route', $config['dashboard_route']);
         $container->setParameter('frd_admin.required_role', $config['required_role']);
-        $container->setParameter('frd_admin.entities', $config['entities'] ?? []);
         $container->setParameter('frd_admin.enable_generic_controller', $config['enable_generic_controller']);
         $container->setParameter('frd_admin.pagination.default_items_per_page', $config['pagination']['default_items_per_page']);
         $container->setParameter('frd_admin.pagination.allowed_items_per_page', $config['pagination']['allowed_items_per_page']);
