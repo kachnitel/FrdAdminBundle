@@ -35,13 +35,6 @@ class FrdAdminExtension extends Extension
             new FileLocator(__DIR__ . '/../../config')
         );
         $loader->load('services.yaml');
-
-        // Register Twig global for base_layout
-        $container->prependExtensionConfig('twig', [
-            'globals' => [
-                'frd_admin_base_layout' => '%frd_admin.base_layout%',
-            ],
-        ]);
     }
 
     public function getAlias(): string

@@ -42,12 +42,6 @@ class FrdAdminBundle extends AbstractBundle
                     ->defaultNull()
                     ->info('Base layout template (defaults to none, templates extend app layout)')
                 ->end()
-                ->arrayNode('entities')
-                    ->info('List of entities to manage via the generic admin controller')
-                    ->defaultValue([])
-                    ->scalarPrototype()->end()
-                    ->example(['Region', 'FulfillmentMethod', 'WorkStation'])
-                ->end()
                 ->booleanNode('enable_generic_controller')
                     ->defaultTrue()
                     ->info('Enable the generic admin controller with dynamic routes')
@@ -85,7 +79,7 @@ class FrdAdminBundle extends AbstractBundle
         $builder->setParameter('frd_admin.route_prefix', $config['route_prefix']);
         $builder->setParameter('frd_admin.dashboard_route', $config['dashboard_route']);
         $builder->setParameter('frd_admin.required_role', $config['required_role']);
-        $builder->setParameter('frd_admin.entities', $config['entities'] ?? []);
+        $builder->setParameter('frd_admin.base_layout', $config['base_layout']);
         $builder->setParameter('frd_admin.enable_generic_controller', $config['enable_generic_controller']);
         $builder->setParameter('frd_admin.pagination.default_items_per_page', $config['pagination']['default_items_per_page']);
         $builder->setParameter('frd_admin.pagination.allowed_items_per_page', $config['pagination']['allowed_items_per_page']);

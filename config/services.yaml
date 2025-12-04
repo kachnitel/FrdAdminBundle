@@ -16,6 +16,13 @@ services:
     # Twig Extensions
     Frd\AdminBundle\Twig\Extension\:
         resource: '../src/Twig/Extension'
+        exclude: '../src/Twig/Extension/AdminConfigExtension.php'
+        tags: ['twig.extension']
+
+    # Admin config extension (provides Twig globals)
+    Frd\AdminBundle\Twig\Extension\AdminConfigExtension:
+        arguments:
+            $baseLayout: '%frd_admin.base_layout%'
         tags: ['twig.extension']
 
     # Twig Runtimes
