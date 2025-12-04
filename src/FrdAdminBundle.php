@@ -96,26 +96,8 @@ class FrdAdminBundle extends AbstractBundle
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        // Get existing Twig configuration to preserve app-level paths
-        $twigConfig = $builder->getExtensionConfig('twig');
-
-        // Collect all existing paths to preserve their priority
-        $existingPaths = [];
-        foreach ($twigConfig as $config) {
-            if (isset($config['paths'])) {
-                foreach ($config['paths'] as $path => $namespace) {
-                    $existingPaths[$path] = $namespace;
-                }
-            }
-        }
-
-        // Add our bundle path AFTER existing paths (lower priority)
-        $existingPaths[$this->getPath() . '/templates'] = 'FrdAdmin';
-
-        // Register complete paths configuration
-        $container->extension('twig', [
-            'paths' => $existingPaths,
-        ]);
+        // Don't manually register the Twig path - AbstractBundle does this automatically
+        // and allows proper template overriding via templates/bundles/FrdAdminBundle/
 
         // Register LiveComponent namespace
         $container->extension('twig_component', [
