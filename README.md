@@ -43,6 +43,7 @@ frd_admin:
     entity_namespace: 'App\Entity\'
     form_namespace: 'App\Form\'
     route_prefix: 'admin'
+    base_layout: 'layout.html.twig'  # Optional: your app's base layout
 ```
 
 ### 2. Add Routes

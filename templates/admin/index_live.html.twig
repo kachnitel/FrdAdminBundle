@@ -7,7 +7,7 @@
  # @var string entityShortClass - Short class name of the entity
  # @var string|null repositoryMethod - Custom repository method for query
  #}
-{% extends 'layout.html.twig' %}
+{% extends frd_admin_base_layout ?: '@FrdAdmin/admin/base.html.twig' %}
 
 {% block headerTitle %}
     {{ title|default(entityShortClass ~ ' List') }}

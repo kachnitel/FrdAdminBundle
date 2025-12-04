@@ -5,6 +5,7 @@ This guide explains how to customize the visual appearance of the admin bundle b
 ## Table of Contents
 
 - [How Template Overrides Work](#how-template-overrides-work)
+- [Configuring Base Layout](#configuring-base-layout)
 - [Template Hierarchy](#template-hierarchy)
 - [Override Locations](#override-locations)
 - [Common Override Scenarios](#common-override-scenarios)
@@ -18,6 +19,66 @@ FrdAdminBundle uses Symfony's standard template override mechanism. When you pla
 **Priority Order:**
 1. **Application override** (Highest) - `templates/bundles/FrdAdminBundle/`
 2. **Bundle template** (Lowest) - `vendor/frd/admin-bundle/templates/`
+
+## Configuring Base Layout
+
+The easiest way to integrate the admin bundle with your application's design is to configure the `base_layout` option.
+
+### Quick Setup
+
+In `config/packages/frd_admin.yaml`:
+
+```yaml
+frd_admin:
+    base_layout: 'layout.html.twig'  # Your app's base layout
+```
+
+All admin templates (`dashboard.html.twig`, `index_live.html.twig`, `edit.html.twig`, etc.) will automatically extend your specified layout.
+
+### What Admin Templates Provide
+
+Admin templates provide these blocks for your base layout:
+
+- `{% block title %}` - Page title (e.g., "Admin Dashboard", "Edit Product")
+- `{% block headerTitle %}` - Page header (optional, for breadcrumbs or page titles)
+- `{% block headerButtons %}` - Action buttons in header (e.g., "New" button)
+- `{% block content %}` - Main page content
+
+### Example Integration
+
+**Your app layout** (`templates/layout.html.twig`):
+```twig
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}My App{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>{% block headerTitle %}{% endblock %}</h1>
+        <div>{% block headerButtons %}{% endblock %}</div>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
+```
+
+**Admin template** (automatically uses your layout):
+```twig
+{% extends frd_admin_base_layout ?: '@FrdAdmin/admin/base.html.twig' %}
+
+{% block title %}Product List{% endblock %}
+{% block headerTitle %}Products{% endblock %}
+{% block content %}
+    {# Admin content here #}
+{% endblock %}
+```
+
+### Default Behavior
+
+If `base_layout` is not configured (null), admin templates use the bundle's minimal default layout at `@FrdAdmin/admin/base.html.twig`.
 
 ## Template Hierarchy
 

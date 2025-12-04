@@ -5,7 +5,7 @@
  # @var FormView form - The form view
  # @var array breadcrumbs - Breadcrumb navigation array
  #}
-{% extends 'layout.html.twig' %}
+{% extends frd_admin_base_layout ?: '@FrdAdmin/admin/base.html.twig' %}
 
 {% block headerTitle %}New{% endblock %}
 

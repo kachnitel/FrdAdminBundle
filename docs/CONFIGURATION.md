@@ -4,6 +4,7 @@ This guide covers how to configure entities for the admin bundle using PHP attri
 
 ## Table of Contents
 
+- [Bundle Configuration](#bundle-configuration)
 - [Quick Start](#quick-start)
 - [The Admin Attribute](#the-admin-attribute)
 - [Configuration Options](#configuration-options)
@@ -11,6 +12,59 @@ This guide covers how to configure entities for the admin bundle using PHP attri
 - [Column Filtering](#column-filtering)
 - [Permissions](#permissions)
 - [Complete Examples](#complete-examples)
+
+## Bundle Configuration
+
+Configure the admin bundle in `config/packages/frd_admin.yaml`:
+
+```yaml
+frd_admin:
+    # Entity and form namespaces
+    entity_namespace: 'App\Entity\'      # Default namespace for entities
+    form_namespace: 'App\Form\'          # Default namespace for form types
+    form_suffix: 'FormType'              # Suffix for form type classes
+
+    # Layout and routing
+    base_layout: 'layout.html.twig'     # Your app's base layout (optional)
+    route_prefix: 'app_admin_entity'    # Route prefix for CRUD operations
+    dashboard_route: 'app_admin_dashboard'  # Dashboard route name
+
+    # Security
+    required_role: 'ROLE_ADMIN'         # Default required role
+
+    # Features
+    enable_generic_controller: true     # Enable generic admin controller
+
+    # Pagination
+    pagination:
+        default_items_per_page: 20      # Default items per page
+        allowed_items_per_page: [10, 20, 50, 100]  # Allowed values
+```
+
+### Key Configuration Options
+
+#### base_layout
+**Type:** `?string` **Default:** `null`
+
+Specify your application's base layout template. If not set, admin templates use the bundle's minimal default layout.
+
+**Example:**
+```yaml
+frd_admin:
+    base_layout: 'layout.html.twig'  # Use your app's layout
+```
+
+Admin templates will extend this layout and provide blocks like `title`, `headerTitle`, and `content`.
+
+#### entity_namespace
+**Type:** `string` **Default:** `'App\\Entity\\'`
+
+Base namespace for your Doctrine entities. Used when resolving entity short names.
+
+#### required_role
+**Type:** `string` **Default:** `'ROLE_ADMIN'`
+
+Global required role for accessing the admin. Can be overridden per-entity using the `permissions` option in the `#[Admin]` attribute.
 
 ## Quick Start
 

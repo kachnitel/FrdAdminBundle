@@ -1,0 +1,8 @@
+{# Integer type preview template with clickable ID support #}
+{% if property == 'id' and entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
+    <a href="{{ admin_object_path(entity, 'show') }}" class="text-decoration-none">
+        {{ value }}
+    </a>
+{% else %}
+    {{ value }}
+{% endif %}
