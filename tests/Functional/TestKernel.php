@@ -52,6 +52,10 @@ class TestKernel extends Kernel
 
         $container->loadFromExtension('twig', [
             'default_path' => '%kernel.project_dir%/templates',
+            'paths' => [
+                // Register test override templates with FrdAdmin namespace (higher priority)
+                '%kernel.project_dir%/tests/templates/bundles/FrdAdminBundle' => 'FrdAdmin',
+            ],
         ]);
 
         $container->loadFromExtension('webpack_encore', [

@@ -1,0 +1,183 @@
+{# Override marker - DO NOT REMOVE #}
+<!-- TEST_OVERRIDE:ENTITY_LIST -->
+{#
+ # LiveComponent template for reactive entity lists with per-column filters.
+ #
+ # Props:
+ # @var string entityClass - Entity class name
+ # @var string search - Global search query
+ # @var string sortBy - Sort field
+ # @var string sortDirection - ASC or DESC
+ # @var array columnFilters - Per-column filter values
+ #}
+
+<div {{ attributes }}>
+    {# Global Search #}
+    {% if block('search') is defined %}
+        <div class="admin-global-search mb-3">
+            {{ block('search') }}
+        </div>
+    {% else %}
+        <div class="admin-global-search mb-3">
+            <input
+                type="text"
+                class="form-control"
+                placeholder="Global search across all columns..."
+                data-model="search"
+                value="{{ this.search }}"
+            >
+        </div>
+    {% endif %}
+
+    {# Entity List Table #}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                {% for column in this.columns %}
+                    <th>
+                        <button
+                            type="button"
+                            class="btn btn-link p-0 text-decoration-none"
+                            data-action="live#action"
+                            data-live-action-param="sort"
+                            data-live-column-param="{{ column }}"
+                        >
+                            {{ column|humanize }}
+                            {% if sortBy == column %}
+                                <span class="sort-indicator">{{ sortDirection == constant('SORT_ASC', this) ? '▲' : '▼' }}</span>
+                            {% endif %}
+                        </button>
+                    </th>
+                {% endfor %}
+                <th>Actions</th>
+            </tr>
+            <tr class="filters">
+                {% for column in this.columns %}
+                    <th>
+                        {% if this.filterMetadata[column] is defined %}
+                            {#
+                             Pass the initial value so it persists on re-renders.
+                             #}
+                            <twig:FRD:Admin:ColumnFilter
+                                column="{{ column }}"
+                                value="{{ this.columnFilters[column] ?? '' }}"
+                                type="{{ this.filterMetadata[column].type|default('text') }}"
+                            />
+                        {% endif %}
+                    </th>
+                {% endfor %}
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entity in this.entities %}
+                <tr>
+                    {% for property, value in admin_get_entity_data(entity) %}
+                        <td>
+                            {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
+                            {{ include([
+                                '@FrdAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
+                                '@FrdAdmin/types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+                                '@FrdAdmin/types/' ~ templateName
+                            ], {
+                                entity: entity,
+                                value: value,
+                                property: property,
+                                cell: true
+                            }, ignore_missing = true) }}
+                        </td>
+                    {% endfor %}
+
+                    <td class="actions">
+                        {% if entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
+                            <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
+                                <span class="material-icons">visibility</span>
+                            </a>
+                        {% endif %}
+
+                        {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
+                            <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
+                                <span class="material-icons">edit</span>
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="100" class="text-center text-muted py-4">
+                        No {{ this.entityShortClass }} found.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {# Pagination Controls #}
+    {% if this.totalPages > 0 %}
+        <div class="pagination-wrapper d-flex justify-content-between align-items-center mt-3">
+            {# Items per page selector #}
+            <div class="items-per-page">
+                <label for="items-per-page" class="form-label me-2">Items per page:</label>
+                <select
+                    id="items-per-page"
+                    class="form-select form-select-sm d-inline-block w-auto"
+                    data-model="itemsPerPage"
+                >
+                    {% for option in this.allowedItemsPerPage %}
+                        <option value="{{ option }}" {% if option == this.itemsPerPage %}selected{% endif %}>
+                            {{ option }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Pagination info and controls #}
+            <div class="pagination-info-controls d-flex align-items-center gap-3">
+                {# Showing X-Y of Z #}
+                <span class="text-muted">
+                    {% if this.totalItems > 0 %}
+                        Showing {{ this.startItem }}-{{ this.endItem }} of {{ this.totalItems }}
+                    {% else %}
+                        No items
+                    {% endif %}
+                </span>
+
+                {# Page navigation #}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0">
+                        {# Previous button #}
+                        <li class="page-item {% if this.page <= 1 %}disabled{% endif %}">
+                            <button
+                                class="page-link"
+                                data-action="live#action"
+                                data-live-action-param="previousPage"
+                                {% if this.page <= 1 %}disabled{% endif %}
+                            >
+                                Previous
+                            </button>
+                        </li>
+
+                        {# Page number display #}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                Page {{ this.page }} of {{ this.totalPages }}
+                            </span>
+                        </li>
+
+                        {# Next button #}
+                        <li class="page-item {% if this.page >= this.totalPages %}disabled{% endif %}">
+                            <button
+                                class="page-link"
+                                data-action="live#action"
+                                data-live-action-param="nextPage"
+                                {% if this.page >= this.totalPages %}disabled{% endif %}
+                            >
+                                Next
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    {% endif %}
+</div>

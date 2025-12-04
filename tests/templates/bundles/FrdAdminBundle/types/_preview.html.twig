@@ -1,0 +1,46 @@
+{# Override marker - DO NOT REMOVE #}
+<!-- TEST_OVERRIDE:PREVIEW -->
+{#
+ # Default fallback preview template for any property.
+ #
+ # Variables:
+ # @var object entity - The root entity being displayed
+ # @var mixed value - The value to be displayed
+ # @var string property - The property name being displayed
+ # @var bool|null cell - Whether this is being rendered in a table cell
+ #}
+
+{% if value is null %}
+    <span class="text-muted">-</span>
+{% elseif value is iterable %}
+    {# Handle Collections/Arrays #}
+    {% if value is not empty %}
+        {{ value|length }} related items
+    {% else %}
+        <span class="text-muted">-</span>
+    {% endif %}
+{% elseif value is same as(true) or value is same as(false) %}
+    {# Handle booleans #}
+    {{ value ? 'Yes' : 'No' }}
+{% else %}
+    {# Try to detect the type of value and render appropriately #}
+
+    {# Check if it's a PHP Enum (has 'value' or 'name' property but not 'id') #}
+    {% if value.value is defined and value.id is not defined %}
+        {{ value.value }}
+    {% elseif value.name is defined and value.value is not defined and value.id is not defined %}
+        {{value.name }}
+    {# Check if it's an entity/object with common display properties #}
+    {% elseif value.name is defined %}
+        {{ value.name }}
+    {% elseif value.label is defined %}
+        {{ value.label }}
+    {% elseif value.title is defined %}
+        {{ value.title }}
+    {% elseif value.id is defined %}
+        #{{ value.id }}
+    {% else %}
+        {# It's a scalar value (string, int, float, datetime, etc.) #}
+        {{ value }}
+    {% endif %}
+{% endif %}

@@ -1,0 +1,35 @@
+{# Override marker - DO NOT REMOVE #}
+<!-- TEST_OVERRIDE:INDEX_LIVE -->
+{#
+ # LiveComponent-powered entity list template.
+ # Use this instead of index.html.twig for reactive lists.
+ #
+ # Variables:
+ # @var string entityClass - Full class name of the entity
+ # @var string entityShortClass - Short class name of the entity
+ # @var string|null repositoryMethod - Custom repository method for query
+ #}
+{% extends 'layout.html.twig' %}
+
+{% block headerTitle %}
+    {{ title|default(entityShortClass ~ ' List') }}
+{% endblock %}
+
+{% block headerButtons %}
+    {% if entityClass|admin_has_route('new') and admin_route_accessible(entityClass|admin_get_route('new')) %}
+        <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="btn btn-primary">
+            <span class="material-icons">add</span>
+            New
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% component 'FRD:Admin:EntityList' with {
+        entityClass: entityClass,
+        entityShortClass: entityShortClass,
+        repositoryMethod: repositoryMethod|default(null)
+    } %}
+        {# Override blocks from component template as needed #}
+    {% endcomponent %}
+{% endblock %}

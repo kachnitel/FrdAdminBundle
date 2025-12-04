@@ -1,0 +1,16 @@
+{# Override marker - DO NOT REMOVE #}
+<!-- TEST_OVERRIDE:BOOLEAN -->
+{#
+ # Boolean property preview template override with custom symbols.
+ #
+ # Variables:
+ # @var bool value - The boolean value to display
+ #}
+
+{% if value is same as(true) %}
+    <span class="text-success">✓ True</span>
+{% elseif value is same as(false) %}
+    <span class="text-danger">✗ False</span>
+{% else %}
+    <span class="text-muted">-</span>
+{% endif %}
