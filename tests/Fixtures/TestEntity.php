@@ -104,9 +104,21 @@ class TestEntity
         return $this->quantity;
     }
 
+    public function setQuantity(int $quantity): self
+    {
+        $this->quantity = $quantity;
+        return $this;
+    }
+
     public function getPrice(): string
     {
         return $this->price;
+    }
+
+    public function setPrice(string $price): self
+    {
+        $this->price = $price;
+        return $this;
     }
 
     public function getCreatedAt(): \DateTimeInterface

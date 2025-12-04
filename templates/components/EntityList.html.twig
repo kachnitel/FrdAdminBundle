@@ -70,17 +70,19 @@
         <tbody>
             {% for entity in this.entities %}
                 <tr>
-                    {% for property, value in admin_get_entity_data(entity) %}
+                    {% set entityData = admin_get_entity_data(entity) %}
+                    {% for column in this.columns %}
                         <td>
-                            {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
+                            {% set value = entityData[column] ?? null %}
+                            {% set templateName = admin_is_collection(entity, column) ? '_collection.html.twig' : '_preview.html.twig' %}
                             {{ include([
-                                '@FrdAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
-                                '@FrdAdmin/types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+                                '@FrdAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ column ~ '.html.twig',
+                                '@FrdAdmin/types/' ~ admin_get_property_type(entity, column)|replace({'\\': '/'}) ~ '/' ~ templateName,
                                 '@FrdAdmin/types/' ~ templateName
                             ], {
                                 entity: entity,
                                 value: value,
-                                property: property,
+                                property: column,
                                 cell: true
                             }, ignore_missing = true) }}
                         </td>

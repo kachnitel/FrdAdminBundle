@@ -9,6 +9,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Frd\AdminBundle\Attribute\ColumnFilter;
 use Frd\AdminBundle\Service\FilterMetadataProvider;
+use Frd\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
@@ -72,6 +73,7 @@ class EntityList
     public function __construct(
         private EntityManagerInterface $em,
         private FilterMetadataProvider $filterMetadataProvider,
+        private EntityDiscoveryService $entityDiscovery,
         private int $defaultItemsPerPage = 20,
         private array $allowedItemsPerPage = [10, 20, 50, 100]
     ) {
@@ -277,12 +279,33 @@ class EntityList
     /**
      * Get columns for display.
      *
+     * Respects the #[Admin] attribute configuration:
+     * - If columns are explicitly set, use only those columns in that order
+     * - If excludeColumns is set, filter out those columns
+     * - Otherwise, use all entity fields and associations
+     *
      * @return array<int|string, string>
      */
     public function getColumns(): array
     {
         $metadata = $this->em->getClassMetadata($this->entityClass);
-        return array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
+        $adminAttr = $this->entityDiscovery->getAdminAttribute($this->entityClass);
+
+        // If columns are explicitly configured, use only those (respecting order)
+        if ($adminAttr?->getColumns() !== null) {
+            return $adminAttr->getColumns();
+        }
+
+        // Get all available columns
+        $allColumns = array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
+
+        // If excludeColumns is configured, filter them out
+        if ($adminAttr?->getExcludeColumns() !== null) {
+            $excludeColumns = $adminAttr->getExcludeColumns();
+            return array_values(array_filter($allColumns, fn($col) => !in_array($col, $excludeColumns)));
+        }
+
+        return $allColumns;
     }
 
     /**
