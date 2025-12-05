@@ -64,6 +64,9 @@
         ],
         "phpstan": "phpstan analyse --memory-limit=1G",
         "phpunit": "phpunit",
+        "phpunit:debug": [
+            "@php -dxdebug.mode=debug -dxdebug.start_with_request=yes -dxdebug.client_port=${XDEBUG_PORT:-9003} ./vendor/bin/phpunit --colors=always"
+        ],
         "coverage": "XDEBUG_MODE=coverage phpunit --coverage-text --coverage-html=.coverage",
         "metrics": ".metrics/update-metrics.sh",
         "install-hooks": ".githooks/install-hooks.sh",

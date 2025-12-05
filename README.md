@@ -1,9 +1,9 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-79%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-39%25-red>)
-![Assertions](<https://img.shields.io/badge/assertions-282-blue>)
+![Tests](<https://img.shields.io/badge/tests-84%20passed-red>)
+![Coverage](<https://img.shields.io/badge/coverage-27%25-red>)
+![Assertions](<https://img.shields.io/badge/assertions-161-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-level 6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP->=8.2-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-6.4|7.0+-000000?logo=symfony&logoColor=white>)
