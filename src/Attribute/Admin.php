@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Frd\AdminBundle\Attribute;
+namespace Kachnitel\AdminBundle\Attribute;
 
 use Attribute;
 

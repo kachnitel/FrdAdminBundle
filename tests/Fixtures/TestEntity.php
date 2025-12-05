@@ -1,12 +1,12 @@
 <?php
 
-namespace Frd\AdminBundle\Tests\Fixtures;
+namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Frd\AdminBundle\Attribute\Admin;
-use Frd\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 
 enum TestStatus: string
 {

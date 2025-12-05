@@ -1,6 +1,6 @@
 <?php
 
-namespace Frd\AdminBundle\Service\Filter;
+namespace Kachnitel\AdminBundle\Service\Filter;
 
 /**
  * Base implementation of FilterInterface with common functionality.

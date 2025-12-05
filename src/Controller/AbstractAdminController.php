@@ -1,8 +1,8 @@
 <?php
 
-namespace Frd\AdminBundle\Controller;
+namespace Kachnitel\AdminBundle\Controller;
 
-use Frd\AdminBundle\Controller\Trait\DeleteEntityTrait;
+use Kachnitel\AdminBundle\Controller\Trait\DeleteEntityTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -230,22 +230,22 @@ abstract class AbstractAdminController extends AbstractController
     // Template resolution methods (can be overridden for custom template paths)
     protected function getIndexTemplate(string $class): string
     {
-        return '@FrdAdmin/admin/index.html.twig';
+        return '@KachnitelAdmin/admin/index.html.twig';
     }
 
     protected function getShowTemplate(string $class): string
     {
-        return '@FrdAdmin/admin/show.html.twig';
+        return '@KachnitelAdmin/admin/show.html.twig';
     }
 
     protected function getEditTemplate(string $class): string
     {
-        return '@FrdAdmin/admin/edit.html.twig';
+        return '@KachnitelAdmin/admin/edit.html.twig';
     }
 
     protected function getNewTemplate(string $class): string
     {
-        return '@FrdAdmin/admin/new.html.twig';
+        return '@KachnitelAdmin/admin/new.html.twig';
     }
 
     // Configuration methods (must be implemented by application)

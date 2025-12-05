@@ -14,11 +14,11 @@ This guide explains how to customize the visual appearance of the admin bundle b
 
 ## How Template Overrides Work
 
-FrdAdminBundle uses Symfony's standard template override mechanism. When you place a template in your application's `templates/bundles/FrdAdminBundle/` directory, it takes precedence over the bundle's default template.
+KachnitelAdminBundle uses Symfony's standard template override mechanism. When you place a template in your application's `templates/bundles/KachnitelAdminBundle/` directory, it takes precedence over the bundle's default template.
 
 **Priority Order:**
-1. **Application override** (Highest) - `templates/bundles/FrdAdminBundle/`
-2. **Bundle template** (Lowest) - `vendor/frd/admin-bundle/templates/`
+1. **Application override** (Highest) - `templates/bundles/KachnitelAdminBundle/`
+2. **Bundle template** (Lowest) - `vendor/kachnitel/admin-bundle/templates/`
 
 ## Configuring Base Layout
 
@@ -26,10 +26,10 @@ The easiest way to integrate the admin bundle with your application's design is 
 
 ### Quick Setup
 
-In `config/packages/frd_admin.yaml`:
+In `config/packages/kachnitel_admin.yaml`:
 
 ```yaml
-frd_admin:
+kachnitel_admin:
     base_layout: 'layout.html.twig'  # Your app's base layout
 ```
 
@@ -67,7 +67,7 @@ Admin templates provide these blocks for your base layout:
 
 **Admin template** (automatically uses your layout):
 ```twig
-{% extends frd_admin_base_layout ?: '@FrdAdmin/admin/base.html.twig' %}
+{% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
 {% block title %}Product List{% endblock %}
 {% block headerTitle %}Products{% endblock %}
@@ -78,7 +78,7 @@ Admin templates provide these blocks for your base layout:
 
 ### Default Behavior
 
-If `base_layout` is not configured (null), admin templates use the bundle's minimal default layout at `@FrdAdmin/admin/base.html.twig`.
+If `base_layout` is not configured (null), admin templates use the bundle's minimal default layout at `@KachnitelAdmin/admin/base.html.twig`.
 
 ## Template Hierarchy
 
@@ -108,7 +108,7 @@ When rendering entity properties, the bundle uses a **three-level fallback syste
 ### Directory Structure
 
 ```
-templates/bundles/FrdAdminBundle/
+templates/bundles/KachnitelAdminBundle/
 ├── admin/                      # Admin page templates
 │   ├── index_live.html.twig    # Entity list page (wraps LiveComponent)
 │   ├── show.html.twig          # Entity detail page
@@ -147,7 +147,7 @@ templates/bundles/FrdAdminBundle/
 Change how ALL properties of a specific type are rendered:
 
 ```twig
-{# templates/bundles/FrdAdminBundle/types/datetime/_preview.html.twig #}
+{# templates/bundles/KachnitelAdminBundle/types/datetime/_preview.html.twig #}
 {% if value %}
     <time datetime="{{ value|date('c') }}">
         {{ value|date('Y-m-d H:i') }}
@@ -168,7 +168,7 @@ Change how ALL properties of a specific type are rendered:
 Customize rendering for ONE specific property:
 
 ```twig
-{# templates/bundles/FrdAdminBundle/types/App/Entity/User/email.html.twig #}
+{# templates/bundles/KachnitelAdminBundle/types/App/Entity/User/email.html.twig #}
 <a href="mailto:{{ value }}" class="text-decoration-none">
     <span class="material-icons">email</span>
     {{ value }}
@@ -180,7 +180,7 @@ Customize rendering for ONE specific property:
 Apply custom rendering to ALL properties of an entity:
 
 ```twig
-{# templates/bundles/FrdAdminBundle/types/App/Entity/User/_preview.html.twig #}
+{# templates/bundles/KachnitelAdminBundle/types/App/Entity/User/_preview.html.twig #}
 {% if value is null %}
     <span class="text-muted">N/A</span>
 {% else %}
@@ -194,7 +194,7 @@ Apply custom rendering to ALL properties of an entity:
 Customize the page that wraps the LiveComponent:
 
 ```twig
-{# templates/bundles/FrdAdminBundle/admin/index_live.html.twig #}
+{# templates/bundles/KachnitelAdminBundle/admin/index_live.html.twig #}
 {% extends 'admin_layout.html.twig' %}
 
 {% block title %}{{ entityShortClass }} Management{% endblock %}
@@ -217,7 +217,7 @@ Customize the page that wraps the LiveComponent:
 **⚠️ Advanced:** Override the entire entity list component:
 
 ```twig
-{# templates/bundles/FrdAdminBundle/components/EntityList.html.twig #}
+{# templates/bundles/KachnitelAdminBundle/components/EntityList.html.twig #}
 {# IMPORTANT: Copy the ENTIRE template from the bundle, then modify #}
 
 <div {{ attributes }}>
@@ -246,7 +246,7 @@ Customize the page that wraps the LiveComponent:
 Change how collections (OneToMany, ManyToMany) are rendered:
 
 ```twig
-{# templates/bundles/FrdAdminBundle/types/_collection.html.twig #}
+{# templates/bundles/KachnitelAdminBundle/types/_collection.html.twig #}
 {% if value is iterable and value is not empty %}
     <div class="badge bg-primary">
         {{ value|length }} items
@@ -269,7 +269,7 @@ Change how collections (OneToMany, ManyToMany) are rendered:
 Custom boolean rendering with icons:
 
 ```twig
-{# templates/bundles/FrdAdminBundle/types/boolean/_preview.html.twig #}
+{# templates/bundles/KachnitelAdminBundle/types/boolean/_preview.html.twig #}
 {% if value is same as(true) %}
     <span class="badge bg-success">
         <span class="material-icons">check_circle</span>
@@ -289,17 +289,17 @@ Custom boolean rendering with icons:
 
 ### ❌ Cannot Use `{% extends %}` in Overrides
 
-When you override a template, Symfony resolves `@FrdAdmin/template.html.twig` to YOUR override. This creates a circular reference:
+When you override a template, Symfony resolves `@KachnitelAdmin/template.html.twig` to YOUR override. This creates a circular reference:
 
 **This WILL NOT work:**
 ```twig
-{# templates/bundles/FrdAdminBundle/admin/index_live.html.twig #}
-{% extends '@FrdAdmin/admin/index_live.html.twig' %}  {# ❌ CIRCULAR REFERENCE! #}
+{# templates/bundles/KachnitelAdminBundle/admin/index_live.html.twig #}
+{% extends '@KachnitelAdmin/admin/index_live.html.twig' %}  {# ❌ CIRCULAR REFERENCE! #}
 ```
 
 **Instead, do this:**
 ```twig
-{# templates/bundles/FrdAdminBundle/admin/index_live.html.twig #}
+{# templates/bundles/KachnitelAdminBundle/admin/index_live.html.twig #}
 {% extends 'layout.html.twig' %}  {# ✅ Extend your app layout #}
 
 {% block content %}
@@ -312,14 +312,14 @@ When you override a template, Symfony resolves `@FrdAdmin/template.html.twig` to
 The GenericAdminController hardcodes the template path, so these DON'T work:
 
 ```
-❌ templates/bundles/FrdAdminBundle/admin/Product/index_live.html.twig
-❌ templates/bundles/FrdAdminBundle/admin/User/index.html.twig
+❌ templates/bundles/KachnitelAdminBundle/admin/Product/index_live.html.twig
+❌ templates/bundles/KachnitelAdminBundle/admin/User/index.html.twig
 ```
 
 **Alternative:** Create a custom controller for entity-specific index pages:
 
 ```php
-use Frd\AdminBundle\Controller\AbstractAdminController;
+use Kachnitel\AdminBundle\Controller\AbstractAdminController;
 
 class ProductController extends AbstractAdminController
 {
@@ -340,18 +340,18 @@ class ProductController extends AbstractAdminController
 Use Symfony's debug command to verify which template is being used:
 
 ```bash
-php bin/console debug:twig @FrdAdmin/types/datetime/_preview.html.twig
+php bin/console debug:twig @KachnitelAdmin/types/datetime/_preview.html.twig
 ```
 
 **Expected output when override exists:**
 ```
 Matched File
 ------------
-templates/bundles/FrdAdminBundle/types/datetime/_preview.html.twig
+templates/bundles/KachnitelAdminBundle/types/datetime/_preview.html.twig
 
 Overridden Files
 ----------------
-vendor/frd/admin-bundle/templates/types/datetime/_preview.html.twig
+vendor/kachnitel/admin-bundle/templates/types/datetime/_preview.html.twig
 ```
 
 ### 2. Clear Cache
@@ -367,7 +367,7 @@ php bin/console cache:clear
 Validate your Twig syntax:
 
 ```bash
-php bin/console lint:twig templates/bundles/FrdAdminBundle/
+php bin/console lint:twig templates/bundles/KachnitelAdminBundle/
 ```
 
 ### 4. Verify Available Variables
@@ -431,5 +431,5 @@ Add debugging output to see what variables are available:
 ## Need Help?
 
 - Check the [CONFIGURATION.md](CONFIGURATION.md) for attribute-based configuration
-- Review bundle templates in `vendor/frd/admin-bundle/templates/`
+- Review bundle templates in `vendor/kachnitel/admin-bundle/templates/`
 - See [Symfony's template documentation](https://symfony.com/doc/current/templates.html)

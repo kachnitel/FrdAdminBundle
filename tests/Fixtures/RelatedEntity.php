@@ -1,6 +1,6 @@
 <?php
 
-namespace Frd\AdminBundle\Tests\Fixtures;
+namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
 

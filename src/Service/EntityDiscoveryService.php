@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Frd\AdminBundle\Service;
+namespace Kachnitel\AdminBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Frd\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\Attribute\Admin;
 
 /**
  * Discovers entities with the #[Admin] attribute.

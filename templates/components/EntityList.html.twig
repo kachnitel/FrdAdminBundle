@@ -56,7 +56,7 @@
                             {#
                              Pass the initial value so it persists on re-renders.
                              #}
-                            <twig:FRD:Admin:ColumnFilter
+                            <twig:K:Admin:ColumnFilter
                                 column="{{ column }}"
                                 value="{{ this.columnFilters[column] ?? '' }}"
                                 type="{{ this.filterMetadata[column].type|default('text') }}"
@@ -76,9 +76,9 @@
                             {% set value = entityData[column] ?? null %}
                             {% set templateName = admin_is_collection(entity, column) ? '_collection.html.twig' : '_preview.html.twig' %}
                             {{ include([
-                                '@FrdAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ column ~ '.html.twig',
-                                '@FrdAdmin/types/' ~ admin_get_property_type(entity, column)|replace({'\\': '/'}) ~ '/' ~ templateName,
-                                '@FrdAdmin/types/' ~ templateName
+                                '@KachnitelAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ column ~ '.html.twig',
+                                '@KachnitelAdmin/types/' ~ admin_get_property_type(entity, column)|replace({'\\': '/'}) ~ '/' ~ templateName,
+                                '@KachnitelAdmin/types/' ~ templateName
                             ], {
                                 entity: entity,
                                 value: value,

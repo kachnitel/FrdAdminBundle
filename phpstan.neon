@@ -10,7 +10,7 @@ parameters:
         # PHPUnit mock method false positives
         - '#Call to an undefined method .+::(method|expects|with|willReturn|willReturnCallback)\(\)#'
         # Test fixtures - properties set by Doctrine, not in tests
-        - '#Property Frd\\AdminBundle\\Tests\\Fixtures\\.+ is never assigned#'
+        - '#Property Kachnitel\\AdminBundle\\Tests\\Fixtures\\.+ is never assigned#'
         # Test fixtures - properties only written by Doctrine
         - '#Property .+ is never read, only written#'
         # Match expression in tests handling various types

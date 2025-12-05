@@ -1,10 +1,10 @@
 <?php
 
-namespace Frd\AdminBundle\Service;
+namespace Kachnitel\AdminBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Frd\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use ReflectionClass;
 use ReflectionProperty;
 

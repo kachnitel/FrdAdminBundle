@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Frd\AdminBundle\Controller;
+namespace Kachnitel\AdminBundle\Controller;
 
-use Frd\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -72,7 +72,7 @@ class GenericAdminController extends AbstractAdminController
             ];
         }, $this->getSupportedEntities());
 
-        return $this->render('@FrdAdmin/admin/dashboard.html.twig', [
+        return $this->render('@KachnitelAdmin/admin/dashboard.html.twig', [
             'entities' => $entities
         ]);
     }
@@ -83,7 +83,7 @@ class GenericAdminController extends AbstractAdminController
     {
         $entityName = $this->resolveEntityName($entitySlug);
 
-        return $this->render('@FrdAdmin/admin/index_live.html.twig', [
+        return $this->render('@KachnitelAdmin/admin/index_live.html.twig', [
             'entityClass' => $this->entityNamespace . $entityName,
             'entityShortClass' => $entityName
         ]);

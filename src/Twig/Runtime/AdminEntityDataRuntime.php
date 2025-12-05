@@ -1,6 +1,6 @@
 <?php
 
-namespace Frd\AdminBundle\Twig\Runtime;
+namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;

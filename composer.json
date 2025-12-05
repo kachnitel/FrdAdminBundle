@@ -1,5 +1,5 @@
 {
-  "name": "frd/admin-bundle",
+  "name": "kachnitel/admin-bundle",
   "description": "Modern Symfony admin bundle powered by LiveComponents for Doctrine entities with extensive customization",
   "type": "symfony-bundle",
   "license": "MIT",
@@ -41,12 +41,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Frd\\AdminBundle\\": "src/"
+      "Kachnitel\\AdminBundle\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Frd\\AdminBundle\\Tests\\": "tests/"
+      "Kachnitel\\AdminBundle\\Tests\\": "tests/"
     }
   },
   "scripts": {

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Frd\AdminBundle\Tests\Unit\Service;
+namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
-use Frd\AdminBundle\Attribute\Admin;
-use Frd\AdminBundle\Service\EntityDiscoveryService;
-use Frd\AdminBundle\Tests\Fixtures\TestEntity;
-use Frd\AdminBundle\Tests\Fixtures\RelatedEntity;
-use Frd\AdminBundle\Tests\Fixtures\ConfiguredEntity;
+use Kachnitel\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\ConfiguredEntity;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -157,7 +157,7 @@ class EntityDiscoveryServiceTest extends TestCase
         // TestEntity exists in the namespace
         $resolvedClass = $this->service->resolveEntityClass(
             'TestEntity',
-            'Frd\\AdminBundle\\Tests\\Fixtures\\'
+            'Kachnitel\\AdminBundle\\Tests\\Fixtures\\'
         );
 
         $this->assertSame(TestEntity::class, $resolvedClass);

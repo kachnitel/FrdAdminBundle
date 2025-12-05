@@ -1,6 +1,6 @@
 <?php
 
-namespace Frd\AdminBundle\DependencyInjection;
+namespace Kachnitel\AdminBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -12,7 +12,7 @@ class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('frd_admin');
+        $treeBuilder = new TreeBuilder('kachnitel_admin');
         $rootNode = $treeBuilder->getRootNode();
 
         $rootNode

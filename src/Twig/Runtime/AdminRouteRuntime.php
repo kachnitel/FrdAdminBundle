@@ -1,10 +1,10 @@
 <?php
 
-namespace Frd\AdminBundle\Twig\Runtime;
+namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\Persistence\Proxy;
-use Frd\AdminBundle\Attribute\AdminRoutes;
-use Frd\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Attribute\AdminRoutes;
+use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Extension\RuntimeExtensionInterface;

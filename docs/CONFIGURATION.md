@@ -15,10 +15,10 @@ This guide covers how to configure entities for the admin bundle using PHP attri
 
 ## Bundle Configuration
 
-Configure the admin bundle in `config/packages/frd_admin.yaml`:
+Configure the admin bundle in `config/packages/kachnitel_admin.yaml`:
 
 ```yaml
-frd_admin:
+kachnitel_admin:
     # Entity and form namespaces
     entity_namespace: 'App\Entity\'      # Default namespace for entities
     form_namespace: 'App\Form\'          # Default namespace for form types
@@ -50,7 +50,7 @@ Specify your application's base layout template. If not set, admin templates use
 
 **Example:**
 ```yaml
-frd_admin:
+kachnitel_admin:
     base_layout: 'layout.html.twig'  # Use your app's layout
 ```
 
@@ -71,7 +71,7 @@ Global required role for accessing the admin. Can be overridden per-entity using
 Add the `#[Admin]` attribute to any Doctrine entity to make it available in the admin:
 
 ```php
-use Frd\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\Attribute\Admin;
 
 #[Admin(label: 'Products', icon: 'inventory')]
 class Product
@@ -89,7 +89,7 @@ That's it! The entity will now:
 
 The `#[Admin]` attribute marks an entity as manageable through the admin interface and provides configuration options.
 
-**Namespace:** `Frd\AdminBundle\Attribute\Admin`
+**Namespace:** `Kachnitel\AdminBundle\Attribute\Admin`
 
 ### Auto-Discovery
 
@@ -253,18 +253,18 @@ Per-action permission requirements. Map of action name to required role.
 - `edit` - Edit entity
 - `delete` - Delete entity
 
-**Fallback:** If no specific permission is set, the global `frd_admin.required_role` is used (default: `ROLE_ADMIN`).
+**Fallback:** If no specific permission is set, the global `kachnitel_admin.required_role` is used (default: `ROLE_ADMIN`).
 
 ## AdminRoutes Attribute
 
 The `#[AdminRoutes]` attribute defines custom routes for CRUD operations.
 
-**Namespace:** `Frd\AdminBundle\Attribute\AdminRoutes`
+**Namespace:** `Kachnitel\AdminBundle\Attribute\AdminRoutes`
 
 ### Basic Usage
 
 ```php
-use Frd\AdminBundle\Attribute\AdminRoutes;
+use Kachnitel\AdminBundle\Attribute\AdminRoutes;
 
 #[AdminRoutes([
     'index' => 'app_product_index',
@@ -307,10 +307,10 @@ The bundle provides automatic filtering based on Doctrine property types. You ca
 
 ### ColumnFilter Attribute
 
-**Namespace:** `Frd\AdminBundle\Attribute\ColumnFilter`
+**Namespace:** `Kachnitel\AdminBundle\Attribute\ColumnFilter`
 
 ```php
-use Frd\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 
 class Product
 {
@@ -369,7 +369,7 @@ class Article
    - Defined in `#[Admin(permissions: [...])]`
 
 2. **Global admin role** (fallback)
-   - Defined in `frd_admin.required_role` (default: `ROLE_ADMIN`)
+   - Defined in `kachnitel_admin.required_role` (default: `ROLE_ADMIN`)
 
 ### Example: Read-Only Entity
 
@@ -393,9 +393,9 @@ class AuditLog
 ### E-Commerce Product
 
 ```php
-use Frd\AdminBundle\Attribute\Admin;
-use Frd\AdminBundle\Attribute\AdminRoutes;
-use Frd\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\Attribute\AdminRoutes;
+use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 
 #[ORM\Entity]
 #[Admin(
@@ -605,5 +605,5 @@ class ColumnFilter
 ## Need Help?
 
 - See [TEMPLATE_OVERRIDES.md](TEMPLATE_OVERRIDES.md) for customizing appearance
-- Check `vendor/frd/admin-bundle/src/Attribute/` for attribute source code
+- Check `vendor/kachnitel/admin-bundle/src/Attribute/` for attribute source code
 - Review example entities in your application

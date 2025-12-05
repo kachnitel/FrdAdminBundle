@@ -1,6 +1,6 @@
 <?php
 
-namespace Frd\AdminBundle\Service\Filter;
+namespace Kachnitel\AdminBundle\Service\Filter;
 
 use Doctrine\ORM\QueryBuilder;
 

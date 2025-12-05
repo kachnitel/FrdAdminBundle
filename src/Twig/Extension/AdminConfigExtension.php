@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Frd\AdminBundle\Twig\Extension;
+namespace Kachnitel\AdminBundle\Twig\Extension;
 
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
@@ -19,7 +19,7 @@ class AdminConfigExtension extends AbstractExtension implements GlobalsInterface
     public function getGlobals(): array
     {
         return [
-            'frd_admin_base_layout' => $this->baseLayout,
+            'kachnitel_admin_base_layout' => $this->baseLayout,
         ];
     }
 }

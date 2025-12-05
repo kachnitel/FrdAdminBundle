@@ -1,8 +1,8 @@
 <?php
 
-namespace Frd\AdminBundle\Tests\Unit\Attribute;
+namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
-use Frd\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use PHPUnit\Framework\TestCase;
 
 class ColumnFilterTest extends TestCase

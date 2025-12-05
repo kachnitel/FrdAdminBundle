@@ -1,13 +1,13 @@
 <?php
 
-namespace Frd\AdminBundle\Tests\Unit\Service;
+namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Frd\AdminBundle\Attribute\ColumnFilter;
-use Frd\AdminBundle\Service\FilterMetadataProvider;
-use Frd\AdminBundle\Tests\Fixtures\TestEntity;
-use Frd\AdminBundle\Tests\Fixtures\RelatedEntity;
+use Kachnitel\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use PHPUnit\Framework\TestCase;
 
 class FilterMetadataProviderTest extends TestCase

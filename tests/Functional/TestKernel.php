@@ -1,9 +1,9 @@
 <?php
 
-namespace Frd\AdminBundle\Tests\Functional;
+namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use Frd\AdminBundle\FrdAdminBundle;
+use Kachnitel\AdminBundle\KachnitelAdminBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
@@ -36,7 +36,7 @@ class TestKernel extends Kernel
             new StimulusBundle(),
             new WebpackEncoreBundle(),
 
-            new FrdAdminBundle(),
+            new KachnitelAdminBundle(),
         ];
     }
 
@@ -53,8 +53,8 @@ class TestKernel extends Kernel
         $container->loadFromExtension('twig', [
             'default_path' => '%kernel.project_dir%/templates',
             'paths' => [
-                // Register test override templates with FrdAdmin namespace (higher priority)
-                '%kernel.project_dir%/tests/templates/bundles/FrdAdminBundle' => 'FrdAdmin',
+                // Register test override templates with KachnitelAdmin namespace (higher priority)
+                '%kernel.project_dir%/tests/templates/bundles/KachnitelAdminBundle' => 'KachnitelAdmin',
             ],
         ]);
 
@@ -72,11 +72,11 @@ class TestKernel extends Kernel
                 'naming_strategy' => 'doctrine.orm.naming_strategy.underscore_number_aware',
                 'auto_mapping' => true,
                 'mappings' => [
-                    'FrdAdminBundleTests' => [
+                    'KachnitelAdminBundleTests' => [
                         'is_bundle' => false,
                         'type' => 'attribute',
                         'dir' => '%kernel.project_dir%/tests/Fixtures',
-                        'prefix' => 'Frd\\AdminBundle\\Tests\\Fixtures',
+                        'prefix' => 'Kachnitel\\AdminBundle\\Tests\\Fixtures',
                     ],
                 ],
             ],
@@ -98,12 +98,12 @@ class TestKernel extends Kernel
         $container->loadFromExtension('twig_component', [
             'anonymous_template_directory' => 'components/',
             'defaults' => [
-                'Frd\\\\AdminBundle\\\\Twig\\\\Components\\\\' => 'components/',
+                'Kachnitel\\\\AdminBundle\\\\Twig\\\\Components\\\\' => 'components/',
             ],
         ]);
 
-        $container->loadFromExtension('frd_admin', [
-            'entity_namespace' => 'Frd\\AdminBundle\\Tests\\Fixtures\\',
+        $container->loadFromExtension('kachnitel_admin', [
+            'entity_namespace' => 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\',
         ]);
     }
 
@@ -120,11 +120,11 @@ class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir() . '/frd-admin-bundle-test/cache';
+        return sys_get_temp_dir() . '/kachnitel-admin-bundle-test/cache';
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir() . '/frd-admin-bundle-test/logs';
+        return sys_get_temp_dir() . '/kachnitel-admin-bundle-test/logs';
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Frd\AdminBundle\Controller\Trait;
+namespace Kachnitel\AdminBundle\Controller\Trait;
 
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;

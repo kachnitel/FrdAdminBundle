@@ -1,12 +1,12 @@
 <?php
 
-namespace Frd\AdminBundle\Tests\Functional;
+namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
-use Frd\AdminBundle\Tests\Fixtures\RelatedEntity;
-use Frd\AdminBundle\Tests\Fixtures\TagEntity;
-use Frd\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 
@@ -42,7 +42,7 @@ class EntityListLiveComponentTest extends KernelTestCase
     public function testInitialRenderAndState(): void
     {
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList', // The AsLiveComponent name
+            name: 'K:Admin:EntityList', // The AsLiveComponent name
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'] // Required LiveProp
         );
 
@@ -59,7 +59,7 @@ class EntityListLiveComponentTest extends KernelTestCase
     public function testSearchPropUpdatesState(): void
     {
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -78,7 +78,7 @@ class EntityListLiveComponentTest extends KernelTestCase
     public function testLiveActionChangesSortDirection(): void
     {
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'sortBy' => 'name', 'sortDirection' => 'ASC']
         );
 
@@ -114,7 +114,7 @@ class EntityListLiveComponentTest extends KernelTestCase
         $em->clear(); // Clear to ensure proxy loading
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -159,7 +159,7 @@ class EntityListLiveComponentTest extends KernelTestCase
         $em->clear(); // Force Doctrine to use proxies on next access
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -199,7 +199,7 @@ class EntityListLiveComponentTest extends KernelTestCase
         $em->clear(); // Clear to ensure proxy loading
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -233,7 +233,7 @@ class EntityListLiveComponentTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -264,7 +264,7 @@ class EntityListLiveComponentTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'page' => 1]
         );
 
@@ -295,7 +295,7 @@ class EntityListLiveComponentTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'itemsPerPage' => 5]
         );
 
@@ -324,7 +324,7 @@ class EntityListLiveComponentTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: [
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
@@ -352,7 +352,7 @@ class EntityListLiveComponentTest extends KernelTestCase
     public function testPaginationWithEmptyResults(): void
     {
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -377,7 +377,7 @@ class EntityListLiveComponentTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -404,7 +404,7 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         // Try to access page 999
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'page' => 999]
         );
 
@@ -430,7 +430,7 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         // Initialize component with search parameter
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: [
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
@@ -466,7 +466,7 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         // Initialize component with sort parameters
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: [
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
@@ -501,7 +501,7 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         // Initialize component with pagination parameters
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: [
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
@@ -536,7 +536,7 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         // Initialize component with column filter
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: [
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
@@ -573,7 +573,7 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         // Initialize with multiple URL params at once
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: [
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',

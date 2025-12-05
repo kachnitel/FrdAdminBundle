@@ -5,48 +5,48 @@ services:
         public: false
 
     # Make controllers public
-    Frd\AdminBundle\Controller\:
+    Kachnitel\AdminBundle\Controller\:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
 
     # Services
-    Frd\AdminBundle\Service\:
+    Kachnitel\AdminBundle\Service\:
         resource: '../src/Service'
 
     # Twig Extensions
-    Frd\AdminBundle\Twig\Extension\:
+    Kachnitel\AdminBundle\Twig\Extension\:
         resource: '../src/Twig/Extension'
         exclude: '../src/Twig/Extension/AdminConfigExtension.php'
         tags: ['twig.extension']
 
     # Admin config extension (provides Twig globals)
-    Frd\AdminBundle\Twig\Extension\AdminConfigExtension:
+    Kachnitel\AdminBundle\Twig\Extension\AdminConfigExtension:
         arguments:
-            $baseLayout: '%frd_admin.base_layout%'
+            $baseLayout: '%kachnitel_admin.base_layout%'
         tags: ['twig.extension']
 
     # Twig Runtimes
-    Frd\AdminBundle\Twig\Runtime\:
+    Kachnitel\AdminBundle\Twig\Runtime\:
         resource: '../src/Twig/Runtime'
         tags: ['twig.runtime']
 
     # LiveComponents
-    Frd\AdminBundle\Twig\Components\:
+    Kachnitel\AdminBundle\Twig\Components\:
         resource: '../src/Twig/Components'
         tags: ['twig.component']
 
     # EntityList component with pagination config and entity discovery
-    Frd\AdminBundle\Twig\Components\EntityList:
+    Kachnitel\AdminBundle\Twig\Components\EntityList:
         arguments:
-            $entityDiscovery: '@Frd\AdminBundle\Service\EntityDiscoveryService'
-            $defaultItemsPerPage: '%frd_admin.pagination.default_items_per_page%'
-            $allowedItemsPerPage: '%frd_admin.pagination.allowed_items_per_page%'
+            $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
+            $defaultItemsPerPage: '%kachnitel_admin.pagination.default_items_per_page%'
+            $allowedItemsPerPage: '%kachnitel_admin.pagination.allowed_items_per_page%'
 
     # Generic Admin Controller (auto-discovers entities via #[Admin] attribute)
-    Frd\AdminBundle\Controller\GenericAdminController:
+    Kachnitel\AdminBundle\Controller\GenericAdminController:
         arguments:
-            $entityDiscovery: '@Frd\AdminBundle\Service\EntityDiscoveryService'
-            $routePrefix: '%frd_admin.route_prefix%'
-            $dashboardRoute: '%frd_admin.dashboard_route%'
-            $entityNamespace: '%frd_admin.entity_namespace%'
+            $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
+            $routePrefix: '%kachnitel_admin.route_prefix%'
+            $dashboardRoute: '%kachnitel_admin.dashboard_route%'
+            $entityNamespace: '%kachnitel_admin.entity_namespace%'
         tags: ['controller.service_arguments']

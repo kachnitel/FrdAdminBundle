@@ -1,11 +1,11 @@
 <?php
 
-namespace Frd\AdminBundle\Tests\Unit\Twig\Runtime;
+namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
-use Frd\AdminBundle\Attribute\AdminRoutes;
-use Frd\AdminBundle\Service\AttributeHelper;
-use Frd\AdminBundle\Tests\Fixtures\TestEntity;
-use Frd\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use Kachnitel\AdminBundle\Attribute\AdminRoutes;
+use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;

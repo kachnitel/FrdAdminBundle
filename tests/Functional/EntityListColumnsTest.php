@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Frd\AdminBundle\Tests\Functional;
+namespace Kachnitel\AdminBundle\Tests\Functional;
 
-use Frd\AdminBundle\Tests\Fixtures\ConfiguredEntity;
-use Frd\AdminBundle\Tests\Fixtures\TestEntity;
-use Frd\AdminBundle\Twig\Components\EntityList;
+use Kachnitel\AdminBundle\Tests\Fixtures\ConfiguredEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 

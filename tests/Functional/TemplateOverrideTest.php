@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Frd\AdminBundle\Tests\Functional;
+namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
-use Frd\AdminBundle\Tests\Fixtures\RelatedEntity;
-use Frd\AdminBundle\Tests\Fixtures\TagEntity;
-use Frd\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 
 /**
  * Tests that application-level template overrides work correctly.
  *
- * This test suite verifies that templates in tests/templates/bundles/FrdAdminBundle/
+ * This test suite verifies that templates in tests/templates/bundles/KachnitelAdminBundle/
  * properly override the bundle's default templates, following Symfony's standard
  * template override mechanism.
  */
@@ -56,7 +56,7 @@ class TemplateOverrideTest extends KernelTestCase
     public function testBundleDefaultsWorkWithoutOverrides(): void
     {
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -87,7 +87,7 @@ class TemplateOverrideTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -123,7 +123,7 @@ class TemplateOverrideTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -163,7 +163,7 @@ class TemplateOverrideTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -196,7 +196,7 @@ class TemplateOverrideTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -251,7 +251,7 @@ class TemplateOverrideTest extends KernelTestCase
         $em->clear(); // Force proxy loading
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -276,7 +276,7 @@ class TemplateOverrideTest extends KernelTestCase
      * Test that entity-specific property overrides have highest priority.
      *
      * The fallback chain should be:
-     * 1. Entity-specific property: types/Frd/AdminBundle/Tests/Fixtures/TestEntity/name.html.twig
+     * 1. Entity-specific property: types/Kachnitel/AdminBundle/Tests/Fixtures/TestEntity/name.html.twig
      * 2. Type-specific: types/string/_preview.html.twig
      * 3. Default: types/_preview.html.twig
      */
@@ -293,7 +293,7 @@ class TemplateOverrideTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 
@@ -331,7 +331,7 @@ class TemplateOverrideTest extends KernelTestCase
         $em->flush();
 
         $testComponent = $this->createLiveComponent(
-            name: 'FRD:Admin:EntityList',
+            name: 'K:Admin:EntityList',
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
         );
 

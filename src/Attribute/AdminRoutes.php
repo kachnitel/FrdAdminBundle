@@ -1,6 +1,6 @@
 <?php
 
-namespace Frd\AdminBundle\Attribute;
+namespace Kachnitel\AdminBundle\Attribute;
 
 use Attribute;
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Frd\AdminBundle\Tests\Fixtures;
+namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
-use Frd\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\Attribute\Admin;
 
 /**
  * Entity with comprehensive Admin attribute configuration for testing.

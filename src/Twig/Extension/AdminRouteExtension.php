@@ -1,8 +1,8 @@
 <?php
 
-namespace Frd\AdminBundle\Twig\Extension;
+namespace Kachnitel\AdminBundle\Twig\Extension;
 
-use Frd\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;

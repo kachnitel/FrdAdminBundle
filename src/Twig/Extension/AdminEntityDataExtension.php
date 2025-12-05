@@ -1,8 +1,8 @@
 <?php
 
-namespace Frd\AdminBundle\Twig\Extension;
+namespace Kachnitel\AdminBundle\Twig\Extension;
 
-use Frd\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
+use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 

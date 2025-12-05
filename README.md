@@ -1,8 +1,8 @@
-# FRD Admin Bundle
+# Kachnitel Admin Bundle
 
 <!-- BADGES -->
 ![Tests](<https://img.shields.io/badge/tests-79%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-48%25-red>)
+![Coverage](<https://img.shields.io/badge/coverage-39%25-red>)
 ![Assertions](<https://img.shields.io/badge/assertions-282-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-level 6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP->=8.2-777BB4?logo=php&logoColor=white>)
@@ -29,7 +29,7 @@ Modern Symfony admin bundle powered by LiveComponents for managing Doctrine enti
 ## Installation
 
 ```bash
-composer require frd/admin-bundle
+composer require kachnitel/admin-bundle
 ```
 
 Enable the bundle in `config/bundles.php`:
@@ -37,7 +37,7 @@ Enable the bundle in `config/bundles.php`:
 ```php
 return [
     // ...
-    Frd\AdminBundle\FrdAdminBundle::class => ['all' => true],
+    Kachnitel\AdminBundle\KachnitelAdminBundle::class => ['all' => true],
 ];
 ```
 
@@ -45,10 +45,10 @@ return [
 
 ### 1. Configure the Bundle
 
-Create `config/packages/frd_admin.yaml`:
+Create `config/packages/kachnitel_admin.yaml`:
 
 ```yaml
-frd_admin:
+kachnitel_admin:
     entity_namespace: 'App\Entity\'
     form_namespace: 'App\Form\'
     route_prefix: 'admin'
@@ -60,8 +60,8 @@ frd_admin:
 In `config/routes.yaml`:
 
 ```yaml
-frd_admin:
-    resource: '@FrdAdminBundle/config/routes.yaml'
+kachnitel_admin:
+    resource: '@KachnitelAdminBundle/config/routes.yaml'
     prefix: /admin
 ```
 
@@ -70,7 +70,7 @@ frd_admin:
 Add the `#[Admin]` attribute to any Doctrine entity:
 
 ```php
-use Frd\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\Attribute\Admin;
 
 #[Admin(label: 'Products', icon: 'inventory')]
 class Product

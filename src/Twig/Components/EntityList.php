@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Frd\AdminBundle\Twig\Components;
+namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use Frd\AdminBundle\Attribute\ColumnFilter;
-use Frd\AdminBundle\Service\FilterMetadataProvider;
-use Frd\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
@@ -20,7 +20,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveArg;
 /**
  * LiveComponent for reactive entity lists with per-column search/filter, sorting, and pagination.
  */
-#[AsLiveComponent('FRD:Admin:EntityList', template: '@FrdAdmin/components/EntityList.html.twig')]
+#[AsLiveComponent('K:Admin:EntityList', template: '@KachnitelAdmin/components/EntityList.html.twig')]
 class EntityList
 {
     public const SORT_ASC = 'ASC';

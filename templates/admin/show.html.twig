@@ -6,14 +6,14 @@
  # @var string entityClass - Full class name of the entity
  # @var array breadcrumbs - Breadcrumb navigation array
  #}
-{% extends frd_admin_base_layout ?: '@FrdAdmin/admin/base.html.twig' %}
+{% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
 {% block headerTitle %}
   {{ entity.name|default(entity.label|default('#' ~ entity.id)) }}
 {% endblock %}
 
 {% block headerButtons %}
-  {{ include('@FrdAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
+  {{ include('@KachnitelAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
 
   {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
     <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-primary">
@@ -31,9 +31,9 @@
           <td>
             {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
             {{ include([
-              '@FrdAdmin/types/' ~ entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
-              '@FrdAdmin/types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
-              '@FrdAdmin/types/' ~ templateName
+              '@KachnitelAdmin/types/' ~ entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
+              '@KachnitelAdmin/types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
+              '@KachnitelAdmin/types/' ~ templateName
             ], {
               entity: entity,
               value: value,

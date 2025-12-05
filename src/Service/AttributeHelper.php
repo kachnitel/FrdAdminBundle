@@ -1,6 +1,6 @@
 <?php
 
-namespace Frd\AdminBundle\Service;
+namespace Kachnitel\AdminBundle\Service;
 
 use Doctrine\Persistence\Proxy;
 

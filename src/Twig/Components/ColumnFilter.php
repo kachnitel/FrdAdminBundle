@@ -1,13 +1,13 @@
 <?php
 
-namespace Frd\AdminBundle\Twig\Components;
+namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\LiveComponent\ComponentToolsTrait;
 
-#[AsLiveComponent('FRD:Admin:ColumnFilter', template: '@FrdAdmin/components/ColumnFilter.html.twig')]
+#[AsLiveComponent('K:Admin:ColumnFilter', template: '@KachnitelAdmin/components/ColumnFilter.html.twig')]
 class ColumnFilter
 {
     use DefaultActionTrait;

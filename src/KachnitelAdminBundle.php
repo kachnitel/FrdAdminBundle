@@ -1,13 +1,13 @@
 <?php
 
-namespace Frd\AdminBundle;
+namespace Kachnitel\AdminBundle;
 
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
-class FrdAdminBundle extends AbstractBundle
+class KachnitelAdminBundle extends AbstractBundle
 {
     public function configure(DefinitionConfigurator $definition): void
     {
@@ -73,16 +73,16 @@ class FrdAdminBundle extends AbstractBundle
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         // Store configuration as parameters
-        $builder->setParameter('frd_admin.entity_namespace', $config['entity_namespace']);
-        $builder->setParameter('frd_admin.form_namespace', $config['form_namespace']);
-        $builder->setParameter('frd_admin.form_suffix', $config['form_suffix']);
-        $builder->setParameter('frd_admin.route_prefix', $config['route_prefix']);
-        $builder->setParameter('frd_admin.dashboard_route', $config['dashboard_route']);
-        $builder->setParameter('frd_admin.required_role', $config['required_role']);
-        $builder->setParameter('frd_admin.base_layout', $config['base_layout']);
-        $builder->setParameter('frd_admin.enable_generic_controller', $config['enable_generic_controller']);
-        $builder->setParameter('frd_admin.pagination.default_items_per_page', $config['pagination']['default_items_per_page']);
-        $builder->setParameter('frd_admin.pagination.allowed_items_per_page', $config['pagination']['allowed_items_per_page']);
+        $builder->setParameter('kachnitel_admin.entity_namespace', $config['entity_namespace']);
+        $builder->setParameter('kachnitel_admin.form_namespace', $config['form_namespace']);
+        $builder->setParameter('kachnitel_admin.form_suffix', $config['form_suffix']);
+        $builder->setParameter('kachnitel_admin.route_prefix', $config['route_prefix']);
+        $builder->setParameter('kachnitel_admin.dashboard_route', $config['dashboard_route']);
+        $builder->setParameter('kachnitel_admin.required_role', $config['required_role']);
+        $builder->setParameter('kachnitel_admin.base_layout', $config['base_layout']);
+        $builder->setParameter('kachnitel_admin.enable_generic_controller', $config['enable_generic_controller']);
+        $builder->setParameter('kachnitel_admin.pagination.default_items_per_page', $config['pagination']['default_items_per_page']);
+        $builder->setParameter('kachnitel_admin.pagination.allowed_items_per_page', $config['pagination']['allowed_items_per_page']);
 
         // Load services
         $container->import('../config/services.yaml');
@@ -91,12 +91,12 @@ class FrdAdminBundle extends AbstractBundle
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         // Don't manually register the Twig path - AbstractBundle does this automatically
-        // and allows proper template overriding via templates/bundles/FrdAdminBundle/
+        // and allows proper template overriding via templates/bundles/KachnitelAdminBundle/
 
         // Register LiveComponent namespace
         $container->extension('twig_component', [
             'defaults' => [
-                'Frd\\AdminBundle\\Twig\\Components\\' => 'components/',
+                'Kachnitel\\AdminBundle\\Twig\\Components\\' => 'components/',
             ],
         ]);
     }

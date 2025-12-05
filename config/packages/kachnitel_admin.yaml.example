@@ -1,6 +1,6 @@
-# FRD Admin Bundle Configuration
+# Kachnitel Admin Bundle Configuration
 
-frd_admin:
+kachnitel_admin:
     # Base namespace for entities (default: 'App\Entity\')
     entity_namespace: 'App\Entity\'
 

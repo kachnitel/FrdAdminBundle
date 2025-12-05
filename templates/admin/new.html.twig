@@ -5,14 +5,14 @@
  # @var FormView form - The form view
  # @var array breadcrumbs - Breadcrumb navigation array
  #}
-{% extends frd_admin_base_layout ?: '@FrdAdmin/admin/base.html.twig' %}
+{% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
 {% block headerTitle %}New{% endblock %}
 
 {% block headerButtons %}
-  {{ include('@FrdAdmin/admin/_save_button.html.twig', {}, ignore_missing = true) }}
+  {{ include('@KachnitelAdmin/admin/_save_button.html.twig', {}, ignore_missing = true) }}
 {% endblock %}
 
 {% block content %}
-  {{ include('@FrdAdmin/admin/_form.html.twig') }}
+  {{ include('@KachnitelAdmin/admin/_form.html.twig') }}
 {% endblock %}
