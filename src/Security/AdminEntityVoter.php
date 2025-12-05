@@ -8,6 +8,7 @@ use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -19,6 +20,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * Permission resolution order:
  * 1. Entity-specific permission from #[Admin(permissions: ['action' => 'ROLE_X'])]
  * 2. Global required_role configuration (default: 'ROLE_ADMIN')
+ * 3. If required_role is null/false, grants access (authentication disabled)
  *
  * Usage in controllers:
  *   #[IsGranted('ADMIN_INDEX', subject: 'entityName')]
@@ -47,8 +49,9 @@ class AdminEntityVoter extends Voter
 
     public function __construct(
         private readonly EntityDiscoveryService $entityDiscovery,
-        private readonly string $defaultRequiredRole,
+        private readonly ?string $defaultRequiredRole,
         private readonly string $entityNamespace = 'App\\Entity\\',
+        private readonly ?RoleHierarchyInterface $roleHierarchy = null,
     ) {}
 
     protected function supports(string $attribute, mixed $subject): bool
@@ -70,18 +73,23 @@ class AdminEntityVoter extends Voter
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
+        // Get the action name from our map
+        $action = self::ACTION_MAP[$attribute];
+
+        // Resolve required role for this entity and action
+        $requiredRole = $this->getRequiredRole($subject, $action);
+
+        // If no role is required (null), grant access (authentication disabled)
+        if ($requiredRole === null) {
+            return true;
+        }
+
         $user = $token->getUser();
 
         // User must be logged in
         if (!$user instanceof UserInterface) {
             return false;
         }
-
-        // Get the action name from our map
-        $action = self::ACTION_MAP[$attribute];
-
-        // Resolve required role for this entity and action
-        $requiredRole = $this->getRequiredRole($subject, $action);
 
         // Check if user has the required role
         return $this->hasRole($token, $requiredRole);
@@ -92,9 +100,9 @@ class AdminEntityVoter extends Voter
      *
      * @param string $entityName Entity short name (e.g., 'Product')
      * @param string $action Action name ('index', 'show', 'new', 'edit', 'delete')
-     * @return string Required role (e.g., 'ROLE_ADMIN')
+     * @return string|null Required role (e.g., 'ROLE_ADMIN') or null if authentication disabled
      */
-    private function getRequiredRole(string $entityName, string $action): string
+    private function getRequiredRole(string $entityName, string $action): ?string
     {
         // Resolve full entity class name
         $entityClass = $this->entityDiscovery->resolveEntityClass($entityName, $this->entityNamespace);
@@ -124,10 +132,18 @@ class AdminEntityVoter extends Voter
     }
 
     /**
-     * Check if token has the specified role.
+     * Check if user has the specified role.
+     * Uses RoleHierarchy if available to support role inheritance (e.g., ROLE_ADMIN includes ROLE_USER).
      */
     private function hasRole(TokenInterface $token, string $role): bool
     {
+        // If role hierarchy is available, use it to get all reachable roles
+        if ($this->roleHierarchy !== null) {
+            $reachableRoles = $this->roleHierarchy->getReachableRoleNames($token->getRoleNames());
+            return in_array($role, $reachableRoles, true);
+        }
+
+        // Fall back to simple string comparison (no hierarchy support)
         foreach ($token->getRoleNames() as $tokenRole) {
             if ($tokenRole === $role) {
                 return true;
