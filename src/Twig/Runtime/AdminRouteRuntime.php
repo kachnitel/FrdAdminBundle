@@ -35,7 +35,19 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             ));
         }
 
-        // Auto-fill id parameter if object has getId() method
+        // Auto-fill route parameters
+        $parameters = $this->autoFillIdParameter($object, $route, $parameters);
+        $parameters = $this->autoFillClassParameter($object, $route, $parameters);
+        $parameters = $this->autoFillEntitySlugParameter($object, $route, $parameters);
+
+        return $this->router->generate($route, $parameters);
+    }
+
+    /**
+     * Auto-fill id parameter if object has getId() method.
+     */
+    private function autoFillIdParameter(object|string $object, string $route, array $parameters): array
+    {
         if (
             empty($parameters['id'])
             && is_object($object)
@@ -45,13 +57,27 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             $parameters['id'] = $object->getId();
         }
 
-        // Auto-fill class parameter if route needs it
+        return $parameters;
+    }
+
+    /**
+     * Auto-fill class parameter if route needs it.
+     */
+    private function autoFillClassParameter(object|string $object, string $route, array $parameters): array
+    {
         if (empty($parameters['class']) && $this->routeHasParameter($route, 'class')) {
             $class = is_object($object) ? $this->getRealClass($object) : $object;
             $parameters['class'] = (new \ReflectionClass($class))->getShortName();
         }
 
-        // Auto-fill entitySlug parameter if route needs it (for GenericAdminController)
+        return $parameters;
+    }
+
+    /**
+     * Auto-fill entitySlug parameter if route needs it (for GenericAdminController).
+     */
+    private function autoFillEntitySlugParameter(object|string $object, string $route, array $parameters): array
+    {
         if (empty($parameters['entitySlug']) && $this->routeHasParameter($route, 'entitySlug')) {
             $class = is_object($object) ? $this->getRealClass($object) : $object;
             $shortName = (new \ReflectionClass($class))->getShortName();
@@ -59,7 +85,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             $parameters['entitySlug'] = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($shortName)));
         }
 
-        return $this->router->generate($route, $parameters);
+        return $parameters;
     }
 
     /**

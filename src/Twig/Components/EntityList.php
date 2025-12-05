@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\QueryBuilder;
-use Doctrine\ORM\Tools\Pagination\Paginator;
-use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -85,6 +83,7 @@ class EntityList
         private EntityManagerInterface $em,
         private FilterMetadataProvider $filterMetadataProvider,
         private EntityDiscoveryService $entityDiscovery,
+        private EntityListQueryService $queryService,
         private Security $security,
         private int $defaultItemsPerPage = 20,
         private array $allowedItemsPerPage = [10, 20, 50, 100]
@@ -117,65 +116,23 @@ class EntityList
      */
     public function getEntities(): array
     {
-        $qb = $this->buildQuery();
+        $result = $this->queryService->getEntities(
+            $this->entityClass,
+            $this->repositoryMethod,
+            $this->search,
+            $this->columnFilters,
+            $this->getFilterMetadata(),
+            $this->sortBy,
+            $this->sortDirection,
+            $this->page,
+            $this->itemsPerPage
+        );
 
-        // Ensure valid page number
-        $this->page = max(1, $this->page);
+        // Update state from query service
+        $this->totalItems = $result['total'];
+        $this->page = $result['page'];
 
-        // Apply pagination
-        $qb->setFirstResult(($this->page - 1) * $this->itemsPerPage)
-            ->setMaxResults($this->itemsPerPage);
-
-        // Use Doctrine Paginator for efficient counting
-        $paginator = new Paginator($qb, fetchJoinCollection: true);
-
-        // Cache total count
-        $this->totalItems = $paginator->count();
-
-        // Clamp page to valid range
-        $totalPages = $this->getTotalPages();
-        if ($totalPages > 0 && $this->page > $totalPages) {
-            $this->page = $totalPages;
-            // Recalculate with corrected page
-            $qb->setFirstResult(($this->page - 1) * $this->itemsPerPage);
-            $paginator = new Paginator($qb, fetchJoinCollection: true);
-        }
-
-        return iterator_to_array($paginator->getIterator());
-    }
-
-    /**
-     * Build the base query with filters and sorting.
-     */
-    private function buildQuery(): QueryBuilder
-    {
-        /** @var \Doctrine\ORM\EntityRepository<object> $repository */
-        $repository = $this->em->getRepository($this->entityClass);
-
-        // Use custom repository method if specified
-        if ($this->repositoryMethod && method_exists($repository, $this->repositoryMethod)) {
-            $qb = $repository->{$this->repositoryMethod}();
-        } else {
-            $qb = $repository->createQueryBuilder('e');
-        }
-
-        // Apply global search (searches all text fields)
-        if ($this->search) {
-            $this->applyGlobalSearch($qb);
-        }
-
-        // Apply column-specific filters
-        $filterMetadata = $this->getFilterMetadata();
-        foreach ($this->columnFilters as $column => $value) {
-            if (isset($filterMetadata[$column]) && $value !== null && $value !== '') {
-                $this->applyColumnFilter($qb, $column, $value, $filterMetadata[$column]);
-            }
-        }
-
-        // Apply sorting
-        $qb->orderBy('e.' . $this->sortBy, $this->sortDirection);
-
-        return $qb;
+        return $result['entities'];
     }
 
     /**
@@ -336,88 +293,5 @@ class EntityList
         }
 
         return $allColumns;
-    }
-
-    /**
-     * Apply global search across all text fields.
-     */
-    private function applyGlobalSearch(QueryBuilder $qb): void
-    {
-        $metadata = $this->em->getClassMetadata($this->entityClass);
-        $searchableFields = [];
-
-        // Search in string fields
-        foreach ($metadata->getFieldNames() as $field) {
-            $type = $metadata->getTypeOfField($field);
-            if (in_array($type, ['string', 'text'])) {
-                $searchableFields[] = $field;
-            }
-        }
-
-        if (empty($searchableFields)) {
-            return;
-        }
-
-        $orX = $qb->expr()->orX();
-        foreach ($searchableFields as $field) {
-            $orX->add($qb->expr()->like('e.' . $field, ':globalSearch'));
-        }
-
-        $qb->andWhere($orX)
-            ->setParameter('globalSearch', '%' . $this->search . '%');
-    }
-
-    /**
-     * Apply a column-specific filter.
-     *
-     * @param array<string, mixed> $metadata
-     */
-    private function applyColumnFilter(QueryBuilder $qb, string $column, mixed $value, array $metadata): void
-    {
-        $type = $metadata['type'];
-        $operator = $metadata['operator'] ?? '=';
-        $paramName = 'filter_' . str_replace('.', '_', $column);
-
-        switch ($type) {
-            case ColumnFilter::TYPE_TEXT:
-                if ($operator === 'LIKE') {
-                    $qb->andWhere($qb->expr()->like('e.' . $column, ':' . $paramName))
-                        ->setParameter($paramName, '%' . $value . '%');
-                } else {
-                    $qb->andWhere('e.' . $column . ' ' . $operator . ' :' . $paramName)
-                        ->setParameter($paramName, $value);
-                }
-                break;
-
-            case ColumnFilter::TYPE_NUMBER:
-            case ColumnFilter::TYPE_BOOLEAN:
-            case ColumnFilter::TYPE_ENUM:
-                $qb->andWhere('e.' . $column . ' ' . $operator . ' :' . $paramName)
-                    ->setParameter($paramName, $value);
-                break;
-
-            case ColumnFilter::TYPE_DATE:
-                // Parse date value
-                $dateValue = $value instanceof \DateTimeInterface ? $value : new \DateTime($value);
-                $qb->andWhere('e.' . $column . ' ' . $operator . ' :' . $paramName)
-                    ->setParameter($paramName, $dateValue);
-                break;
-
-            case ColumnFilter::TYPE_RELATION:
-                // Search in related entity's configured fields
-                $searchFields = $metadata['searchFields'] ?? ['id'];
-                $alias = 'rel_' . $column;
-
-                $qb->leftJoin('e.' . $column, $alias);
-
-                $orX = $qb->expr()->orX();
-                foreach ($searchFields as $field) {
-                    $orX->add($qb->expr()->like($alias . '.' . $field, ':' . $paramName));
-                }
-
-                $qb->andWhere($orX)
-                    ->setParameter($paramName, '%' . $value . '%');
-                break;
-        }
     }
 }

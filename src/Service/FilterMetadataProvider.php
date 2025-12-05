@@ -114,50 +114,102 @@ class FilterMetadataProvider
 
         // Apply attribute overrides
         if ($columnFilter) {
-            $instance = $columnFilter->newInstance();
-            if ($instance->type) {
-                $config['type'] = $instance->type;
-
-                // If manually set to enum, ensure enumClass is set
-                if ($instance->type === ColumnFilter::TYPE_ENUM && !isset($config['enumClass'])) {
-                    $propertyType = $property->getType();
-                    if ($propertyType instanceof \ReflectionNamedType && !$propertyType->isBuiltin()) {
-                        $typeName = $propertyType->getName();
-                        if (enum_exists($typeName)) {
-                            $config['enumClass'] = $typeName;
-                        }
-                    }
-                }
-
-                // If manually set to relation, ensure relation metadata is set
-                if ($instance->type === ColumnFilter::TYPE_RELATION && !isset($config['targetEntity'])) {
-                    // Get relation metadata if this is actually an association
-                    if ($metadata->hasAssociation($propertyName)) {
-                        $targetClass = $metadata->getAssociationTargetClass($propertyName);
-                        $config['targetEntity'] = (new \ReflectionClass($targetClass))->getShortName();
-                        $config['targetClass'] = $targetClass;
-                        if (!empty($instance->searchFields)) {
-                            $config['searchFields'] = $instance->searchFields;
-                        } else {
-                            $config['searchFields'] = ['name', 'id'];
-                        }
-                    }
-                }
-            }
-            if ($instance->operator) {
-                $config['operator'] = $instance->operator;
-            }
-            if ($instance->placeholder) {
-                $config['placeholder'] = $instance->placeholder;
-            }
-            if ($instance->priority !== null) {
-                $config['priority'] = $instance->priority;
-            }
-            if (!empty($instance->searchFields)) {
-                $config['searchFields'] = $instance->searchFields;
-            }
+            $config = $this->applyAttributeOverrides($config, $columnFilter->newInstance(), $property, $metadata, $propertyName);
         }
 
+        return $config;
+    }
+
+    /**
+     * Apply ColumnFilter attribute overrides to the configuration.
+     */
+    private function applyAttributeOverrides(
+        array $config,
+        ColumnFilter $instance,
+        ReflectionProperty $property,
+        ClassMetadata $metadata,
+        string $propertyName
+    ): array {
+        if ($instance->type) {
+            $config['type'] = $instance->type;
+            $config = $this->applyTypeSpecificOverrides($config, $instance, $property, $metadata, $propertyName);
+        }
+
+        if ($instance->operator) {
+            $config['operator'] = $instance->operator;
+        }
+        if ($instance->placeholder) {
+            $config['placeholder'] = $instance->placeholder;
+        }
+        if ($instance->priority !== null) {
+            $config['priority'] = $instance->priority;
+        }
+        if (!empty($instance->searchFields)) {
+            $config['searchFields'] = $instance->searchFields;
+        }
+
+        return $config;
+    }
+
+    /**
+     * Apply type-specific configuration overrides.
+     */
+    private function applyTypeSpecificOverrides(
+        array $config,
+        ColumnFilter $instance,
+        ReflectionProperty $property,
+        ClassMetadata $metadata,
+        string $propertyName
+    ): array {
+        // If manually set to enum, ensure enumClass is set
+        if ($instance->type === ColumnFilter::TYPE_ENUM && !isset($config['enumClass'])) {
+            $config = $this->ensureEnumClassConfig($config, $property);
+        }
+
+        // If manually set to relation, ensure relation metadata is set
+        if ($instance->type === ColumnFilter::TYPE_RELATION && !isset($config['targetEntity'])) {
+            $config = $this->ensureRelationConfig($config, $instance, $metadata, $propertyName);
+        }
+
+        return $config;
+    }
+
+    /**
+     * Ensure enum class configuration is set.
+     */
+    private function ensureEnumClassConfig(array $config, ReflectionProperty $property): array
+    {
+        $propertyType = $property->getType();
+        if ($propertyType instanceof \ReflectionNamedType && !$propertyType->isBuiltin()) {
+            $typeName = $propertyType->getName();
+            if (enum_exists($typeName)) {
+                $config['enumClass'] = $typeName;
+            }
+        }
+        return $config;
+    }
+
+    /**
+     * Ensure relation configuration is set.
+     */
+    private function ensureRelationConfig(
+        array $config,
+        ColumnFilter $instance,
+        ClassMetadata $metadata,
+        string $propertyName
+    ): array {
+        // Get relation metadata if this is actually an association
+        if ($metadata->hasAssociation($propertyName)) {
+            $targetClass = $metadata->getAssociationTargetClass($propertyName);
+            $config['targetEntity'] = (new \ReflectionClass($targetClass))->getShortName();
+            $config['targetClass'] = $targetClass;
+
+            if (!empty($instance->searchFields)) {
+                $config['searchFields'] = $instance->searchFields;
+            } else {
+                $config['searchFields'] = ['name', 'id'];
+            }
+        }
         return $config;
     }
 
