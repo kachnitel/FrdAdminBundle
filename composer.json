@@ -42,7 +42,9 @@
         "symfony/webpack-encore-bundle": "^2.4",
         "symfony/var-exporter": "^7.0",
         "symfony/console": "^7.4",
-        "marcocesarato/php-conventional-changelog": "^1.17"
+        "marcocesarato/php-conventional-changelog": "^1.17",
+        "friendsofphp/php-cs-fixer": "^3.51",
+        "phpmd/phpmd": "^2.12"
     },
     "suggest": {
         "frd/entity-components-bundle": "For attachment, tag, and comment features"
@@ -60,7 +62,8 @@
     "scripts": {
         "test": [
             "@phpstan",
-            "@phpunit"
+            "@phpunit",
+            "@phpmd"
         ],
         "phpstan": "phpstan analyse --memory-limit=1G",
         "phpunit": "phpunit",
@@ -68,6 +71,10 @@
             "@php -dxdebug.mode=debug -dxdebug.start_with_request=yes -dxdebug.client_port=${XDEBUG_PORT:-9003} ./vendor/bin/phpunit --colors=always"
         ],
         "coverage": "XDEBUG_MODE=coverage phpunit --coverage-text --coverage-html=.coverage",
+        "phpmd": "vendor/bin/phpmd . ansi ./phpmd.ruleset.xml --exclude 'tests/*,vendor/*,var/*,.phpstan/*,.coverage/*'",
+        "phpmd:text": "vendor/bin/phpmd . text ./phpmd.ruleset.xml --exclude 'tests/*,vendor/*,var/*,.phpstan/*,.coverage/*'",
+        "phpcs": "vendor/bin/php-cs-fixer fix --dry-run --diff src",
+        "phpcs:fix": "vendor/bin/php-cs-fixer fix src",
         "metrics": ".metrics/update-metrics.sh",
         "install-hooks": ".githooks/install-hooks.sh",
         "release": ".scripts/release.sh"

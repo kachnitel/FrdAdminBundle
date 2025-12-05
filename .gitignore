@@ -11,6 +11,9 @@ composer.lock
 # PHPStan
 .phpstan/
 
+# PHP CS Fixer
+.php-cs-fixer.cache
+
 # Code coverage
 /.coverage/
 
