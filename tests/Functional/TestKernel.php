@@ -48,6 +48,9 @@ class TestKernel extends Kernel
             'router' => ['utf8' => true],
             'http_method_override' => false,
             'assets' => ['enabled' => true],
+            'session' => [
+                'storage_factory_id' => 'session.storage.factory.mock_file',
+            ],
         ]);
 
         $container->loadFromExtension('twig', [
@@ -87,11 +90,27 @@ class TestKernel extends Kernel
                 'Symfony\\Component\\Security\\Core\\User\\PasswordAuthenticatedUserInterface' => 'plaintext',
             ],
             'providers' => [
-                'test' => ['memory' => null],
+                'test' => [
+                    'memory' => [
+                        'users' => [
+                            'admin' => ['password' => 'admin', 'roles' => ['ROLE_ADMIN']],
+                            'user' => ['password' => 'user', 'roles' => ['ROLE_USER']],
+                            'editor' => ['password' => 'editor', 'roles' => ['ROLE_EDITOR']],
+                            'test_viewer' => ['password' => 'test', 'roles' => ['ROLE_TEST_VIEW']],
+                            'test_editor' => ['password' => 'test', 'roles' => ['ROLE_TEST_EDIT']],
+                        ],
+                    ],
+                ],
             ],
             'firewalls' => [
                 'dev' => ['pattern' => '^/(_(profiler|wdt)|css|images|js)/', 'security' => false],
-                'main' => ['lazy' => true],
+                'main' => [
+                    'lazy' => true,
+                    'provider' => 'test',
+                ],
+            ],
+            'access_control' => [
+                // Allow all in test environment by default
             ],
         ]);
 

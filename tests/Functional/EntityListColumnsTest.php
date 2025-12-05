@@ -7,25 +7,12 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\ConfiguredEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 
 /**
  * Tests that the columns configuration from #[Admin] attribute is respected.
  */
-class EntityListColumnsTest extends KernelTestCase
+class EntityListColumnsTest extends ComponentTestCase
 {
-    use InteractsWithLiveComponents;
-
-    protected static function getKernelClass(): string
-    {
-        return TestKernel::class;
-    }
-
-    protected function setUp(): void
-    {
-        self::bootKernel();
-    }
 
     public function testColumnsFromAdminAttributeAreUsed(): void
     {
@@ -35,7 +22,7 @@ class EntityListColumnsTest extends KernelTestCase
             data: [
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
-            ]
+            ],
         );
 
         $columns = $testComponent->component()->getColumns();
@@ -58,7 +45,7 @@ class EntityListColumnsTest extends KernelTestCase
             data: [
                 'entityClass' => ConfiguredEntity::class,
                 'entityShortClass' => 'ConfiguredEntity',
-            ]
+            ],
         );
 
         $columns = $testComponent->component()->getColumns();
@@ -79,7 +66,7 @@ class EntityListColumnsTest extends KernelTestCase
             data: [
                 'entityClass' => ConfiguredEntity::class,
                 'entityShortClass' => 'ConfiguredEntity',
-            ]
+            ],
         );
 
         $columns = $testComponent->component()->getColumns();
@@ -102,7 +89,7 @@ class EntityListColumnsTest extends KernelTestCase
             data: [
                 'entityClass' => ConfiguredEntity::class,
                 'entityShortClass' => 'ConfiguredEntity',
-            ]
+            ],
         );
 
         $columns = $testComponent->component()->getColumns();
@@ -120,7 +107,7 @@ class EntityListColumnsTest extends KernelTestCase
             data: [
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
-            ]
+            ],
         );
 
         $rendered = (string) $testComponent->render();
@@ -161,7 +148,7 @@ class EntityListColumnsTest extends KernelTestCase
             data: [
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
-            ]
+            ],
         );
 
         $rendered = (string) $testComponent->render();

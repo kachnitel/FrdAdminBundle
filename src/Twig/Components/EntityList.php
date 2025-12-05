@@ -8,17 +8,28 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
+use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 
 /**
  * LiveComponent for reactive entity lists with per-column search/filter, sorting, and pagination.
+ *
+ * Security: Requires ADMIN_INDEX permission for the entity being displayed.
+ * Permission is checked using AdminEntityVoter against the entityShortClass in PostHydrate.
+ *
+ * Note: #[IsGranted] cannot be used with subject='entityShortClass' because security
+ * is checked before LiveProps are hydrated. PostHydrate ensures permissions are checked
+ * after the component data is available, for both initial render and all LiveActions.
  */
 #[AsLiveComponent('K:Admin:EntityList', template: '@KachnitelAdmin/components/EntityList.html.twig')]
 class EntityList
@@ -74,10 +85,29 @@ class EntityList
         private EntityManagerInterface $em,
         private FilterMetadataProvider $filterMetadataProvider,
         private EntityDiscoveryService $entityDiscovery,
+        private Security $security,
         private int $defaultItemsPerPage = 20,
         private array $allowedItemsPerPage = [10, 20, 50, 100]
     ) {
         $this->itemsPerPage = $this->defaultItemsPerPage;
+    }
+
+    /**
+     * Check permissions after component hydration.
+     *
+     * This ensures permission is checked for both initial render and all LiveActions,
+     * using the entity-specific permissions from the AdminEntityVoter.
+     */
+    #[PostHydrate]
+    public function checkPermissions(): void
+    {
+        // Check if user has permission to view this entity's index
+        if (!$this->security->isGranted(AdminEntityVoter::ADMIN_INDEX, $this->entityShortClass)) {
+            throw new AccessDeniedException(sprintf(
+                'Access denied to view %s entities.',
+                $this->entityShortClass
+            ));
+        }
     }
 
     /**

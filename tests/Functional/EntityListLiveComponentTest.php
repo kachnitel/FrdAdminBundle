@@ -3,48 +3,19 @@
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Tools\SchemaTool;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 
-class EntityListLiveComponentTest extends KernelTestCase
+class EntityListLiveComponentTest extends ComponentTestCase
 {
-    use InteractsWithLiveComponents;
-
-    protected static function getKernelClass(): string
-    {
-        return TestKernel::class;
-    }
-
-    protected function setUp(): void
-    {
-        static::bootKernel();
-
-        $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
-
-        $metadatas = $em->getMetadataFactory()->getAllMetadata();
-        $schemaTool = new SchemaTool($em);
-
-        try {
-            $schemaTool->dropSchema($metadatas);
-        } catch (\Exception) {
-            // Ignore if tables don't exist yet
-        }
-
-        $schemaTool->createSchema($metadatas);
-    }
 
     public function testInitialRenderAndState(): void
     {
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList', // The AsLiveComponent name
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'] // Required LiveProp
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'], // Required LiveProp
+                    );
 
         $rendered = $testComponent->render();
         $this->assertStringContainsString('<table', $rendered);
@@ -60,8 +31,8 @@ class EntityListLiveComponentTest extends KernelTestCase
     {
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
+            );
 
         $searchQuery = 'Test Search Value';
 
@@ -79,8 +50,8 @@ class EntityListLiveComponentTest extends KernelTestCase
     {
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'sortBy' => 'name', 'sortDirection' => 'ASC']
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'sortBy' => 'name', 'sortDirection' => 'ASC'],
+            );
 
         // Initial check
         $this->assertSame('name', $testComponent->component()->sortBy);
@@ -115,8 +86,8 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
+            );
 
         // This should not throw "Object could not be converted to string" error
         // The key assertion is that render() completes without throwing an exception
@@ -160,8 +131,8 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
+            );
 
         $rendered = (string) $testComponent->render();
 
@@ -200,8 +171,8 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
+            );
 
         $rendered = (string) $testComponent->render();
 
@@ -234,8 +205,8 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
+            );
 
         $component = $testComponent->component();
         $this->assertSame(1, $component->page);
@@ -265,8 +236,8 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'page' => 1]
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'page' => 1],
+            );
 
         // First page (default sort is ID DESC, so latest entities first)
         $entities = $testComponent->component()->getEntities();
@@ -296,8 +267,8 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'itemsPerPage' => 5]
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'itemsPerPage' => 5],
+            );
 
         $component = $testComponent->component();
         $this->assertSame(5, $component->itemsPerPage);
@@ -330,8 +301,8 @@ class EntityListLiveComponentTest extends KernelTestCase
                 'entityShortClass' => 'TestEntity',
                 'search' => 'Special',
                 'itemsPerPage' => 10
-            ]
-        );
+            ],
+            );
 
         $component = $testComponent->component();
         $entities = $component->getEntities();
@@ -353,8 +324,8 @@ class EntityListLiveComponentTest extends KernelTestCase
     {
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
+            );
 
         $component = $testComponent->component();
         $this->assertSame(0, $component->getTotalItems());
@@ -378,8 +349,8 @@ class EntityListLiveComponentTest extends KernelTestCase
 
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity']
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
+            );
 
         $rendered = (string) $testComponent->render();
 
@@ -405,8 +376,8 @@ class EntityListLiveComponentTest extends KernelTestCase
         // Try to access page 999
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'page' => 999]
-        );
+            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'page' => 999],
+            );
 
         $component = $testComponent->component();
         // Should clamp to valid page
@@ -435,8 +406,8 @@ class EntityListLiveComponentTest extends KernelTestCase
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
                 'search' => 'SearchMe'
-            ]
-        );
+            ],
+            );
 
         $component = $testComponent->component();
         $this->assertSame('SearchMe', $component->search);
@@ -472,8 +443,8 @@ class EntityListLiveComponentTest extends KernelTestCase
                 'entityShortClass' => 'TestEntity',
                 'sortBy' => 'name',
                 'sortDirection' => 'ASC'
-            ]
-        );
+            ],
+            );
 
         $component = $testComponent->component();
         $this->assertSame('name', $component->sortBy);
@@ -507,8 +478,8 @@ class EntityListLiveComponentTest extends KernelTestCase
                 'entityShortClass' => 'TestEntity',
                 'page' => 2,
                 'itemsPerPage' => 10
-            ]
-        );
+            ],
+            );
 
         $component = $testComponent->component();
         $this->assertSame(2, $component->page);
@@ -542,7 +513,7 @@ class EntityListLiveComponentTest extends KernelTestCase
                 'entityShortClass' => 'TestEntity',
                 'columnFilters' => ['name' => 'Alpha']
             ]
-        );
+        , );
 
         $component = $testComponent->component();
         $this->assertArrayHasKey('name', $component->columnFilters);
@@ -582,8 +553,8 @@ class EntityListLiveComponentTest extends KernelTestCase
                 'sortDirection' => 'ASC',
                 'page' => 1,
                 'itemsPerPage' => 5
-            ]
-        );
+            ],
+            );
 
         $component = $testComponent->component();
 

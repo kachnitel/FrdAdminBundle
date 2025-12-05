@@ -49,4 +49,13 @@ services:
             $routePrefix: '%kachnitel_admin.route_prefix%'
             $dashboardRoute: '%kachnitel_admin.dashboard_route%'
             $entityNamespace: '%kachnitel_admin.entity_namespace%'
+            $requiredRole: '%kachnitel_admin.required_role%'
         tags: ['controller.service_arguments']
+
+    # Security Voter for entity admin access control
+    Kachnitel\AdminBundle\Security\AdminEntityVoter:
+        arguments:
+            $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
+            $defaultRequiredRole: '%kachnitel_admin.required_role%'
+            $entityNamespace: '%kachnitel_admin.entity_namespace%'
+        tags: ['security.voter']

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Controller;
 
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * Generic Admin Controller with auto-discovery via #[Admin] attribute.
@@ -21,6 +21,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  *     class Product {}
  *
  * URLs are automatically kebab-cased: /admin/work-station
+ *
+ * Permissions are checked using the AdminEntityVoter which respects:
+ * 1. Entity-specific permissions from #[Admin(permissions: [...])]
+ * 2. Global required_role configuration (fallback)
  */
 class GenericAdminController extends AbstractAdminController
 {
@@ -29,6 +33,7 @@ class GenericAdminController extends AbstractAdminController
         private readonly string $routePrefix = 'app_admin_entity',
         private readonly string $dashboardRoute = 'app_admin_dashboard',
         private readonly string $entityNamespace = 'App\\Entity\\',
+        private readonly string $requiredRole = 'ROLE_ADMIN',
     ) {}
 
     /**
@@ -50,9 +55,11 @@ class GenericAdminController extends AbstractAdminController
      * Dashboard: Lists all supported entities.
      */
     #[Route('/admin', name: 'app_admin_dashboard', methods: ['GET'])]
-    #[IsGranted('ROLE_ADMIN')]
     public function dashboard(): Response
     {
+        // Dashboard uses global required_role (doesn't check entity-specific permissions)
+        $this->denyAccessUnlessGranted($this->requiredRole);
+
         // Convert entities to view data with label and icon from #[Admin] attribute
         $entities = array_map(function($entityName) {
             // Resolve full class name
@@ -78,10 +85,10 @@ class GenericAdminController extends AbstractAdminController
     }
 
     #[Route('/admin/{entitySlug}', name: 'app_admin_entity_index', methods: ['GET'])]
-    #[IsGranted('ROLE_ADMIN')]
     public function index(string $entitySlug): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
+        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_INDEX, $entityName);
 
         return $this->render('@KachnitelAdmin/admin/index_live.html.twig', [
             'entityClass' => $this->entityNamespace . $entityName,
@@ -90,34 +97,38 @@ class GenericAdminController extends AbstractAdminController
     }
 
     #[Route('/admin/{entitySlug}/new', name: 'app_admin_entity_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
     public function new(Request $request, string $entitySlug): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
+        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_NEW, $entityName);
+
         return $this->doNew($entityName, $request);
     }
 
     #[Route('/admin/{entitySlug}/{id}', name: 'app_admin_entity_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    #[IsGranted('ROLE_ADMIN')]
     public function show(string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
+        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_SHOW, $entityName);
+
         return $this->doShow($entityName, $id);
     }
 
     #[Route('/admin/{entitySlug}/{id}/edit', name: 'app_admin_entity_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
     public function edit(Request $request, string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
+        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_EDIT, $entityName);
+
         return $this->doEdit($entityName, $id, $request);
     }
 
     #[Route('/admin/{entitySlug}/{id}', name: 'app_admin_entity_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
     public function delete(Request $request, string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
+        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_DELETE, $entityName);
+
         return $this->doDeleteEntity($entityName, $id, $request);
     }
 
