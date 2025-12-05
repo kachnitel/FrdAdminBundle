@@ -148,7 +148,7 @@ Enable/disable column filtering in the list view.
 #[Admin(enableFilters: false)]  // Disable filtering
 ```
 
-#### enableBatchActions
+#### enableBatchActions (TODO:)
 **Type:** `bool` **Default:** `true`
 
 Enable/disable batch actions (e.g., bulk delete).
@@ -183,7 +183,7 @@ Columns to exclude from display (useful with auto-detection).
 - If `columns` is set, `excludeColumns` is applied to that list
 - If `columns` is `null`, `excludeColumns` removes from auto-detected columns
 
-#### filterableColumns
+#### filterableColumns (TODO:)
 **Type:** `?array<string>` **Default:** `null` (all visible columns)
 
 Specify which columns can be filtered. If `null`, all visible columns are filterable.
