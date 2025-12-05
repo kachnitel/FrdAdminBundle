@@ -6,6 +6,7 @@ use Kachnitel\AdminBundle\Attribute\AdminRoutes;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -14,8 +15,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 class AdminRouteRuntimeTest extends TestCase
 {
-    private RouterInterface $router;
-    private AttributeHelper $attributeHelper;
+    private RouterInterface&MockObject $router;
+    private AttributeHelper&MockObject $attributeHelper;
     private AdminRouteRuntime $runtime;
     private ?AuthorizationCheckerInterface $authChecker = null;
 
