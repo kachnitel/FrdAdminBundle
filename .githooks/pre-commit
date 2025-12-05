@@ -4,8 +4,6 @@
 #
 # To install: .githooks/install-hooks.sh
 
-set -e
-
 # Only update metrics if relevant files changed
 RELEVANT_CHANGES=$(git diff --cached --name-only | grep -E '(src/|tests/|composer\.json|phpunit\.xml)' || true)
 
