@@ -7,7 +7,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.0.1](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.0...v0.0.1) (2025-12-05)
+## [0.0.2](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.1...v0.0.2) (2025-12-05)
+
+### Features
+
+* Allow no-role access if not configured ([d91238](https://https://github.com/kachnitel/FrdAdminBundle/commit/d9123815c23b35520cf8494494e9181dd291d044))
+* Implement security into the component ([b9cc63](https://https://github.com/kachnitel/FrdAdminBundle/commit/b9cc63bf05d29c56f7a0cfc0f4be7f247742264e))
+
+### Bug Fixes
+
+* Pre-commit "set -e" ([89f906](https://https://github.com/kachnitel/FrdAdminBundle/commit/89f906a397b6f97dbd68c6f650165a533d3dbcba))
+
+##### Docs
+
+* Clarify incomplete config features ([f83f11](https://https://github.com/kachnitel/FrdAdminBundle/commit/f83f11ba522b4c255e998d862a7ecd600a7c424a))
+
+##### Test
+
+* Restore exception handlers in tearDown to avoid Risky warning ([2960e9](https://https://github.com/kachnitel/FrdAdminBundle/commit/2960e9fba92ee933e2f51cac701c7035f54848a2))
+
+### Code Refactoring
+
+* Extract EntityListQueryService from EntityList ([1092f9](https://https://github.com/kachnitel/FrdAdminBundle/commit/1092f90a2f32ac9fd2174650bbc1fa0b2ca09108))
+
+### Documentation
+
+* Clean up README ([4c45a6](https://https://github.com/kachnitel/FrdAdminBundle/commit/4c45a665df7c401f97001c2a41b66fa60f993fe4))
+
+
+---
+
+## [0.0.1](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.0...v0.0.1) (2025-12-04)
 
 ### ⚠ BREAKING CHANGES
 
@@ -18,10 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Add automated metrics and badges system ([4267fe](https://https://github.com/kachnitel/FrdAdminBundle/commit/4267fedf49934e97b1e2d22a28a79c7e2022eafa))
 * Add automated release workflow with conventional-changelog ([75426f](https://https://github.com/kachnitel/FrdAdminBundle/commit/75426f27c796864aab7580b8e5498ba18b950ea7))
-
-### Bug Fixes
-
-* Convert .changelog from JSON to PHP format ([f38dcb](https://https://github.com/kachnitel/FrdAdminBundle/commit/f38dcbba8bd44d3a60580057c4d0df37021f18bb))
 
 
 ---

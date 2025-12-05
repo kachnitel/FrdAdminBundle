@@ -44,5 +44,7 @@ abstract class ComponentTestCase extends KernelTestCase
         $schemaTool->dropSchema($metadata);
 
         parent::tearDown();
+
+        restore_exception_handler();
     }
 }

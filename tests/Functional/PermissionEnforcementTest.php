@@ -35,6 +35,13 @@ class PermissionEnforcementTest extends KernelTestCase
         $this->voter = $container->get(AdminEntityVoter::class);
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        restore_exception_handler();
+    }
+
     /**
      * Test that ConfiguredEntity has specific permissions configured.
      *
