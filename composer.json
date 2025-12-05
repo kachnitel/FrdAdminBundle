@@ -1,71 +1,80 @@
 {
-  "name": "kachnitel/admin-bundle",
-  "description": "Modern Symfony admin bundle powered by LiveComponents for Doctrine entities with extensive customization",
-  "type": "symfony-bundle",
-  "license": "MIT",
-  "keywords": ["symfony", "admin", "crud", "doctrine", "live-component", "ux", "bundle"],
-  "authors": [
-    {
-      "name": "Ondrej Vana",
-      "email": "kachnitel@gmail.com"
-    }
-  ],
-  "require": {
-    "php": ">=8.2",
-    "symfony/framework-bundle": "^6.4|^7.0",
-    "symfony/twig-bundle": "^6.4|^7.0",
-    "symfony/form": "^6.4|^7.0",
-    "symfony/security-bundle": "^6.4|^7.0",
-    "symfony/serializer": "^6.4|^7.0",
-    "symfony/ux-live-component": "^2.0",
-    "symfony/ux-twig-component": "^2.0",
-    "doctrine/orm": "^2.0|^3.0",
-    "doctrine/doctrine-bundle": "^2.0",
-    "twig/twig": "^3.0"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^10.0|^11.0",
-    "symfony/browser-kit": "^6.4|^7.0",
-    "symfony/css-selector": "^6.4|^7.0",
-    "phpstan/phpstan": "^2.0",
-    "phpstan/extension-installer": "^1.4",
-    "symfony/yaml": "^8.0",
-    "symfony/stimulus-bundle": "^2.31",
-    "symfony/webpack-encore-bundle": "^2.4",
-    "symfony/var-exporter": "^7.0",
-    "symfony/console": "^7.4",
-    "marcocesarato/php-conventional-changelog": "^1.17"
-  },
-  "suggest": {
-    "frd/entity-components-bundle": "For attachment, tag, and comment features"
-  },
-  "autoload": {
-    "psr-4": {
-      "Kachnitel\\AdminBundle\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Kachnitel\\AdminBundle\\Tests\\": "tests/"
-    }
-  },
-  "scripts": {
-    "test": [
-      "@phpstan",
-      "@phpunit"
+    "name": "kachnitel/admin-bundle",
+    "description": "Modern Symfony admin bundle powered by LiveComponents for Doctrine entities with extensive customization",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "keywords": [
+        "symfony",
+        "admin",
+        "crud",
+        "doctrine",
+        "live-component",
+        "ux",
+        "bundle"
     ],
-    "phpstan": "phpstan analyse --memory-limit=1G",
-    "phpunit": "phpunit",
-    "coverage": "XDEBUG_MODE=coverage phpunit --coverage-text --coverage-html=.coverage",
-    "metrics": ".metrics/update-metrics.sh",
-    "install-hooks": ".githooks/install-hooks.sh",
-    "release": ".scripts/release.sh"
-  },
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "config": {
-    "allow-plugins": {
-      "phpstan/extension-installer": true
-    }
-  }
+    "authors": [
+        {
+            "name": "Ondrej Vana",
+            "email": "kachnitel@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "symfony/framework-bundle": "^6.4|^7.0",
+        "symfony/twig-bundle": "^6.4|^7.0",
+        "symfony/form": "^6.4|^7.0",
+        "symfony/security-bundle": "^6.4|^7.0",
+        "symfony/serializer": "^6.4|^7.0",
+        "symfony/ux-live-component": "^2.0",
+        "symfony/ux-twig-component": "^2.0",
+        "doctrine/orm": "^2.0|^3.0",
+        "doctrine/doctrine-bundle": "^2.0",
+        "twig/twig": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0|^11.0",
+        "symfony/browser-kit": "^6.4|^7.0",
+        "symfony/css-selector": "^6.4|^7.0",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/extension-installer": "^1.4",
+        "symfony/yaml": "^8.0",
+        "symfony/stimulus-bundle": "^2.31",
+        "symfony/webpack-encore-bundle": "^2.4",
+        "symfony/var-exporter": "^7.0",
+        "symfony/console": "^7.4",
+        "marcocesarato/php-conventional-changelog": "^1.17"
+    },
+    "suggest": {
+        "frd/entity-components-bundle": "For attachment, tag, and comment features"
+    },
+    "autoload": {
+        "psr-4": {
+            "Kachnitel\\AdminBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Kachnitel\\AdminBundle\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "@phpstan",
+            "@phpunit"
+        ],
+        "phpstan": "phpstan analyse --memory-limit=1G",
+        "phpunit": "phpunit",
+        "coverage": "XDEBUG_MODE=coverage phpunit --coverage-text --coverage-html=.coverage",
+        "metrics": ".metrics/update-metrics.sh",
+        "install-hooks": ".githooks/install-hooks.sh",
+        "release": ".scripts/release.sh"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
+    },
+    "version": "0.0.1"
 }

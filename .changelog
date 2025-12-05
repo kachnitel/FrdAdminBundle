@@ -1,26 +1,26 @@
-{
-  "headerTitle": "Changelog",
-  "headerDescription": "All notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).",
-  "types": {
-    "feat": "Added",
-    "fix": "Fixed",
-    "perf": "Performance",
-    "refactor": "Changed",
-    "revert": "Removed",
-    "docs": "Documentation",
-    "style": "Style",
-    "test": "Tests",
-    "build": "Build",
-    "ci": "CI/CD",
-    "chore": "Chore"
-  },
-  "hiddenTypes": ["chore", "style", "ci"],
-  "ignorePatterns": ["^WIP", "^wip"],
-  "ignoreTypes": [],
-  "preMajorTags": ["alpha", "beta", "rc"],
-  "postMajorTags": [],
-  "tagPrefix": "v",
-  "commitUrlFormat": "https://github.com/{{owner}}/{{repository}}/commit/{{hash}}",
-  "compareUrlFormat": "https://github.com/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}",
-  "issueUrlFormat": "https://github.com/{{owner}}/{{repository}}/issues/{{id}}"
-}
+<?php
+
+return [
+    'headerTitle' => 'Changelog',
+    'headerDescription' => 'All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).',
+    'preset' => [
+        'feat' => ['label' => 'Added', 'description' => 'New features'],
+        'fix' => ['label' => 'Fixed', 'description' => 'Bug fixes'],
+        'perf' => ['label' => 'Performance', 'description' => 'Performance improvements'],
+        'refactor' => ['label' => 'Changed', 'description' => 'Code changes'],
+        'revert' => ['label' => 'Removed', 'description' => 'Removed features'],
+        'docs' => ['label' => 'Documentation', 'description' => 'Documentation changes'],
+        'test' => ['label' => 'Tests', 'description' => 'Test additions or changes'],
+        'build' => ['label' => 'Build', 'description' => 'Build system changes'],
+    ],
+    'types' => ['feat', 'fix', 'perf', 'refactor', 'docs', 'test', 'build'],
+    'ignoreTypes' => [],
+    'ignorePatterns' => ['/^WIP/', '/^wip/'],
+    'tagPrefix' => 'v',
+    'commitUrlFormat' => 'https://github.com/{{owner}}/{{repository}}/commit/{{hash}}',
+    'compareUrlFormat' => 'https://github.com/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}',
+    'issueUrlFormat' => 'https://github.com/{{owner}}/{{repository}}/issues/{{id}}',
+];
