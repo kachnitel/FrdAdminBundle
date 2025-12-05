@@ -88,6 +88,9 @@ class KachnitelAdminBundle extends AbstractBundle
         $container->import('../config/services.yaml');
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter("builder"))
+     */
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         // Don't manually register the Twig path - AbstractBundle does this automatically

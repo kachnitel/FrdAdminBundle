@@ -2,10 +2,10 @@
 
 <!-- BADGES -->
 ![Tests](<https://img.shields.io/badge/tests-84%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-51%25-red>)
+![Coverage](<https://img.shields.io/badge/coverage-43%25-red>)
 ![Assertions](<https://img.shields.io/badge/assertions-302-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-level 6-brightgreen>)
-![PHP](<https://img.shields.io/badge/PHP-%3E%3D8.2-777BB4?logo=php&logoColor=white>)
+![PHP](<https://img.shields.io/badge/PHP->=8.2-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-6.4|7.0+-000000?logo=symfony&logoColor=white>)
 <!-- BADGES -->
 

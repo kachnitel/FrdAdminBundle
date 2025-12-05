@@ -71,6 +71,9 @@ class AdminEntityVoter extends Voter
         return is_string($subject);
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter("vote"))
+     */
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
         // Get the action name from our map

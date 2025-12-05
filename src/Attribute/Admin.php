@@ -27,6 +27,13 @@ use Attribute;
 class Admin
 {
     /**
+     * Configuration attribute constructor.
+     *
+     * Note: This attribute has 12 parameters because it serves as a comprehensive
+     * configuration object for entity admin panels. Each parameter controls a specific
+     * aspect of the admin interface behavior. Grouping these into sub-objects would
+     * make the attribute API more complex without meaningful benefits.
+     *
      * @param string|null $label Display label for this entity (defaults to class name)
      * @param string|null $icon Material icon name for this entity
      * @param string|null $formType Custom form type class for create/edit forms
@@ -39,6 +46,8 @@ class Admin
      * @param int|null $itemsPerPage Default items per page for this entity (null = use global default)
      * @param string|null $sortBy Default sort column (null = 'id')
      * @param string|null $sortDirection Default sort direction 'ASC' or 'DESC' (null = 'DESC')
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         private ?string $label = null,

@@ -4,7 +4,7 @@ parameters:
         - src
         - tests
     excludePaths:
-        - tests/Functional/TestKernel.php (?)
+        - tests/Functional/TestKernel.php
     tmpDir: .phpstan
     ignoreErrors:
         # PHPUnit mock method false positives
@@ -17,3 +17,5 @@ parameters:
         - '#Match expression does not handle remaining value#'
         # Match arm false positive with constants
         - '#Match arm comparison between .+ and .+ is always true#'
+        # Ignore PHPMD @SuppressWarnings annotation parsing errors
+        - '#PHPDoc tag @SuppressWarnings has invalid value#'
