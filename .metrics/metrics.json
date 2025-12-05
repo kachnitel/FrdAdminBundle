@@ -1,8 +1,8 @@
 {
-    "generated_at": "2025-12-05 20:47:07",
+    "generated_at": "2025-12-05 21:29:11",
     "tests": {
-        "count": 0,
-        "assertions": 0,
+        "count": 84,
+        "assertions": 302,
         "status": "passing"
     },
     "coverage": {
@@ -11,11 +11,11 @@
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {
-        "level": 6,
-        "status": "level 6"
+        "level": 5,
+        "status": "pass"
     },
     "requirements": {
         "php": ">=8.2",
-        "symfony": "6.4|7.0+"
+        "symfony": "^6.4|^7.0"
     }
 }
