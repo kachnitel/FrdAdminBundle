@@ -62,9 +62,9 @@ Admin templates will extend this layout and provide blocks like `title`, `header
 Base namespace for your Doctrine entities. Used when resolving entity short names.
 
 #### required_role
-**Type:** `string` **Default:** `'ROLE_ADMIN'`
+**Type:** `string|false` **Default:** `'ROLE_ADMIN'`
 
-Global required role for accessing the admin. Can be overridden per-entity using the `permissions` option in the `#[Admin]` attribute.
+Global required role for accessing the admin. Can be overridden per-entity using the `permissions` option in the `#[Admin]` attribute. False disables default controller security in `GenericAdminController`.
 
 ## Quick Start
 

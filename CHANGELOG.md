@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.0.3](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.2...v0.0.3) (2025-12-06)
+
+### Features
+
+* Use required_role: false in config to disable GenericAdminController security ([266288](https://https://github.com/kachnitel/FrdAdminBundle/commit/2662881f9ceaa76075e1499c2cdc272de7fe82c9))
+
+### Bug Fixes
+
+
+##### Docs
+
+* PHP Tag in readme ([40bcf0](https://https://github.com/kachnitel/FrdAdminBundle/commit/40bcf0aaaa52e0762bdd539253e33d541877dab0))
+
+
+---
+
 ## [0.0.2](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.1...v0.0.2) (2025-12-05)
 
 ### Features
@@ -21,10 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ##### Docs
 
 * Clarify incomplete config features ([f83f11](https://https://github.com/kachnitel/FrdAdminBundle/commit/f83f11ba522b4c255e998d862a7ecd600a7c424a))
-
-##### Test
-
-* Restore exception handlers in tearDown to avoid Risky warning ([2960e9](https://https://github.com/kachnitel/FrdAdminBundle/commit/2960e9fba92ee933e2f51cac701c7035f54848a2))
 
 ### Code Refactoring
 

@@ -33,7 +33,7 @@ class GenericAdminController extends AbstractAdminController
         private readonly string $routePrefix = 'app_admin_entity',
         private readonly string $dashboardRoute = 'app_admin_dashboard',
         private readonly string $entityNamespace = 'App\\Entity\\',
-        private readonly string $requiredRole = 'ROLE_ADMIN',
+        private readonly string|false $requiredRole = 'ROLE_ADMIN',
     ) {}
 
     /**
@@ -58,7 +58,9 @@ class GenericAdminController extends AbstractAdminController
     public function dashboard(): Response
     {
         // Dashboard uses global required_role (doesn't check entity-specific permissions)
-        $this->denyAccessUnlessGranted($this->requiredRole);
+        if (false !== $this->requiredRole) {
+            $this->denyAccessUnlessGranted($this->requiredRole);
+        }
 
         // Convert entities to view data with label and icon from #[Admin] attribute
         $entities = array_map(function($entityName) {
@@ -88,7 +90,9 @@ class GenericAdminController extends AbstractAdminController
     public function index(string $entitySlug): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_INDEX, $entityName);
+        if (false !== $this->requiredRole) {
+            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_INDEX, $entityName);
+        }
 
         return $this->render('@KachnitelAdmin/admin/index_live.html.twig', [
             'entityClass' => $this->entityNamespace . $entityName,
@@ -100,7 +104,9 @@ class GenericAdminController extends AbstractAdminController
     public function new(Request $request, string $entitySlug): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_NEW, $entityName);
+        if (false !== $this->requiredRole) {
+            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_NEW, $entityName);
+        }
 
         return $this->doNew($entityName, $request);
     }
@@ -109,7 +115,9 @@ class GenericAdminController extends AbstractAdminController
     public function show(string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_SHOW, $entityName);
+        if (false !== $this->requiredRole) {
+            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_SHOW, $entityName);
+        }
 
         return $this->doShow($entityName, $id);
     }
@@ -118,7 +126,9 @@ class GenericAdminController extends AbstractAdminController
     public function edit(Request $request, string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_EDIT, $entityName);
+        if (false !== $this->requiredRole) {
+            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_EDIT, $entityName);
+        }
 
         return $this->doEdit($entityName, $id, $request);
     }
@@ -127,7 +137,9 @@ class GenericAdminController extends AbstractAdminController
     public function delete(Request $request, string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_DELETE, $entityName);
+        if (false !== $this->requiredRole) {
+            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_DELETE, $entityName);
+        }
 
         return $this->doDeleteEntity($entityName, $id, $request);
     }
