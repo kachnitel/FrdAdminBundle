@@ -7,11 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.0.4](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.3...v0.0.4) (2025-12-07)
+## [0.0.5](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.4...v0.0.5) (2025-12-07)
 
 ### Bug Fixes
 
-* Do not show edit btn without a form [#2](https://https://github.com/kachnitel/FrdAdminBundle/issues/2) ([c7d2b3](https://https://github.com/kachnitel/FrdAdminBundle/commit/c7d2b3521cabdbbf33a5becc3b5d2af12edb1aca))
+* Clean up material-icons leftovers in default templates ([d31633](https://https://github.com/kachnitel/FrdAdminBundle/commit/d31633d4c57445e9e6a8e5ca3e6391050157757e))
+
+
+---
+
+## [0.0.4](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.3...v0.0.4) (2025-12-06)
 
 
 ---
