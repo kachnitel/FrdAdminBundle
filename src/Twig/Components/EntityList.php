@@ -10,6 +10,7 @@ use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -85,11 +86,16 @@ class EntityList
         private EntityDiscoveryService $entityDiscovery,
         private EntityListQueryService $queryService,
         private Security $security,
+        private FormRegistryInterface $formRegistry,
+        private string $formNamespace,
+        private string $formSuffix,
         private int $defaultItemsPerPage = 20,
         private array $allowedItemsPerPage = [10, 20, 50, 100]
     ) {
         $this->itemsPerPage = $this->defaultItemsPerPage;
     }
+
+    // --- Security ---
 
     /**
      * Check permissions after component hydration.
@@ -108,6 +114,24 @@ class EntityList
             ));
         }
     }
+
+    /**
+     * Whether to show "edit" button
+     * NOTE: can accept a parameter to decide by column in future release
+     * Test:
+     * - Does user have permission
+     * - Does route exist
+     * - Is route accessible (redundant? verify it's working)
+     * - Does form exist (skip for show)
+     */
+    public function canEdit(): bool
+    {
+        // {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
+        // $this->security->isGranted(AdminEntityVoter::ADMIN_EDIT, $this->entityShortClass)
+        return $this->hasForm();
+    }
+
+    // --- UI ---
 
     /**
      * Get filtered, sorted, and paginated entities.
@@ -293,5 +317,12 @@ class EntityList
         }
 
         return $allColumns;
+    }
+
+    private function hasForm(): bool
+    {
+        $type = $this->entityDiscovery->getAdminAttribute($this->entityClass)->getFormType()
+            ?: $this->formNamespace . $this->entityShortClass . $this->formSuffix;
+        return $this->formRegistry->hasType($type);
     }
 }

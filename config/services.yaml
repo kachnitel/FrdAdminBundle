@@ -41,6 +41,8 @@ services:
             $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
             $defaultItemsPerPage: '%kachnitel_admin.pagination.default_items_per_page%'
             $allowedItemsPerPage: '%kachnitel_admin.pagination.allowed_items_per_page%'
+            $formNamespace: '%kachnitel_admin.form_namespace%'
+            $formSuffix: '%kachnitel_admin.form_suffix%'
 
     # Generic Admin Controller (auto-discovers entities via #[Admin] attribute)
     Kachnitel\AdminBundle\Controller\GenericAdminController:
