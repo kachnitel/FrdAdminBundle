@@ -1,0 +1,8 @@
+{#
+ # Date preview template.
+ #
+ # Variables:
+ # @var Date|null value
+ #}
+
+{{ value ? value|date('Y-m-d') : '' }}
