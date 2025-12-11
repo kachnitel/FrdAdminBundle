@@ -7,11 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.0.5](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.4...v0.0.5) (2025-12-07)
+## [0.0.6](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.5...v0.0.6) (2025-12-11)
 
-### Bug Fixes
+### Features
 
-* Clean up material-icons leftovers in default templates ([d31633](https://https://github.com/kachnitel/FrdAdminBundle/commit/d31633d4c57445e9e6a8e5ca3e6391050157757e))
+* Add default Date template ([aacedc](https://https://github.com/kachnitel/FrdAdminBundle/commit/aacedc256406926d41b2838ade2eab106b6f7e9f))
+
+### Code Refactoring
+
+* Consolidate permission checks and support disabled authentication ([276e36](https://https://github.com/kachnitel/FrdAdminBundle/commit/276e3679e7c328eab873385aa4f18a9eda27bfb3))
+
+
+---
+
+## [0.0.5](https://https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.4...v0.0.5) (2025-12-06)
 
 
 ---

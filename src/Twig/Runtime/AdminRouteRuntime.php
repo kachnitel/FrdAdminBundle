@@ -4,7 +4,10 @@ namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Attribute\AdminRoutes;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
@@ -17,7 +20,11 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     public function __construct(
         private RouterInterface $router,
         private AttributeHelper $attributeHelper,
-        private ?AuthorizationCheckerInterface $authChecker = null
+        private ?AuthorizationCheckerInterface $authChecker = null,
+        private ?EntityDiscoveryService $entityDiscovery = null,
+        private ?FormRegistryInterface $formRegistry = null,
+        private string $formNamespace = 'App\\Form\\',
+        private string $formSuffix = 'FormType'
     ) {}
 
     /**
@@ -168,6 +175,91 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         // For now, just check if route exists
         // Applications can extend this with custom security logic
         return $this->router->getRouteCollection()->get($route) !== null;
+    }
+
+    /**
+     * Check if the current user can perform an action on a specific entity object.
+     *
+     * @param object $entity The entity object
+     * @param string $action Action name ('show', 'edit', 'delete')
+     * @return bool True if action is accessible
+     */
+    public function canPerformAction(object $entity, string $action): bool
+    {
+        $entityClass = $this->getRealClass($entity);
+        $shortName = (new \ReflectionClass($entityClass))->getShortName();
+
+        return $this->isActionAccessible($shortName, $action);
+    }
+
+    /**
+     * Check if a user can perform an action on an entity.
+     * Checks permissions and form availability.
+     *
+     * @param string $entityShortName Entity short name (e.g., 'Product', 'User')
+     * @param string $action Action name ('index', 'show', 'new', 'edit', 'delete')
+     * @return bool True if action is accessible
+     */
+    public function isActionAccessible(string $entityShortName, string $action): bool
+    {
+        // Check if route exists
+        if (!$this->hasRoute($entityShortName, $action)) {
+            return false;
+        }
+
+        // Map action to voter attribute
+        $voterAttribute = match($action) {
+            'index' => AdminEntityVoter::ADMIN_INDEX,
+            'show' => AdminEntityVoter::ADMIN_SHOW,
+            'new' => AdminEntityVoter::ADMIN_NEW,
+            'edit' => AdminEntityVoter::ADMIN_EDIT,
+            'delete' => AdminEntityVoter::ADMIN_DELETE,
+            default => null,
+        };
+
+        // Check permission via voter (if auth checker is available)
+        if ($this->authChecker !== null && $voterAttribute !== null) {
+            if (!$this->authChecker->isGranted($voterAttribute, $entityShortName)) {
+                return false;
+            }
+        }
+
+        // For new/edit actions, check if form exists
+        if (in_array($action, ['new', 'edit'], true)) {
+            if (!$this->hasForm($entityShortName)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if an entity has a form defined.
+     */
+    private function hasForm(string $entityShortName): bool
+    {
+        if ($this->formRegistry === null || $this->entityDiscovery === null) {
+            // If dependencies not available, assume form exists
+            return true;
+        }
+
+        // Try to get form type from Admin attribute first
+        try {
+            $entityClass = $this->entityDiscovery->resolveEntityClass($entityShortName, 'App\\Entity\\');
+            if ($entityClass) {
+                $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
+                $formType = $adminAttr?->getFormType()
+                    ?: $this->formNamespace . $entityShortName . $this->formSuffix;
+                return $this->formRegistry->hasType($formType);
+            }
+        } catch (\Exception) {
+            // Fall through to default behavior
+        }
+
+        // Default: check standard form type
+        $formType = $this->formNamespace . $entityShortName . $this->formSuffix;
+        return $this->formRegistry->hasType($formType);
     }
 
     /**

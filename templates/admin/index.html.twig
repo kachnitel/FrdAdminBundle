@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block header_buttons %}
-  {% if entityClass|admin_has_route('new') and admin_route_accessible(entityClass|admin_get_route('new')) %}
+  {% if admin_action_accessible(entityShortClass, 'new') %}
     <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="btn btn-primary">
       New {{ entityShortClass }}
     </a>
@@ -50,13 +50,13 @@
 
     <td class="actions">
       {% block row_actions %}
-        {% if entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
+        {% if admin_action_accessible(entityShortClass, 'show') %}
           <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary" title="View">
             Show
           </a>
         {% endif %}
 
-        {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
+        {% if admin_action_accessible(entityShortClass, 'edit') %}
           <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary" title="Edit">
             Edit
           </a>

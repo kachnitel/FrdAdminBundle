@@ -89,13 +89,13 @@
                     {% endfor %}
 
                     <td class="actions">
-                        {% if entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
+                        {% if admin_action_accessible(this.entityShortClass, 'show') %}
                             <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
                                 👀
                             </a>
                         {% endif %}
 
-                        {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) and this.canEdit %}
+                        {% if admin_action_accessible(this.entityShortClass, 'edit') %}
                             <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
                                 🖊
                             </a>

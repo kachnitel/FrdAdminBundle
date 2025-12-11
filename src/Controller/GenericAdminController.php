@@ -33,7 +33,7 @@ class GenericAdminController extends AbstractAdminController
         private readonly string $routePrefix = 'app_admin_entity',
         private readonly string $dashboardRoute = 'app_admin_dashboard',
         private readonly string $entityNamespace = 'App\\Entity\\',
-        private readonly string|false $requiredRole = 'ROLE_ADMIN',
+        private readonly ?string $requiredRole = 'ROLE_ADMIN',
     ) {}
 
     /**
@@ -58,9 +58,7 @@ class GenericAdminController extends AbstractAdminController
     public function dashboard(): Response
     {
         // Dashboard uses global required_role (doesn't check entity-specific permissions)
-        if (false !== $this->requiredRole) {
-            $this->denyAccessUnlessGranted($this->requiredRole);
-        }
+        $this->checkGlobalPermission();
 
         // Convert entities to view data with label and icon from #[Admin] attribute
         $entities = array_map(function($entityName) {
@@ -90,9 +88,7 @@ class GenericAdminController extends AbstractAdminController
     public function index(string $entitySlug): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        if (false !== $this->requiredRole) {
-            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_INDEX, $entityName);
-        }
+        $this->checkEntityPermission(AdminEntityVoter::ADMIN_INDEX, $entityName);
 
         return $this->render('@KachnitelAdmin/admin/index_live.html.twig', [
             'entityClass' => $this->entityNamespace . $entityName,
@@ -104,9 +100,7 @@ class GenericAdminController extends AbstractAdminController
     public function new(Request $request, string $entitySlug): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        if (false !== $this->requiredRole) {
-            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_NEW, $entityName);
-        }
+        $this->checkEntityPermission(AdminEntityVoter::ADMIN_NEW, $entityName);
 
         return $this->doNew($entityName, $request);
     }
@@ -115,9 +109,7 @@ class GenericAdminController extends AbstractAdminController
     public function show(string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        if (false !== $this->requiredRole) {
-            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_SHOW, $entityName);
-        }
+        $this->checkEntityPermission(AdminEntityVoter::ADMIN_SHOW, $entityName);
 
         return $this->doShow($entityName, $id);
     }
@@ -126,9 +118,7 @@ class GenericAdminController extends AbstractAdminController
     public function edit(Request $request, string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        if (false !== $this->requiredRole) {
-            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_EDIT, $entityName);
-        }
+        $this->checkEntityPermission(AdminEntityVoter::ADMIN_EDIT, $entityName);
 
         return $this->doEdit($entityName, $id, $request);
     }
@@ -137,11 +127,29 @@ class GenericAdminController extends AbstractAdminController
     public function delete(Request $request, string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
-        if (false !== $this->requiredRole) {
-            $this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_DELETE, $entityName);
-        }
+        $this->checkEntityPermission(AdminEntityVoter::ADMIN_DELETE, $entityName);
 
         return $this->doDeleteEntity($entityName, $id, $request);
+    }
+
+    /**
+     * Check entity-specific permissions if authentication is enabled.
+     */
+    private function checkEntityPermission(string $attribute, string $entityName): void
+    {
+        if ($this->requiredRole !== null) {
+            $this->denyAccessUnlessGranted($attribute, $entityName);
+        }
+    }
+
+    /**
+     * Check global permissions if authentication is enabled.
+     */
+    private function checkGlobalPermission(): void
+    {
+        if ($this->requiredRole !== null) {
+            $this->denyAccessUnlessGranted($this->requiredRole);
+        }
     }
 
     /**

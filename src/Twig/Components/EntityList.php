@@ -126,9 +126,20 @@ class EntityList
      */
     public function canEdit(): bool
     {
-        // {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
-        // $this->security->isGranted(AdminEntityVoter::ADMIN_EDIT, $this->entityShortClass)
-        return $this->hasForm();
+        return $this->hasForm()
+            && $this->security->isGranted(AdminEntityVoter::ADMIN_EDIT, $this->entityShortClass);
+    }
+
+    /**
+     * Whether to show "new" button
+     * Test:
+     * - Does user have permission
+     * - Does form exist
+     */
+    public function canNew(): bool
+    {
+        return $this->hasForm()
+            && $this->security->isGranted(AdminEntityVoter::ADMIN_NEW, $this->entityShortClass);
     }
 
     // --- UI ---

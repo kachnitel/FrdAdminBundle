@@ -20,7 +20,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * Permission resolution order:
  * 1. Entity-specific permission from #[Admin(permissions: ['action' => 'ROLE_X'])]
  * 2. Global required_role configuration (default: 'ROLE_ADMIN')
- * 3. If required_role is null/false, grants access (authentication disabled)
+ * 3. If required_role is null, grants access (authentication disabled)
  *
  * Usage in controllers:
  *   #[IsGranted('ADMIN_INDEX', subject: 'entityName')]

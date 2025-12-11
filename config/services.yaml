@@ -30,6 +30,15 @@ services:
         resource: '../src/Twig/Runtime'
         tags: ['twig.runtime']
 
+    # AdminRouteRuntime with additional dependencies for permission checks
+    Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime:
+        arguments:
+            $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
+            $formRegistry: '@form.registry'
+            $formNamespace: '%kachnitel_admin.form_namespace%'
+            $formSuffix: '%kachnitel_admin.form_suffix%'
+        tags: ['twig.runtime']
+
     # LiveComponents
     Kachnitel\AdminBundle\Twig\Components\:
         resource: '../src/Twig/Components'

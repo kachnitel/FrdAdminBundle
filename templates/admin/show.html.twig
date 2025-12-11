@@ -15,7 +15,7 @@
 {% block headerButtons %}
   {{ include('@KachnitelAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
 
-  {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
+  {% if entity|admin_has_route('edit') and admin_can_perform_action(entity, 'edit') %}
     <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-primary">
       Edit
     </a>

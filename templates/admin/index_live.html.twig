@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block headerButtons %}
-    {% if entityClass|admin_has_route('new') and admin_route_accessible(entityClass|admin_get_route('new')) %}
+    {% if admin_action_accessible(entityShortClass, 'new') %}
         <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="btn btn-primary">
             ➕ New
         </a>

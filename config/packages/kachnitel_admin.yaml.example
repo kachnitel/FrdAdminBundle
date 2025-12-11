@@ -17,6 +17,7 @@ kachnitel_admin:
     dashboard_route: 'app_admin_dashboard'
 
     # Required role for accessing admin (default: 'ROLE_ADMIN')
+    # Set to null (or ~) to disable authentication
     required_role: 'ROLE_ADMIN'
 
     # Enable the generic admin controller with dynamic routes (default: true)

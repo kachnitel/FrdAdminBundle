@@ -25,6 +25,8 @@ class AdminRouteExtension extends AbstractExtension
         return [
             new TwigFunction('admin_object_path', [AdminRouteRuntime::class, 'getPath']),
             new TwigFunction('admin_route_accessible', [AdminRouteRuntime::class, 'isRouteAccessible']),
+            new TwigFunction('admin_action_accessible', [AdminRouteRuntime::class, 'isActionAccessible']),
+            new TwigFunction('admin_can_perform_action', [AdminRouteRuntime::class, 'canPerformAction']),
         ];
     }
 }
