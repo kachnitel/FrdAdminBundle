@@ -18,9 +18,10 @@
 
 ## Documentation
 
-- **[Configuration Guide](docs/CONFIGURATION.md)** - Complete guide to configuring entities with the `#[Admin]` attribute
-- **[Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md)** - How to customize the admin interface appearance
-- **[Development Guide](docs/DEVELOPMENT.md)** - Information on running tests, code quality, and contributing
+- **[Configuration Guide](docs/CONFIGURATION.md)** - Configure entities with the `#[Admin]` attribute
+- **[Column Filtering](docs/FILTERS.md)** - Automatic per-column filters and customization
+- **[Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md)** - Customize the admin interface appearance
+- **[Development Guide](docs/DEVELOPMENT.md)** - Running tests, code quality, and contributing
 
 ## Features
 
