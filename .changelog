@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     'tagPrefix' => 'v',
     'owner' => 'kachnitel',
     'repository' => 'FrdAdminBundle',
-    'commitUrlFormat' => 'https://github.com/{{owner}}/{{repository}}/commit/{{hash}}',
-    'compareUrlFormat' => 'https://github.com/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}',
-    'issueUrlFormat' => 'https://github.com/{{owner}}/{{repository}}/issues/{{id}}',
+    'commitUrlFormat' => 'github.com/{{owner}}/{{repository}}/commit/{{hash}}',
+    'compareUrlFormat' => 'github.com/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}',
+    'issueUrlFormat' => 'github.com/{{owner}}/{{repository}}/issues/{{id}}',
 ];
