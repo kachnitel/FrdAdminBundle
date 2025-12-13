@@ -17,6 +17,5 @@ final readonly class EntityListConfig
         public string $formSuffix = 'Type',
         public int $defaultItemsPerPage = 20,
         public array $allowedItemsPerPage = [10, 20, 50, 100]
-    ) {
-    }
+    ) {}
 }

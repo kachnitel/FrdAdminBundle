@@ -62,6 +62,7 @@
     "scripts": {
         "test": [
             "@phpstan",
+            "@phpcs",
             "@phpunit",
             "@phpmd"
         ],
