@@ -9,6 +9,9 @@ use Doctrine\ORM\QueryBuilder;
  */
 class FieldFilter extends AbstractFilter
 {
+    /**
+     * @param array<string, mixed> $options
+     */
     public function __construct(
         string $name,
         string $label,

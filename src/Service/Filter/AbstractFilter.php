@@ -7,6 +7,9 @@ namespace Kachnitel\AdminBundle\Service\Filter;
  */
 abstract class AbstractFilter implements FilterInterface
 {
+    /**
+     * @param array<string, mixed> $options
+     */
     public function __construct(
         protected string $name,
         protected string $label,
@@ -29,6 +32,9 @@ abstract class AbstractFilter implements FilterInterface
         return $this->type;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getOptions(): array
     {
         return $this->options;

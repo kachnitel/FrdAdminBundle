@@ -224,6 +224,7 @@ class PermissionEnforcementTest extends KernelTestCase
 
     /**
      * Helper to invoke private methods for testing.
+     * @param array<mixed> $parameters
      */
     private function invokePrivateMethod(object $object, string $methodName, array $parameters = []): mixed
     {

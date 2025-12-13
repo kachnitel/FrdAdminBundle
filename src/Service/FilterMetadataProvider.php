@@ -34,7 +34,7 @@ class FilterMetadataProvider
      * Get filter metadata for all filterable columns of an entity.
      *
      * @param string $entityClass Full class name
-     * @return array<string, array> Map of property name => filter metadata
+     * @return array<string, array<string, mixed>> Map of property name => filter metadata
      */
     public function getFilters(string $entityClass): array
     {
@@ -68,13 +68,15 @@ class FilterMetadataProvider
         }
 
         // Sort by priority
-        uasort($filters, fn($a, $b) => ($a['priority'] ?? 999) <=> ($b['priority'] ?? 999));
+        uasort($filters, fn(array $a, array $b): int => ($a['priority'] ?? 999) <=> ($b['priority'] ?? 999));
 
         return $filters;
     }
 
     /**
      * Get filter configuration for a specific property.
+     * @param ClassMetadata<object> $metadata
+     * @return array<string, mixed>|null
      */
     private function getFilterConfig(
         ReflectionProperty $property,
@@ -122,6 +124,9 @@ class FilterMetadataProvider
 
     /**
      * Apply ColumnFilter attribute overrides to the configuration.
+     * @param array<string, mixed> $config
+     * @param ClassMetadata<object> $metadata
+     * @return array<string, mixed>
      */
     private function applyAttributeOverrides(
         array $config,
@@ -153,6 +158,9 @@ class FilterMetadataProvider
 
     /**
      * Apply type-specific configuration overrides.
+     * @param array<string, mixed> $config
+     * @param ClassMetadata<object> $metadata
+     * @return array<string, mixed>
      */
     private function applyTypeSpecificOverrides(
         array $config,
@@ -176,6 +184,8 @@ class FilterMetadataProvider
 
     /**
      * Ensure enum class configuration is set.
+     * @param array<string, mixed> $config
+     * @return array<string, mixed>
      */
     private function ensureEnumClassConfig(array $config, ReflectionProperty $property): array
     {
@@ -191,6 +201,9 @@ class FilterMetadataProvider
 
     /**
      * Ensure relation configuration is set.
+     * @param array<string, mixed> $config
+     * @param ClassMetadata<object> $metadata
+     * @return array<string, mixed>
      */
     private function ensureRelationConfig(
         array $config,
@@ -215,6 +228,9 @@ class FilterMetadataProvider
 
     /**
      * Get filter config for a regular field.
+     * @param ClassMetadata<object> $metadata
+     * @param \ReflectionAttribute<ColumnFilter>|null $columnFilter
+     * @return array<string, mixed>
      */
     private function getFieldFilterConfig(
         ClassMetadata $metadata,
@@ -261,6 +277,9 @@ class FilterMetadataProvider
 
     /**
      * Get filter config for a relationship.
+     * @param ClassMetadata<object> $metadata
+     * @param \ReflectionAttribute<ColumnFilter>|null $columnFilter
+     * @return array<string, mixed>
      */
     private function getRelationFilterConfig(
         ClassMetadata $metadata,

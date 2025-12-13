@@ -14,6 +14,7 @@ class FilterMetadataProviderTest extends TestCase
 {
     private FilterMetadataProvider $provider;
     private EntityManagerInterface $em;
+    /** @var ClassMetadata<object> */
     private ClassMetadata $metadata;
 
     protected function setUp(): void

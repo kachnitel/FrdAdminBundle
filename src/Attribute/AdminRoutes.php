@@ -19,6 +19,9 @@ use Attribute;
 #[Attribute(Attribute::TARGET_CLASS)]
 class AdminRoutes
 {
+    /**
+     * @param array<string, string> $routes
+     */
     public function __construct(
         private array $routes = []
     ) {}
@@ -33,6 +36,9 @@ class AdminRoutes
         return isset($this->routes[$key]);
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function all(): array
     {
         return $this->routes;

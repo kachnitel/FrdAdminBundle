@@ -29,6 +29,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
 
     /**
      * Generate a path for an entity's route.
+     * @param array<string, mixed> $parameters
      */
     public function getPath(object|string $object, string $routeName, array $parameters = []): string
     {
@@ -52,6 +53,8 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
 
     /**
      * Auto-fill id parameter if object has getId() method.
+     * @param array<string, mixed> $parameters
+     * @return array<string, mixed>
      */
     private function autoFillIdParameter(object|string $object, string $route, array $parameters): array
     {
@@ -69,6 +72,8 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
 
     /**
      * Auto-fill class parameter if route needs it.
+     * @param array<string, mixed> $parameters
+     * @return array<string, mixed>
      */
     private function autoFillClassParameter(object|string $object, string $route, array $parameters): array
     {
@@ -82,6 +87,8 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
 
     /**
      * Auto-fill entitySlug parameter if route needs it (for GenericAdminController).
+     * @param array<string, mixed> $parameters
+     * @return array<string, mixed>
      */
     private function autoFillEntitySlugParameter(object|string $object, string $route, array $parameters): array
     {

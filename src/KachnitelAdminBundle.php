@@ -11,7 +11,6 @@ class KachnitelAdminBundle extends AbstractBundle
 {
     public function configure(DefinitionConfigurator $definition): void
     {
-        /** @var \Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition $rootNode */
         $rootNode = $definition->rootNode();
         $rootNode->children()
                 ->scalarNode('entity_namespace')
@@ -70,6 +69,9 @@ class KachnitelAdminBundle extends AbstractBundle
         return \dirname(__DIR__);
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         // Store configuration as parameters

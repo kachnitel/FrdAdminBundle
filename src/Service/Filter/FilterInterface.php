@@ -34,6 +34,7 @@ interface FilterInterface
 
     /**
      * Get options for select-type filters.
+     * @return array<string, mixed>
      */
     public function getOptions(): array;
 }

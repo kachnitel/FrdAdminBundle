@@ -24,6 +24,7 @@ class EntityListQueryService
      * Get filtered, sorted, and paginated entities.
      *
      * @param string $entityClass Full entity class name
+     * @param array<string, mixed> $columnFilters
      * @param array<string, array<string, mixed>> $filterMetadata
      * @return array{entities: array<object>, total: int, page: int}
      */
@@ -95,6 +96,7 @@ class EntityListQueryService
 
         // Use custom repository method if specified
         if ($repositoryMethod && method_exists($repository, $repositoryMethod)) {
+            /** @var QueryBuilder $qb */
             $qb = $repository->{$repositoryMethod}();
         } else {
             $qb = $repository->createQueryBuilder('e');

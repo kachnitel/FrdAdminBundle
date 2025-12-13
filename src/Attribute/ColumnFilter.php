@@ -62,6 +62,7 @@ class ColumnFilter
         /**
          * For relation filters: which fields to search on the related entity.
          * Example: ['name', 'email', 'phone'] for User
+         * @var array<string>
          */
         public array $searchFields = [],
 

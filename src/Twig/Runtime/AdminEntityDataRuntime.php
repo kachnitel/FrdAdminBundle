@@ -21,6 +21,7 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
      *
      * Note: Collection-valued associations are excluded to avoid memory issues.
      * To display collections, use custom templates or the _collection.html.twig template.
+     * @return array<string, mixed>
      */
     public function getData(object $entity): array
     {
@@ -54,6 +55,7 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
      * Get column names for an entity class.
      *
      * Note: Collection-valued associations are excluded from columns.
+     * @return array<string>
      */
     public function getColumns(string $entityClass): array
     {

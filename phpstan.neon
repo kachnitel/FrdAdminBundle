@@ -1,5 +1,5 @@
 parameters:
-    level: 5
+    level: 6
     paths:
         - src
         - tests
@@ -19,3 +19,5 @@ parameters:
         - '#Match arm comparison between .+ and .+ is always true#'
         # Ignore PHPMD @SuppressWarnings annotation parsing errors
         - '#PHPDoc tag @SuppressWarnings has invalid value#'
+        # Doctrine repository template type cannot be resolved statically
+        - '#Unable to resolve the template type T in call to method Doctrine\\ORM\\EntityManagerInterface::getRepository\(\)#'

@@ -25,7 +25,8 @@ abstract class AbstractAdminController extends AbstractController
     protected EntityManagerInterface $em;
 
     #[Required]
-    public function setEntityManager(EntityManagerInterface $em) {
+    public function setEntityManager(EntityManagerInterface $em): void
+    {
         $this->em = $em;
     }
 
@@ -158,11 +159,15 @@ abstract class AbstractAdminController extends AbstractController
 
     /**
      * Get repository for entity class.
+     * @return object
+     * @phpstan-return \Doctrine\ORM\EntityRepository<object>
      */
     protected function getRepository(string $class): object
     {
         $className = $this->getEntityNamespace() . $class;
-        return $this->em->getRepository($className);
+        /** @var \Doctrine\ORM\EntityRepository<object> $repository */
+        $repository = $this->em->getRepository($className);
+        return $repository;
     }
 
     /**
@@ -185,6 +190,7 @@ abstract class AbstractAdminController extends AbstractController
 
     /**
      * Get breadcrumbs for navigation.
+     * @return array<int, array{url: string, label: string}>
      */
     protected function getBreadcrumbs(string $class, ?object $entity = null): array
     {
@@ -261,6 +267,9 @@ abstract class AbstractAdminController extends AbstractController
     }
 
     // Configuration methods (must be implemented by application)
+    /**
+     * @return array<string>
+     */
     abstract protected function getSupportedEntities(): array;
 
     // Configuration methods (can be overridden)
