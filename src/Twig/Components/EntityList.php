@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
@@ -77,9 +78,6 @@ class EntityList
     /** @var int|null Cached total count of items */
     private ?int $totalItems = null;
 
-    /**
-     * @param array<int> $allowedItemsPerPage
-     */
     public function __construct(
         private EntityManagerInterface $em,
         private FilterMetadataProvider $filterMetadataProvider,
@@ -87,12 +85,9 @@ class EntityList
         private EntityListQueryService $queryService,
         private Security $security,
         private FormRegistryInterface $formRegistry,
-        private string $formNamespace,
-        private string $formSuffix,
-        private int $defaultItemsPerPage = 20,
-        private array $allowedItemsPerPage = [10, 20, 50, 100]
+        private EntityListConfig $config
     ) {
-        $this->itemsPerPage = $this->defaultItemsPerPage;
+        $this->itemsPerPage = $this->config->defaultItemsPerPage;
     }
 
     // --- Security ---
@@ -229,7 +224,7 @@ class EntityList
      */
     public function getAllowedItemsPerPage(): array
     {
-        return $this->allowedItemsPerPage;
+        return $this->config->allowedItemsPerPage;
     }
 
     #[LiveAction]
@@ -333,7 +328,7 @@ class EntityList
     private function hasForm(): bool
     {
         $type = $this->entityDiscovery->getAdminAttribute($this->entityClass)->getFormType()
-            ?: $this->formNamespace . $this->entityShortClass . $this->formSuffix;
+            ?: $this->config->formNamespace . $this->entityShortClass . $this->config->formSuffix;
         return $this->formRegistry->hasType($type);
     }
 }

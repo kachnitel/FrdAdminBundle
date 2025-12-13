@@ -44,14 +44,19 @@ services:
         resource: '../src/Twig/Components'
         tags: ['twig.component']
 
+    # EntityList configuration
+    Kachnitel\AdminBundle\Config\EntityListConfig:
+        arguments:
+            $formNamespace: '%kachnitel_admin.form_namespace%'
+            $formSuffix: '%kachnitel_admin.form_suffix%'
+            $defaultItemsPerPage: '%kachnitel_admin.pagination.default_items_per_page%'
+            $allowedItemsPerPage: '%kachnitel_admin.pagination.allowed_items_per_page%'
+
     # EntityList component with pagination config and entity discovery
     Kachnitel\AdminBundle\Twig\Components\EntityList:
         arguments:
             $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
-            $defaultItemsPerPage: '%kachnitel_admin.pagination.default_items_per_page%'
-            $allowedItemsPerPage: '%kachnitel_admin.pagination.allowed_items_per_page%'
-            $formNamespace: '%kachnitel_admin.form_namespace%'
-            $formSuffix: '%kachnitel_admin.form_suffix%'
+            $config: '@Kachnitel\AdminBundle\Config\EntityListConfig'
 
     # Generic Admin Controller (auto-discovers entities via #[Admin] attribute)
     Kachnitel\AdminBundle\Controller\GenericAdminController:
