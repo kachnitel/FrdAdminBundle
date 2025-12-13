@@ -36,8 +36,7 @@ echo ""
 
 # Generate changelog and create version tag
 # --commit: Commit the changes
-# --amend: Amend the commit with changelog
-vendor/bin/conventional-changelog --$BUMP_TYPE --commit --amend --history
+vendor/bin/conventional-changelog --$BUMP_TYPE --commit --history
 
 # Get the new tag
 NEW_TAG=$(git describe --tags --abbrev=0)
