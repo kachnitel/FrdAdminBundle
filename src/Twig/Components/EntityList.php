@@ -63,6 +63,14 @@ class EntityList
     #[LiveProp(writable: true, url: true)]
     public int $itemsPerPage;
 
+    /**
+     * Selected entity IDs for batch actions.
+     *
+     * @var array<int>
+     */
+    #[LiveProp(writable: true)]
+    public array $selectedIds = [];
+
     #[LiveProp]
     public string $entityClass;
 
@@ -135,6 +143,24 @@ class EntityList
     {
         return $this->hasForm()
             && $this->security->isGranted(AdminEntityVoter::ADMIN_NEW, $this->entityShortClass);
+    }
+
+    /**
+     * Whether batch actions are enabled for this entity.
+     */
+    public function isBatchActionsEnabled(): bool
+    {
+        $adminAttr = $this->entityDiscovery->getAdminAttribute($this->entityClass);
+        return $adminAttr?->isEnableBatchActions() ?? false;
+    }
+
+    /**
+     * Whether to show batch delete button.
+     */
+    public function canBatchDelete(): bool
+    {
+        return $this->isBatchActionsEnabled()
+            && $this->security->isGranted(AdminEntityVoter::ADMIN_DELETE, $this->entityShortClass);
     }
 
     // --- UI ---
@@ -277,6 +303,61 @@ class EntityList
         // Reset to first page when filters change
         $this->page = 1;
         $this->totalItems = null;
+    }
+
+    /**
+     * Batch delete selected entities.
+     */
+    #[LiveAction]
+    public function batchDelete(): void
+    {
+        if (!$this->canBatchDelete()) {
+            throw new AccessDeniedException('Batch delete not allowed for this entity.');
+        }
+
+        if (empty($this->selectedIds)) {
+            return;
+        }
+
+        $repository = $this->em->getRepository($this->entityClass);
+
+        foreach ($this->selectedIds as $id) {
+            $entity = $repository->find($id);
+            if ($entity !== null) {
+                $this->em->remove($entity);
+            }
+        }
+
+        $this->em->flush();
+
+        // Clear selections after deletion
+        $this->selectedIds = [];
+        $this->totalItems = null;
+    }
+
+    /**
+     * Select all entities on current page.
+     */
+    #[LiveAction]
+    public function selectAll(): void
+    {
+        $entities = $this->getEntities();
+        $metadata = $this->em->getClassMetadata($this->entityClass);
+        $idField = $metadata->getSingleIdentifierFieldName();
+
+        $this->selectedIds = array_values(array_unique(array_merge(
+            $this->selectedIds,
+            array_map(fn($entity) => $metadata->getFieldValue($entity, $idField), $entities)
+        )));
+    }
+
+    /**
+     * Deselect all entities.
+     */
+    #[LiveAction]
+    public function deselectAll(): void
+    {
+        $this->selectedIds = [];
     }
 
     /**
