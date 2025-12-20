@@ -1,0 +1,7 @@
+# Build output
+/dist/*.js
+/dist/*.css
+/dist/*.map
+
+# Keep the directory
+!.gitignore

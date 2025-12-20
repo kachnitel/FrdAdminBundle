@@ -1,9 +1,9 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-94%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-48%25-red>)
-![Assertions](<https://img.shields.io/badge/assertions-341-blue>)
+![Tests](<https://img.shields.io/badge/tests-106%20passed-red>)
+![Coverage](<https://img.shields.io/badge/coverage-40%25-red>)
+![Assertions](<https://img.shields.io/badge/assertions-201-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.2-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0-000000?logo=symfony&logoColor=white>)
@@ -20,6 +20,7 @@
 
 - **[Configuration Guide](docs/CONFIGURATION.md)** - Configure entities with the `#[Admin]` attribute
 - **[Column Filtering](docs/FILTERS.md)** - Automatic per-column filters and customization
+- **[Asset Management](docs/ASSETS.md)** - AssetMapper & Webpack Encore setup for Stimulus controllers
 - **[Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md)** - Customize the admin interface appearance
 - **[Development Guide](docs/DEVELOPMENT.md)** - Running tests, code quality, and contributing
 
@@ -30,7 +31,7 @@
 - 🔧 **Type-Based Rendering**: Smart property rendering based on Doctrine types
 - 📝 **Attribute-Driven**: Modern PHP 8+ attribute configuration
 - 🔍 **Filters & Search**: Built-in filtering and search capabilities
-- ⚡ **Batch Operations**: Select and act on multiple entities
+- ⚡ **Batch Operations**: Multi-select with Shift/Ctrl+Click and bulk delete
 - 📊 **Dashboard & Menu**: Configurable admin dashboard and navigation
 
 ## 🏗️ Installation & Quick Start

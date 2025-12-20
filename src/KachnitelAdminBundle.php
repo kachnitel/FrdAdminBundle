@@ -2,6 +2,7 @@
 
 namespace Kachnitel\AdminBundle;
 
+use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -90,9 +91,6 @@ class KachnitelAdminBundle extends AbstractBundle
         $container->import('../config/services.yaml');
     }
 
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter("builder"))
-     */
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         // Don't manually register the Twig path - AbstractBundle does this automatically
@@ -104,5 +102,33 @@ class KachnitelAdminBundle extends AbstractBundle
                 'Kachnitel\\AdminBundle\\Twig\\Components\\' => 'components/',
             ],
         ]);
+
+        // Register AssetMapper paths for Stimulus controllers
+        if ($this->isAssetMapperAvailable($builder)) {
+            $builder->prependExtensionConfig('framework', [
+                'asset_mapper' => [
+                    'paths' => [
+                        __DIR__ . '/../assets/dist' => '@kachnitel/admin-bundle',
+                    ],
+                ],
+            ]);
+        }
+    }
+
+    /**
+     * Check if AssetMapper is available in the application.
+     */
+    private function isAssetMapperAvailable(ContainerBuilder $builder): bool
+    {
+        if (!interface_exists(AssetMapperInterface::class)) {
+            return false;
+        }
+
+        $bundlesMetadata = $builder->getParameter('kernel.bundles_metadata');
+        if (!isset($bundlesMetadata['FrameworkBundle'])) {
+            return false;
+        }
+
+        return is_file($bundlesMetadata['FrameworkBundle']['path'] . '/Resources/config/asset_mapper.php');
     }
 }

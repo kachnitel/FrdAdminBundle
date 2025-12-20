@@ -54,7 +54,7 @@ class Admin
         private ?string $icon = null,
         private ?string $formType = null,
         private bool $enableFilters = true,
-        private bool $enableBatchActions = true,
+        private bool $enableBatchActions = false,
         private ?array $columns = null,
         private ?array $excludeColumns = null,
         private ?array $filterableColumns = null,

@@ -11,7 +11,48 @@
  # @var array columnFilters - Per-column filter values
  #}
 
-<div {{ attributes }}>
+<div {{ attributes }} {% if this.isBatchActionsEnabled %}data-controller="batch-select"{% endif %}>
+    {# Batch Actions Bar #}
+    {% if this.isBatchActionsEnabled and this.canBatchDelete %}
+        <div class="admin-batch-actions mb-3 d-flex gap-2 align-items-center">
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                data-batch-select-target="selectAllBtn"
+                data-action="click->batch-select#selectAll"
+            >
+                Select All
+            </button>
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                data-action="click->batch-select#deselectAll"
+            >
+                Deselect All
+            </button>
+            <div class="vr"></div>
+            <button
+                type="button"
+                class="btn btn-sm btn-danger"
+                data-action="live#action"
+                data-live-action-param="batchDelete"
+                onclick="return confirm('Are you sure you want to delete the selected items?')"
+            >
+                Delete Selected (<span data-batch-select-target="count">{{ this.selectedIds|length }}</span>)
+            </button>
+        </div>
+    {% endif %}
+
+    {# Hidden input to sync selectedIds with LiveComponent #}
+    {% if this.isBatchActionsEnabled %}
+        <input
+            type="hidden"
+            data-batch-select-target="selectedIds"
+            data-model="selectedIds"
+            value="{{ this.selectedIds|json_encode }}"
+        >
+    {% endif %}
+
     {# Global Search #}
     {% if block('search') is defined %}
         <div class="admin-global-search mb-3">
@@ -33,6 +74,16 @@
     <table class="table table-hover">
         <thead>
             <tr>
+                {% if this.isBatchActionsEnabled and this.canBatchDelete %}
+                    <th style="width: 40px;">
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            title="Select/Deselect All"
+                            data-action="change->batch-select#selectAll"
+                        >
+                    </th>
+                {% endif %}
                 {% for column in this.columns %}
                     <th>
                         <button
@@ -52,6 +103,9 @@
                 <th>Actions</th>
             </tr>
             <tr class="filters">
+                {% if this.isBatchActionsEnabled and this.canBatchDelete %}
+                    <th></th>
+                {% endif %}
                 {% for column in this.columns %}
                     <th>
                         {% if this.filterMetadata[column] is defined %}
@@ -71,8 +125,22 @@
         </thead>
         <tbody>
             {% for entity in this.entities %}
+                {% set entityData = admin_get_entity_data(entity) %}
+                {% set entityId = entityData.id ?? entityData[attribute(entity, 'id')] ?? loop.index %}
                 <tr>
-                    {% for property, value in admin_get_entity_data(entity) %}
+                    {% if this.isBatchActionsEnabled and this.canBatchDelete %}
+                        <td>
+                            <input
+                                type="checkbox"
+                                class="form-check-input"
+                                value="{{ entityId }}"
+                                {% if entityId in this.selectedIds %}checked{% endif %}
+                                data-batch-select-target="checkbox"
+                                data-action="change->batch-select#toggle"
+                            >
+                        </td>
+                    {% endif %}
+                    {% for property, value in entityData %}
                         <td>
                             {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
                             {{ include([
@@ -104,7 +172,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="100" class="text-center text-muted py-4">
+                    <td colspan="{{ this.columns|length + (this.isBatchActionsEnabled and this.canBatchDelete ? 2 : 1) }}" class="text-center text-muted py-4">
                         No {{ this.entityShortClass }} found.
                     </td>
                 </tr>

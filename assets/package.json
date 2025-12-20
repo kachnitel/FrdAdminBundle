@@ -1,0 +1,33 @@
+{
+    "name": "@kachnitel/admin-bundle",
+    "description": "Batch select controller for Kachnitel Admin Bundle",
+    "license": "MIT",
+    "version": "0.1.0",
+    "keywords": [
+        "symfony-ux",
+        "stimulus",
+        "admin"
+    ],
+    "homepage": "https://github.com/kachnitel/FrdAdminBundle",
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "symfony": {
+        "controllers": {
+            "batch-select": {
+                "main": "dist/batch-select_controller.js",
+                "name": "batch-select",
+                "webpackMode": "eager",
+                "fetch": "eager",
+                "enabled": true
+            }
+        },
+        "importmap": {
+            "@hotwired/stimulus": "^3.0.0"
+        }
+    },
+    "peerDependencies": {
+        "@hotwired/stimulus": "^3.0.0"
+    }
+}

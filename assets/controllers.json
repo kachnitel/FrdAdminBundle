@@ -1,0 +1,12 @@
+{
+    "controllers": {
+        "@kachnitel/admin-bundle": {
+            "batch-select": {
+                "enabled": true,
+                "fetch": "eager",
+                "autoimport": {}
+            }
+        }
+    },
+    "entrypoints": []
+}

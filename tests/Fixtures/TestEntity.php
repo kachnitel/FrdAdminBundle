@@ -20,6 +20,7 @@ enum TestStatus: string
     icon: 'science',
     columns: ['id', 'name', 'active'],
     itemsPerPage: 15,
+    enableBatchActions: true,
     permissions: ['index' => 'ROLE_TEST_VIEW', 'edit' => 'ROLE_TEST_EDIT']
 )]
 class TestEntity

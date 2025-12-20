@@ -148,14 +148,35 @@ Enable/disable column filtering in the list view.
 #[Admin(enableFilters: false)]  // Disable filtering
 ```
 
-#### enableBatchActions (TODO:)
-**Type:** `bool` **Default:** `true`
+#### enableBatchActions
+**Type:** `bool` **Default:** `false`
 
-Enable/disable batch actions (e.g., bulk delete).
+Enable/disable batch actions for selecting and performing operations on multiple entities at once.
+
+**Features:**
+- Individual row selection with checkboxes
+- **Shift+Click** for range selection
+- **Ctrl/Cmd+Click** for multi-toggle
+- "Select All" / "Deselect All" buttons
+- Batch delete with confirmation dialog
+- Real-time selection counter
+
+**Requirements:**
+- User must have delete permission (`ADMIN_DELETE`) to see batch actions
+- Must explicitly enable with `enableBatchActions: true`
 
 ```php
-#[Admin(enableBatchActions: false)]
+// Enable batch actions for this entity
+#[Admin(enableBatchActions: true)]
+
+// Enable with custom delete permission
+#[Admin(
+    enableBatchActions: true,
+    permissions: ['delete' => 'ROLE_SUPER_ADMIN']
+)]
 ```
+
+**Note:** Batch actions are disabled by default for safety. The batch delete UI includes a confirmation dialog before deletion to prevent accidental data loss.
 
 ### Column Configuration
 
@@ -522,6 +543,26 @@ class Category
     // Uses class name as label
     // Default pagination (20 items)
     // Requires ROLE_ADMIN
+    // Batch actions disabled by default
+}
+```
+
+### Entity with Batch Actions Enabled
+
+```php
+#[ORM\Entity]
+#[Admin(
+    label: 'Blog Posts',
+    icon: 'article',
+    enableBatchActions: true,  // Enable bulk operations
+    permissions: [
+        'index' => 'ROLE_EDITOR',
+        'delete' => 'ROLE_ADMIN',  // Only admins can delete
+    ]
+)]
+class BlogPost
+{
+    // Batch actions enabled for easier content management
 }
 ```
 
@@ -535,6 +576,8 @@ class Category
 - Exclude sensitive fields with `excludeColumns`
 - Set appropriate `itemsPerPage` for entities with many records
 - Use `filterableColumns` to limit filtering to useful fields
+- Enable `enableBatchActions: true` only for entities where bulk operations make sense
+- Use strict delete permissions when batch actions are enabled
 
 ### ❌ DON'T:
 
@@ -543,6 +586,7 @@ class Category
 - Set `itemsPerPage` too high (causes performance issues)
 - Forget to set permissions for sensitive entities
 - Use `columns` when auto-detection works fine
+- Enable batch actions on critical entities (users, financial records) without careful consideration
 
 ## API Reference
 
