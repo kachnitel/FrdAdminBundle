@@ -9,14 +9,13 @@ import { Controller } from '@hotwired/stimulus';
  * - Ctrl/Cmd+Click for multi-toggle
  */
 export default class extends Controller {
-    static targets = ['checkbox', 'selectedIds', 'count'];
+    static targets = ['checkbox'];
     static values = {
         lastCheckedIndex: Number
     };
 
     connect() {
         this.lastCheckedIndexValue = -1;
-        this.updateCount();
     }
 
     /**
@@ -36,11 +35,11 @@ export default class extends Controller {
         // (No special handling needed - checkbox toggles naturally)
 
         this.lastCheckedIndexValue = currentIndex;
-        this.updateSelectedIds();
     }
 
     /**
      * Select/deselect a range of checkboxes.
+     * Dispatches change events to trigger data-model binding.
      *
      * @param {number} start - Start index
      * @param {number} end - End index
@@ -50,58 +49,38 @@ export default class extends Controller {
         const [min, max] = start < end ? [start, end] : [end, start];
 
         for (let i = min; i <= max; i++) {
-            if (this.checkboxTargets[i]) {
-                this.checkboxTargets[i].checked = checked;
+            const checkbox = this.checkboxTargets[i];
+            if (checkbox && checkbox.checked !== checked) {
+                checkbox.checked = checked;
+                // Dispatch change event to trigger data-model binding
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }
     }
 
     /**
      * Select all checkboxes on current page.
+     * Dispatches change events to trigger data-model binding.
      */
     selectAll() {
         this.checkboxTargets.forEach(checkbox => {
-            checkbox.checked = true;
+            if (!checkbox.checked) {
+                checkbox.checked = true;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
         });
-        this.updateSelectedIds();
     }
 
     /**
      * Deselect all checkboxes.
+     * Dispatches change events to trigger data-model binding.
      */
     deselectAll() {
         this.checkboxTargets.forEach(checkbox => {
-            checkbox.checked = false;
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
         });
-        this.updateSelectedIds();
-    }
-
-    /**
-     * Update the hidden selectedIds input with current selection.
-     * This syncs with the LiveComponent's selectedIds LiveProp.
-     */
-    updateSelectedIds() {
-        const selectedIds = this.checkboxTargets
-            .filter(checkbox => checkbox.checked)
-            .map(checkbox => parseInt(checkbox.value));
-
-        // Update LiveComponent's selectedIds prop
-        if (this.hasSelectedIdsTarget) {
-            this.selectedIdsTarget.value = JSON.stringify(selectedIds);
-            // Trigger change event to update LiveComponent
-            this.selectedIdsTarget.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-
-        this.updateCount();
-    }
-
-    /**
-     * Update the selection count display.
-     */
-    updateCount() {
-        if (this.hasCountTarget) {
-            const count = this.checkboxTargets.filter(checkbox => checkbox.checked).length;
-            this.countTarget.textContent = count;
-        }
     }
 }

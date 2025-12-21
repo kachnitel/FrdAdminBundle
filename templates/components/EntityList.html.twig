@@ -38,29 +38,15 @@
             <button
                 type="button"
                 class="btn btn-sm btn-danger"
-                data-action="click->batch-select#performBatchDelete"
-            >
-                Delete Selected (<span data-batch-select-target="count">{{ this.selectedIds|length }}</span>)
-            </button>
-            {# Hidden button that will actually trigger the LiveComponent action #}
-            <button
-                type="button"
-                style="display: none;"
-                data-batch-select-target="deleteButton"
                 data-action="live#action"
                 data-live-action-param="batchDelete"
-            ></button>
+                onclick="return confirm('Are you sure you want to delete the selected items?')"
+            >
+                Delete Selected ({{ this.selectedIds|length }})
+            </button>
         </div>
     {% endif %}
 
-    {# Hidden input to store selectedIds - read by JS controller #}
-    {% if this.isBatchActionsEnabled %}
-        <input
-            type="hidden"
-            data-batch-select-target="selectedIds"
-            value="{{ this.selectedIds|json_encode }}"
-        >
-    {% endif %}
 
     {# Global Search #}
     {% if block('search') is defined %}
@@ -144,6 +130,7 @@
                                 class="form-check-input"
                                 value="{{ entityId }}"
                                 {% if entityId in this.selectedIds %}checked{% endif %}
+                                data-model="selectedIds[]"
                                 data-batch-select-target="checkbox"
                                 data-action="change->batch-select#toggle"
                             >
