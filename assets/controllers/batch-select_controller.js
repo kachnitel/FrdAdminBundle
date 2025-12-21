@@ -5,7 +5,7 @@ import { Controller } from '@hotwired/stimulus';
  *
  * Supports:
  * - Click to toggle individual selection
- * - Shift+Click for range selection
+ * - Shift+Click for range selection between last clicked and current
  * - Ctrl/Cmd+Click for multi-toggle
  */
 export default class extends Controller {
@@ -19,7 +19,10 @@ export default class extends Controller {
     }
 
     /**
-     * Handle checkbox change with modifier key support.
+     * Handle checkbox click with modifier key support.
+     *
+     * Must use 'click' event (not 'change') to properly detect shift key
+     * and prevent default text selection behavior.
      *
      * @param {Event} event - Click event with potential shift/ctrl/meta modifiers
      */
@@ -27,13 +30,28 @@ export default class extends Controller {
         const checkbox = event.currentTarget;
         const currentIndex = this.checkboxTargets.indexOf(checkbox);
 
-        // Shift+Click: Range selection
+        // Shift+Click: Range selection from last clicked to current
         if (event.shiftKey && this.lastCheckedIndexValue !== -1) {
-            this.selectRange(this.lastCheckedIndexValue, currentIndex, checkbox.checked);
-        }
-        // Ctrl/Cmd+Click or regular click: Individual toggle
-        // (No special handling needed - checkbox toggles naturally)
+            // Prevent default browser behavior (text selection)
+            event.preventDefault();
 
+            // Determine the desired state - we want to apply the state
+            // that the clicked checkbox will have AFTER this click
+            const checked = !checkbox.checked;
+            
+            // Apply to the clicked checkbox
+            checkbox.checked = checked;
+            
+            // Apply to the range
+            this.selectRange(this.lastCheckedIndexValue, currentIndex, checked);
+
+            // Manually dispatch change for LiveComponent sync
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        // Regular click or Ctrl/Cmd+Click: Individual toggle
+        // (checkbox toggles naturally, change event fires automatically)
+
+        // Remember this checkbox as the last clicked for next shift+click
         this.lastCheckedIndexValue = currentIndex;
     }
 
