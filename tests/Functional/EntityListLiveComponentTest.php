@@ -216,8 +216,8 @@ class EntityListLiveComponentTest extends ComponentTestCase
         $this->assertCount(20, $entities); // First page should have 20 items
 
         // Verify pagination info
-        $this->assertSame(25, $component->getTotalItems());
-        $this->assertSame(2, $component->getTotalPages());
+        $this->assertSame(25, $component->getPaginationInfo()->totalItems);
+        $this->assertSame(2, $component->getPaginationInfo()->getTotalPages());
     }
 
     public function testPaginationNavigationBetweenPages(): void
@@ -276,8 +276,8 @@ class EntityListLiveComponentTest extends ComponentTestCase
         $entities = $component->getEntities();
         $this->assertCount(5, $entities);
 
-        $this->assertSame(15, $component->getTotalItems());
-        $this->assertSame(3, $component->getTotalPages());
+        $this->assertSame(15, $component->getPaginationInfo()->totalItems);
+        $this->assertSame(3, $component->getPaginationInfo()->getTotalPages());
     }
 
     public function testPaginationWithSearchFiltersResults(): void
@@ -311,8 +311,8 @@ class EntityListLiveComponentTest extends ComponentTestCase
         $this->assertCount(10, $entities);
 
         // Total should be 15 (half of 30)
-        $this->assertSame(15, $component->getTotalItems());
-        $this->assertSame(2, $component->getTotalPages());
+        $this->assertSame(15, $component->getPaginationInfo()->totalItems);
+        $this->assertSame(2, $component->getPaginationInfo()->getTotalPages());
 
         // All entities should contain "Special"
         foreach ($entities as $entity) {
@@ -328,8 +328,8 @@ class EntityListLiveComponentTest extends ComponentTestCase
             );
 
         $component = $testComponent->component();
-        $this->assertSame(0, $component->getTotalItems());
-        $this->assertSame(0, $component->getTotalPages());
+        $this->assertSame(0, $component->getPaginationInfo()->totalItems);
+        $this->assertSame(0, $component->getPaginationInfo()->getTotalPages());
         $this->assertCount(0, $component->getEntities());
     }
 
@@ -382,7 +382,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
         $component = $testComponent->component();
         // Should clamp to valid page
         $this->assertGreaterThanOrEqual(1, $component->page);
-        $this->assertLessThanOrEqual($component->getTotalPages(), $component->page);
+        $this->assertLessThanOrEqual($component->getPaginationInfo()->getTotalPages(), $component->page);
     }
 
     public function testComponentInitializesFromUrlSearchParam(): void
@@ -487,8 +487,8 @@ class EntityListLiveComponentTest extends ComponentTestCase
 
         $entities = $component->getEntities();
         $this->assertCount(10, $entities); // Second page of 10
-        $this->assertSame(25, $component->getTotalItems());
-        $this->assertSame(3, $component->getTotalPages());
+        $this->assertSame(25, $component->getPaginationInfo()->totalItems);
+        $this->assertSame(3, $component->getPaginationInfo()->getTotalPages());
     }
 
     public function testComponentInitializesFromUrlColumnFiltersParam(): void
@@ -568,7 +568,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
         // Verify filtering works with all params
         $entities = $component->getEntities();
         $this->assertCount(5, $entities); // First page of 5
-        $this->assertSame(15, $component->getTotalItems()); // 15 even numbers
-        $this->assertSame(3, $component->getTotalPages());
+        $this->assertSame(15, $component->getPaginationInfo()->totalItems); // 15 even numbers
+        $this->assertSame(3, $component->getPaginationInfo()->getTotalPages());
     }
 }

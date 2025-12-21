@@ -1,5 +1,5 @@
 ![Tests](<https://img.shields.io/badge/tests-111%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-48%25-red>)
+![Coverage](<https://img.shields.io/badge/coverage-49%25-red>)
 ![Assertions](<https://img.shields.io/badge/assertions-382-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.2-777BB4?logo=php&logoColor=white>)

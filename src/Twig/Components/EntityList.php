@@ -9,9 +9,10 @@ use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
+use Kachnitel\AdminBundle\ValueObject\PaginationInfo;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -80,22 +81,29 @@ class EntityList
     #[LiveProp]
     public ?string $repositoryMethod = null;
 
-    /** @var array<string, array<string, mixed>>|null Column filter metadata (lazy-loaded) */
-    private ?array $filterMetadata = null;
+    /** @var array<int> Allowed items per page options */
+    public array $allowedItemsPerPage;
 
     /** @var int|null Cached total count of items */
     private ?int $totalItems = null;
+
+    /** @var array<string, array<string, mixed>>|null Column filter metadata (lazy-loaded) */
+    private ?array $filterMetadataCache = null;
+
+    /** @var array<int|string, string>|null Cached columns */
+    private ?array $columnsCache = null;
 
     public function __construct(
         private EntityManagerInterface $em,
         private FilterMetadataProvider $filterMetadataProvider,
         private EntityDiscoveryService $entityDiscovery,
         private EntityListQueryService $queryService,
+        public readonly EntityListPermissionService $permissionService,
         private Security $security,
-        private FormRegistryInterface $formRegistry,
         private EntityListConfig $config
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
+        $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
     }
 
     // --- Security ---
@@ -116,51 +124,6 @@ class EntityList
                 $this->entityShortClass
             ));
         }
-    }
-
-    /**
-     * Whether to show "edit" button
-     * NOTE: can accept a parameter to decide by column in future release
-     * Test:
-     * - Does user have permission
-     * - Does route exist
-     * - Is route accessible (redundant? verify it's working)
-     * - Does form exist (skip for show)
-     */
-    public function canEdit(): bool
-    {
-        return $this->hasForm()
-            && $this->security->isGranted(AdminEntityVoter::ADMIN_EDIT, $this->entityShortClass);
-    }
-
-    /**
-     * Whether to show "new" button
-     * Test:
-     * - Does user have permission
-     * - Does form exist
-     */
-    public function canNew(): bool
-    {
-        return $this->hasForm()
-            && $this->security->isGranted(AdminEntityVoter::ADMIN_NEW, $this->entityShortClass);
-    }
-
-    /**
-     * Whether batch actions are enabled for this entity.
-     */
-    public function isBatchActionsEnabled(): bool
-    {
-        $adminAttr = $this->entityDiscovery->getAdminAttribute($this->entityClass);
-        return $adminAttr?->isEnableBatchActions() ?? false;
-    }
-
-    /**
-     * Whether to show batch delete button.
-     */
-    public function canBatchDelete(): bool
-    {
-        return $this->isBatchActionsEnabled()
-            && $this->security->isGranted(AdminEntityVoter::ADMIN_DELETE, $this->entityShortClass);
     }
 
     // --- UI ---
@@ -194,7 +157,7 @@ class EntityList
     /**
      * Get total number of items (with filters applied).
      */
-    public function getTotalItems(): int
+    private function getTotalItems(): int
     {
         if ($this->totalItems === null) {
             // Trigger getEntities to populate totalItems
@@ -205,52 +168,15 @@ class EntityList
     }
 
     /**
-     * Get total number of pages.
+     * Get pagination information (pages, start/end items).
      */
-    public function getTotalPages(): int
+    public function getPaginationInfo(): PaginationInfo
     {
-        $total = $this->getTotalItems();
-        if ($total === 0) {
-            return 0;
-        }
-
-        return (int) ceil($total / $this->itemsPerPage);
-    }
-
-    /**
-     * Get the starting item number for current page.
-     */
-    public function getStartItem(): int
-    {
-        $total = $this->getTotalItems();
-        if ($total === 0) {
-            return 0;
-        }
-
-        return (($this->page - 1) * $this->itemsPerPage) + 1;
-    }
-
-    /**
-     * Get the ending item number for current page.
-     */
-    public function getEndItem(): int
-    {
-        $total = $this->getTotalItems();
-        if ($total === 0) {
-            return 0;
-        }
-
-        return min($this->page * $this->itemsPerPage, $total);
-    }
-
-    /**
-     * Get allowed items per page options.
-     *
-     * @return array<int>
-     */
-    public function getAllowedItemsPerPage(): array
-    {
-        return $this->config->allowedItemsPerPage;
+        return new PaginationInfo(
+            $this->getTotalItems(),
+            $this->page,
+            $this->itemsPerPage
+        );
     }
 
     #[LiveAction]
@@ -272,7 +198,7 @@ class EntityList
     #[LiveAction]
     public function nextPage(): void
     {
-        if ($this->page < $this->getTotalPages()) {
+        if ($this->page < $this->getPaginationInfo()->getTotalPages()) {
             $this->page++;
         }
     }
@@ -288,7 +214,7 @@ class EntityList
     #[LiveAction]
     public function goToPage(#[LiveArg] int $page): void
     {
-        $this->page = max(1, min($page, $this->getTotalPages()));
+        $this->page = max(1, min($page, $this->getPaginationInfo()->getTotalPages()));
     }
 
     /**
@@ -311,7 +237,7 @@ class EntityList
     #[LiveAction]
     public function batchDelete(): void
     {
-        if (!$this->canBatchDelete()) {
+        if (!$this->permissionService->canBatchDelete($this->entityClass, $this->entityShortClass)) {
             throw new AccessDeniedException('Batch delete not allowed for this entity.');
         }
 
@@ -368,10 +294,10 @@ class EntityList
      */
     public function getFilterMetadata(): array
     {
-        if ($this->filterMetadata === null) {
-            $this->filterMetadata = $this->filterMetadataProvider->getFilters($this->entityClass);
+        if ($this->filterMetadataCache === null) {
+            $this->filterMetadataCache = $this->filterMetadataProvider->getFilters($this->entityClass);
         }
-        return $this->filterMetadata;
+        return $this->filterMetadataCache;
     }
 
     /**
@@ -386,12 +312,17 @@ class EntityList
      */
     public function getColumns(): array
     {
+        if ($this->columnsCache !== null) {
+            return $this->columnsCache;
+        }
+
         $metadata = $this->em->getClassMetadata($this->entityClass);
         $adminAttr = $this->entityDiscovery->getAdminAttribute($this->entityClass);
 
         // If columns are explicitly configured, use only those (respecting order)
         if ($adminAttr?->getColumns() !== null) {
-            return $adminAttr->getColumns();
+            $this->columnsCache = $adminAttr->getColumns();
+            return $this->columnsCache;
         }
 
         // Get all available columns
@@ -400,16 +331,11 @@ class EntityList
         // If excludeColumns is configured, filter them out
         if ($adminAttr?->getExcludeColumns() !== null) {
             $excludeColumns = $adminAttr->getExcludeColumns();
-            return array_values(array_filter($allColumns, fn($col) => !in_array($col, $excludeColumns)));
+            $this->columnsCache = array_values(array_filter($allColumns, fn($col) => !in_array($col, $excludeColumns)));
+            return $this->columnsCache;
         }
 
-        return $allColumns;
-    }
-
-    private function hasForm(): bool
-    {
-        $type = $this->entityDiscovery->getAdminAttribute($this->entityClass)->getFormType()
-            ?: $this->config->formNamespace . $this->entityShortClass . $this->config->formSuffix;
-        return $this->formRegistry->hasType($type);
+        $this->columnsCache = $allColumns;
+        return $this->columnsCache;
     }
 }

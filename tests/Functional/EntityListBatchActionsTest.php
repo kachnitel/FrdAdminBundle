@@ -313,7 +313,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
         );
 
         $component = $testComponent->component();
-        $this->assertTrue($component->canBatchDelete());
+        $this->assertTrue($component->permissionService->canBatchDelete($component->entityClass, $component->entityShortClass));
     }
 
     public function testIsBatchActionsEnabledReturnsFalseByDefault(): void
@@ -325,7 +325,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
         );
 
         $component = $testComponent->component();
-        $this->assertFalse($component->isBatchActionsEnabled());
+        $this->assertFalse($component->permissionService->isBatchActionsEnabled($component->entityClass));
     }
 
     public function testCheckboxesHaveProperDataModelBinding(): void
@@ -511,12 +511,12 @@ class EntityListBatchActionsTest extends ComponentTestCase
         );
 
         $component = $testComponent->component();
-        $this->assertSame(5, $component->getTotalItems());
+        $this->assertSame(5, $component->getPaginationInfo()->totalItems);
 
         // Execute batch delete
         $testComponent->call('batchDelete');
 
         $component = $testComponent->component();
-        $this->assertSame(3, $component->getTotalItems());
+        $this->assertSame(3, $component->getPaginationInfo()->totalItems);
     }
 }

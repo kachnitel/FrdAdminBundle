@@ -10,14 +10,14 @@
  #}
 
 <div
-    {% if this.isBatchActionsEnabled %}
+    {% if this.permissionService.isBatchActionsEnabled(this.entityClass) %}
         {{ attributes.defaults({ 'data-controller': 'batch-select' }) }}
     {% else %}
         {{ attributes }}
     {% endif %}
 >
     {# Batch Actions Bar #}
-    {% if this.isBatchActionsEnabled and this.canBatchDelete %}
+    {% if this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
         <div class="admin-batch-actions mb-3 d-flex gap-2 align-items-center">
             <button
                 type="button"
@@ -53,7 +53,7 @@
     <table class="table table-hover">
         <thead>
             <tr>
-                {% if this.isBatchActionsEnabled and this.canBatchDelete %}
+                {% if this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
                     <th style="width: 40px;">
                         <input
                             type="checkbox"
@@ -83,7 +83,7 @@
                 <th>Actions</th>
             </tr>
             <tr class="filters">
-                {% if this.isBatchActionsEnabled and this.canBatchDelete %}
+                {% if this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
                     <th></th>
                 {% endif %}
                 {% for column in this.columns %}
@@ -108,7 +108,7 @@
                 {% set entityData = admin_get_entity_data(entity) %}
                 {% set entityId = entityData.id ?? entityData[attribute(entity, 'id')] ?? loop.index %}
                 <tr>
-                    {% if this.isBatchActionsEnabled and this.canBatchDelete %}
+                    {% if this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
                         <td>
                             <input
                                 type="checkbox"
@@ -154,7 +154,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="{{ this.columns|length + (this.isBatchActionsEnabled and this.canBatchDelete ? 2 : 1) }}" class="text-center text-muted py-4">
+                    <td colspan="{{ this.columns|length + (this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) ? 2 : 1) }}" class="text-center text-muted py-4">
                         No {{ this.entityShortClass }} found.
                     </td>
                 </tr>
@@ -163,7 +163,8 @@
     </table>
 
     {# Pagination Controls #}
-    {% if this.totalPages > 0 %}
+    {% set paginationInfo = this.paginationInfo %}
+    {% if paginationInfo.totalPages > 0 %}
         <div class="pagination-wrapper d-flex justify-content-between align-items-center mt-3">
             {# Items per page selector #}
             <div class="items-per-page">
@@ -185,8 +186,8 @@
             <div class="pagination-info-controls d-flex align-items-center gap-3">
                 {# Showing X-Y of Z #}
                 <span class="text-muted">
-                    {% if this.totalItems > 0 %}
-                        Showing {{ this.startItem }}-{{ this.endItem }} of {{ this.totalItems }}
+                    {% if paginationInfo.totalItems > 0 %}
+                        Showing {{ paginationInfo.startItem }}-{{ paginationInfo.endItem }} of {{ paginationInfo.totalItems }}
                     {% else %}
                         No items
                     {% endif %}
@@ -210,17 +211,17 @@
                         {# Page number display #}
                         <li class="page-item disabled">
                             <span class="page-link">
-                                Page {{ this.page }} of {{ this.totalPages }}
+                                Page {{ this.page }} of {{ paginationInfo.totalPages }}
                             </span>
                         </li>
 
                         {# Next button #}
-                        <li class="page-item {% if this.page >= this.totalPages %}disabled{% endif %}">
+                        <li class="page-item {% if this.page >= paginationInfo.totalPages %}disabled{% endif %}">
                             <button
                                 class="page-link"
                                 data-action="live#action"
                                 data-live-action-param="nextPage"
-                                {% if this.page >= this.totalPages %}disabled{% endif %}
+                                {% if this.page >= paginationInfo.totalPages %}disabled{% endif %}
                             >
                                 Next
                             </button>

@@ -268,6 +268,6 @@ class TemplateOverrideTest extends ComponentTestCase
         $testComponent->set('search', '');
         $component = $testComponent->component();
         $this->assertSame(2, $component->itemsPerPage);
-        $this->assertSame(3, $component->getTotalPages());
+        $this->assertSame(3, $component->getPaginationInfo()->getTotalPages());
     }
 }
