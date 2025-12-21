@@ -21,22 +21,6 @@
         <div class="admin-batch-actions mb-3 d-flex gap-2 align-items-center">
             <button
                 type="button"
-                class="btn btn-sm btn-outline-secondary"
-                data-batch-select-target="selectAllBtn"
-                data-action="click->batch-select#selectAll"
-            >
-                Select All
-            </button>
-            <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary"
-                data-action="click->batch-select#deselectAll"
-            >
-                Deselect All
-            </button>
-            <div class="vr"></div>
-            <button
-                type="button"
                 class="btn btn-sm btn-danger"
                 data-action="live#action"
                 data-live-action-param="batchDelete"
@@ -75,7 +59,8 @@
                             type="checkbox"
                             class="form-check-input"
                             title="Select/Deselect All"
-                            data-action="change->batch-select#selectAll"
+                            data-batch-select-target="master"
+                            data-action="change->batch-select#toggleAll"
                         >
                     </th>
                 {% endif %}

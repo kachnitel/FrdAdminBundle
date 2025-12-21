@@ -155,9 +155,9 @@ Enable/disable batch actions for selecting and performing operations on multiple
 
 **Features:**
 - Individual row selection with checkboxes
-- **Shift+Click** for range selection
+- **Shift+Click** for range selection (click first checkbox, then shift+click another to select all rows between them)
 - **Ctrl/Cmd+Click** for multi-toggle
-- "Select All" / "Deselect All" buttons
+- Master checkbox to select/deselect all (with indeterminate state when partially selected)
 - Batch delete with confirmation dialog
 - Real-time selection counter
 

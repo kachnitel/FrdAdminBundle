@@ -7,22 +7,17 @@ import { Controller } from '@hotwired/stimulus';
  * - Click to toggle individual selection
  * - Shift+Click for range selection between last clicked and current
  * - Ctrl/Cmd+Click for multi-toggle
+ * - Master checkbox to select/deselect all
  */
 export default class extends Controller {
-    static targets = ['checkbox'];
-    static values = {
-        lastCheckedIndex: Number
-    };
+    static targets = ['checkbox', 'master'];
 
     connect() {
-        this.lastCheckedIndexValue = -1;
+        this.lastCheckedIndex = -1;
     }
 
     /**
      * Handle checkbox click with modifier key support.
-     *
-     * Must use 'click' event (not 'change') to properly detect shift key
-     * and prevent default text selection behavior.
      *
      * @param {Event} event - Click event with potential shift/ctrl/meta modifiers
      */
@@ -31,36 +26,65 @@ export default class extends Controller {
         const currentIndex = this.checkboxTargets.indexOf(checkbox);
 
         // Shift+Click: Range selection from last clicked to current
-        if (event.shiftKey && this.lastCheckedIndexValue !== -1) {
-            // Prevent default browser behavior (text selection)
+        if (event.shiftKey && this.lastCheckedIndex !== -1) {
             event.preventDefault();
-
-            // Determine the desired state - we want to apply the state
-            // that the clicked checkbox will have AFTER this click
-            const checked = !checkbox.checked;
             
-            // Apply to the clicked checkbox
-            checkbox.checked = checked;
+            // Look at the anchor checkbox's CURRENT state and apply to range
+            const anchorCheckbox = this.checkboxTargets[this.lastCheckedIndex];
+            const targetState = anchorCheckbox ? anchorCheckbox.checked : true;
             
-            // Apply to the range
-            this.selectRange(this.lastCheckedIndexValue, currentIndex, checked);
-
-            // Manually dispatch change for LiveComponent sync
+            // Apply to all checkboxes in range (including endpoints)
+            this.selectRange(this.lastCheckedIndex, currentIndex, targetState);
+            
+            // Explicitly set the clicked checkbox (since we prevented default)
+            checkbox.checked = targetState;
             checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+            // Regular click - remember this as the anchor for next shift+click
+            this.lastCheckedIndex = currentIndex;
         }
-        // Regular click or Ctrl/Cmd+Click: Individual toggle
-        // (checkbox toggles naturally, change event fires automatically)
 
-        // Remember this checkbox as the last clicked for next shift+click
-        this.lastCheckedIndexValue = currentIndex;
+        // Update master checkbox state
+        this.updateMaster();
+    }
+
+    /**
+     * Handle master checkbox change - select or deselect all based on its state.
+     *
+     * @param {Event} event - Change event from master checkbox
+     */
+    toggleAll(event) {
+        const checked = event.currentTarget.checked;
+
+        this.checkboxTargets.forEach(checkbox => {
+            if (checkbox.checked !== checked) {
+                checkbox.checked = checked;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+    }
+
+    /**
+     * Update master checkbox state based on row checkboxes.
+     * - Checked if all are checked
+     * - Unchecked if none are checked
+     * - Indeterminate if some (but not all) are checked
+     */
+    updateMaster() {
+        if (!this.hasMasterTarget) return;
+
+        const total = this.checkboxTargets.length;
+        const checked = this.checkboxTargets.filter(cb => cb.checked).length;
+
+        this.masterTarget.checked = checked === total && total > 0;
+        this.masterTarget.indeterminate = checked > 0 && checked < total;
     }
 
     /**
      * Select/deselect a range of checkboxes.
-     * Dispatches change events to trigger data-model binding.
      *
      * @param {number} start - Start index
-     * @param {number} end - End index
+     * @param {number} end - End index  
      * @param {boolean} checked - Whether to check or uncheck
      */
     selectRange(start, end, checked) {
@@ -68,37 +92,11 @@ export default class extends Controller {
 
         for (let i = min; i <= max; i++) {
             const checkbox = this.checkboxTargets[i];
-            if (checkbox && checkbox.checked !== checked) {
+            if (checkbox) {
                 checkbox.checked = checked;
-                // Dispatch change event to trigger data-model binding
                 checkbox.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }
     }
 
-    /**
-     * Select all checkboxes on current page.
-     * Dispatches change events to trigger data-model binding.
-     */
-    selectAll() {
-        this.checkboxTargets.forEach(checkbox => {
-            if (!checkbox.checked) {
-                checkbox.checked = true;
-                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-        });
-    }
-
-    /**
-     * Deselect all checkboxes.
-     * Dispatches change events to trigger data-model binding.
-     */
-    deselectAll() {
-        this.checkboxTargets.forEach(checkbox => {
-            if (checkbox.checked) {
-                checkbox.checked = false;
-                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-        });
-    }
 }

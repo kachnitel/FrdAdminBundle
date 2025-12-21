@@ -88,7 +88,7 @@ The bundle's `package.json` includes the necessary Symfony UX configuration. Enc
 
 **Features:**
 - Click to toggle individual selection
-- Shift+Click for range selection
+- Shift+Click for range selection (selects all checkboxes between first and second click)
 - Ctrl/Cmd+Click for multi-toggle
 - Real-time selection counter
 - Syncs with LiveComponent state
