@@ -20,6 +20,7 @@
 
 - **[Configuration Guide](docs/CONFIGURATION.md)** - Configure entities with the `#[Admin]` attribute
 - **[Column Filtering](docs/FILTERS.md)** - Automatic per-column filters and customization
+- **[Batch Actions Setup](docs/BATCH_ACTIONS.md)** - Enable multi-select and bulk operations
 - **[Asset Management](docs/ASSETS.md)** - AssetMapper & Webpack Encore setup for Stimulus controllers
 - **[Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md)** - Customize the admin interface appearance
 - **[Development Guide](docs/DEVELOPMENT.md)** - Running tests, code quality, and contributing
@@ -51,24 +52,27 @@ return [
 ];
 ```
 
-### 2. Configure the Bundle (Minimum Config)
+### 2. Configure the Bundle
 
-This bundle is designed to be **minimum-config**. The minimal required configuration is simply the bundle key in a YAML file:
+Create the bundle configuration file:
 
 ```yaml
 # config/packages/kachnitel_admin.yaml
-kachnitel_admin: ~
+kachnitel_admin:
+    base_layout: 'base.html.twig'  # Your app's base template
+    required_role: 'ROLE_ADMIN'    # Role required to access admin (null for no restriction)
 ```
 
-The entry `kachnitel_admin: ~` is the **minimum required configuration** and **must** be present in `config/packages/kachnitel_admin.yaml` (or an equivalent config file) for the bundle to load its default services and settings. The configuration file itself cannot be empty or missing for the bundle to function correctly.
+> **Note:** The `kachnitel_admin:` key **must** be present for the bundle to load. Use `kachnitel_admin: ~` for all defaults.
 
-See the [Configuration Guide](docs/CONFIGURATION.md) for further details.
+See the [Configuration Guide](docs/CONFIGURATION.md) for all available options.
 
 ### 3. Add Routes
 
-In `config/routes.yaml`:
+Import the bundle's routes:
 
 ```yaml
+# config/routes/kachnitel_admin.yaml
 kachnitel_admin:
     resource: '@KachnitelAdminBundle/config/routes.yaml'
     prefix: /admin
@@ -88,9 +92,36 @@ class Product
 }
 ```
 
-That's it! The entity will now appear in the admin dashboard.
+That's it! The entity will now appear in the admin dashboard at `/admin`.
 
-For advanced configuration (columns, permissions, pagination, etc.), see the [Configuration Guide](docs/CONFIGURATION.md).
+### 5. Enable Batch Actions (Optional)
+
+For multi-select and batch delete functionality, you'll need to:
+
+1. Enable batch actions on your entity:
+   ```php
+   #[Admin(label: 'Products', enableBatchActions: true)]
+   class Product { /* ... */ }
+   ```
+
+2. Register the Stimulus controller in your asset configuration
+
+**→ See the [Batch Actions Setup Guide](docs/BATCH_ACTIONS.md) for complete setup instructions.**
+
+---
+
+## 📋 Installation Summary
+
+| Step | Automated by Flex | Manual Setup Required |
+|------|-------------------|----------------------|
+| Bundle registration (`bundles.php`) | ✅ Yes | Only if not using Flex |
+| Config file (`kachnitel_admin.yaml`) | ✅ Creates template | Customize `base_layout`, `required_role` |
+| Routes import | ✅ Creates file | Adjust prefix if needed |
+| Entity `#[Admin]` attribute | ❌ No | Add to each entity |
+| Security/access control | ❌ No | Configure in `security.yaml` |
+| Batch actions Stimulus controller | ❌ No | Manual registration in `controllers.json` |
+| Template overrides | ❌ No | Create in `templates/bundles/KachnitelAdminBundle/` |
+| Form types for edit/new | ❌ No | Create form classes |
 
 For template customization, see the [Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md).
 

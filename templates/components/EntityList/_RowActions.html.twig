@@ -1,0 +1,21 @@
+{#
+ # Partial template for entity row action buttons.
+ #
+ # Variables:
+ # @var object entity - The entity object
+ # @var string entityShortClass - Short class name for permission checks
+ #}
+
+<td class="actions">
+    {% if admin_action_accessible(entityShortClass, 'show') %}
+        <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
+            👀
+        </a>
+    {% endif %}
+
+    {% if admin_action_accessible(entityShortClass, 'edit') %}
+        <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
+            🖊
+        </a>
+    {% endif %}
+</td>

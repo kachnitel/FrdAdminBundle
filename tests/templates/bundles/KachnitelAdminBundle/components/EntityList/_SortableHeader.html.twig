@@ -1,0 +1,18 @@
+{#
+ # Partial template for sortable table header cell (test override).
+ #}
+
+<th>
+    <button
+        type="button"
+        class="btn btn-link p-0 text-decoration-none"
+        data-action="live#action"
+        data-live-action-param="sort"
+        data-live-column-param="{{ column }}"
+    >
+        {{ column|humanize }}
+        {% if sortBy == column %}
+            <span class="sort-indicator">{{ sortDirection == constant('SORT_ASC', component) ? '▲' : '▼' }}</span>
+        {% endif %}
+    </button>
+</th>

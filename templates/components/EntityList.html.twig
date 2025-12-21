@@ -9,26 +9,22 @@
  # @var array columnFilters - Per-column filter values
  #}
 
+{% set batchEnabled = this.permissionService.isBatchActionsEnabled(this.entityClass) %}
+{% set canBatchDelete = this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
+{% set showBatchColumn = batchEnabled and canBatchDelete %}
+
 <div
-    {% if this.permissionService.isBatchActionsEnabled(this.entityClass) %}
+    {% if batchEnabled %}
         {{ attributes.defaults({ 'data-controller': 'batch-select' }) }}
     {% else %}
         {{ attributes }}
     {% endif %}
 >
     {# Batch Actions Bar #}
-    {% if this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
-        <div class="admin-batch-actions mb-3 d-flex gap-2 align-items-center">
-            <button
-                type="button"
-                class="btn btn-sm btn-danger"
-                data-action="live#action"
-                data-live-action-param="batchDelete"
-                onclick="return confirm('Are you sure you want to delete the selected items?')"
-            >
-                Delete Selected ({{ this.selectedIds|length }})
-            </button>
-        </div>
+    {% if showBatchColumn %}
+        {% include '@KachnitelAdmin/components/EntityList/_BatchActionsBar.html.twig' with {
+            selectedCount: this.selectedIds|length
+        } only %}
     {% endif %}
 
 
@@ -53,7 +49,7 @@
     <table class="table table-hover">
         <thead>
             <tr>
-                {% if this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
+                {% if showBatchColumn %}
                     <th style="width: 40px;">
                         <input
                             type="checkbox"
@@ -65,25 +61,17 @@
                     </th>
                 {% endif %}
                 {% for column in this.columns %}
-                    <th>
-                        <button
-                            type="button"
-                            class="btn btn-link p-0 text-decoration-none"
-                            data-action="live#action"
-                            data-live-action-param="sort"
-                            data-live-column-param="{{ column }}"
-                        >
-                            {{ column|humanize }}
-                            {% if sortBy == column %}
-                                <span class="sort-indicator">{{ sortDirection == constant('SORT_ASC', this) ? '▲' : '▼' }}</span>
-                            {% endif %}
-                        </button>
-                    </th>
+                    {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
+                        column: column,
+                        sortBy: sortBy,
+                        sortDirection: sortDirection,
+                        component: this
+                    } only %}
                 {% endfor %}
                 <th>Actions</th>
             </tr>
             <tr class="filters">
-                {% if this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
+                {% if showBatchColumn %}
                     <th></th>
                 {% endif %}
                 {% for column in this.columns %}
@@ -108,7 +96,7 @@
                 {% set entityData = admin_get_entity_data(entity) %}
                 {% set entityId = entityData.id ?? entityData[attribute(entity, 'id')] ?? loop.index %}
                 <tr>
-                    {% if this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
+                    {% if showBatchColumn %}
                         <td>
                             <input
                                 type="checkbox"
@@ -138,23 +126,14 @@
                         </td>
                     {% endfor %}
 
-                    <td class="actions">
-                        {% if admin_action_accessible(this.entityShortClass, 'show') %}
-                            <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
-                                👀
-                            </a>
-                        {% endif %}
-
-                        {% if admin_action_accessible(this.entityShortClass, 'edit') %}
-                            <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
-                                🖊
-                            </a>
-                        {% endif %}
-                    </td>
+                    {% include '@KachnitelAdmin/components/EntityList/_RowActions.html.twig' with {
+                        entity: entity,
+                        entityShortClass: this.entityShortClass
+                    } only %}
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="{{ this.columns|length + (this.permissionService.isBatchActionsEnabled(this.entityClass) and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) ? 2 : 1) }}" class="text-center text-muted py-4">
+                    <td colspan="{{ this.columns|length + (showBatchColumn ? 2 : 1) }}" class="text-center text-muted py-4">
                         No {{ this.entityShortClass }} found.
                     </td>
                 </tr>
@@ -164,71 +143,10 @@
 
     {# Pagination Controls #}
     {% set paginationInfo = this.paginationInfo %}
-    {% if paginationInfo.totalPages > 0 %}
-        <div class="pagination-wrapper d-flex justify-content-between align-items-center mt-3">
-            {# Items per page selector #}
-            <div class="items-per-page">
-                <label for="items-per-page" class="form-label me-2">Items per page:</label>
-                <select
-                    id="items-per-page"
-                    class="form-select form-select-sm d-inline-block w-auto"
-                    data-model="itemsPerPage"
-                >
-                    {% for option in this.allowedItemsPerPage %}
-                        <option value="{{ option }}" {% if option == this.itemsPerPage %}selected{% endif %}>
-                            {{ option }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            {# Pagination info and controls #}
-            <div class="pagination-info-controls d-flex align-items-center gap-3">
-                {# Showing X-Y of Z #}
-                <span class="text-muted">
-                    {% if paginationInfo.totalItems > 0 %}
-                        Showing {{ paginationInfo.startItem }}-{{ paginationInfo.endItem }} of {{ paginationInfo.totalItems }}
-                    {% else %}
-                        No items
-                    {% endif %}
-                </span>
-
-                {# Page navigation #}
-                <nav aria-label="Page navigation">
-                    <ul class="pagination pagination-sm mb-0">
-                        {# Previous button #}
-                        <li class="page-item {% if this.page <= 1 %}disabled{% endif %}">
-                            <button
-                                class="page-link"
-                                data-action="live#action"
-                                data-live-action-param="previousPage"
-                                {% if this.page <= 1 %}disabled{% endif %}
-                            >
-                                Previous
-                            </button>
-                        </li>
-
-                        {# Page number display #}
-                        <li class="page-item disabled">
-                            <span class="page-link">
-                                Page {{ this.page }} of {{ paginationInfo.totalPages }}
-                            </span>
-                        </li>
-
-                        {# Next button #}
-                        <li class="page-item {% if this.page >= paginationInfo.totalPages %}disabled{% endif %}">
-                            <button
-                                class="page-link"
-                                data-action="live#action"
-                                data-live-action-param="nextPage"
-                                {% if this.page >= paginationInfo.totalPages %}disabled{% endif %}
-                            >
-                                Next
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    {% endif %}
+    {% include '@KachnitelAdmin/components/EntityList/_Pagination.html.twig' with {
+        paginationInfo: paginationInfo,
+        page: this.page,
+        allowedItemsPerPage: this.allowedItemsPerPage,
+        itemsPerPage: this.itemsPerPage
+    } only %}
 </div>

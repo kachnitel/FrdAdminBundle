@@ -1,0 +1,24 @@
+{#
+ # Partial template for sortable table header cell.
+ #
+ # Variables:
+ # @var string column - Column name
+ # @var string sortBy - Currently sorted column
+ # @var string sortDirection - Current sort direction (ASC/DESC)
+ # @var object component - Reference to parent component for constant access
+ #}
+
+<th>
+    <button
+        type="button"
+        class="btn btn-link p-0 text-decoration-none"
+        data-action="live#action"
+        data-live-action-param="sort"
+        data-live-column-param="{{ column }}"
+    >
+        {{ column|humanize }}
+        {% if sortBy == column %}
+            <span class="sort-indicator">{{ sortDirection == constant('SORT_ASC', component) ? '▲' : '▼' }}</span>
+        {% endif %}
+    </button>
+</th>
