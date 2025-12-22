@@ -45,7 +45,8 @@
         "symfony/console": "^6.4|^7.0|^8.0",
         "marcocesarato/php-conventional-changelog": "^1.17",
         "friendsofphp/php-cs-fixer": "^3.51",
-        "phpmd/phpmd": "^2.12"
+        "phpmd/phpmd": "^2.12",
+        "smnandre/twigmetrics": "^1.1"
     },
     "suggest": {
         "frd/entity-components-bundle": "For attachment, tag, and comment features"

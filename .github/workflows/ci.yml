@@ -19,7 +19,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           coverage: none
           tools: composer:v2
 
@@ -124,6 +124,11 @@ jobs:
         if: matrix.symfony == '8.*'
         run: |
           composer remove --dev --no-update marcocesarato/php-conventional-changelog phpmd/phpmd
+
+      - name: Remove PHP 8.3+ only dev dependencies
+        if: matrix.php == '8.2'
+        run: |
+          composer remove --dev --no-update smnandre/twigmetrics
 
       - name: Install dependencies (${{ matrix.dependency-version }})
         run: |
