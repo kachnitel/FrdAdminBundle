@@ -11,12 +11,12 @@
     "homepage": "https://github.com/kachnitel/FrdAdminBundle",
     "type": "module",
     "files": [
-        "dist"
+        "controllers"
     ],
     "symfony": {
         "controllers": {
             "batch-select": {
-                "main": "dist/batch-select_controller.js",
+                "main": "controllers/batch-select_controller.js",
                 "name": "batch-select",
                 "webpackMode": "eager",
                 "fetch": "eager",
@@ -24,7 +24,8 @@
             }
         },
         "importmap": {
-            "@hotwired/stimulus": "^3.0.0"
+            "@hotwired/stimulus": "^3.0.0",
+            "@kachnitel/admin-bundle/batch-select_controller.js": "path:%PACKAGE%/controllers/batch-select_controller.js"
         }
     },
     "peerDependencies": {

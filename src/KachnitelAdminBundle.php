@@ -13,6 +13,8 @@ class KachnitelAdminBundle extends AbstractBundle
     public function configure(DefinitionConfigurator $definition): void
     {
         $rootNode = $definition->rootNode();
+
+        /**@disregard P1013 Undefined method 'children'. */
         $rootNode->children()
                 ->scalarNode('entity_namespace')
                     ->defaultValue('App\\Entity\\')
@@ -93,9 +95,6 @@ class KachnitelAdminBundle extends AbstractBundle
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        // Don't manually register the Twig path - AbstractBundle does this automatically
-        // and allows proper template overriding via templates/bundles/KachnitelAdminBundle/
-
         // Register LiveComponent namespace
         $container->extension('twig_component', [
             'defaults' => [
@@ -108,7 +107,7 @@ class KachnitelAdminBundle extends AbstractBundle
             $builder->prependExtensionConfig('framework', [
                 'asset_mapper' => [
                     'paths' => [
-                        __DIR__ . '/../assets/dist' => '@kachnitel/admin-bundle',
+                        __DIR__ . '/../assets' => '@kachnitel/admin-bundle',
                     ],
                 ],
             ]);
@@ -120,6 +119,7 @@ class KachnitelAdminBundle extends AbstractBundle
      */
     private function isAssetMapperAvailable(ContainerBuilder $builder): bool
     {
+        /** @disregard P1009 AssetMapper is optional */
         if (!interface_exists(AssetMapperInterface::class)) {
             return false;
         }
