@@ -1,12 +1,12 @@
 {
-    "generated_at": "2025-12-21 20:32:10",
+    "generated_at": "2025-12-22 07:02:26",
     "tests": {
         "count": 111,
-        "assertions": 382,
+        "assertions": 359,
         "status": "passing"
     },
     "coverage": {
-        "lines": 49.25,
+        "lines": 49.14,
         "percentage": 49,
         "html_report": ".coverage\/index.html"
     },
@@ -16,6 +16,6 @@
     },
     "requirements": {
         "php": ">=8.2",
-        "symfony": "^6.4|^7.0"
+        "symfony": "^6.4|^7.0|^8.0"
     }
 }

@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+  workflow_dispatch:
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer:v2
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run PHPStan
+        run: composer phpstan
+
+      - name: Run PHP-CS-Fixer (dry-run)
+        run: composer phpcs
+
+      - name: Run PHPMD
+        run: composer phpmd
+
+  tests:
+    name: Tests (PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony }}, ${{ matrix.dependency-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # PHP 8.2 - Symfony 6.4 LTS with lowest dependencies
+          - php: '8.2'
+            symfony: '6.4.*'
+            dependency-version: 'prefer-lowest'
+
+          # PHP 8.2 - Symfony 6.4 LTS with stable dependencies
+          - php: '8.2'
+            symfony: '6.4.*'
+            dependency-version: 'prefer-stable'
+
+          # PHP 8.2 - Symfony 7.x with stable dependencies
+          - php: '8.2'
+            symfony: '7.*'
+            dependency-version: 'prefer-stable'
+
+          # PHP 8.3 - Symfony 7.x with stable dependencies
+          - php: '8.3'
+            symfony: '7.*'
+            dependency-version: 'prefer-stable'
+
+          # PHP 8.4 - Symfony 7.x with stable dependencies
+          - php: '8.4'
+            symfony: '7.*'
+            dependency-version: 'prefer-stable'
+
+          # PHP 8.4 - Symfony 8.x with stable dependencies (Symfony 8 requires PHP 8.4+)
+          - php: '8.4'
+            symfony: '8.*'
+            dependency-version: 'prefer-stable'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite
+          coverage: none
+          tools: composer:v2, flex
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-${{ matrix.dependency-version }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-
+            ${{ runner.os }}-php-${{ matrix.php }}-
+
+      - name: Configure Symfony Flex
+        run: |
+          composer global config --no-plugins allow-plugins.symfony/flex true
+          composer global require --no-progress --no-scripts --no-plugins symfony/flex
+
+      - name: Restrict Symfony version
+        if: matrix.symfony != ''
+        run: |
+          composer config extra.symfony.require "${{ matrix.symfony }}"
+          composer config --no-plugins allow-plugins.symfony/flex true
+
+      - name: Remove incompatible dev dependencies for Symfony 8
+        if: matrix.symfony == '8.*'
+        run: |
+          composer remove --dev --no-update marcocesarato/php-conventional-changelog phpmd/phpmd
+
+      - name: Install dependencies (${{ matrix.dependency-version }})
+        run: |
+          composer update --${{ matrix.dependency-version }} --prefer-dist --no-progress --no-interaction
+
+      - name: Show installed dependencies
+        run: composer show
+
+      - name: Run tests
+        run: composer phpunit

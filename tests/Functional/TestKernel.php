@@ -65,24 +65,39 @@ class TestKernel extends Kernel
             'output_path' => '%kernel.project_dir%/public/build',
         ]);
 
+        $ormConfig = [
+            'naming_strategy' => 'doctrine.orm.naming_strategy.underscore_number_aware',
+            'auto_mapping' => true,
+            'mappings' => [
+                'KachnitelAdminBundleTests' => [
+                    'is_bundle' => false,
+                    'type' => 'attribute',
+                    'dir' => '%kernel.project_dir%/tests/Fixtures',
+                    'prefix' => 'Kachnitel\\AdminBundle\\Tests\\Fixtures',
+                ],
+            ],
+        ];
+
+        // Doctrine-bundle 3.x removed proxy/ghost config options (they're no longer needed with ORM 3)
+        // Detect doctrine-bundle 3.x by checking for EventListenerInterface which was removed in 3.0
+        $isDoctrineBundle3 = !interface_exists(\Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface::class);
+
+        if (!$isDoctrineBundle3) {
+            // Doctrine-bundle 2.x: add proxy and lazy ghost options
+            $ormConfig['auto_generate_proxy_classes'] = true;
+
+            // Add lazy ghost options only if doctrine-bundle 2.13+ supports them
+            if (class_exists(\Doctrine\Bundle\DoctrineBundle\Attribute\AsMiddleware::class)) {
+                $ormConfig['enable_lazy_ghost_objects'] = true;
+            }
+        }
+
         $container->loadFromExtension('doctrine', [
             'dbal' => [
                 // FIX: Use a file-based DB to persist across kernel reboots/connection closures
                 'url' => 'sqlite:///%kernel.cache_dir%/test.db',
             ],
-            'orm' => [
-                'auto_generate_proxy_classes' => true,
-                'naming_strategy' => 'doctrine.orm.naming_strategy.underscore_number_aware',
-                'auto_mapping' => true,
-                'mappings' => [
-                    'KachnitelAdminBundleTests' => [
-                        'is_bundle' => false,
-                        'type' => 'attribute',
-                        'dir' => '%kernel.project_dir%/tests/Fixtures',
-                        'prefix' => 'Kachnitel\\AdminBundle\\Tests\\Fixtures',
-                    ],
-                ],
-            ],
+            'orm' => $ormConfig,
         ]);
 
         $container->loadFromExtension('security', [

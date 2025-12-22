@@ -110,6 +110,16 @@ class AdminRouteRuntimeTest extends TestCase
             ->method('getAttribute')
             ->willReturn($routes);
 
+        $route = $this->createMock(Route::class);
+        $route->method('getPath')->willReturn('/products');
+
+        $routeCollection = new RouteCollection();
+        $routeCollection->add('app_product_index', $route);
+
+        $this->router
+            ->method('getRouteCollection')
+            ->willReturn($routeCollection);
+
         $this->router
             ->expects($this->once())
             ->method('generate')
