@@ -19,6 +19,7 @@
 ## Documentation
 
 - **[Configuration Guide](docs/CONFIGURATION.md)** - Configure entities with the `#[Admin]` attribute
+- **[DataSource Abstraction](docs/DATASOURCE.md)** - Display non-Doctrine data sources in the admin
 - **[Column Filtering](docs/FILTERS.md)** - Automatic per-column filters and customization
 - **[Batch Actions Setup](docs/BATCH_ACTIONS.md)** - Enable multi-select and bulk operations
 - **[Asset Management](docs/ASSETS.md)** - AssetMapper & Webpack Encore setup for Stimulus controllers
@@ -34,6 +35,7 @@
 - 🔍 **Filters & Search**: Built-in filtering and search capabilities
 - ⚡ **Batch Operations**: Multi-select with Shift/Ctrl+Click and bulk delete
 - 📊 **Dashboard & Menu**: Configurable admin dashboard and navigation
+- 🔌 **DataSource Abstraction**: Display data from external APIs, audit logs, or any source
 
 ## 🏗️ Installation & Quick Start
 
@@ -131,7 +133,7 @@ Kachnitel Admin is built purely on the established **Symfony stack**.
 
 It relies only on **Symfony**, **Doctrine ORM**, and **Live Components** (part of the Symfony UX initiative) for all functionality and interactivity. This approach ensures the administration interface is built using server-side PHP without requiring any external JavaScript frameworks or frontend libraries.
 
-> **Note on Doctrine:** While currently dependent on Doctrine ORM, the goal is to decouple this dependency in a future release to allow for integration with other persistence layers/ORMs.
+> **DataSource Abstraction:** While Doctrine entities work out-of-the-box with the `#[Admin]` attribute, the bundle also supports custom data sources via the `DataSourceInterface`. This allows displaying data from external APIs, audit logs, or other non-Doctrine sources using the same admin UI. See the [DataSource Guide](docs/DATASOURCE.md) for details.
 
 ## Requirements
 
