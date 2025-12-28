@@ -4,6 +4,13 @@ services:
         autoconfigure: true
         public: false
 
+    # Auto-tag DataSource interfaces for service discovery
+    _instanceof:
+        Kachnitel\AdminBundle\DataSource\DataSourceInterface:
+            tags: ['admin.data_source']
+        Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface:
+            tags: ['admin.data_source_provider']
+
     # Make controllers public
     Kachnitel\AdminBundle\Controller\:
         resource: '../src/Controller'
@@ -12,6 +19,11 @@ services:
     # Services
     Kachnitel\AdminBundle\Service\:
         resource: '../src/Service'
+
+    # DataSource services (exclude DoctrineDataSource - created by factory, not a service)
+    Kachnitel\AdminBundle\DataSource\:
+        resource: '../src/DataSource'
+        exclude: '../src/DataSource/DoctrineDataSource.php'
 
     # Twig Extensions
     Kachnitel\AdminBundle\Twig\Extension\:

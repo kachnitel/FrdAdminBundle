@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Controller;
 
+use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
+use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * Generic Admin Controller with auto-discovery via #[Admin] attribute.
@@ -28,6 +31,8 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class GenericAdminController extends AbstractAdminController
 {
+    private DataSourceRegistry $dataSourceRegistry;
+
     public function __construct(
         private readonly EntityDiscoveryService $entityDiscovery,
         private readonly string $routePrefix = 'app_admin_entity',
@@ -35,6 +40,12 @@ class GenericAdminController extends AbstractAdminController
         private readonly string $entityNamespace = 'App\\Entity\\',
         private readonly ?string $requiredRole = 'ROLE_ADMIN',
     ) {}
+
+    #[Required]
+    public function setDataSourceRegistry(DataSourceRegistry $registry): void
+    {
+        $this->dataSourceRegistry = $registry;
+    }
 
     /**
      * List of supported entities discovered via #[Admin] attribute.
@@ -52,7 +63,7 @@ class GenericAdminController extends AbstractAdminController
     }
 
     /**
-     * Dashboard: Lists all supported entities.
+     * Dashboard: Lists all supported entities and data sources.
      */
     #[Route('/admin', name: 'app_admin_dashboard', methods: ['GET'])]
     public function dashboard(): Response
@@ -76,11 +87,28 @@ class GenericAdminController extends AbstractAdminController
                 'icon' => $adminAttr?->getIcon(),
                 // PascalCase to kebab-case slug (e.g. WorkStation -> work-station)
                 'slug'  => strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($entityName))),
+                'type' => 'entity',
             ];
         }, $this->getSupportedEntities());
 
+        // Collect non-Doctrine data sources (e.g., audit logs)
+        $dataSources = [];
+        foreach ($this->dataSourceRegistry->all() as $identifier => $dataSource) {
+            // Skip Doctrine data sources (they're already in entities list)
+            if ($dataSource instanceof DoctrineDataSource) {
+                continue;
+            }
+            $dataSources[] = [
+                'identifier' => $identifier,
+                'label' => $dataSource->getLabel(),
+                'icon' => $dataSource->getIcon(),
+                'type' => 'datasource',
+            ];
+        }
+
         return $this->render('@KachnitelAdmin/admin/dashboard.html.twig', [
-            'entities' => $entities
+            'entities' => $entities,
+            'dataSources' => $dataSources,
         ]);
     }
 
@@ -130,6 +158,56 @@ class GenericAdminController extends AbstractAdminController
         $this->checkEntityPermission(AdminEntityVoter::ADMIN_DELETE, $entityName);
 
         return $this->doDeleteEntity($entityName, $id, $request);
+    }
+
+    // ===== Data Source Routes (for non-Doctrine data sources like audit logs) =====
+
+    /**
+     * List data source entries.
+     */
+    #[Route('/admin/data/{dataSourceId}', name: 'app_admin_datasource_index', methods: ['GET'], priority: 10)]
+    public function dataSourceIndex(string $dataSourceId): Response
+    {
+        $this->checkGlobalPermission();
+
+        $dataSource = $this->dataSourceRegistry->get($dataSourceId);
+        if (!$dataSource) {
+            throw new NotFoundHttpException(sprintf('Data source "%s" not found.', $dataSourceId));
+        }
+
+        return $this->render('@KachnitelAdmin/admin/datasource_index.html.twig', [
+            'dataSourceId' => $dataSourceId,
+            'dataSource' => $dataSource,
+        ]);
+    }
+
+    /**
+     * Show a single data source entry.
+     */
+    #[Route('/admin/data/{dataSourceId}/{id}', name: 'app_admin_datasource_show', methods: ['GET'], priority: 10)]
+    public function dataSourceShow(string $dataSourceId, string $id): Response
+    {
+        $this->checkGlobalPermission();
+
+        $dataSource = $this->dataSourceRegistry->get($dataSourceId);
+        if (!$dataSource) {
+            throw new NotFoundHttpException(sprintf('Data source "%s" not found.', $dataSourceId));
+        }
+
+        if (!$dataSource->supportsAction('show')) {
+            throw new NotFoundHttpException('This data source does not support showing individual entries.');
+        }
+
+        $item = $dataSource->find($id);
+        if (!$item) {
+            throw new NotFoundHttpException(sprintf('Entry "%s" not found in data source "%s".', $id, $dataSourceId));
+        }
+
+        return $this->render('@KachnitelAdmin/admin/datasource_show.html.twig', [
+            'dataSourceId' => $dataSourceId,
+            'dataSource' => $dataSource,
+            'item' => $item,
+        ]);
     }
 
     /**

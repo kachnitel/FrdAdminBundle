@@ -1,0 +1,16 @@
+{#
+ # Partial template for data source entry row action buttons.
+ #
+ # Variables:
+ # @var string dataSourceId - Data source identifier
+ # @var DataSourceInterface dataSource - The data source instance
+ # @var string|int entityId - ID of the entry
+ #}
+
+<td class="actions">
+    {% if dataSource.supportsAction('show') %}
+        <a href="{{ path('app_admin_datasource_show', { dataSourceId: dataSourceId, id: entityId }) }}" class="btn btn-sm btn-outline-primary">
+            View
+        </a>
+    {% endif %}
+</td>

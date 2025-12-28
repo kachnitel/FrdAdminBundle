@@ -6,6 +6,10 @@ namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
+use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
+use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
+use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
@@ -25,7 +29,11 @@ use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 /**
  * LiveComponent for reactive entity lists with per-column search/filter, sorting, and pagination.
  *
- * Security: Requires ADMIN_INDEX permission for the entity being displayed.
+ * Supports two modes:
+ * 1. Entity mode (legacy): Pass entityClass and entityShortClass for Doctrine entities
+ * 2. DataSource mode: Pass dataSourceId for any DataSourceInterface implementation
+ *
+ * Security: Requires ADMIN_INDEX permission for the entity/data source being displayed.
  * Permission is checked using AdminEntityVoter against the entityShortClass in PostHydrate.
  *
  * Note: #[IsGranted] cannot be used with subject='entityShortClass' because security
@@ -67,16 +75,31 @@ class EntityList
     /**
      * Selected entity IDs for batch actions.
      *
-     * @var array<int>
+     * @var array<int|string>
      */
     #[LiveProp(writable: true)]
     public array $selectedIds = [];
 
+    /**
+     * Data source identifier (alternative to entityClass).
+     * When set, the component uses DataSourceRegistry to resolve the data source.
+     */
     #[LiveProp]
-    public string $entityClass;
+    public ?string $dataSourceId = null;
 
+    /**
+     * Entity class (legacy, for backward compatibility).
+     * Ignored when dataSourceId is set.
+     */
     #[LiveProp]
-    public string $entityShortClass;
+    public string $entityClass = '';
+
+    /**
+     * Entity short class (legacy, for backward compatibility).
+     * Ignored when dataSourceId is set.
+     */
+    #[LiveProp]
+    public string $entityShortClass = '';
 
     #[LiveProp]
     public ?string $repositoryMethod = null;
@@ -84,14 +107,17 @@ class EntityList
     /** @var array<int> Allowed items per page options */
     public array $allowedItemsPerPage;
 
-    /** @var int|null Cached total count of items */
-    private ?int $totalItems = null;
+    /** @var PaginatedResult|null Cached query result */
+    private ?PaginatedResult $queryResult = null;
 
     /** @var array<string, array<string, mixed>>|null Column filter metadata (lazy-loaded) */
     private ?array $filterMetadataCache = null;
 
     /** @var array<int|string, string>|null Cached columns */
     private ?array $columnsCache = null;
+
+    /** @var DataSourceInterface|null Resolved data source */
+    private ?DataSourceInterface $dataSource = null;
 
     public function __construct(
         private EntityManagerInterface $em,
@@ -100,7 +126,8 @@ class EntityList
         private EntityListQueryService $queryService,
         public readonly EntityListPermissionService $permissionService,
         private Security $security,
-        private EntityListConfig $config
+        private EntityListConfig $config,
+        private DataSourceRegistry $dataSourceRegistry,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -117,13 +144,64 @@ class EntityList
     #[PostHydrate]
     public function checkPermissions(): void
     {
-        // Check if user has permission to view this entity's index
-        if (!$this->security->isGranted(AdminEntityVoter::ADMIN_INDEX, $this->entityShortClass)) {
+        // Resolve data source
+        $this->resolveDataSource();
+
+        // For Doctrine entities, check permission by short class name
+        $identifier = $this->dataSourceId ?? $this->entityShortClass;
+
+        if (!$this->security->isGranted(AdminEntityVoter::ADMIN_INDEX, $identifier)) {
             throw new AccessDeniedException(sprintf(
-                'Access denied to view %s entities.',
-                $this->entityShortClass
+                'Access denied to view %s.',
+                $identifier
             ));
         }
+    }
+
+    // --- Data Source Resolution ---
+
+    /**
+     * Resolve the data source from registry or create from entity class.
+     */
+    private function resolveDataSource(): void
+    {
+        if ($this->dataSource !== null) {
+            return;
+        }
+
+        // Try to resolve by dataSourceId first
+        if ($this->dataSourceId !== null) {
+            $this->dataSource = $this->dataSourceRegistry->get($this->dataSourceId);
+            if ($this->dataSource === null) {
+                throw new \RuntimeException(sprintf('Data source "%s" not found.', $this->dataSourceId));
+            }
+            return;
+        }
+
+        // Fall back to entityShortClass (which is the identifier for Doctrine entities)
+        if ($this->entityShortClass !== '') {
+            $this->dataSource = $this->dataSourceRegistry->get($this->entityShortClass);
+        }
+
+        // If still not found, we're in legacy mode without data source support
+        // Continue with direct Doctrine access
+    }
+
+    /**
+     * Get the resolved data source, if available.
+     */
+    public function getDataSource(): ?DataSourceInterface
+    {
+        $this->resolveDataSource();
+        return $this->dataSource;
+    }
+
+    /**
+     * Check if using a data source (vs legacy mode).
+     */
+    public function isUsingDataSource(): bool
+    {
+        return $this->getDataSource() !== null;
     }
 
     // --- UI ---
@@ -135,6 +213,30 @@ class EntityList
      */
     public function getEntities(): array
     {
+        if ($this->queryResult !== null) {
+            return $this->queryResult->items;
+        }
+
+        $dataSource = $this->getDataSource();
+
+        if ($dataSource !== null) {
+            // Use data source for query
+            $this->queryResult = $dataSource->query(
+                search: $this->search,
+                filters: $this->columnFilters,
+                sortBy: $this->sortBy,
+                sortDirection: $this->sortDirection,
+                page: $this->page,
+                itemsPerPage: $this->itemsPerPage
+            );
+
+            // Update page if clamped by query
+            $this->page = $this->queryResult->currentPage;
+
+            return $this->queryResult->items;
+        }
+
+        // Legacy mode: use query service directly
         $result = $this->queryService->getEntities(
             $this->entityClass,
             $this->repositoryMethod,
@@ -147,8 +249,7 @@ class EntityList
             $this->itemsPerPage
         );
 
-        // Update state from query service
-        $this->totalItems = $result['total'];
+        $this->queryResult = PaginatedResult::fromQueryResult($result, $this->itemsPerPage);
         $this->page = $result['page'];
 
         return $result['entities'];
@@ -159,12 +260,11 @@ class EntityList
      */
     private function getTotalItems(): int
     {
-        if ($this->totalItems === null) {
-            // Trigger getEntities to populate totalItems
+        if ($this->queryResult === null) {
             $this->getEntities();
         }
 
-        return $this->totalItems ?? 0;
+        return $this->queryResult->totalItems;
     }
 
     /**
@@ -172,11 +272,11 @@ class EntityList
      */
     public function getPaginationInfo(): PaginationInfo
     {
-        return new PaginationInfo(
-            $this->getTotalItems(),
-            $this->page,
-            $this->itemsPerPage
-        );
+        if ($this->queryResult === null) {
+            $this->getEntities();
+        }
+
+        return $this->queryResult->toPaginationInfo();
     }
 
     #[LiveAction]
@@ -192,7 +292,7 @@ class EntityList
 
         // Reset to first page when sorting changes
         $this->page = 1;
-        $this->totalItems = null;
+        $this->queryResult = null;
     }
 
     #[LiveAction]
@@ -200,6 +300,7 @@ class EntityList
     {
         if ($this->page < $this->getPaginationInfo()->getTotalPages()) {
             $this->page++;
+            $this->queryResult = null;
         }
     }
 
@@ -208,6 +309,7 @@ class EntityList
     {
         if ($this->page > 1) {
             $this->page--;
+            $this->queryResult = null;
         }
     }
 
@@ -215,6 +317,7 @@ class EntityList
     public function goToPage(#[LiveArg] int $page): void
     {
         $this->page = max(1, min($page, $this->getPaginationInfo()->getTotalPages()));
+        $this->queryResult = null;
     }
 
     /**
@@ -228,7 +331,7 @@ class EntityList
 
         // Reset to first page when filters change
         $this->page = 1;
-        $this->totalItems = null;
+        $this->queryResult = null;
     }
 
     /**
@@ -237,6 +340,13 @@ class EntityList
     #[LiveAction]
     public function batchDelete(): void
     {
+        $dataSource = $this->getDataSource();
+
+        // Check if batch delete is supported
+        if ($dataSource !== null && !$dataSource->supportsAction('batch_delete')) {
+            throw new AccessDeniedException('Batch delete not supported for this data source.');
+        }
+
         if (!$this->permissionService->canBatchDelete($this->entityClass, $this->entityShortClass)) {
             throw new AccessDeniedException('Batch delete not allowed for this entity.');
         }
@@ -245,7 +355,16 @@ class EntityList
             return;
         }
 
-        $repository = $this->em->getRepository($this->entityClass);
+        // For non-Doctrine data sources, batch delete is not supported
+        if ($dataSource !== null && !($dataSource instanceof DoctrineDataSource)) {
+            throw new AccessDeniedException('Batch delete only supported for Doctrine entities.');
+        }
+
+        $entityClass = $dataSource instanceof DoctrineDataSource
+            ? $dataSource->getEntityClass()
+            : $this->entityClass;
+
+        $repository = $this->em->getRepository($entityClass);
 
         foreach ($this->selectedIds as $id) {
             $entity = $repository->find($id);
@@ -258,7 +377,7 @@ class EntityList
 
         // Clear selections after deletion
         $this->selectedIds = [];
-        $this->totalItems = null;
+        $this->queryResult = null;
     }
 
     /**
@@ -268,13 +387,22 @@ class EntityList
     public function selectAll(): void
     {
         $entities = $this->getEntities();
-        $metadata = $this->em->getClassMetadata($this->entityClass);
-        $idField = $metadata->getSingleIdentifierFieldName();
+        $dataSource = $this->getDataSource();
 
-        $this->selectedIds = array_values(array_unique(array_merge(
-            $this->selectedIds,
-            array_map(fn($entity) => $metadata->getFieldValue($entity, $idField), $entities)
-        )));
+        if ($dataSource !== null) {
+            $this->selectedIds = array_values(array_unique(array_merge(
+                $this->selectedIds,
+                array_map(fn($entity) => $dataSource->getItemId($entity), $entities)
+            )));
+        } else {
+            $metadata = $this->em->getClassMetadata($this->entityClass);
+            $idField = $metadata->getSingleIdentifierFieldName();
+
+            $this->selectedIds = array_values(array_unique(array_merge(
+                $this->selectedIds,
+                array_map(fn($entity) => $metadata->getFieldValue($entity, $idField), $entities)
+            )));
+        }
     }
 
     /**
@@ -295,7 +423,17 @@ class EntityList
     public function getFilterMetadata(): array
     {
         if ($this->filterMetadataCache === null) {
-            $this->filterMetadataCache = $this->filterMetadataProvider->getFilters($this->entityClass);
+            $dataSource = $this->getDataSource();
+
+            if ($dataSource !== null) {
+                // Convert FilterMetadata objects to legacy array format
+                $this->filterMetadataCache = [];
+                foreach ($dataSource->getFilters() as $name => $filter) {
+                    $this->filterMetadataCache[$name] = $filter->toArray();
+                }
+            } else {
+                $this->filterMetadataCache = $this->filterMetadataProvider->getFilters($this->entityClass);
+            }
         }
         return $this->filterMetadataCache;
     }
@@ -316,6 +454,15 @@ class EntityList
             return $this->columnsCache;
         }
 
+        $dataSource = $this->getDataSource();
+
+        if ($dataSource !== null) {
+            // Get column names from data source
+            $this->columnsCache = array_keys($dataSource->getColumns());
+            return $this->columnsCache;
+        }
+
+        // Legacy mode
         $metadata = $this->em->getClassMetadata($this->entityClass);
         $adminAttr = $this->entityDiscovery->getAdminAttribute($this->entityClass);
 
@@ -337,5 +484,66 @@ class EntityList
 
         $this->columnsCache = $allColumns;
         return $this->columnsCache;
+    }
+
+    /**
+     * Check if batch actions are supported for this data source.
+     */
+    public function supportsBatchActions(): bool
+    {
+        $dataSource = $this->getDataSource();
+
+        if ($dataSource !== null) {
+            return $dataSource->supportsAction('batch_delete');
+        }
+
+        return true;
+    }
+
+    /**
+     * Get the value of a field for an entity.
+     */
+    public function getEntityValue(object $entity, string $field): mixed
+    {
+        $dataSource = $this->getDataSource();
+
+        if ($dataSource !== null) {
+            return $dataSource->getItemValue($entity, $field);
+        }
+
+        // Legacy mode
+        $metadata = $this->em->getClassMetadata($this->entityClass);
+
+        if ($metadata->hasField($field)) {
+            return $metadata->getFieldValue($entity, $field);
+        }
+
+        if ($metadata->hasAssociation($field)) {
+            return $metadata->getFieldValue($entity, $field);
+        }
+
+        $getter = 'get' . ucfirst($field);
+        if (method_exists($entity, $getter)) {
+            return $entity->$getter();
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the ID of an entity.
+     */
+    public function getEntityId(object $entity): string|int
+    {
+        $dataSource = $this->getDataSource();
+
+        if ($dataSource !== null) {
+            return $dataSource->getItemId($entity);
+        }
+
+        // Legacy mode
+        $metadata = $this->em->getClassMetadata($this->entityClass);
+        $idField = $metadata->getSingleIdentifierFieldName();
+        return $metadata->getFieldValue($entity, $idField);
     }
 }

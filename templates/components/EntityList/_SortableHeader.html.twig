@@ -3,6 +3,7 @@
  #
  # Variables:
  # @var string column - Column name
+ # @var string|null columnLabel - Optional label override from DataSource column metadata
  # @var string sortBy - Currently sorted column
  # @var string sortDirection - Current sort direction (ASC/DESC)
  # @var object component - Reference to parent component for constant access
@@ -16,7 +17,7 @@
         data-live-action-param="sort"
         data-live-column-param="{{ column }}"
     >
-        {{ column|humanize }}
+        {{ columnLabel ?? column|humanize }}
         {% if sortBy == column %}
             <span class="sort-indicator">{{ sortDirection == constant('SORT_ASC', component) ? '▲' : '▼' }}</span>
         {% endif %}

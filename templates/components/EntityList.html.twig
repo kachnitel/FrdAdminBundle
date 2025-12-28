@@ -1,16 +1,24 @@
 {#
  # LiveComponent template for reactive entity lists with per-column filters.
  #
+ # Supports two modes:
+ # 1. Entity mode: Uses Doctrine entities with admin_* twig functions
+ # 2. DataSource mode: Uses DataSourceInterface for non-Doctrine data (e.g., audit logs)
+ #
  # Props:
- # @var string entityClass - Entity class name
+ # @var string entityClass - Entity class name (entity mode)
+ # @var string dataSourceId - Data source identifier (data source mode)
  # @var string search - Global search query
  # @var string sortBy - Sort field
  # @var string sortDirection - ASC or DESC
  # @var array columnFilters - Per-column filter values
  #}
 
-{% set batchEnabled = this.permissionService.isBatchActionsEnabled(this.entityClass) %}
-{% set canBatchDelete = this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
+{% set isDataSourceMode = this.isUsingDataSource() %}
+{% set dataSource = this.dataSource %}
+{# Batch actions only for Doctrine entities, not read-only data sources #}
+{% set batchEnabled = not isDataSourceMode and this.entityClass and this.permissionService.isBatchActionsEnabled(this.entityClass) %}
+{% set canBatchDelete = not isDataSourceMode and this.entityClass and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
 {% set showBatchColumn = batchEnabled and canBatchDelete %}
 
 <div
@@ -63,6 +71,7 @@
                 {% for column in this.columns %}
                     {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
                         column: column,
+                        columnLabel: isDataSourceMode and dataSource.columns[column] is defined ? dataSource.columns[column].label : null,
                         sortBy: sortBy,
                         sortDirection: sortDirection,
                         component: this
@@ -93,8 +102,7 @@
         </thead>
         <tbody>
             {% for entity in this.entities %}
-                {% set entityData = admin_get_entity_data(entity) %}
-                {% set entityId = entityData.id ?? entityData[attribute(entity, 'id')] ?? loop.index %}
+                {% set entityId = this.getEntityId(entity) %}
                 <tr>
                     {% if showBatchColumn %}
                         <td>
@@ -111,30 +119,59 @@
                     {% endif %}
                     {% for column in this.columns %}
                         <td>
-                            {% set value = entityData[column] ?? null %}
-                            {% set templateName = admin_is_collection(entity, column) ? '_collection.html.twig' : '_preview.html.twig' %}
-                            {{ include([
-                                '@KachnitelAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ column ~ '.html.twig',
-                                '@KachnitelAdmin/types/' ~ admin_get_property_type(entity, column)|replace({'\\': '/'}) ~ '/' ~ templateName,
-                                '@KachnitelAdmin/types/' ~ templateName
-                            ], {
-                                entity: entity,
-                                value: value,
-                                property: column,
-                                cell: true
-                            }, ignore_missing = true) }}
+                            {% set value = this.getEntityValue(entity, column) %}
+                            {% if isDataSourceMode %}
+                                {# Data source mode: use column metadata for type #}
+                                {% set columnMeta = dataSource.columns[column] ?? null %}
+                                {% set columnType = columnMeta ? columnMeta.type : 'string' %}
+                                {% set templateName = columnType == 'collection' ? '_collection.html.twig' : '_preview.html.twig' %}
+                                {{ include([
+                                    '@KachnitelAdmin/types/' ~ columnType ~ '/' ~ templateName,
+                                    '@KachnitelAdmin/types/' ~ templateName
+                                ], {
+                                    entity: entity,
+                                    value: value,
+                                    property: column,
+                                    cell: true
+                                }, ignore_missing = true) }}
+                            {% else %}
+                                {# Entity mode: use Doctrine-based type detection #}
+                                {% set templateName = admin_is_collection(entity, column) ? '_collection.html.twig' : '_preview.html.twig' %}
+                                {{ include([
+                                    '@KachnitelAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ column ~ '.html.twig',
+                                    '@KachnitelAdmin/types/' ~ admin_get_property_type(entity, column)|replace({'\\': '/'}) ~ '/' ~ templateName,
+                                    '@KachnitelAdmin/types/' ~ templateName
+                                ], {
+                                    entity: entity,
+                                    value: value,
+                                    property: column,
+                                    cell: true
+                                }, ignore_missing = true) }}
+                            {% endif %}
                         </td>
                     {% endfor %}
 
-                    {% include '@KachnitelAdmin/components/EntityList/_RowActions.html.twig' with {
-                        entity: entity,
-                        entityShortClass: this.entityShortClass
-                    } only %}
+                    {% if isDataSourceMode %}
+                        {% include '@KachnitelAdmin/components/EntityList/_DataSourceRowActions.html.twig' with {
+                            dataSourceId: this.dataSourceId,
+                            dataSource: dataSource,
+                            entityId: entityId
+                        } only %}
+                    {% else %}
+                        {% include '@KachnitelAdmin/components/EntityList/_RowActions.html.twig' with {
+                            entity: entity,
+                            entityShortClass: this.entityShortClass
+                        } only %}
+                    {% endif %}
                 </tr>
             {% else %}
                 <tr>
                     <td colspan="{{ this.columns|length + (showBatchColumn ? 2 : 1) }}" class="text-center text-muted py-4">
-                        No {{ this.entityShortClass }} found.
+                        {% if isDataSourceMode %}
+                            No entries found.
+                        {% else %}
+                            No {{ this.entityShortClass }} found.
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}

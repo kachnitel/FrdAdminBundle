@@ -1,0 +1,25 @@
+{#
+ # DataSource list template (read-only).
+ # Uses the EntityList component in data source mode.
+ #
+ # Variables:
+ # @var string dataSourceId - Identifier of the data source
+ # @var DataSourceInterface dataSource - The data source instance
+ #}
+{% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
+
+{% block headerTitle %}
+    {{ dataSource.label }}
+{% endblock %}
+
+{% block headerButtons %}
+    {# Data sources are read-only, no "New" button #}
+{% endblock %}
+
+{% block content %}
+    {% component 'K:Admin:EntityList' with {
+        dataSourceId: dataSourceId
+    } %}
+        {# Override blocks from component template as needed #}
+    {% endcomponent %}
+{% endblock %}

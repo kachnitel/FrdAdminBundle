@@ -7,7 +7,10 @@
 {% endblock %}
 
 {% block content %}
-  <div class="row g-4">
+  {# Entities Section #}
+  {% if entities|length > 0 %}
+  <h2 class="h4 mb-3">Entities</h2>
+  <div class="row g-4 mb-5">
     {% for entity in entities %}
       <div class="col-12 col-md-6 col-lg-4 col-xl-3">
         <div class="card h-100 shadow-sm hover-shadow transition-all">
@@ -27,15 +30,41 @@
           </div>
         </div>
       </div>
-    {% else %}
-      <div class="col-12">
-        <div class="alert alert-warning d-flex align-items-center">
-          ⚠
-          <div>
-            No supported entities configured in <code>AdminEntityController::getSupportedEntities()</code>.
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Data Sources Section (e.g., Audit Logs) #}
+  {% if dataSources|default([])|length > 0 %}
+  <h2 class="h4 mb-3">Data Sources</h2>
+  <div class="row g-4">
+    {% for ds in dataSources %}
+      <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+        <div class="card h-100 shadow-sm hover-shadow transition-all border-info">
+          <div class="card-body text-center d-flex flex-column justify-content-center p-5">
+            <h3 class="h5 card-title text-secondary mb-3">
+              {{ ds.label }}
+            </h3>
+            <a href="{{ path('app_admin_datasource_index', { dataSourceId: ds.identifier }) }}"
+               class="btn btn-outline-info stretched-link">
+              View {{ ds.label }}
+            </a>
           </div>
         </div>
       </div>
     {% endfor %}
   </div>
+  {% endif %}
+
+  {% if entities|length == 0 and dataSources|default([])|length == 0 %}
+  <div class="row g-4">
+    <div class="col-12">
+      <div class="alert alert-warning d-flex align-items-center">
+        <div>
+          No entities or data sources configured.
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 {% endblock %}
