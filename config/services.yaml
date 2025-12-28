@@ -4,13 +4,6 @@ services:
         autoconfigure: true
         public: false
 
-    # Auto-tag DataSource interfaces for service discovery
-    _instanceof:
-        Kachnitel\AdminBundle\DataSource\DataSourceInterface:
-            tags: ['admin.data_source']
-        Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface:
-            tags: ['admin.data_source_provider']
-
     # Make controllers public
     Kachnitel\AdminBundle\Controller\:
         resource: '../src/Controller'

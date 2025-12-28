@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\DataSource;
 
-use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
  * Registry for all available data sources.
  *
  * Collects data sources from:
  * 1. Doctrine entities with #[Admin] attribute (via DoctrineDataSourceFactory)
- * 2. Custom data sources tagged with 'admin.data_source'
- * 3. Data source providers tagged with 'admin.data_source_provider'
+ * 2. Custom DataSourceInterface implementations (auto-discovered)
+ * 3. DataSourceProviderInterface implementations (auto-discovered)
  */
 class DataSourceRegistry
 {
@@ -20,14 +20,14 @@ class DataSourceRegistry
     private ?array $dataSources = null;
 
     /**
-     * @param iterable<DataSourceInterface> $customDataSources Custom data sources (tagged services)
+     * @param iterable<DataSourceInterface> $customDataSources Custom data source implementations
      * @param iterable<DataSourceProviderInterface> $dataSourceProviders Providers of multiple data sources
      * @param DoctrineDataSourceFactory $doctrineFactory Factory for Doctrine entity data sources
      */
     public function __construct(
-        #[TaggedIterator('admin.data_source')]
+        #[AutowireIterator(DataSourceInterface::class, exclude: [DoctrineDataSource::class])]
         private readonly iterable $customDataSources,
-        #[TaggedIterator('admin.data_source_provider')]
+        #[AutowireIterator(DataSourceProviderInterface::class)]
         private readonly iterable $dataSourceProviders,
         private readonly DoctrineDataSourceFactory $doctrineFactory,
     ) {}

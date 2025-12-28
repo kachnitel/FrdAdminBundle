@@ -55,9 +55,8 @@ Use in templates with the `dataSourceId` prop:
 
 ### Creating a Custom Data Source
 
-1. Create a class implementing `DataSourceInterface`
-2. Register it as a service (auto-tagged via `_instanceof`)
-3. Use in templates with `dataSourceId`
+1. Create a class implementing `DataSourceInterface` (Auto registers as service using `#[AutowireIterator]`)
+2. Use in templates with `dataSourceId`
 
 ```php
 // src/DataSource/ApiProductDataSource.php
@@ -153,6 +152,9 @@ public function supportsAction(string $action): bool;
 ## Creating Custom Data Sources
 
 ### Basic Implementation
+
+<details>
+<summary>Full implementation example (click to expand)</summary>
 
 ```php
 <?php
@@ -275,26 +277,27 @@ class ExternalApiDataSource implements DataSourceInterface
 }
 ```
 
+</details>
+
 ### Service Registration
 
-Data sources are **auto-tagged** when implementing `DataSourceInterface`:
+Data sources are **auto-discovered** when implementing `DataSourceInterface`. The bundle uses Symfony's `#[AutowireIterator]` attribute (Symfony 6.4+) to automatically collect all implementations:
 
 ```yaml
 # config/services.yaml
 services:
-    _instanceof:
-        Kachnitel\AdminBundle\DataSource\DataSourceInterface:
-            tags: ['admin.data_source']
-
     App\DataSource\:
         resource: '../src/DataSource'
 ```
 
-The bundle's default configuration already includes the `_instanceof` tag, so your data sources are registered automatically.
+That's all you need! Any class implementing `DataSourceInterface` is automatically registered with the `DataSourceRegistry`.
 
 ## DataSource Providers
 
 For bundles providing multiple data sources, implement `DataSourceProviderInterface`:
+
+<details>
+<summary>Provider implementation example (click to expand)</summary>
 
 ```php
 <?php
@@ -331,14 +334,9 @@ class AuditDataSourceProvider implements DataSourceProviderInterface
 }
 ```
 
-Providers are also auto-tagged:
+</details>
 
-```yaml
-services:
-    _instanceof:
-        Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface:
-            tags: ['admin.data_source_provider']
-```
+Providers are also auto-discovered via `#[AutowireIterator]` - no manual tagging needed. Just implement the interface and register your service.
 
 ## Value Objects
 
@@ -469,7 +467,8 @@ class MyController
 
 ## Complete Example
 
-### Read-Only Audit Log Data Source
+<details>
+<summary>Read-Only Audit Log Data Source (click to expand)</summary>
 
 ```php
 <?php
@@ -621,9 +620,12 @@ class AuditLogDataSource implements DataSourceInterface
 />
 ```
 
+</details>
+
 ## API Reference
 
-### DataSourceInterface
+<details>
+<summary>DataSourceInterface (click to expand)</summary>
 
 ```php
 interface DataSourceInterface
@@ -652,7 +654,10 @@ interface DataSourceInterface
 }
 ```
 
-### DataSourceProviderInterface
+</details>
+
+<details>
+<summary>DataSourceProviderInterface (click to expand)</summary>
 
 ```php
 interface DataSourceProviderInterface
@@ -662,7 +667,10 @@ interface DataSourceProviderInterface
 }
 ```
 
-### ColumnMetadata
+</details>
+
+<details>
+<summary>ColumnMetadata (click to expand)</summary>
 
 ```php
 readonly class ColumnMetadata
@@ -685,7 +693,10 @@ readonly class ColumnMetadata
 }
 ```
 
-### FilterMetadata
+</details>
+
+<details>
+<summary>FilterMetadata (click to expand)</summary>
 
 ```php
 readonly class FilterMetadata
@@ -715,7 +726,10 @@ readonly class FilterMetadata
 }
 ```
 
-### PaginatedResult
+</details>
+
+<details>
+<summary>PaginatedResult (click to expand)</summary>
 
 ```php
 readonly class PaginatedResult
@@ -735,6 +749,8 @@ readonly class PaginatedResult
     public function toPaginationInfo(): PaginationInfo;
 }
 ```
+
+</details>
 
 ## Need Help?
 
