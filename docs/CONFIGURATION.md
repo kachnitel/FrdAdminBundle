@@ -4,18 +4,61 @@ This guide covers how to configure entities for the admin bundle using PHP attri
 
 ## Table of Contents
 
-- [Bundle Configuration](#bundle-configuration)
 - [Quick Start](#quick-start)
+- [Bundle Configuration](#bundle-configuration)
 - [The Admin Attribute](#the-admin-attribute)
 - [Configuration Options](#configuration-options)
 - [AdminRoutes Attribute](#adminroutes-attribute)
 - [Column Filtering](#column-filtering)
 - [Permissions](#permissions)
-- [Complete Examples](#complete-examples)
+- [Examples](#examples)
+
+## Quick Start
+
+Add the `#[Admin]` attribute to any Doctrine entity to make it available in the admin:
+
+```php
+use Kachnitel\AdminBundle\Attribute\Admin;
+
+#[Admin]  // That's it! Uses sensible defaults
+class Product
+{
+    // ...
+}
+```
+
+The entity will now appear in the admin dashboard with auto-detected columns.
+
+**With common options:**
+
+```php
+#[Admin(label: 'Products', icon: 'inventory')]
+class Product
+{
+    // ...
+}
+```
 
 ## Bundle Configuration
 
-Configure the admin bundle in `config/packages/kachnitel_admin.yaml`:
+**Minimal** - just enable the bundle:
+
+```yaml
+# config/packages/kachnitel_admin.yaml
+kachnitel_admin: ~
+```
+
+**Typical setup:**
+
+```yaml
+# config/packages/kachnitel_admin.yaml
+kachnitel_admin:
+    base_layout: 'layout.html.twig'  # Your app's base template
+    required_role: 'ROLE_ADMIN'      # Role required to access admin
+```
+
+<details>
+<summary><strong>All configuration options</strong></summary>
 
 ```yaml
 kachnitel_admin:
@@ -48,12 +91,6 @@ kachnitel_admin:
 
 Specify your application's base layout template. If not set, admin templates use the bundle's minimal default layout.
 
-**Example:**
-```yaml
-kachnitel_admin:
-    base_layout: 'layout.html.twig'  # Use your app's layout
-```
-
 Admin templates will extend this layout and provide blocks like `title`, `headerTitle`, and `content`.
 
 #### entity_namespace
@@ -66,24 +103,7 @@ Base namespace for your Doctrine entities. Used when resolving entity short name
 
 Global required role for accessing the admin. Can be overridden per-entity using the `permissions` option in the `#[Admin]` attribute. False disables default controller security in `GenericAdminController`.
 
-## Quick Start
-
-Add the `#[Admin]` attribute to any Doctrine entity to make it available in the admin:
-
-```php
-use Kachnitel\AdminBundle\Attribute\Admin;
-
-#[Admin(label: 'Products', icon: 'inventory')]
-class Product
-{
-    // ...
-}
-```
-
-That's it! The entity will now:
-- Appear in the admin dashboard
-- Be accessible at `/admin/products`
-- Use auto-detected columns from Doctrine metadata
+</details>
 
 ## The Admin Attribute
 
@@ -409,9 +429,52 @@ class AuditLog
 }
 ```
 
-## Complete Examples
+## Examples
 
-### E-Commerce Product
+### Minimal - Just Works
+
+```php
+#[Admin]
+class Category
+{
+    // Auto-detects columns from Doctrine metadata
+    // Uses class name as label
+    // Default pagination (20 items)
+    // Requires ROLE_ADMIN
+}
+```
+
+### Common Configurations
+
+```php
+// With label and icon
+#[Admin(label: 'Products', icon: 'inventory')]
+class Product { }
+
+// With batch actions
+#[Admin(label: 'Blog Posts', enableBatchActions: true)]
+class BlogPost { }
+
+// With custom permissions
+#[Admin(
+    label: 'Users',
+    permissions: [
+        'index' => 'ROLE_USER_ADMIN',
+        'delete' => 'ROLE_SUPER_ADMIN',
+    ]
+)]
+class User { }
+
+// Read-only (no create/edit/delete)
+#[Admin(
+    label: 'Audit Logs',
+    permissions: ['index' => 'ROLE_ADMIN', 'show' => 'ROLE_ADMIN']
+)]
+class AuditLog { }
+```
+
+<details>
+<summary><strong>Full example: E-Commerce Product with all options</strong></summary>
 
 ```php
 use Kachnitel\AdminBundle\Attribute\Admin;
@@ -487,7 +550,10 @@ class Product
 }
 ```
 
-### User Management
+</details>
+
+<details>
+<summary><strong>Full example: User Management</strong></summary>
 
 ```php
 #[ORM\Entity]
@@ -499,7 +565,7 @@ class Product
         'index' => 'ROLE_USER_ADMIN',
         'show' => 'ROLE_USER_ADMIN',
         'edit' => 'ROLE_USER_ADMIN',
-        'delete' => 'ROLE_SUPER_ADMIN',  // Only super admins can delete
+        'delete' => 'ROLE_SUPER_ADMIN',
     ],
     sortBy: 'lastLogin',
     sortDirection: 'DESC'
@@ -532,39 +598,7 @@ class User implements UserInterface
 }
 ```
 
-### Minimal Configuration
-
-```php
-// Simplest possible configuration - sensible defaults
-#[Admin]
-class Category
-{
-    // Auto-detects columns
-    // Uses class name as label
-    // Default pagination (20 items)
-    // Requires ROLE_ADMIN
-    // Batch actions disabled by default
-}
-```
-
-### Entity with Batch Actions Enabled
-
-```php
-#[ORM\Entity]
-#[Admin(
-    label: 'Blog Posts',
-    icon: 'article',
-    enableBatchActions: true,  // Enable bulk operations
-    permissions: [
-        'index' => 'ROLE_EDITOR',
-        'delete' => 'ROLE_ADMIN',  // Only admins can delete
-    ]
-)]
-class BlogPost
-{
-    // Batch actions enabled for easier content management
-}
-```
+</details>
 
 ## Best Practices
 
@@ -588,7 +622,8 @@ class BlogPost
 - Use `columns` when auto-detection works fine
 - Enable batch actions on critical entities (users, financial records) without careful consideration
 
-## API Reference
+<details>
+<summary><strong>API Reference</strong></summary>
 
 ### Admin Attribute
 
@@ -645,6 +680,8 @@ class ColumnFilter
     ) {}
 }
 ```
+
+</details>
 
 ## Need Help?
 

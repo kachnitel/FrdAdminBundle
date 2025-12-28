@@ -1,6 +1,25 @@
 # Template Overrides Guide
 
-This guide explains how to customize the visual appearance of the admin bundle by overriding templates.
+Customize the admin interface appearance by overriding templates.
+
+## Quick Start
+
+**Most common customization** - use your app's base layout:
+
+```yaml
+# config/packages/kachnitel_admin.yaml
+kachnitel_admin:
+    base_layout: 'layout.html.twig'
+```
+
+**Override a specific template** - place it in your app:
+
+```
+templates/bundles/KachnitelAdminBundle/
+└── types/
+    └── datetime/
+        └── _preview.html.twig   # Overrides datetime display
+```
 
 ## Table of Contents
 
@@ -14,11 +33,10 @@ This guide explains how to customize the visual appearance of the admin bundle b
 
 ## How Template Overrides Work
 
-KachnitelAdminBundle uses Symfony's standard template override mechanism. When you place a template in your application's `templates/bundles/KachnitelAdminBundle/` directory, it takes precedence over the bundle's default template.
+Uses Symfony's standard bundle override mechanism:
 
-**Priority Order:**
-1. **Application override** (Highest) - `templates/bundles/KachnitelAdminBundle/`
-2. **Bundle template** (Lowest) - `vendor/kachnitel/admin-bundle/templates/`
+1. **Application override** (priority) - `templates/bundles/KachnitelAdminBundle/`
+2. **Bundle template** (fallback) - `vendor/kachnitel/admin-bundle/templates/`
 
 ## Configuring Base Layout
 
@@ -189,7 +207,8 @@ Apply custom rendering to ALL properties of an entity:
 {% endif %}
 ```
 
-### 4. Override the Entity List Page
+<details>
+<summary><strong>4. Override the Entity List Page</strong></summary>
 
 Customize the page that wraps the LiveComponent:
 
@@ -212,9 +231,12 @@ Customize the page that wraps the LiveComponent:
 {% endblock %}
 ```
 
-### 5. Override the LiveComponent Itself
+</details>
 
-**⚠️ Advanced:** Override the entire entity list component:
+<details>
+<summary><strong>5. Override the LiveComponent Itself (Advanced)</strong></summary>
+
+Override the entire entity list component:
 
 ```twig
 {# templates/bundles/KachnitelAdminBundle/components/EntityList.html.twig #}
@@ -236,12 +258,15 @@ Customize the page that wraps the LiveComponent:
 </div>
 ```
 
-**Note:** You MUST preserve:
+**You MUST preserve:**
 - `{{ attributes }}` on the root element
 - `data-model` attributes for LiveComponent reactivity
 - `data-action` attributes for actions
 
-### 6. Override Collection Display
+</details>
+
+<details>
+<summary><strong>6. Override Collection Display</strong></summary>
 
 Change how collections (OneToMany, ManyToMany) are rendered:
 
@@ -264,7 +289,10 @@ Change how collections (OneToMany, ManyToMany) are rendered:
 {% endif %}
 ```
 
-### 7. Override Boolean Display
+</details>
+
+<details>
+<summary><strong>7. Override Boolean Display</strong></summary>
 
 Custom boolean rendering with icons:
 
@@ -284,6 +312,8 @@ Custom boolean rendering with icons:
     <span class="badge bg-secondary">Unknown</span>
 {% endif %}
 ```
+
+</details>
 
 ## Important Limitations
 
@@ -316,21 +346,39 @@ The GenericAdminController hardcodes the template path, so these DON'T work:
 ❌ templates/bundles/KachnitelAdminBundle/admin/User/index.html.twig
 ```
 
-**Alternative:** Create a custom controller for entity-specific index pages:
+**Alternative:** Create a custom controller that renders the `EntityList` component:
 
 ```php
-use Kachnitel\AdminBundle\Controller\AbstractAdminController;
+// src/Controller/Admin/ProductController.php
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class ProductController extends AbstractAdminController
+class ProductController extends AbstractController
 {
     #[Route('/admin/products', name: 'app_product_index')]
     public function index(): Response
     {
-        return $this->render('admin/product/index.html.twig', [
-            'products' => $this->entityManager->getRepository(Product::class)->findAll()
-        ]);
+        return $this->render('admin/product/index.html.twig');
     }
 }
+```
+
+```twig
+{# templates/admin/product/index.html.twig #}
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+    <h1>Products</h1>
+    {# Full functionality: search, filters, pagination, sorting #}
+    <twig:K:Admin:EntityList dataSourceId="Product" />
+{% endblock %}
+```
+
+Use `#[AdminRoutes]` on your entity to wire up the custom routes:
+
+```php
+#[Admin(label: 'Products')]
+#[AdminRoutes(['index' => 'app_product_index'])]
+class Product { }
 ```
 
 ## Testing Your Overrides
@@ -381,7 +429,8 @@ Add debugging output to see what variables are available:
 {{ dump(property) }}
 ```
 
-## Template Variables Reference
+<details>
+<summary><strong>Template Variables Reference</strong></summary>
 
 ### Property Templates (`types/**/_preview.html.twig`)
 
@@ -411,6 +460,8 @@ Add debugging output to see what variables are available:
 | `this.sortDirection` | string | 'ASC' or 'DESC' |
 | `this.page` | int | Current page number |
 | `this.totalPages` | int | Total number of pages |
+
+</details>
 
 ## Best Practices
 

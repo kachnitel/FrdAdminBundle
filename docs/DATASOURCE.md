@@ -1,75 +1,38 @@
 # DataSource Abstraction Guide
 
-This guide covers the DataSource abstraction layer, which allows displaying data from non-Doctrine sources in the admin interface.
+Display data from any source (APIs, audit logs, external databases) in the admin interface.
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Quick Start](#quick-start)
-- [DataSource Interface](#datasource-interface)
-- [Creating Custom Data Sources](#creating-custom-data-sources)
-- [DataSource Providers](#datasource-providers)
+- [When to Use DataSources](#when-to-use-datasources)
+- [Creating a Custom Data Source](#creating-a-custom-data-source)
 - [Value Objects](#value-objects)
-- [Using DataSources in Templates](#using-datasources-in-templates)
-- [Complete Example](#complete-example)
+- [Using in Templates](#using-in-templates)
+- [DataSource Providers](#datasource-providers)
 - [API Reference](#api-reference)
-
-## Overview
-
-The DataSource abstraction decouples the admin UI from Doctrine ORM. This allows you to:
-
-- Display data from external APIs
-- Show audit logs or event histories
-- Create virtual "views" combining multiple entities
-- Integrate with other ORMs or data stores
-- Build read-only dashboards from any data
-
-**Key components:**
-
-| Component | Purpose |
-|-----------|---------|
-| `DataSourceInterface` | Contract for queryable data sources |
-| `DataSourceProviderInterface` | Provides multiple data sources (for bundles) |
-| `DataSourceRegistry` | Service locator for all registered data sources |
-| `DoctrineDataSource` | Built-in implementation for Doctrine entities |
 
 ## Quick Start
 
-### Using with Doctrine Entities (Default)
-
-Doctrine entities with the `#[Admin]` attribute are **automatically registered** as data sources:
+**Doctrine entities work automatically** - just add `#[Admin]`:
 
 ```php
 #[Admin(label: 'Products')]
-class Product
-{
-    // Automatically available as data source 'Product'
-}
+class Product { }  // Available as data source 'Product'
 ```
-
-Use in templates with the `dataSourceId` prop:
 
 ```twig
 <twig:K:Admin:EntityList dataSourceId="Product" />
 ```
 
-### Creating a Custom Data Source
-
-1. Create a class implementing `DataSourceInterface` (Auto registers as service using `#[AutowireIterator]`)
-2. Use in templates with `dataSourceId`
+**For custom data sources**, implement `DataSourceInterface`:
 
 ```php
-// src/DataSource/ApiProductDataSource.php
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
-
 class ApiProductDataSource implements DataSourceInterface
 {
-    public function getIdentifier(): string
-    {
-        return 'api-products';
-    }
-
-    // ... implement remaining methods
+    public function getIdentifier(): string { return 'api-products'; }
+    public function getLabel(): string { return 'API Products'; }
+    // ... other required methods
 }
 ```
 
@@ -77,84 +40,62 @@ class ApiProductDataSource implements DataSourceInterface
 <twig:K:Admin:EntityList dataSourceId="api-products" />
 ```
 
-## DataSource Interface
+Data sources are **auto-discovered** - just implement the interface and register as a service.
 
-The `DataSourceInterface` defines the contract for all data sources.
+## When to Use DataSources
 
-### Required Methods
+| Use Case | Example |
+|----------|---------|
+| External APIs | Display products from a third-party service |
+| Audit logs | Show entity change history |
+| Read-only views | Dashboard statistics, reports |
+| Non-Doctrine data | Redis, MongoDB, file-based data |
 
-#### Identity & Display
+## Creating a Custom Data Source
 
-```php
-// Unique identifier (used in URLs and registry)
-public function getIdentifier(): string;
-
-// Human-readable label for UI
-public function getLabel(): string;
-
-// Optional icon (Material Icons name)
-public function getIcon(): ?string;
-```
-
-#### Schema Definition
+Implement `DataSourceInterface` with these key methods:
 
 ```php
-// Column definitions for list display
-// @return array<string, ColumnMetadata>
-public function getColumns(): array;
+use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
+use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 
-// Filter definitions for search/filtering
-// @return array<string, FilterMetadata>
-public function getFilters(): array;
+class MyDataSource implements DataSourceInterface
+{
+    // Required: unique identifier
+    public function getIdentifier(): string { return 'my-data'; }
+
+    // Required: display name
+    public function getLabel(): string { return 'My Data'; }
+
+    // Required: column definitions
+    public function getColumns(): array
+    {
+        return [
+            'id' => ColumnMetadata::create('id', 'ID', 'integer'),
+            'name' => ColumnMetadata::create('name', 'Name', 'string'),
+        ];
+    }
+
+    // Required: query data with pagination
+    public function query(...): PaginatedResult
+    {
+        // Fetch your data here
+        return new PaginatedResult($items, $total, $page, $itemsPerPage);
+    }
+
+    // Required: which actions are supported
+    public function supportsAction(string $action): bool
+    {
+        return in_array($action, ['index', 'show'], true); // Read-only
+    }
+
+    // ... other required methods
+}
 ```
-
-#### Defaults
-
-```php
-public function getDefaultSortBy(): string;      // e.g., 'id'
-public function getDefaultSortDirection(): string; // 'ASC' or 'DESC'
-public function getDefaultItemsPerPage(): int;   // e.g., 20
-```
-
-#### Data Access
-
-```php
-// Query with filters, sorting, and pagination
-public function query(
-    string $search,
-    array $filters,
-    string $sortBy,
-    string $sortDirection,
-    int $page,
-    int $itemsPerPage
-): PaginatedResult;
-
-// Find single item by ID
-public function find(string|int $id): ?object;
-
-// Get ID field name
-public function getIdField(): string;
-
-// Get ID value from item
-public function getItemId(object $item): string|int;
-
-// Get field value from item
-public function getItemValue(object $item, string $field): mixed;
-```
-
-#### Action Support
-
-```php
-// Check if action is supported: 'index', 'show', 'new', 'edit', 'delete', 'batch_delete'
-public function supportsAction(string $action): bool;
-```
-
-## Creating Custom Data Sources
-
-### Basic Implementation
 
 <details>
-<summary>Full implementation example (click to expand)</summary>
+<summary><strong>Full implementation example</strong></summary>
 
 ```php
 <?php
@@ -415,17 +356,13 @@ $result->getEndItem();       // 40
 $paginationInfo = $result->toPaginationInfo();
 ```
 
-## Using DataSources in Templates
-
-### EntityList Component
-
-Use the `dataSourceId` prop instead of `entityClass`:
+## Using in Templates
 
 ```twig
-{# Modern approach - using DataSource #}
+{# Basic usage #}
 <twig:K:Admin:EntityList dataSourceId="Product" />
 
-{# With custom options #}
+{# With options #}
 <twig:K:Admin:EntityList
     dataSourceId="api-products"
     :itemsPerPage="50"
@@ -434,41 +371,35 @@ Use the `dataSourceId` prop instead of `entityClass`:
 />
 ```
 
-### Accessing the Registry
-
-In controllers or services:
+<details>
+<summary><strong>Accessing DataSourceRegistry in PHP</strong></summary>
 
 ```php
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 
 class MyController
 {
-    public function __construct(
-        private DataSourceRegistry $registry,
-    ) {}
+    public function __construct(private DataSourceRegistry $registry) {}
 
     public function index(): Response
     {
-        // Get a specific data source
         $dataSource = $this->registry->get('Product');
 
-        // Check if exists
         if ($this->registry->has('api-products')) {
             // ...
         }
 
-        // Get all data sources
-        foreach ($this->registry->all() as $identifier => $dataSource) {
+        foreach ($this->registry->all() as $id => $dataSource) {
             // ...
         }
     }
 }
 ```
 
-## Complete Example
+</details>
 
 <details>
-<summary>Read-Only Audit Log Data Source (click to expand)</summary>
+<summary><strong>Full example: Audit Log Data Source</strong></summary>
 
 ```php
 <?php
