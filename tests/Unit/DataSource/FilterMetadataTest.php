@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\DataSource\FilterEnumOptions;
 use Kachnitel\AdminBundle\DataSource\FilterMetadata;
 use PHPUnit\Framework\TestCase;
 
@@ -19,9 +20,9 @@ class FilterMetadataTest extends TestCase
         $this->assertNull($filter->label);
         $this->assertNull($filter->placeholder);
         $this->assertSame('=', $filter->operator);
-        $this->assertNull($filter->options);
-        $this->assertNull($filter->enumClass);
-        $this->assertTrue($filter->showAllOption);
+        $this->assertNull($filter->getOptions());
+        $this->assertNull($filter->getEnumClass());
+        $this->assertTrue($filter->getShowAllOption());
         $this->assertNull($filter->searchFields);
         $this->assertSame(999, $filter->priority);
         $this->assertTrue($filter->enabled);
@@ -35,9 +36,7 @@ class FilterMetadataTest extends TestCase
             label: 'Status',
             placeholder: 'Select status',
             operator: '=',
-            options: ['active', 'inactive'],
-            enumClass: null,
-            showAllOption: false,
+            enumOptions: new FilterEnumOptions(values: ['active', 'inactive'], showAllOption: false),
             searchFields: null,
             priority: 10,
             enabled: true
@@ -48,8 +47,8 @@ class FilterMetadataTest extends TestCase
         $this->assertSame('Status', $filter->label);
         $this->assertSame('Select status', $filter->placeholder);
         $this->assertSame('=', $filter->operator);
-        $this->assertSame(['active', 'inactive'], $filter->options);
-        $this->assertFalse($filter->showAllOption);
+        $this->assertSame(['active', 'inactive'], $filter->getOptions());
+        $this->assertFalse($filter->getShowAllOption());
         $this->assertSame(10, $filter->priority);
     }
 
@@ -158,8 +157,8 @@ class FilterMetadataTest extends TestCase
         $this->assertSame(ColumnFilter::TYPE_ENUM, $filter->type);
         $this->assertSame('Status', $filter->label);
         $this->assertSame('=', $filter->operator);
-        $this->assertSame($options, $filter->options);
-        $this->assertFalse($filter->showAllOption);
+        $this->assertSame($options, $filter->getOptions());
+        $this->assertFalse($filter->getShowAllOption());
         $this->assertSame(5, $filter->priority);
     }
 
@@ -167,7 +166,7 @@ class FilterMetadataTest extends TestCase
     {
         $filter = FilterMetadata::enum(name: 'type', options: ['a', 'b']);
 
-        $this->assertTrue($filter->showAllOption);
+        $this->assertTrue($filter->getShowAllOption());
         $this->assertSame('Type', $filter->label);
     }
 
@@ -183,8 +182,8 @@ class FilterMetadataTest extends TestCase
 
         $this->assertSame('status', $filter->name);
         $this->assertSame(ColumnFilter::TYPE_ENUM, $filter->type);
-        $this->assertSame('App\\Enum\\Status', $filter->enumClass);
-        $this->assertTrue($filter->showAllOption);
+        $this->assertSame('App\\Enum\\Status', $filter->getEnumClass());
+        $this->assertTrue($filter->getShowAllOption());
     }
 
     public function testBooleanFactory(): void
@@ -200,7 +199,7 @@ class FilterMetadataTest extends TestCase
         $this->assertSame(ColumnFilter::TYPE_BOOLEAN, $filter->type);
         $this->assertSame('Is Active', $filter->label);
         $this->assertSame('=', $filter->operator);
-        $this->assertFalse($filter->showAllOption);
+        $this->assertFalse($filter->getShowAllOption());
         $this->assertSame(25, $filter->priority);
     }
 
@@ -208,7 +207,7 @@ class FilterMetadataTest extends TestCase
     {
         $filter = FilterMetadata::boolean(name: 'enabled');
 
-        $this->assertTrue($filter->showAllOption);
+        $this->assertTrue($filter->getShowAllOption());
         $this->assertSame('Enabled', $filter->label);
     }
 

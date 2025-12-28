@@ -89,15 +89,22 @@ class DoctrineDataSource implements DataSourceInterface
         $this->filtersCache = [];
 
         foreach ($legacyFilters as $name => $config) {
+            $enumOptions = null;
+            if (isset($config['options']) || isset($config['enumClass']) || isset($config['showAllOption'])) {
+                $enumOptions = new FilterEnumOptions(
+                    values: $config['options'] ?? null,
+                    enumClass: $config['enumClass'] ?? null,
+                    showAllOption: $config['showAllOption'] ?? true,
+                );
+            }
+
             $this->filtersCache[$name] = new FilterMetadata(
                 name: $name,
                 type: $config['type'] ?? 'text',
                 label: $config['label'] ?? null,
                 placeholder: $config['placeholder'] ?? null,
                 operator: $config['operator'] ?? '=',
-                options: $config['options'] ?? null,
-                enumClass: $config['enumClass'] ?? null,
-                showAllOption: $config['showAllOption'] ?? true,
+                enumOptions: $enumOptions,
                 searchFields: $config['searchFields'] ?? null,
                 priority: $config['priority'] ?? 999,
                 enabled: $config['enabled'] ?? true,

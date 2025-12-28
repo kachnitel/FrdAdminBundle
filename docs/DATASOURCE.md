@@ -638,15 +638,18 @@ readonly class FilterMetadata
         public ?string $label = null,
         public ?string $placeholder = null,
         public string $operator = '=',
-        public ?array $options = null,
-        public ?string $enumClass = null,
-        public bool $showAllOption = true,
+        public ?FilterEnumOptions $enumOptions = null,
         public ?array $searchFields = null,
         public int $priority = 999,
         public bool $enabled = true,
     );
 
-    // Factory methods
+    // Accessors for enum options (backward compatibility)
+    public function getOptions(): ?array;
+    public function getEnumClass(): ?string;
+    public function getShowAllOption(): bool;
+
+    // Factory methods (recommended)
     public static function text(string $name, ?string $label = null, ?string $placeholder = null, int $priority = 999): self;
     public static function number(string $name, ?string $label = null, string $operator = '=', int $priority = 999): self;
     public static function date(string $name, ?string $label = null, string $operator = '>=', int $priority = 999): self;
@@ -654,6 +657,18 @@ readonly class FilterMetadata
     public static function enum(string $name, array $options, ?string $label = null, bool $showAllOption = true, int $priority = 999): self;
     public static function enumClass(string $name, string $enumClass, ?string $label = null, bool $showAllOption = true, int $priority = 999): self;
     public static function boolean(string $name, ?string $label = null, bool $showAllOption = true, int $priority = 999): self;
+}
+
+readonly class FilterEnumOptions
+{
+    public function __construct(
+        public ?array $values = null,
+        public ?string $enumClass = null,
+        public bool $showAllOption = true,
+    );
+
+    public static function fromValues(array $values, bool $showAllOption = true): self;
+    public static function fromEnumClass(string $enumClass, bool $showAllOption = true): self;
 }
 ```
 

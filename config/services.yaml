@@ -57,10 +57,9 @@ services:
             $defaultItemsPerPage: '%kachnitel_admin.pagination.default_items_per_page%'
             $allowedItemsPerPage: '%kachnitel_admin.pagination.allowed_items_per_page%'
 
-    # EntityList component with pagination config and entity discovery
+    # EntityList component with pagination config
     Kachnitel\AdminBundle\Twig\Components\EntityList:
         arguments:
-            $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
             $config: '@Kachnitel\AdminBundle\Config\EntityListConfig'
 
     # Generic Admin Controller (auto-discovers entities via #[Admin] attribute)

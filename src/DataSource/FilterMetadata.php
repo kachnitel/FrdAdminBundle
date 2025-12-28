@@ -16,12 +16,10 @@ readonly class FilterMetadata
     /**
      * @param string $name Internal filter name (used for query parameters)
      * @param string $type Filter type: 'text', 'number', 'date', 'daterange', 'enum', 'boolean', 'relation'
-     * @param string $label Human-readable label
+     * @param string|null $label Human-readable label
      * @param string|null $placeholder Placeholder text for input
      * @param string $operator SQL operator: '=', '!=', '<', '>', '<=', '>=', 'LIKE', 'BETWEEN'
-     * @param array<string>|null $options For enum/select filters: list of options
-     * @param string|null $enumClass For enum filters: fully-qualified enum class name
-     * @param bool $showAllOption For enum filters: whether to show "All" option
+     * @param FilterEnumOptions|null $enumOptions Options for enum-type filters
      * @param array<string>|null $searchFields For relation filters: fields to search on
      * @param int $priority Display order (lower = first)
      * @param bool $enabled Whether this filter is enabled
@@ -32,9 +30,7 @@ readonly class FilterMetadata
         public ?string $label = null,
         public ?string $placeholder = null,
         public string $operator = '=',
-        public ?array $options = null,
-        public ?string $enumClass = null,
-        public bool $showAllOption = true,
+        public ?FilterEnumOptions $enumOptions = null,
         public ?array $searchFields = null,
         public int $priority = 999,
         public bool $enabled = true,
@@ -129,8 +125,7 @@ readonly class FilterMetadata
             type: ColumnFilter::TYPE_ENUM,
             label: $label ?? self::humanize($name),
             operator: '=',
-            options: $options,
-            showAllOption: $showAllOption,
+            enumOptions: FilterEnumOptions::fromValues($options, $showAllOption),
             priority: $priority,
         );
     }
@@ -152,8 +147,7 @@ readonly class FilterMetadata
             type: ColumnFilter::TYPE_ENUM,
             label: $label ?? self::humanize($name),
             operator: '=',
-            enumClass: $enumClass,
-            showAllOption: $showAllOption,
+            enumOptions: FilterEnumOptions::fromEnumClass($enumClass, $showAllOption),
             priority: $priority,
         );
     }
@@ -172,9 +166,39 @@ readonly class FilterMetadata
             type: ColumnFilter::TYPE_BOOLEAN,
             label: $label ?? self::humanize($name),
             operator: '=',
-            showAllOption: $showAllOption,
+            enumOptions: new FilterEnumOptions(showAllOption: $showAllOption),
             priority: $priority,
         );
+    }
+
+    // --- Backward compatibility accessors for enum options ---
+
+    /**
+     * Get options for enum/select filters.
+     *
+     * @return array<string>|null
+     */
+    public function getOptions(): ?array
+    {
+        return $this->enumOptions?->values;
+    }
+
+    /**
+     * Get enum class name.
+     *
+     * @return string|null
+     */
+    public function getEnumClass(): ?string
+    {
+        return $this->enumOptions?->enumClass;
+    }
+
+    /**
+     * Check if "All" option should be shown.
+     */
+    public function getShowAllOption(): bool
+    {
+        return $this->enumOptions !== null ? $this->enumOptions->showAllOption : true;
     }
 
     /**
@@ -197,16 +221,16 @@ readonly class FilterMetadata
             $result['placeholder'] = $this->placeholder;
         }
 
-        if ($this->options !== null) {
-            $result['options'] = $this->options;
+        if ($this->enumOptions?->values !== null) {
+            $result['options'] = $this->enumOptions->values;
         }
 
-        if ($this->enumClass !== null) {
-            $result['enumClass'] = $this->enumClass;
+        if ($this->enumOptions?->enumClass !== null) {
+            $result['enumClass'] = $this->enumOptions->enumClass;
         }
 
-        if ($this->showAllOption !== true) {
-            $result['showAllOption'] = $this->showAllOption;
+        if ($this->enumOptions !== null && $this->enumOptions->showAllOption !== true) {
+            $result['showAllOption'] = $this->enumOptions->showAllOption;
         }
 
         if ($this->searchFields !== null) {

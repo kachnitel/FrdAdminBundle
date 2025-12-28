@@ -55,9 +55,10 @@ class DoctrineDataSourceFactory
     }
 
     /**
-     * Create a data source for a specific entity class.
+     * Create a data source for a specific entity class with #[Admin] attribute.
      *
      * @param class-string $entityClass
+     * @return DoctrineDataSource|null Returns null if entity doesn't have #[Admin] attribute
      */
     public function create(string $entityClass): ?DoctrineDataSource
     {
@@ -66,6 +67,28 @@ class DoctrineDataSourceFactory
         if ($adminAttribute === null) {
             return null;
         }
+
+        return new DoctrineDataSource(
+            entityClass: $entityClass,
+            adminAttribute: $adminAttribute,
+            em: $this->em,
+            queryService: $this->queryService,
+            filterMetadataProvider: $this->filterMetadataProvider,
+        );
+    }
+
+    /**
+     * Create a data source for any Doctrine entity class.
+     *
+     * Uses the #[Admin] attribute if present, otherwise creates with default settings.
+     * This allows EntityList to work with any Doctrine entity.
+     *
+     * @param class-string $entityClass
+     */
+    public function createForClass(string $entityClass): DoctrineDataSource
+    {
+        $adminAttribute = $this->entityDiscovery->getAdminAttribute($entityClass)
+            ?? new \Kachnitel\AdminBundle\Attribute\Admin();
 
         return new DoctrineDataSource(
             entityClass: $entityClass,
