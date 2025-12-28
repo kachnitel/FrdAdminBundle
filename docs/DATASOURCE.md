@@ -10,6 +10,7 @@ Display data from any source (APIs, audit logs, external databases) in the admin
 - [Value Objects](#value-objects)
 - [Using in Templates](#using-in-templates)
 - [DataSource Providers](#datasource-providers)
+- [Debugging](#debugging)
 - [API Reference](#api-reference)
 
 ## Quick Start
@@ -552,6 +553,59 @@ class AuditLogDataSource implements DataSourceInterface
 ```
 
 </details>
+
+## Debugging
+
+Use the `debug:datasource` console command to inspect registered data sources.
+
+### Interactive Mode
+
+```bash
+bin/console debug:datasource
+```
+
+Lists all registered data sources and prompts you to select one to view details:
+
+```
+Registered Data Sources
+=======================
+
+Found 3 data source(s)
+
+ -------------- --------------- --------- ----------------------------------------
+  Identifier     Label           Type      Class
+ -------------- --------------- --------- ----------------------------------------
+  Product        Products        Doctrine  Kachnitel\AdminBundle\DataSource\DoctrineDataSource
+  Category       Categories      Doctrine  Kachnitel\AdminBundle\DataSource\DoctrineDataSource
+  api-products   API Products    Custom    App\DataSource\ApiProductDataSource
+ -------------- --------------- --------- ----------------------------------------
+
+ Select a data source to see details:
+  [0] Product
+  [1] Category
+  [2] api-products
+ >
+```
+
+### Direct Access
+
+Skip the interactive prompt by specifying the identifier directly:
+
+```bash
+bin/console debug:datasource --identifier=Product
+# or
+bin/console debug:datasource -i Product
+```
+
+### Data Source Details
+
+The detail view displays comprehensive information:
+
+- **Basic Information**: Identifier, label, icon, type, class, ID field
+- **Pagination Defaults**: Default sort field, direction, items per page
+- **Supported Actions**: Which CRUD actions are available (index, show, new, edit, delete, batch_delete)
+- **Columns**: Column definitions with name, label, type, sortable status, and custom templates
+- **Filters**: Filter definitions with name, label, type, operator, and enum options
 
 ## API Reference
 

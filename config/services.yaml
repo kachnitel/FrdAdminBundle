@@ -9,6 +9,11 @@ services:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
 
+    # Commands
+    Kachnitel\AdminBundle\Command\:
+        resource: '../src/Command'
+        tags: ['console.command']
+
     # Services
     Kachnitel\AdminBundle\Service\:
         resource: '../src/Service'
