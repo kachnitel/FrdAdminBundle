@@ -1,0 +1,10 @@
+<input
+    type="text"
+    class="form-control form-control-sm"
+    placeholder="{{ filterMetadata.placeholder|default('Search ' ~ (filterMetadata.targetEntity|default(column|humanize)) ~ '...') }}"
+    data-model="debounce(300)|value"
+    value="{{ value }}"
+    {% if filterMetadata.searchFields is defined %}
+        title="Searches: {{ filterMetadata.searchFields|join(', ') }}"
+    {% endif %}
+>

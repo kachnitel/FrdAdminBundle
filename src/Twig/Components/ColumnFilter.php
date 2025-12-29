@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -19,12 +21,20 @@ class ColumnFilter
     #[LiveProp(writable: true, onUpdated: 'onUpdated')]
     public string $value = '';
 
+    /**
+     * Full filter metadata (type, enumClass, showAllOption, placeholder, etc.)
+     * @var array<string, mixed>
+     */
     #[LiveProp]
-    public string $type = 'text'; // text, number, date, etc.
+    public array $filterMetadata = [];
+
+    public function getType(): string
+    {
+        return $this->filterMetadata['type'] ?? 'text';
+    }
 
     public function onUpdated(): void
     {
-        // Emit event to parent (EntityList)
         $this->emitUp('filter:updated', [
             'column' => $this->column,
             'value'  => $this->value,

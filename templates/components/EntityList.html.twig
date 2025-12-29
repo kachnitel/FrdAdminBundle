@@ -82,13 +82,10 @@
                 {% for column in this.columns %}
                     <th>
                         {% if this.filterMetadata[column] is defined %}
-                            {#
-                             Pass the initial value so it persists on re-renders.
-                             #}
                             <twig:K:Admin:ColumnFilter
                                 column="{{ column }}"
                                 value="{{ this.columnFilters[column] ?? '' }}"
-                                type="{{ this.filterMetadata[column].type|default('text') }}"
+                                :filterMetadata="this.filterMetadata[column]"
                             />
                         {% endif %}
                     </th>

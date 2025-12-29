@@ -1,9 +1,12 @@
 <div {{ attributes }}>
-    <input
-        type="{{ type }}"
-        class="form-control form-control-sm"
-        placeholder="Filter {{ column|humanize }}..."
-        data-model="debounce(300)|value"
-        value="{{ this.value }}"
-    >
+    {% set filterType = this.type %}
+    {% if this.type == 'enum' and filterMetadata.enumClass is not defined %}
+        {% set filterType = 'text' %}
+    {% endif %}
+
+    {% include '@KachnitelAdmin/components/ColumnFilter/_' ~ filterType ~ '.html.twig' with {
+        column: column,
+        value: this.value,
+        filterMetadata: filterMetadata
+    } only %}
 </div>

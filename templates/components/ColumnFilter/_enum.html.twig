@@ -1,0 +1,13 @@
+<select
+    class="form-control form-control-sm"
+    data-model="value"
+>
+    {% if filterMetadata.showAllOption|default(true) %}
+        <option value="">All</option>
+    {% endif %}
+    {% for case in enum(filterMetadata.enumClass).cases() %}
+        <option value="{{ case.value }}" {{ value == case.value ? 'selected' : '' }}>
+            {{ case.displayValue is defined ? case.displayValue() : case.name }}
+        </option>
+    {% endfor %}
+</select>
