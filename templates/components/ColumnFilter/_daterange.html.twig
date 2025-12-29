@@ -1,4 +1,4 @@
-{% set rangeData = value ? value|json_decode : {} %}
+{% set rangeData = value ?: {} %}
 <div
     class="d-flex gap-1 align-items-center"
     data-controller="kachnitel--admin-bundle--daterange-filter"
