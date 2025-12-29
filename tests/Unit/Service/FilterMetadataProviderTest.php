@@ -8,13 +8,14 @@ use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class FilterMetadataProviderTest extends TestCase
 {
     private FilterMetadataProvider $provider;
-    private EntityManagerInterface $em;
-    /** @var ClassMetadata<object> */
+    private EntityManagerInterface&MockObject $em;
+    /** @var ClassMetadata<object>&MockObject */
     private ClassMetadata $metadata;
 
     protected function setUp(): void
@@ -140,6 +141,10 @@ class FilterMetadataProviderTest extends TestCase
         $this->metadata->method('hasAssociation')->willReturn(true);
         $this->metadata->method('getAssociationTargetClass')
             ->willReturn(RelatedEntity::class);
+        // Mock the target entity metadata for field validation
+        $this->metadata->method('hasField')->willReturnCallback(
+            fn($field) => in_array($field, ['id', 'name', 'email'])
+        );
 
         $filters = $this->provider->getFilters(TestEntity::class);
 
@@ -226,7 +231,7 @@ class FilterMetadataProviderTest extends TestCase
         // This test covers the issue where a related entity has a computed property (getter)
         // like getName() that combines firstName and lastName, but "name" is not a database field.
         // The system should filter out non-existent fields and only keep real database fields.
-        
+
         // Create a fresh EM mock for this test
         $em = $this->createMock(EntityManagerInterface::class);
         $mainEntityMetadata = $this->createMock(ClassMetadata::class);
@@ -264,12 +269,12 @@ class FilterMetadataProviderTest extends TestCase
         // Should have customer filter
         $this->assertArrayHasKey('customer', $filters);
         $this->assertEquals(ColumnFilter::TYPE_RELATION, $filters['customer']['type']);
-        
-        // The default searchFields from DEFAULT_SEARCH_FIELDS['User'] would be 
-        // ['name', 'email', 'firstName', 'lastName'], but 'name' doesn't exist as a 
+
+        // The default searchFields from DEFAULT_SEARCH_FIELDS['User'] would be
+        // ['name', 'email', 'firstName', 'lastName'], but 'name' doesn't exist as a
         // database field, so it should be filtered out. Other fields should remain.
-        // The default searchFields from DEFAULT_SEARCH_FIELDS['User'] would be 
-        // ['name', 'email', 'firstName', 'lastName'], but 'name' doesn't exist as a 
+        // The default searchFields from DEFAULT_SEARCH_FIELDS['User'] would be
+        // ['name', 'email', 'firstName', 'lastName'], but 'name' doesn't exist as a
         // database field, so it should be filtered out. Other fields should remain.
         $searchFields = $filters['customer']['searchFields'];
         $this->assertNotContains('name', $searchFields);
@@ -283,7 +288,7 @@ class FilterMetadataProviderTest extends TestCase
     public function testRelationFilterFallsBackToIdWhenNoValidSearchFields(): void
     {
         // If all default searchFields are non-existent, should fall back to 'id'
-        
+
         // Create a fresh EM mock for this test
         $em = $this->createMock(EntityManagerInterface::class);
         $mainEntityMetadata = $this->createMock(ClassMetadata::class);
@@ -320,7 +325,7 @@ class FilterMetadataProviderTest extends TestCase
 
         // Should have customer filter
         $this->assertArrayHasKey('customer', $filters);
-        
+
         // Should fall back to 'id' when no valid searchFields exist
         $searchFields = $filters['customer']['searchFields'];
         $this->assertContains('id', $searchFields);

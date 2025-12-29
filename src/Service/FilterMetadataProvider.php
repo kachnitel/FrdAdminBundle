@@ -149,9 +149,8 @@ class FilterMetadataProvider
         if ($instance->priority !== null) {
             $config['priority'] = $instance->priority;
         }
-        if (!empty($instance->searchFields)) {
-            $config['searchFields'] = $instance->searchFields;
-        }
+        // searchFields are validated in ensureRelationConfig or getRelationFilterConfig,
+        // so we don't override them here to preserve the validation
 
         return $config;
     }
@@ -217,11 +216,27 @@ class FilterMetadataProvider
             $config['targetEntity'] = (new \ReflectionClass($targetClass))->getShortName();
             $config['targetClass'] = $targetClass;
 
-            if (!empty($instance->searchFields)) {
-                $config['searchFields'] = $instance->searchFields;
-            } else {
-                $config['searchFields'] = ['name', 'id'];
+            // Get searchFields from attribute or use defaults
+            $searchFields = !empty($instance->searchFields)
+                ? $instance->searchFields
+                : ['name', 'id'];
+
+            // Validate that searchFields actually exist in the target entity
+            $targetMetadata = $this->em->getClassMetadata($targetClass);
+            $validSearchFields = [];
+            foreach ($searchFields as $field) {
+                // Only include fields that exist as actual database fields in the target entity
+                if ($targetMetadata->hasField($field)) {
+                    $validSearchFields[] = $field;
+                }
             }
+
+            // If no valid search fields remain, fall back to 'id'
+            if (empty($validSearchFields)) {
+                $validSearchFields = ['id'];
+            }
+
+            $config['searchFields'] = $validSearchFields;
         }
         return $config;
     }
@@ -290,9 +305,9 @@ class FilterMetadataProvider
         $targetEntity = (new ReflectionClass($targetClass))->getShortName();
 
         // Get searchable fields from attribute or defaults
-        $searchFields = $columnFilter?->newInstance()->searchFields
-            ?? self::DEFAULT_SEARCH_FIELDS[$targetEntity]
-            ?? ['name', 'id'];
+        $searchFields = !empty($columnFilter?->newInstance()->searchFields)
+            ? $columnFilter->newInstance()->searchFields
+            : (self::DEFAULT_SEARCH_FIELDS[$targetEntity] ?? ['name', 'id']);
 
         // Validate that searchFields actually exist in the target entity
         $targetMetadata = $this->em->getClassMetadata($targetClass);

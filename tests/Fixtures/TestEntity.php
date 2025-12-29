@@ -66,7 +66,6 @@ class TestEntity
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ColumnFilter(
         type: ColumnFilter::TYPE_RELATION,
-        searchFields: ['name', 'email'],
         placeholder: 'Search customer...'
     )]
     private ?User $customer = null;
