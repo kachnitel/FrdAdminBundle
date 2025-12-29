@@ -299,6 +299,12 @@ class EntityListQueryService
 
         // Default to searching the 'id' field if not specified
         $searchFields = $metadata['searchFields'] ?? ['id'];
+        
+        // Filter out any empty searchFields array
+        if (empty($searchFields)) {
+            $searchFields = ['id'];
+        }
+        
         $alias = 'rel_' . $column;
 
         // Perform a join to access the related entity fields

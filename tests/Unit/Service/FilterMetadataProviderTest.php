@@ -220,4 +220,77 @@ class FilterMetadataProviderTest extends TestCase
 
         $this->assertEquals('Created at', $filters['createdAt']['label']);
     }
+
+    public function testRelationFilterFiltersOutNonExistentSearchFields(): void
+    {
+        // This test covers the issue where a related entity has a computed property (getter)
+        // like getName() that combines firstName and lastName, but "name" is not a database field.
+        // The system should filter out non-existent fields and only keep real database fields.
+        
+        $mainEntityMetadata = $this->createMock(ClassMetadata::class);
+        $userMetadata = $this->createMock(ClassMetadata::class);
+
+        $this->em->method('getClassMetadata')->willReturnMap([
+            [TestEntity::class, $mainEntityMetadata],
+            ['App\Entity\User', $userMetadata],
+        ]);
+
+        $mainEntityMetadata->method('getFieldNames')->willReturn([]);
+        $mainEntityMetadata->method('getAssociationNames')->willReturn(['customer']);
+        $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $mainEntityMetadata->method('hasAssociation')->willReturn(true);
+        $mainEntityMetadata->method('getAssociationTargetClass')->willReturn('App\Entity\User');
+
+        // User entity has firstName, lastName, email but NOT "name" (name is a getter)
+        $userMetadata->method('hasField')->willReturnCallback(
+            fn($field) => in_array($field, ['firstName', 'lastName', 'email'])
+        );
+
+        $provider = new FilterMetadataProvider($this->em);
+        $filters = $provider->getFilters(TestEntity::class);
+
+        // Should have customer filter
+        $this->assertArrayHasKey('customer', $filters);
+        $this->assertEquals(ColumnFilter::TYPE_RELATION, $filters['customer']['type']);
+        
+        // The default searchFields would be ['name', 'email'] from DEFAULT_SEARCH_FIELDS['User']
+        // But 'name' doesn't exist as a database field, so it should be filtered out
+        $searchFields = $filters['customer']['searchFields'];
+        $this->assertNotContains('name', $searchFields);
+        $this->assertContains('email', $searchFields);
+    }
+
+    public function testRelationFilterFallsBackToIdWhenNoValidSearchFields(): void
+    {
+        // If all default searchFields are non-existent, should fall back to 'id'
+        $mainEntityMetadata = $this->createMock(ClassMetadata::class);
+        $userMetadata = $this->createMock(ClassMetadata::class);
+
+        $this->em->method('getClassMetadata')->willReturnMap([
+            [TestEntity::class, $mainEntityMetadata],
+            ['App\Entity\User', $userMetadata],
+        ]);
+
+        $mainEntityMetadata->method('getFieldNames')->willReturn([]);
+        $mainEntityMetadata->method('getAssociationNames')->willReturn(['customer']);
+        $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $mainEntityMetadata->method('hasAssociation')->willReturn(true);
+        $mainEntityMetadata->method('getAssociationTargetClass')->willReturn('App\Entity\User');
+
+        // User entity has no 'name' or 'email' fields
+        $userMetadata->method('hasField')->willReturnCallback(
+            fn($field) => false
+        );
+
+        $provider = new FilterMetadataProvider($this->em);
+        $filters = $provider->getFilters(TestEntity::class);
+
+        // Should have customer filter
+        $this->assertArrayHasKey('customer', $filters);
+        
+        // Should fall back to 'id' when no valid searchFields exist
+        $searchFields = $filters['customer']['searchFields'];
+        $this->assertContains('id', $searchFields);
+        $this->assertCount(1, $searchFields);
+    }
 }

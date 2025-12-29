@@ -294,11 +294,26 @@ class FilterMetadataProvider
             ?? self::DEFAULT_SEARCH_FIELDS[$targetEntity]
             ?? ['name', 'id'];
 
+        // Validate that searchFields actually exist in the target entity
+        $targetMetadata = $this->em->getClassMetadata($targetClass);
+        $validSearchFields = [];
+        foreach ($searchFields as $field) {
+            // Only include fields that exist as actual database fields in the target entity
+            if ($targetMetadata->hasField($field)) {
+                $validSearchFields[] = $field;
+            }
+        }
+
+        // If no valid search fields remain, fall back to 'id'
+        if (empty($validSearchFields)) {
+            $validSearchFields = ['id'];
+        }
+
         return [
             'type' => ColumnFilter::TYPE_RELATION,
             'targetClass' => $targetClass,
             'targetEntity' => $targetEntity,
-            'searchFields' => $searchFields,
+            'searchFields' => $validSearchFields,
             'operator' => 'LIKE',
         ];
     }
