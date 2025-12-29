@@ -24,10 +24,26 @@ The bundle automatically creates appropriate filters based on property types:
 |--------------|-----------|----------|---------|
 | string, text | Text input | LIKE | Name, description |
 | integer, decimal | Number input | = | Price, quantity |
-| date, datetime | Date picker | >= | Created at |
+| date, datetime | Date picker | BETWEEN (exact day) | Created at |
 | PHP enum | Dropdown | = | Status, type |
 | boolean | Yes/No/All | = | Active, published |
 | ManyToOne, OneToOne | Text search | LIKE | User, category |
+
+### Date Filters
+
+**Single date** (`date` type) - matches the exact selected day:
+```php
+#[ColumnFilter(type: 'date')]
+private \DateTimeInterface $createdAt;
+```
+
+**Date range** (`daterange` type) - allows selecting from/to dates:
+```php
+#[ColumnFilter(type: 'daterange')]
+private \DateTimeInterface $createdAt;
+```
+
+The date range filter displays two date inputs. You can fill in just one (from or to) for open-ended ranges.
 
 ## Custom Configuration
 

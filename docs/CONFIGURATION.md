@@ -378,9 +378,12 @@ class Product
 |----------|-------------|
 | `TYPE_TEXT` | Text input (default for strings) |
 | `TYPE_NUMBER` | Number input |
-| `TYPE_DATE` | Date picker |
+| `TYPE_DATE` | Date picker (matches exact day) |
+| `TYPE_DATERANGE` | Date range picker (from/to) |
 | `TYPE_BOOLEAN` | Yes/No/All dropdown |
 | `TYPE_RELATION` | Search related entities |
+
+See [Filters](./FILTERS.md) for details
 
 ## Permissions
 
@@ -669,6 +672,7 @@ class ColumnFilter
     public const TYPE_TEXT = 'text';
     public const TYPE_NUMBER = 'number';
     public const TYPE_DATE = 'date';
+    public const TYPE_DATERANGE = 'daterange';
     public const TYPE_BOOLEAN = 'boolean';
     public const TYPE_RELATION = 'relation';
 
