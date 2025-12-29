@@ -32,4 +32,6 @@ if ($exitCode !== 0) {
     echo "╚══════════════════════════════════════════════════════════════════╝\n\n";
     echo $output->fetch();
     exit($exitCode);
+} else {
+    echo "Test Templates synced\n\n";
 }
