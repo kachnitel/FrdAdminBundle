@@ -232,14 +232,14 @@ class FilterMetadataProviderTest extends TestCase
 
         $this->em->method('getClassMetadata')->willReturnMap([
             [TestEntity::class, $mainEntityMetadata],
-            ['App\Entity\User', $userMetadata],
+            [\Kachnitel\AdminBundle\Tests\Fixtures\User::class, $userMetadata],
         ]);
 
         $mainEntityMetadata->method('getFieldNames')->willReturn([]);
         $mainEntityMetadata->method('getAssociationNames')->willReturn(['customer']);
         $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
         $mainEntityMetadata->method('hasAssociation')->willReturn(true);
-        $mainEntityMetadata->method('getAssociationTargetClass')->willReturn('App\Entity\User');
+        $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(\Kachnitel\AdminBundle\Tests\Fixtures\User::class);
 
         // User entity has firstName, lastName, email but NOT "name" (name is a getter)
         $userMetadata->method('hasField')->willReturnCallback(
@@ -253,11 +253,14 @@ class FilterMetadataProviderTest extends TestCase
         $this->assertArrayHasKey('customer', $filters);
         $this->assertEquals(ColumnFilter::TYPE_RELATION, $filters['customer']['type']);
         
-        // The default searchFields would be ['name', 'email'] from DEFAULT_SEARCH_FIELDS['User']
-        // But 'name' doesn't exist as a database field, so it should be filtered out
+        // The default searchFields from DEFAULT_SEARCH_FIELDS['User'] would be 
+        // ['name', 'email', 'firstName', 'lastName'], but 'name' doesn't exist as a 
+        // database field, so it should be filtered out. Other fields should remain.
         $searchFields = $filters['customer']['searchFields'];
         $this->assertNotContains('name', $searchFields);
         $this->assertContains('email', $searchFields);
+        $this->assertContains('firstName', $searchFields);
+        $this->assertContains('lastName', $searchFields);
     }
 
     public function testRelationFilterFallsBackToIdWhenNoValidSearchFields(): void
@@ -268,14 +271,14 @@ class FilterMetadataProviderTest extends TestCase
 
         $this->em->method('getClassMetadata')->willReturnMap([
             [TestEntity::class, $mainEntityMetadata],
-            ['App\Entity\User', $userMetadata],
+            [\Kachnitel\AdminBundle\Tests\Fixtures\User::class, $userMetadata],
         ]);
 
         $mainEntityMetadata->method('getFieldNames')->willReturn([]);
         $mainEntityMetadata->method('getAssociationNames')->willReturn(['customer']);
         $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
         $mainEntityMetadata->method('hasAssociation')->willReturn(true);
-        $mainEntityMetadata->method('getAssociationTargetClass')->willReturn('App\Entity\User');
+        $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(\Kachnitel\AdminBundle\Tests\Fixtures\User::class);
 
         // User entity has no 'name' or 'email' fields
         $userMetadata->method('hasField')->willReturnCallback(

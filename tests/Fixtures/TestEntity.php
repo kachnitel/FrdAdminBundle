@@ -63,6 +63,14 @@ class TestEntity
     )]
     private ?RelatedEntity $relatedEntity = null;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ColumnFilter(
+        type: ColumnFilter::TYPE_RELATION,
+        searchFields: ['name', 'email'],
+        placeholder: 'Search customer...'
+    )]
+    private ?User $customer = null;
+
     /**
      * @var Collection<int, TagEntity>
      */
@@ -145,6 +153,17 @@ class TestEntity
     public function setRelatedEntity(?RelatedEntity $relatedEntity): self
     {
         $this->relatedEntity = $relatedEntity;
+        return $this;
+    }
+
+    public function getCustomer(): ?User
+    {
+        return $this->customer;
+    }
+
+    public function setCustomer(?User $customer): self
+    {
+        $this->customer = $customer;
         return $this;
     }
 
