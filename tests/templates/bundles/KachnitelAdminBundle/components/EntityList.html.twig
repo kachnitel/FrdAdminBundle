@@ -3,25 +3,42 @@
 {#
  # LiveComponent template for reactive entity lists with per-column filters.
  #
+ # Supports two modes:
+ # 1. Entity mode: Uses Doctrine entities with admin_* twig functions
+ # 2. DataSource mode: Uses DataSourceInterface for non-Doctrine data (e.g., audit logs)
+ #
  # Props:
- # @var string entityClass - Entity class name
+ # @var string entityClass - Entity class name (entity mode)
+ # @var string dataSourceId - Data source identifier (data source mode)
  # @var string search - Global search query
  # @var string sortBy - Sort field
  # @var string sortDirection - ASC or DESC
  # @var array columnFilters - Per-column filter values
  #}
 
-{% set batchEnabled = this.permissionService.isBatchActionsEnabled(this.entityClass) %}
-{% set canBatchDelete = this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
+{% set isDataSourceMode = this.isUsingDataSource() %}
+{% set dataSource = this.dataSource %}
+{# Pure DataSource mode means dataSourceId was explicitly set (not resolved from entityClass) #}
+{% set isPureDataSourceMode = this.dataSourceId is not null %}
+{# Batch actions for Doctrine entities #}
+{% set batchEnabled = this.entityClass and this.permissionService.isBatchActionsEnabled(this.entityClass) %}
+{% set canBatchDelete = this.entityClass and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
 {% set showBatchColumn = batchEnabled and canBatchDelete %}
 
-<div {{ attributes }} {% if batchEnabled %}data-controller="batch-select"{% endif %}>
+<div
+    {% if batchEnabled %}
+        {{ attributes.defaults({ 'data-controller': 'batch-select' }) }}
+    {% else %}
+        {{ attributes }}
+    {% endif %}
+>
     {# Batch Actions Bar #}
     {% if showBatchColumn %}
         {% include '@KachnitelAdmin/components/EntityList/_BatchActionsBar.html.twig' with {
             selectedCount: this.selectedIds|length
         } only %}
     {% endif %}
+
 
     {# Global Search #}
     {% if block('search') is defined %}
@@ -58,6 +75,7 @@
                 {% for column in this.columns %}
                     {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
                         column: column,
+                        columnLabel: isDataSourceMode and dataSource.columns[column] is defined ? dataSource.columns[column].label : null,
                         sortBy: sortBy,
                         sortDirection: sortDirection,
                         component: this
@@ -88,8 +106,7 @@
         </thead>
         <tbody>
             {% for entity in this.entities %}
-                {% set entityData = admin_get_entity_data(entity) %}
-                {% set entityId = entityData.id ?? entityData[attribute(entity, 'id')] ?? loop.index %}
+                {% set entityId = this.getEntityId(entity) %}
                 <tr>
                     {% if showBatchColumn %}
                         <td>
@@ -104,31 +121,72 @@
                             >
                         </td>
                     {% endif %}
-                    {% for property, value in entityData %}
+                    {% for column in this.columns %}
                         <td>
-                            {% set templateName = admin_is_collection(entity, property) ? '_collection.html.twig' : '_preview.html.twig' %}
-                            {{ include([
-                                '@KachnitelAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ property ~ '.html.twig',
-                                '@KachnitelAdmin/types/' ~ admin_get_property_type(entity, property)|replace({'\\': '/'}) ~ '/' ~ templateName,
-                                '@KachnitelAdmin/types/' ~ templateName
-                            ], {
-                                entity: entity,
-                                value: value,
-                                property: property,
-                                cell: true
-                            }, ignore_missing = true) }}
+                            {% set value = this.getEntityValue(entity, column) %}
+                            {% if isPureDataSourceMode %}
+                                {# Pure DataSource mode: use column metadata for custom templates #}
+                                {% set columnMeta = dataSource.columns[column] ?? null %}
+                                {% set columnType = columnMeta ? columnMeta.type : 'string' %}
+                                {% if columnMeta and columnMeta.template %}
+                                    {# Custom template specified in column metadata #}
+                                    {{ include(columnMeta.template, {
+                                        entity: entity,
+                                        item: entity,
+                                        value: value,
+                                        property: column,
+                                        cell: true
+                                    }) }}
+                                {% else %}
+                                    {% set templateName = columnType == 'collection' ? '_collection.html.twig' : '_preview.html.twig' %}
+                                    {{ include([
+                                        '@KachnitelAdmin/types/' ~ columnType ~ '/' ~ templateName,
+                                        '@KachnitelAdmin/types/' ~ templateName
+                                    ], {
+                                        entity: entity,
+                                        value: value,
+                                        property: column,
+                                        cell: true
+                                    }, ignore_missing = true) }}
+                                {% endif %}
+                            {% else %}
+                                {# Entity mode: use Doctrine-based type detection #}
+                                {% set templateName = admin_is_collection(entity, column) ? '_collection.html.twig' : '_preview.html.twig' %}
+                                {{ include([
+                                    '@KachnitelAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ column ~ '.html.twig',
+                                    '@KachnitelAdmin/types/' ~ admin_get_property_type(entity, column)|replace({'\\': '/'}) ~ '/' ~ templateName,
+                                    '@KachnitelAdmin/types/' ~ templateName
+                                ], {
+                                    entity: entity,
+                                    value: value,
+                                    property: column,
+                                    cell: true
+                                }, ignore_missing = true) }}
+                            {% endif %}
                         </td>
                     {% endfor %}
 
-                    {% include '@KachnitelAdmin/components/EntityList/_RowActions.html.twig' with {
-                        entity: entity,
-                        entityShortClass: this.entityShortClass
-                    } only %}
+                    {% if isPureDataSourceMode %}
+                        {% include '@KachnitelAdmin/components/EntityList/_DataSourceRowActions.html.twig' with {
+                            dataSourceId: this.dataSourceId,
+                            dataSource: dataSource,
+                            entityId: entityId
+                        } only %}
+                    {% else %}
+                        {% include '@KachnitelAdmin/components/EntityList/_RowActions.html.twig' with {
+                            entity: entity,
+                            entityShortClass: this.entityShortClass
+                        } only %}
+                    {% endif %}
                 </tr>
             {% else %}
                 <tr>
                     <td colspan="{{ this.columns|length + (showBatchColumn ? 2 : 1) }}" class="text-center text-muted py-4">
-                        No {{ this.entityShortClass }} found.
+                        {% if isPureDataSourceMode %}
+                            No entries found.
+                        {% else %}
+                            No {{ this.entityShortClass }} found.
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}

@@ -1,0 +1,17 @@
+{#
+ # Partial template for data source entry row action buttons.
+ # Test version that doesn't require routing.
+ #
+ # Variables:
+ # @var string dataSourceId - Data source identifier
+ # @var DataSourceInterface dataSource - The data source instance
+ # @var string|int entityId - ID of the entry
+ #}
+
+<td class="actions">
+    {% if dataSource.supportsAction('show') %}
+        <a href="#" class="btn btn-sm btn-outline-primary">
+            View
+        </a>
+    {% endif %}
+</td>

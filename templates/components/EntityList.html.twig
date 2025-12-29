@@ -124,16 +124,27 @@
                                 {# Data source mode: use column metadata for type #}
                                 {% set columnMeta = dataSource.columns[column] ?? null %}
                                 {% set columnType = columnMeta ? columnMeta.type : 'string' %}
-                                {% set templateName = columnType == 'collection' ? '_collection.html.twig' : '_preview.html.twig' %}
-                                {{ include([
-                                    '@KachnitelAdmin/types/' ~ columnType ~ '/' ~ templateName,
-                                    '@KachnitelAdmin/types/' ~ templateName
-                                ], {
-                                    entity: entity,
-                                    value: value,
-                                    property: column,
-                                    cell: true
-                                }, ignore_missing = true) }}
+                                {% if columnMeta and columnMeta.template %}
+                                    {# Custom template specified in column metadata #}
+                                    {{ include(columnMeta.template, {
+                                        entity: entity,
+                                        item: entity,
+                                        value: value,
+                                        property: column,
+                                        cell: true
+                                    }) }}
+                                {% else %}
+                                    {% set templateName = columnType == 'collection' ? '_collection.html.twig' : '_preview.html.twig' %}
+                                    {{ include([
+                                        '@KachnitelAdmin/types/' ~ columnType ~ '/' ~ templateName,
+                                        '@KachnitelAdmin/types/' ~ templateName
+                                    ], {
+                                        entity: entity,
+                                        value: value,
+                                        property: column,
+                                        cell: true
+                                    }, ignore_missing = true) }}
+                                {% endif %}
                             {% else %}
                                 {# Entity mode: use Doctrine-based type detection #}
                                 {% set templateName = admin_is_collection(entity, column) ? '_collection.html.twig' : '_preview.html.twig' %}

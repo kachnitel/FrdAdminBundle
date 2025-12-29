@@ -1,0 +1,11 @@
+{# Test template for status column with custom rendering #}
+<!-- TEST_CUSTOM_TEMPLATE:STATUS -->
+{% if value == 'active' %}
+    <span class="badge bg-success status-active">Active</span>
+{% elseif value == 'pending' %}
+    <span class="badge bg-warning status-pending">Pending</span>
+{% elseif value == 'inactive' %}
+    <span class="badge bg-secondary status-inactive">Inactive</span>
+{% else %}
+    <span class="badge bg-light status-unknown">{{ value }}</span>
+{% endif %}

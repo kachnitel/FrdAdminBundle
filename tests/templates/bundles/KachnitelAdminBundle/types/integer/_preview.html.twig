@@ -1,0 +1,11 @@
+{# Override marker - DO NOT REMOVE #}
+<!-- TEST_OVERRIDE:PREVIEW -->
+<!-- TEST_OVERRIDE:INTEGER -->
+{# Integer type preview template - test override #}
+{% if property == 'id' and entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
+    <a href="{{ admin_object_path(entity, 'show') }}" class="text-decoration-none">
+        {{ value }}
+    </a>
+{% else %}
+    {{ value }}
+{% endif %}

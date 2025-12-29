@@ -3,7 +3,9 @@
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface;
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestDataSourceProvider;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
@@ -58,6 +60,8 @@ class TestKernel extends Kernel
             'paths' => [
                 // Register test override templates with KachnitelAdmin namespace (higher priority)
                 '%kernel.project_dir%/tests/templates/bundles/KachnitelAdminBundle' => 'KachnitelAdmin',
+                // Register test templates for custom column template testing
+                '%kernel.project_dir%/tests/templates' => '',
             ],
         ]);
 
@@ -139,6 +143,12 @@ class TestKernel extends Kernel
         $container->loadFromExtension('kachnitel_admin', [
             'entity_namespace' => 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\',
         ]);
+
+        // Register test data source provider for custom column template testing
+        // AutowireIterator uses the interface FQCN as the tag for discovery
+        $container->register(TestDataSourceProvider::class)
+            ->setPublic(true)
+            ->addTag(DataSourceProviderInterface::class);
     }
 
     protected function configureRoutes(RoutingConfigurator $routes): void

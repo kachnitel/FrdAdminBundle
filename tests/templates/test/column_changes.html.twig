@@ -1,0 +1,31 @@
+{# Test template for custom column rendering #}
+<!-- TEST_CUSTOM_TEMPLATE:CHANGES -->
+{% if value %}
+    <div class="changes-preview">
+        {% if value.total_changes is defined %}
+            <span class="badge">{{ value.total_changes }} change(s)</span>
+        {% endif %}
+        {% if value.changes is defined and value.changes is iterable %}
+            <ul class="change-list">
+                {% for change in value.changes|slice(0, 3) %}
+                    <li class="change-item">
+                        <strong>{{ change.field }}</strong>:
+                        {% if change.type == 'update' %}
+                            {{ change.old }} → {{ change.new }}
+                        {% elseif change.type == 'add' %}
+                            +{{ change.added_count }}
+                        {% elseif change.type == 'remove' %}
+                            -{{ change.removed_count }}
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+{% else %}
+    <span class="text-muted">No changes</span>
+{% endif %}
+{# Verify that both entity and item are available #}
+{% if entity is defined and item is defined %}
+<!-- ENTITY_AND_ITEM_AVAILABLE -->
+{% endif %}
