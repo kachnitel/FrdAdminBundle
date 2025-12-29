@@ -268,7 +268,7 @@ class FilterMetadataProvider
             ColumnFilter::TYPE_TEXT => 'LIKE',
             ColumnFilter::TYPE_NUMBER => '=',
             ColumnFilter::TYPE_BOOLEAN => '=',
-            ColumnFilter::TYPE_DATE => '>=',
+            ColumnFilter::TYPE_DATE => 'BETWEEN',
             default => '=',
         };
 

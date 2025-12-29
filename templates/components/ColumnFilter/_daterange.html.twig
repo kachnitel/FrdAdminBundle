@@ -1,0 +1,29 @@
+{% set rangeData = value ? value|json_decode : {} %}
+<div
+    class="d-flex gap-1 align-items-center"
+    data-controller="kachnitel--admin-bundle--daterange-filter"
+>
+    <input
+        type="date"
+        class="form-control form-control-sm"
+        data-kachnitel--admin-bundle--daterange-filter-target="from"
+        data-action="change->kachnitel--admin-bundle--daterange-filter#update"
+        value="{{ rangeData.from|default('') }}"
+        placeholder="From"
+    >
+    <span class="text-muted">–</span>
+    <input
+        type="date"
+        class="form-control form-control-sm"
+        data-kachnitel--admin-bundle--daterange-filter-target="to"
+        data-action="change->kachnitel--admin-bundle--daterange-filter#update"
+        value="{{ rangeData.to|default('') }}"
+        placeholder="To"
+    >
+    <input
+        type="hidden"
+        data-model="value"
+        data-kachnitel--admin-bundle--daterange-filter-target="output"
+        value="{{ value }}"
+    >
+</div>

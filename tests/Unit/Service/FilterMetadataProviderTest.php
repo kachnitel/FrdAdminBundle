@@ -102,7 +102,7 @@ class FilterMetadataProviderTest extends TestCase
         $filters = $this->provider->getFilters(TestEntity::class);
 
         $this->assertEquals(ColumnFilter::TYPE_DATE, $filters['createdAt']['type']);
-        $this->assertEquals('>=', $filters['createdAt']['operator']);
+        $this->assertEquals('BETWEEN', $filters['createdAt']['operator']);
     }
 
     public function testBooleanFieldHasCorrectFilterType(): void

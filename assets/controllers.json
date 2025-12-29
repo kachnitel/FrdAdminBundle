@@ -5,6 +5,11 @@
                 "enabled": true,
                 "fetch": "eager",
                 "autoimport": {}
+            },
+            "daterange-filter": {
+                "enabled": true,
+                "fetch": "eager",
+                "autoimport": {}
             }
         }
     },

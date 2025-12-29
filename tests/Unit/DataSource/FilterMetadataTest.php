@@ -123,7 +123,7 @@ class FilterMetadataTest extends TestCase
     {
         $filter = FilterMetadata::date(name: 'updatedAt');
 
-        $this->assertSame('>=', $filter->operator);
+        $this->assertSame('BETWEEN', $filter->operator);
         $this->assertSame('Updated at', $filter->label);
     }
 

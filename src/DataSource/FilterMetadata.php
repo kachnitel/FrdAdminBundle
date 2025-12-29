@@ -74,12 +74,12 @@ readonly class FilterMetadata
     }
 
     /**
-     * Create date filter.
+     * Create date filter (matches exact day by default).
      */
     public static function date(
         string $name,
         ?string $label = null,
-        string $operator = '>=',
+        string $operator = 'BETWEEN',
         int $priority = 999
     ): self {
         return new self(
