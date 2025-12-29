@@ -21,6 +21,13 @@
                 "webpackMode": "eager",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "daterange-filter": {
+                "main": "controllers/daterange-filter_controller.js",
+                "name": "daterange-filter",
+                "webpackMode": "eager",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {
