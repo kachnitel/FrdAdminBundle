@@ -227,26 +227,38 @@ class FilterMetadataProviderTest extends TestCase
         // like getName() that combines firstName and lastName, but "name" is not a database field.
         // The system should filter out non-existent fields and only keep real database fields.
         
+        // Create a fresh EM mock for this test
+        $em = $this->createMock(EntityManagerInterface::class);
         $mainEntityMetadata = $this->createMock(ClassMetadata::class);
         $userMetadata = $this->createMock(ClassMetadata::class);
 
-        $this->em->method('getClassMetadata')->willReturnMap([
-            [TestEntity::class, $mainEntityMetadata],
-            [\Kachnitel\AdminBundle\Tests\Fixtures\User::class, $userMetadata],
-        ]);
+        // Set up getClassMetadata with callback to handle different classes
+        $em->method('getClassMetadata')->willReturnCallback(
+            function($class) use ($mainEntityMetadata, $userMetadata) {
+                if ($class === TestEntity::class) {
+                    return $mainEntityMetadata;
+                }
+                if ($class === \Kachnitel\AdminBundle\Tests\Fixtures\User::class) {
+                    return $userMetadata;
+                }
+                throw new \InvalidArgumentException("Unexpected class: " . $class);
+            }
+        );
 
         $mainEntityMetadata->method('getFieldNames')->willReturn([]);
         $mainEntityMetadata->method('getAssociationNames')->willReturn(['customer']);
         $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
-        $mainEntityMetadata->method('hasAssociation')->willReturn(true);
+        $mainEntityMetadata->method('hasAssociation')->willReturnCallback(
+            fn($name) => $name === 'customer'
+        );
         $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(\Kachnitel\AdminBundle\Tests\Fixtures\User::class);
 
         // User entity has firstName, lastName, email but NOT "name" (name is a getter)
         $userMetadata->method('hasField')->willReturnCallback(
-            fn($field) => in_array($field, ['firstName', 'lastName', 'email'])
+            fn($field) => in_array($field, ['firstName', 'lastName', 'email', 'id'])
         );
 
-        $provider = new FilterMetadataProvider($this->em);
+        $provider = new FilterMetadataProvider($em);
         $filters = $provider->getFilters(TestEntity::class);
 
         // Should have customer filter
@@ -256,9 +268,14 @@ class FilterMetadataProviderTest extends TestCase
         // The default searchFields from DEFAULT_SEARCH_FIELDS['User'] would be 
         // ['name', 'email', 'firstName', 'lastName'], but 'name' doesn't exist as a 
         // database field, so it should be filtered out. Other fields should remain.
+        // The default searchFields from DEFAULT_SEARCH_FIELDS['User'] would be 
+        // ['name', 'email', 'firstName', 'lastName'], but 'name' doesn't exist as a 
+        // database field, so it should be filtered out. Other fields should remain.
         $searchFields = $filters['customer']['searchFields'];
         $this->assertNotContains('name', $searchFields);
         $this->assertContains('email', $searchFields);
+        $this->assertContains('firstName', $searchFields);
+        $this->assertContains('lastName', $searchFields);
         $this->assertContains('firstName', $searchFields);
         $this->assertContains('lastName', $searchFields);
     }
@@ -266,26 +283,39 @@ class FilterMetadataProviderTest extends TestCase
     public function testRelationFilterFallsBackToIdWhenNoValidSearchFields(): void
     {
         // If all default searchFields are non-existent, should fall back to 'id'
+        
+        // Create a fresh EM mock for this test
+        $em = $this->createMock(EntityManagerInterface::class);
         $mainEntityMetadata = $this->createMock(ClassMetadata::class);
         $userMetadata = $this->createMock(ClassMetadata::class);
 
-        $this->em->method('getClassMetadata')->willReturnMap([
-            [TestEntity::class, $mainEntityMetadata],
-            [\Kachnitel\AdminBundle\Tests\Fixtures\User::class, $userMetadata],
-        ]);
+        // Set up getClassMetadata with callback to handle different classes
+        $em->method('getClassMetadata')->willReturnCallback(
+            function($class) use ($mainEntityMetadata, $userMetadata) {
+                if ($class === TestEntity::class) {
+                    return $mainEntityMetadata;
+                }
+                if ($class === \Kachnitel\AdminBundle\Tests\Fixtures\User::class) {
+                    return $userMetadata;
+                }
+                throw new \InvalidArgumentException("Unexpected class: " . $class);
+            }
+        );
 
         $mainEntityMetadata->method('getFieldNames')->willReturn([]);
         $mainEntityMetadata->method('getAssociationNames')->willReturn(['customer']);
         $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
-        $mainEntityMetadata->method('hasAssociation')->willReturn(true);
+        $mainEntityMetadata->method('hasAssociation')->willReturnCallback(
+            fn($name) => $name === 'customer'
+        );
         $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(\Kachnitel\AdminBundle\Tests\Fixtures\User::class);
 
-        // User entity has no 'name' or 'email' fields
+        // User entity has no 'name' or 'email' fields (but has id)
         $userMetadata->method('hasField')->willReturnCallback(
-            fn($field) => false
+            fn($field) => $field === 'id'
         );
 
-        $provider = new FilterMetadataProvider($this->em);
+        $provider = new FilterMetadataProvider($em);
         $filters = $provider->getFilters(TestEntity::class);
 
         // Should have customer filter
