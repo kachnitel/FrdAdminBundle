@@ -155,7 +155,7 @@ class TemplateOverrideTest extends ComponentTestCase
 
         $this->assertStringContainsString('<!-- TEST_OVERRIDE:BOOLEAN -->', $rendered);
         $this->assertStringContainsString('✓ True', $rendered);
-        $this->assertStringNotContainsString('>Yes<', $rendered);
+        // Note: Can't assert ">Yes<" is absent - the boolean ColumnFilter dropdown has Yes/No options
     }
 
     /**
