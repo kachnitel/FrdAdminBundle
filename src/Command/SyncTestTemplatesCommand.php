@@ -22,6 +22,8 @@ use Symfony\Component\Filesystem\Filesystem;
  *
  * This command supports context-based patching for line-agnostic
  * insertion of markers into templates.
+ *
+ * TODO: Many templates override just to remove routes unavailable in tests, we could take care of these or mock route check in tests
  */
 #[AsCommand(
     name: 'admin:sync-test-templates',
@@ -84,7 +86,7 @@ class SyncTestTemplatesCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $fs = new Filesystem();
+        $filesystem = new Filesystem();
         $patcher = new TemplatePatcher();
         $checkOnly = (bool) $input->getOption('check');
         $showDiff = (bool) $input->getOption('diff');
@@ -93,63 +95,21 @@ class SyncTestTemplatesCommand extends Command
         $errors = [];
 
         foreach (self::TEMPLATE_MAPPINGS as $source => $config) {
-            $sourcePath = $this->projectDir . '/' . $source;
-            $targetPath = $this->projectDir . '/' . $config['target'];
+            $templateErrors = $this->processTemplate(
+                $source,
+                $config,
+                $filesystem,
+                $patcher,
+                $io,
+                $checkOnly,
+                $showDiff
+            );
 
-            if (!$fs->exists($sourcePath)) {
-                $io->warning(sprintf('Source template not found: %s', $source));
-                continue;
-            }
-
-            $sourceContent = file_get_contents($sourcePath);
-            if ($sourceContent === false) {
-                $errors[] = sprintf('Failed to read: %s', $source);
-                continue;
-            }
-
-            try {
-                $targetContent = $patcher->apply($sourceContent, $config);
-            } catch (TemplatePatchException $e) {
-                $errors[] = sprintf(
-                    "Failed to patch %s: %s\n\n" .
-                    "This usually means the source template changed in a way that breaks the patch.\n" .
-                    "Please update the patch configuration in SyncTestTemplatesCommand::TEMPLATE_MAPPINGS.",
-                    $source,
-                    $e->getMessage()
-                );
-                continue;
-            }
-
-            // Check if already in sync
-            $currentTarget = $fs->exists($targetPath) ? (string) file_get_contents($targetPath) : '';
-            if ($currentTarget === $targetContent) {
-                if ($io->isVerbose()) {
-                    $io->text(sprintf('<info>✓</info> Already in sync: %s', $source));
-                }
+            if (!empty($templateErrors)) {
+                $errors = array_merge($errors, $templateErrors);
+            } else {
                 $synced++;
-                continue;
             }
-
-            if ($showDiff && $currentTarget !== '') {
-                $diff = $patcher->generateDiff($currentTarget, $targetContent);
-                $io->text($diff);
-            }
-
-            if ($checkOnly) {
-                $errors[] = sprintf(
-                    "Template out of sync: %s -> %s\nRun without --check to update.",
-                    $source,
-                    $config['target']
-                );
-                continue;
-            }
-
-            // Write the synced template
-            $fs->mkdir(dirname($targetPath));
-            $fs->dumpFile($targetPath, $targetContent);
-
-            $io->text(sprintf('Synced: %s -> %s', $source, $config['target']));
-            $synced++;
         }
 
         if (!empty($errors)) {
@@ -165,5 +125,143 @@ class SyncTestTemplatesCommand extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Process a single template mapping.
+     *
+     * @param string $source Source template path (relative to project root)
+     * @param array<string, mixed> $config Template patch configuration
+     * @param Filesystem $filesystem Filesystem operations handler
+     * @param TemplatePatcher $patcher Template patcher service
+     * @param SymfonyStyle $io Console output handler
+     * @param bool $checkOnly If true, only check without modifying files
+     * @param bool $showDiff If true, display diff of changes
+     *
+     * @return array<int, string> Array of error messages (empty if successful)
+     */
+    private function processTemplate(
+        string $source,
+        array $config,
+        Filesystem $filesystem,
+        TemplatePatcher $patcher,
+        SymfonyStyle $io,
+        bool $checkOnly,
+        bool $showDiff
+    ): array {
+        $sourcePath = $this->projectDir . '/' . $source;
+        $targetPath = $this->projectDir . '/' . $config['target'];
+
+        if (!$filesystem->exists($sourcePath)) {
+            $io->warning(sprintf('Source template not found: %s', $source));
+            return [];
+        }
+
+        $sourceContent = $this->readSourceFile($source);
+        if ($sourceContent === null) {
+            return [sprintf('Failed to read: %s', $source)];
+        }
+
+        $targetContent = $this->generateTargetContent($sourceContent, $config, $patcher);
+        if ($targetContent === null) {
+            return [
+                sprintf(
+                    "Failed to patch %s\n\n" .
+                    "This usually means the source template changed in a way that breaks the patch.\n" .
+                    "Please update the patch configuration in SyncTestTemplatesCommand::TEMPLATE_MAPPINGS.",
+                    $source
+                ),
+            ];
+        }
+
+        return $this->handleSyncResult(
+            $source,
+            $config,
+            $targetPath,
+            $targetContent,
+            $filesystem,
+            $patcher,
+            $io,
+            $checkOnly,
+            $showDiff
+        );
+    }
+
+    /**
+     * Read the source template file.
+     *
+     * @return string|null The file contents, or null if read failed
+     */
+    private function readSourceFile(string $source): ?string
+    {
+        $sourcePath = $this->projectDir . '/' . $source;
+        $content = file_get_contents($sourcePath);
+        return $content !== false ? $content : null;
+    }
+
+    /**
+     * Generate the target template content with patches applied.
+     *
+     * @param array<string, mixed> $config Template patch configuration
+     * @return string|null The patched content, or null if patching failed
+     */
+    private function generateTargetContent(
+        string $sourceContent,
+        array $config,
+        TemplatePatcher $patcher
+    ): ?string {
+        try {
+            return $patcher->apply($sourceContent, $config);
+        } catch (TemplatePatchException) {
+            return null;
+        }
+    }
+
+    /**
+     * Handle the result of template syncing.
+     *
+     * @param array<string, mixed> $config Template patch configuration
+     * @return array<int, string> Array of error messages (empty if successful)
+     */
+    private function handleSyncResult(
+        string $source,
+        array $config,
+        string $targetPath,
+        string $targetContent,
+        Filesystem $filesystem,
+        TemplatePatcher $patcher,
+        SymfonyStyle $io,
+        bool $checkOnly,
+        bool $showDiff
+    ): array {
+        $currentTarget = $filesystem->exists($targetPath) ? (string) file_get_contents($targetPath) : '';
+
+        if ($currentTarget === $targetContent) {
+            if ($io->isVerbose()) {
+                $io->text(sprintf('<info>✓</info> Already in sync: %s', $source));
+            }
+            return [];
+        }
+
+        if ($showDiff && $currentTarget !== '') {
+            $diff = $patcher->generateDiff($currentTarget, $targetContent);
+            $io->text($diff);
+        }
+
+        if ($checkOnly) {
+            return [
+                sprintf(
+                    "Template out of sync: %s -> %s\nRun without --check to update.",
+                    $source,
+                    $config['target']
+                ),
+            ];
+        }
+
+        $filesystem->mkdir(dirname($targetPath));
+        $filesystem->dumpFile($targetPath, $targetContent);
+        $io->text(sprintf('Synced: %s -> %s', $source, $config['target']));
+
+        return [];
     }
 }
