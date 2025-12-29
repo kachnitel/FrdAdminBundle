@@ -46,7 +46,7 @@ class EntityListDataSourceTest extends ComponentTestCase
         $this->assertSame('TestEntity', $dataSource->getIdentifier());
     }
 
-    public function testComponentIsUsingDataSourceReturnsTrue(): void
+    public function testIsDoctrineEntityReturnsFalseForDataSourceId(): void
     {
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
@@ -55,11 +55,12 @@ class EntityListDataSourceTest extends ComponentTestCase
 
         $component = $testComponent->component();
 
-        $this->assertTrue($component->isUsingDataSource());
+        // When using dataSourceId without entityClass, isDoctrineEntity is false
+        $this->assertFalse($component->isDoctrineEntity());
         $this->assertNotNull($component->getDataSource());
     }
 
-    public function testComponentIsUsingDataSourceReturnsFalseInLegacyMode(): void
+    public function testIsDoctrineEntityReturnsTrueForEntityClass(): void
     {
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
@@ -71,8 +72,8 @@ class EntityListDataSourceTest extends ComponentTestCase
 
         $component = $testComponent->component();
 
-        // In legacy mode with entityShortClass, it should resolve via registry
-        $this->assertTrue($component->isUsingDataSource());
+        // When using entityClass, isDoctrineEntity is true
+        $this->assertTrue($component->isDoctrineEntity());
     }
 
     public function testDataSourceModeShowsColumns(): void

@@ -196,11 +196,30 @@ class EntityList
     }
 
     /**
-     * Check if using a data source (always true now).
+     * Check if this is a Doctrine entity (for template rendering mode).
      */
-    public function isUsingDataSource(): bool
+    public function isDoctrineEntity(): bool
     {
-        return true;
+        return $this->entityClass !== '';
+    }
+
+    /**
+     * Check if user can perform batch delete on this data source.
+     */
+    public function canBatchDelete(): bool
+    {
+        if (!$this->supportsBatchActions()) {
+            return false;
+        }
+
+        // For Doctrine entities, check permissions via permission service
+        if ($this->entityClass !== '') {
+            return $this->permissionService->canBatchDelete($this->entityClass, $this->entityShortClass);
+        }
+
+        // For non-Doctrine data sources, check ADMIN_DELETE permission on the identifier
+        $identifier = $this->dataSourceId ?? $this->entityShortClass;
+        return $this->security->isGranted(AdminEntityVoter::ADMIN_DELETE, $identifier);
     }
 
     // --- UI ---

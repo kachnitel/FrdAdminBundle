@@ -3,30 +3,24 @@
 {#
  # LiveComponent template for reactive entity lists with per-column filters.
  #
- # Supports two modes:
- # 1. Entity mode: Uses Doctrine entities with admin_* twig functions
- # 2. DataSource mode: Uses DataSourceInterface for non-Doctrine data (e.g., audit logs)
+ # Uses DataSourceInterface for all data sources. Doctrine entities use DoctrineDataSource
+ # while custom data sources (e.g., audit logs) implement DataSourceInterface directly.
  #
  # Props:
- # @var string entityClass - Entity class name (entity mode)
- # @var string dataSourceId - Data source identifier (data source mode)
+ # @var string entityClass - Entity class name (for Doctrine entities)
+ # @var string dataSourceId - Data source identifier (for custom data sources)
  # @var string search - Global search query
  # @var string sortBy - Sort field
  # @var string sortDirection - ASC or DESC
  # @var array columnFilters - Per-column filter values
  #}
 
-{% set isDataSourceMode = this.isUsingDataSource() %}
 {% set dataSource = this.dataSource %}
-{# Pure DataSource mode means dataSourceId was explicitly set (not resolved from entityClass) #}
-{% set isPureDataSourceMode = this.dataSourceId is not null %}
-{# Batch actions for Doctrine entities #}
-{% set batchEnabled = this.entityClass and this.permissionService.isBatchActionsEnabled(this.entityClass) %}
-{% set canBatchDelete = this.entityClass and this.permissionService.canBatchDelete(this.entityClass, this.entityShortClass) %}
-{% set showBatchColumn = batchEnabled and canBatchDelete %}
+{% set isDoctrineEntity = this.isDoctrineEntity() %}
+{% set showBatchColumn = this.canBatchDelete() %}
 
 <div
-    {% if batchEnabled %}
+    {% if showBatchColumn %}
         {{ attributes.defaults({ 'data-controller': 'batch-select' }) }}
     {% else %}
         {{ attributes }}
@@ -75,7 +69,7 @@
                 {% for column in this.columns %}
                     {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
                         column: column,
-                        columnLabel: isDataSourceMode and dataSource.columns[column] is defined ? dataSource.columns[column].label : null,
+                        columnLabel: dataSource.columns[column] is defined ? dataSource.columns[column].label : null,
                         sortBy: sortBy,
                         sortDirection: sortDirection,
                         component: this
@@ -124,8 +118,8 @@
                     {% for column in this.columns %}
                         <td>
                             {% set value = this.getEntityValue(entity, column) %}
-                            {% if isPureDataSourceMode %}
-                                {# Pure DataSource mode: use column metadata for custom templates #}
+                            {% if not isDoctrineEntity %}
+                                {# Custom DataSource: use column metadata for type #}
                                 {% set columnMeta = dataSource.columns[column] ?? null %}
                                 {% set columnType = columnMeta ? columnMeta.type : 'string' %}
                                 {% if columnMeta and columnMeta.template %}
@@ -150,7 +144,7 @@
                                     }, ignore_missing = true) }}
                                 {% endif %}
                             {% else %}
-                                {# Entity mode: use Doctrine-based type detection #}
+                                {# Doctrine entity: use entity-based type detection for backwards compatibility #}
                                 {% set templateName = admin_is_collection(entity, column) ? '_collection.html.twig' : '_preview.html.twig' %}
                                 {{ include([
                                     '@KachnitelAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ column ~ '.html.twig',
@@ -166,7 +160,7 @@
                         </td>
                     {% endfor %}
 
-                    {% if isPureDataSourceMode %}
+                    {% if not isDoctrineEntity %}
                         {% include '@KachnitelAdmin/components/EntityList/_DataSourceRowActions.html.twig' with {
                             dataSourceId: this.dataSourceId,
                             dataSource: dataSource,
@@ -182,11 +176,7 @@
             {% else %}
                 <tr>
                     <td colspan="{{ this.columns|length + (showBatchColumn ? 2 : 1) }}" class="text-center text-muted py-4">
-                        {% if isPureDataSourceMode %}
-                            No entries found.
-                        {% else %}
-                            No {{ this.entityShortClass }} found.
-                        {% endif %}
+                        No {{ dataSource.label }} found.
                     </td>
                 </tr>
             {% endfor %}

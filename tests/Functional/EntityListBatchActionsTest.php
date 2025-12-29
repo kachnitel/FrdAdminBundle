@@ -34,7 +34,8 @@ class EntityListBatchActionsTest extends ComponentTestCase
 
         // Verify batch actions UI elements are present
         $this->assertStringContainsString('Delete Selected', $rendered);
-        $this->assertStringContainsString('data-controller="batch-select"', $rendered);
+        // The data-controller may include multiple controllers (e.g., "batch-select live")
+        $this->assertMatchesRegularExpression('/data-controller="[^"]*batch-select[^"]*"/', $rendered);
         $this->assertStringContainsString('data-batch-select-target="checkbox"', $rendered);
         $this->assertStringContainsString('data-batch-select-target="master"', $rendered);
         $this->assertStringContainsString('data-action="change->batch-select#toggleAll"', $rendered);
