@@ -7,7 +7,7 @@
         type="date"
         class="form-control form-control-sm"
         data-kachnitel--admin-bundle--daterange-filter-target="from"
-        data-action="change->kachnitel--admin-bundle--daterange-filter#update"
+        data-action="change->kachnitel--admin-bundle--daterange-filter#update input->kachnitel--admin-bundle--daterange-filter#update"
         value="{{ rangeData.from|default('') }}"
         placeholder="From"
     >
@@ -16,7 +16,7 @@
         type="date"
         class="form-control form-control-sm"
         data-kachnitel--admin-bundle--daterange-filter-target="to"
-        data-action="change->kachnitel--admin-bundle--daterange-filter#update"
+        data-action="change->kachnitel--admin-bundle--daterange-filter#update input->kachnitel--admin-bundle--daterange-filter#update"
         value="{{ rangeData.to|default('') }}"
         placeholder="To"
     >

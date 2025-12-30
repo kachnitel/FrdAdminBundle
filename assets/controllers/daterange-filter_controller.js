@@ -7,6 +7,11 @@ import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
     static targets = ['from', 'to', 'output'];
 
+    connect() {
+        // Initialize the output field on connect
+        this.update();
+    }
+
     /**
      * Update the hidden output field with combined JSON value.
      * Triggers a change event to notify Live Components.
@@ -22,6 +27,7 @@ export default class extends Controller {
         }
 
         this.outputTarget.value = value;
+        this.outputTarget.dispatchEvent(new Event('change', { bubbles: true }));
         this.outputTarget.dispatchEvent(new Event('input', { bubbles: true }));
     }
 }
