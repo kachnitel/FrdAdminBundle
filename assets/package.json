@@ -21,19 +21,11 @@
                 "webpackMode": "eager",
                 "fetch": "eager",
                 "enabled": true
-            },
-            "daterange-filter": {
-                "main": "controllers/daterange-filter_controller.js",
-                "name": "daterange-filter",
-                "webpackMode": "eager",
-                "fetch": "eager",
-                "enabled": true
             }
         },
         "importmap": {
             "@hotwired/stimulus": "^3.0.0",
-            "@kachnitel/admin-bundle/batch-select_controller.js": "path:%PACKAGE%/controllers/batch-select_controller.js",
-            "@kachnitel/admin-bundle/daterange-filter_controller.js": "path:%PACKAGE%/controllers/daterange-filter_controller.js"
+            "@kachnitel/admin-bundle/batch-select_controller.js": "path:%PACKAGE%/controllers/batch-select_controller.js"
         }
     },
     "peerDependencies": {

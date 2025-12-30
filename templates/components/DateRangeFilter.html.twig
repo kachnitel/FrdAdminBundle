@@ -1,0 +1,55 @@
+<div {{ attributes }}>
+    {% if compact %}
+        {% set popoverId = 'daterange-popover-' ~ column ~ '-' ~ random() %}
+        <button
+            type="button"
+            popovertarget="{{ popoverId }}"
+            class="btn btn-sm btn-outline-secondary"
+        >
+            📅
+            {% if from or to %}
+                {% if from %}{{ from|date('M d') }}{% endif -%}
+                {%- if to %} – {{ to|date('M d') }}{% endif %}
+            {% else %}
+                Select dates
+            {% endif %}
+        </button>
+        <div popover id="{{ popoverId }}" class="d-flex gap-1 align-items-center" {{ attributes }}>
+            <input
+                type="date"
+                class="form-control form-control-sm"
+                data-model="from"
+                value="{{ from|default('') }}"
+                placeholder="From"
+            >
+            <span class="text-muted">–</span>
+            <input
+                type="date"
+                class="form-control form-control-sm"
+                data-model="to"
+                value="{{ to|default('') }}"
+                placeholder="To"
+            >
+        </div>
+    {% else %}
+        <div
+            class="d-flex gap-1 align-items-center"
+        >
+            <input
+                type="date"
+                class="form-control form-control-sm"
+                data-model="from"
+                value="{{ from|default('') }}"
+                placeholder="From"
+            >
+            <span class="text-muted">–</span>
+            <input
+                type="date"
+                class="form-control form-control-sm"
+                data-model="to"
+                value="{{ to|default('') }}"
+                placeholder="To"
+            >
+        </div>
+    {% endif %}
+</div>
