@@ -1,10 +1,10 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-273%20passed-red>)
-![Coverage](<https://img.shields.io/badge/coverage-53%25-red>)
-![Assertions](<https://img.shields.io/badge/assertions-784-blue>)
-![PHPStan](<https://img.shields.io/badge/PHPStan-6-red>)
+![Tests](<https://img.shields.io/badge/tests-286%20passed-brightgreen>)
+![Coverage](<https://img.shields.io/badge/coverage-56%25-red>)
+![Assertions](<https://img.shields.io/badge/assertions-826-blue>)
+![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.2-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0|^8.0-000000?logo=symfony&logoColor=white>)
 <!-- BADGES -->
