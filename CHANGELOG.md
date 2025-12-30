@@ -7,7 +7,59 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.1.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.8...v0.1.0) (2025-12-13)
+## [0.2.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.1.0...v0.2.0) (2025-12-30)
+
+### Features
+
+* Add batch actions with multi-select support ([c5773c](https://github.com/kachnitel/FrdAdminBundle/commit/c5773c75632addd1ef69347456b0e5f97f6e436e))
+* Add DataSource abstraction for non-Doctrine data sources ([f5a299](https://github.com/kachnitel/FrdAdminBundle/commit/f5a2991a722bfb25fca940678b984365a6b1eb72))
+* Add debug.datasource command ([0dbaf3](https://github.com/kachnitel/FrdAdminBundle/commit/0dbaf321d8e3264d422adc3dffb973d16ff31c17))
+* Date range filter ([25db0b](https://github.com/kachnitel/FrdAdminBundle/commit/25db0b453edeee30110d4421c22ed9ea5da7704f))
+* Dispatch both event and input when daterange changes ([899efc](https://github.com/kachnitel/FrdAdminBundle/commit/899efc535dcaddc3c93411487598637aed5fed4e))
+* Improve column filters ([ea769b](https://github.com/kachnitel/FrdAdminBundle/commit/ea769b28a245340f8a6f5bdce3ecc74cb5fb3d18))
+* Make the DateRangeFilter a LiveComponent ([30a478](https://github.com/kachnitel/FrdAdminBundle/commit/30a478e6aec2f7dcdc42570e5be5edcd67f39bdc))
+* More user friendly dateRangeFilter ([f84089](https://github.com/kachnitel/FrdAdminBundle/commit/f84089939870609ae503fed080c6d7bb396e1d6c))
+* Sync "marked" test templates before running tests ([8e5a28](https://github.com/kachnitel/FrdAdminBundle/commit/8e5a28f6a052d468b5612604860ad6b6384e1506))
+
+### Bug Fixes
+
+* "Master checkbox" in batch select behavior ([31b735](https://github.com/kachnitel/FrdAdminBundle/commit/31b7358ec83dedb5d69f10fcbc4548cd04aeabaf))
+* Add missing daterange-filter controller to package.json ([296475](https://github.com/kachnitel/FrdAdminBundle/commit/2964756035ea406b092dd8c406cebb0f01738c99))
+* Add missing daterange-filter in package.json ([fb40f9](https://github.com/kachnitel/FrdAdminBundle/commit/fb40f98b2c13f83904d6892a88462eadd22d83f5))
+* Batch delete ([e59e1a](https://github.com/kachnitel/FrdAdminBundle/commit/e59e1acd0a100a1994aa0a65cc26f4630a518bcb))
+* Correct path to js controller ([a76398](https://github.com/kachnitel/FrdAdminBundle/commit/a763988df3611044feb1c7a7fb3dac4689278a91))
+* Do not try filtering by computed properties ([57d1ca](https://github.com/kachnitel/FrdAdminBundle/commit/57d1cacceaae3727198abcbfa6f6651f1451669c))
+* FilterMetadataProvider to validate searchFields in ensureRelationConfig ([30fb1a](https://github.com/kachnitel/FrdAdminBundle/commit/30fb1a67eca5a5cad1755ff99579361e24fd5af7))
+* Initial date range value on load ([e5fa15](https://github.com/kachnitel/FrdAdminBundle/commit/e5fa155ca762320923afda0f2950ef698a0a0919))
+* No json_decode, value should be decoded in controller ([b3a968](https://github.com/kachnitel/FrdAdminBundle/commit/b3a9684ee281640964513455d6de9d5e900e688b))
+* Respect template setting in data source column options ([398f43](https://github.com/kachnitel/FrdAdminBundle/commit/398f43076b106eba189409cf6d691ce46e043aae))
+* Shift+Click range selection for batch checkboxes ([db7d10](https://github.com/kachnitel/FrdAdminBundle/commit/db7d100391ed4c66b7338765a18ecf5527318b3b))
+* Use string for DateRangeFilter ([8018d3](https://github.com/kachnitel/FrdAdminBundle/commit/8018d3f2602e2fe3412ec35b8b66bebdfb6e8e2e))
+
+### Code Refactoring
+
+* Break down SyncTestTemplates command's execute method ([cf3919](https://github.com/kachnitel/FrdAdminBundle/commit/cf39192202bf93b16a0627c197fb23f852d442ef))
+* Extract pagination and permission services from EntityList ([7a2cfa](https://github.com/kachnitel/FrdAdminBundle/commit/7a2cfaa2943cc97847dc9d955c8cb8c0393bf5fd))
+* Use AutowireIterator for DataSource discovery ([370ac5](https://github.com/kachnitel/FrdAdminBundle/commit/370ac5bb9b219e8bae864067f422de222984ffdd))
+* Use DataSource for default Doctrine implementation, Reduce complexity of EntityList controller ([791275](https://github.com/kachnitel/FrdAdminBundle/commit/791275d2e22234fe46abd9a485692c31beb5d722))
+* Use some partials to lighten up EntityList ([ace7eb](https://github.com/kachnitel/FrdAdminBundle/commit/ace7eb380bf5913e2d2adea91033bc80e26b2cd5))
+
+### Tests
+
+* Cover date range url deconstruction ([6254a5](https://github.com/kachnitel/FrdAdminBundle/commit/6254a523d63ed0846adf48dc515be61f973eb135))
+* DateRangeFilterTest ([8fda82](https://github.com/kachnitel/FrdAdminBundle/commit/8fda829d49e9d20e0c82d00c8d56f6bf6ab84333))
+* Fix searchFields related tests ([14d9f7](https://github.com/kachnitel/FrdAdminBundle/commit/14d9f7782e4b08762586949a637cd50ef48c1e56), [90a7ff](https://github.com/kachnitel/FrdAdminBundle/commit/90a7ffd0c729b35c7ffb9b89c6a1af4a2a5ac08d))
+
+### Documentation
+
+* Add DataSource abstraction documentation ([0ef98b](https://github.com/kachnitel/FrdAdminBundle/commit/0ef98bbd4e32f8e2835a78e271ad7a66067684cf))
+* Date filters ([fc8fb6](https://github.com/kachnitel/FrdAdminBundle/commit/fc8fb610616d3270cd94e947ead96aaef98d061b))
+* Improve readability and fix some examples ([b26d0a](https://github.com/kachnitel/FrdAdminBundle/commit/b26d0a0bd3b0ca30fe64f4ae36e2d6f9bbe7254c))
+
+
+---
+
+## [0.1.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.0.8...v0.1.0) (2025-12-12)
 
 
 ---
