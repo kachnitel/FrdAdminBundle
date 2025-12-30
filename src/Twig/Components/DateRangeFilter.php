@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
+use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
@@ -57,6 +58,14 @@ class DateRangeFilter
             $this->from = $decoded['from'] ?? '';
             $this->to = $decoded['to'] ?? '';
         }
+    }
+
+    #[LiveAction]
+    public function clear(): void
+    {
+        $this->value = '';
+
+        $this->deserializeValue();
     }
 
     public function mount(string $value = ''): void

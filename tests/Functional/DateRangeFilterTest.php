@@ -374,4 +374,71 @@ class DateRangeFilterTest extends ComponentTestCase
         $this->assertSame('', $component->to);
         $this->assertSame('', $component->value);
     }
+
+    public function testClearActionResetsValueProperty(): void
+    {
+        $jsonValue = json_encode(['from' => '2024-01-15', 'to' => '2024-12-31']);
+
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:DateRangeFilter',
+            data: [
+                'column' => 'createdAt',
+                'value' => $jsonValue,
+                'compact' => true,
+            ],
+        );
+
+        // Invoke the clear live action
+        $testComponent->call('clear');
+
+        $component = $testComponent->component();
+        $this->assertSame('', $component->value);
+    }
+
+    public function testClearActionResetsFromAndToProperties(): void
+    {
+        $jsonValue = json_encode(['from' => '2024-01-15', 'to' => '2024-12-31']);
+
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:DateRangeFilter',
+            data: [
+                'column' => 'createdAt',
+                'value' => $jsonValue,
+                'compact' => true,
+            ],
+        );
+
+        // Invoke the clear live action
+        $testComponent->call('clear');
+
+        $component = $testComponent->component();
+        $this->assertSame('', $component->from);
+        $this->assertSame('', $component->to);
+    }
+
+    public function testClearButtonVisibilityChangesWithDates(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:DateRangeFilter',
+            data: ['column' => 'createdAt', 'compact' => true],
+        );
+
+        // When empty, clear button should not be visible
+        $rendered = $testComponent->render()->toString();
+        $this->assertStringNotContainsString('data-live-action-param="clear"', $rendered);
+
+        // Set dates
+        $testComponent->set('from', '2024-01-15');
+        $testComponent->set('to', '2024-12-31');
+
+        // Clear button should now be visible
+        $rendered = $testComponent->render()->toString();
+        $this->assertStringContainsString('data-live-action-param="clear"', $rendered);
+
+        // After calling clear, button should disappear again
+        $testComponent->call('clear');
+
+        $rendered = $testComponent->render()->toString();
+        $this->assertStringNotContainsString('data-live-action-param="clear"', $rendered);
+    }
 }
