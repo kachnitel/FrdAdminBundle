@@ -8,8 +8,17 @@
         >
             📅
             {% if from or to %}
-                {% if from %}{{ from|date('M d') }}{% endif -%}
-                {%- if to %} – {{ to|date('M d') }}{% endif %}
+                {% if from and to %}
+                    {% if from == to %}
+                        {{- from|date('M d') -}}
+                    {% else %}
+                        {{- from|date('M d') }} – {{ to|date('M d') -}}
+                    {% endif %}
+                {% elseif from %}
+                    {{- from|date('M d') ~ ' onwards' -}}
+                {% else %}
+                    {{- 'Until ' ~ to|date('M d') -}}
+                {% endif %}
             {% else %}
                 Select dates
             {% endif %}
