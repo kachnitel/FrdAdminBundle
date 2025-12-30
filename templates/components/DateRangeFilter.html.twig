@@ -14,22 +14,27 @@
                 Select dates
             {% endif %}
         </button>
-        <div popover id="{{ popoverId }}" class="d-flex gap-1 align-items-center" {{ attributes }}>
-            <input
-                type="date"
-                class="form-control form-control-sm"
-                data-model="from"
-                value="{{ from|default('') }}"
-                placeholder="From"
-            >
-            <span class="text-muted">–</span>
-            <input
-                type="date"
-                class="form-control form-control-sm"
-                data-model="to"
-                value="{{ to|default('') }}"
-                placeholder="To"
-            >
+        <div popover id="{{ popoverId }}" style="position-area: top;">
+            <label for="{{ popoverId }}-from" class="form-label mb-1">{{ column }}</label>
+            <div class="d-flex gap-1 align-items-center">
+                <input
+                    id="{{ popoverId }}-from"
+                    type="date"
+                    class="form-control form-control-sm"
+                    data-model="from"
+                    value="{{ from|default('') }}"
+                    placeholder="From"
+                >
+                <span class="text-muted">–</span>
+                <input
+                    id="{{ popoverId }}-to"
+                    type="date"
+                    class="form-control form-control-sm"
+                    data-model="to"
+                    value="{{ to|default('') }}"
+                    placeholder="To"
+                >
+            </div>
         </div>
     {% else %}
         <div

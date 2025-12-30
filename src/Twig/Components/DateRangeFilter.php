@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
+use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\LiveComponent\ComponentToolsTrait;
 
@@ -18,23 +19,62 @@ class DateRangeFilter
     #[LiveProp]
     public string $column;
 
-    #[LiveProp(writable: true, onUpdated: 'onUpdated')]
-    public string $from = '';
-
-    #[LiveProp(writable: true, onUpdated: 'onUpdated')]
-    public string $to = '';
+    /**
+     * Serialized date range as JSON: {"from": "2024-01-01", "to": "2024-12-31"}
+     * Empty string means no filter is set.
+     */
+    #[LiveProp(writable: true)]
+    public string $value = '';
 
     #[LiveProp]
     public bool $compact = true;
 
-    public function onUpdated(): void
+    /**
+     * @internal Extracted from deserialized value.
+     * Writable and triggers onUpdated when changed.
+     */
+    #[LiveProp(writable: true, onUpdated: 'onUpdated')]
+    public string $from = '';
+
+    /**
+     * @internal Extracted from deserialized value.
+     * Writable and triggers onUpdated when changed.
+     */
+    #[LiveProp(writable: true, onUpdated: 'onUpdated')]
+    public string $to = '';
+
+    #[PostHydrate]
+    public function deserializeValue(): void
     {
+        if (!$this->value) {
+            $this->from = '';
+            $this->to = '';
+            return;
+        }
+
+        $decoded = json_decode($this->value, true);
+        if (is_array($decoded)) {
+            $this->from = $decoded['from'] ?? '';
+            $this->to = $decoded['to'] ?? '';
+        }
+    }
+
+    public function onUpdated(string $propertyName): void
+    {
+        if ($propertyName === 'value') {
+            $this->deserializeValue();
+            return;
+        }
+
+        // from or to changed
+        $this->value = json_encode([
+            'from' => $this->from ?: null,
+            'to'   => $this->to ?: null,
+        ]);
+
         $this->emitUp('filter:updated', [
             'column' => $this->column,
-            'value'  => [
-                'from' => $this->from ?: null,
-                'to'   => $this->to ?: null,
-            ],
+            'value'  => $this->value,
         ]);
     }
 }
