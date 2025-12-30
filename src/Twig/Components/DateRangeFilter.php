@@ -59,6 +59,13 @@ class DateRangeFilter
         }
     }
 
+    public function mount(string $value = ''): void
+    {
+        $this->value = $value;
+
+        $this->deserializeValue();
+    }
+
     public function onUpdated(string $propertyName): void
     {
         if ($propertyName === 'value') {
