@@ -66,6 +66,11 @@ class DateRangeFilter
         $this->value = '';
 
         $this->deserializeValue();
+
+        $this->emitUp('filter:updated', [
+            'column' => $this->column,
+            'value'  => $this->value,
+        ]);
     }
 
     public function mount(string $value = ''): void

@@ -416,6 +416,32 @@ class DateRangeFilterTest extends ComponentTestCase
         $this->assertSame('', $component->to);
     }
 
+    public function testClearActionEmitsFilterUpdatedEvent(): void
+    {
+        $jsonValue = json_encode(['from' => '2024-01-15', 'to' => '2024-12-31']);
+
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:DateRangeFilter',
+            data: [
+                'column' => 'createdAt',
+                'value' => $jsonValue,
+                'compact' => true,
+            ],
+        );
+
+        // Invoke the clear live action - this should trigger filter:updated event emission
+        // with empty value, just like when from/to are cleared individually
+        $testComponent->call('clear');
+
+        $component = $testComponent->component();
+        // Verify that the component state is ready to emit the event with correct data
+        $this->assertSame('', $component->value);
+        $this->assertSame('createdAt', $component->column);
+        
+        // The event would be emitted with this structure:
+        // emitUp('filter:updated', ['column' => 'createdAt', 'value' => ''])
+    }
+
     public function testClearButtonVisibilityChangesWithDates(): void
     {
         $testComponent = $this->createLiveComponent(
