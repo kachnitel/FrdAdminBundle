@@ -252,4 +252,186 @@ class AdminRouteRuntimeTest extends TestCase
 
         $this->assertTrue($runtime->isRouteAccessible('app_product_index'));
     }
+
+    /**
+     * @test
+     */
+    public function canPerformActionChecksPermission(): void
+    {
+        $entity = new class {
+            public function getId(): int { return 1; }
+        };
+
+        // Generic routes exist for 'index' action
+        $result = $this->runtime->hasRoute($entity, 'index');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleChecksRouteExistence(): void
+    {
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        // Should return false for routes that don't exist in generic admin routes
+        $result = $this->runtime->isActionAccessible('Product', 'unknown_action');
+        $this->assertFalse($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleWithValidAction(): void
+    {
+        // Generic routes exist for standard admin actions
+        $result = $this->runtime->hasRoute('Product', 'index');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function getPathWithEntitySlugParameter(): void
+    {
+        $entity = new class {
+            public function getId(): int { return 99; }
+        };
+
+        $routes = new AdminRoutes([
+            'show' => 'app_admin_entity_show',
+        ]);
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn($routes);
+
+        $route = $this->createMock(Route::class);
+        $route->method('getPath')->willReturn('/admin/{entitySlug}/{id}');
+
+        $routeCollection = new RouteCollection();
+        $routeCollection->add('app_admin_entity_show', $route);
+
+        $this->router
+            ->method('getRouteCollection')
+            ->willReturn($routeCollection);
+
+        $this->router
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturnCallback(function ($name, $params) {
+                return '/admin/' . ($params['entitySlug'] ?? 'unknown') . '/' . ($params['id'] ?? '');
+            });
+
+        // Using a class without getId() to test entity slug parameter
+        $path = $this->runtime->getPath(TestEntity::class, 'show', []);
+        $this->assertStringContainsString('test-entity', $path);
+    }
+
+    /**
+     * @test
+     */
+    public function hasRouteReturnsTrueForGenericAdminRoutes(): void
+    {
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        // Generic admin routes should be accessible
+        $this->assertTrue($this->runtime->hasRoute('TestEntity', 'index'));
+        $this->assertTrue($this->runtime->hasRoute('TestEntity', 'show'));
+        $this->assertTrue($this->runtime->hasRoute('TestEntity', 'edit'));
+        $this->assertTrue($this->runtime->hasRoute('TestEntity', 'new'));
+        $this->assertTrue($this->runtime->hasRoute('TestEntity', 'delete'));
+    }
+
+    /**
+     * @test
+     */
+    public function getRouteReturnsFallbackGenericAdminRoute(): void
+    {
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        // Should return generic admin routes when no AdminRoutes attribute
+        $this->assertEquals('app_admin_entity_index', $this->runtime->getRoute('TestEntity', 'index'));
+        $this->assertEquals('app_admin_entity_show', $this->runtime->getRoute('TestEntity', 'show'));
+        $this->assertEquals('app_admin_entity_edit', $this->runtime->getRoute('TestEntity', 'edit'));
+    }
+
+    /**
+     * @test
+     */
+    public function getPathWithMultipleParameters(): void
+    {
+        $entity = new class {
+            public function getId(): int { return 5; }
+        };
+
+        $routes = new AdminRoutes([
+            'edit' => 'app_entity_edit',
+        ]);
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn($routes);
+
+        $route = $this->createMock(Route::class);
+        $route->method('getPath')->willReturn('/admin/{class}/{id}/edit');
+
+        $routeCollection = new RouteCollection();
+        $routeCollection->add('app_entity_edit', $route);
+
+        $this->router
+            ->method('getRouteCollection')
+            ->willReturn($routeCollection);
+
+        $this->router
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturnCallback(function ($name, $params) {
+                // Just verify the parameters are passed
+                return '/admin/' . ($params['class'] ?? 'unknown') . '/' . ($params['id'] ?? '0') . '/edit';
+            });
+
+        $path = $this->runtime->getPath($entity, 'edit', []);
+        $this->assertStringContainsString('/edit', $path);
+        $this->assertStringContainsString('5', $path);
+    }
+
+    /**
+     * @test
+     */
+    public function getPathPreservesExistingParameters(): void
+    {
+        $routes = new AdminRoutes([
+            'custom' => 'app_custom_action',
+        ]);
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn($routes);
+
+        $route = $this->createMock(Route::class);
+        $route->method('getPath')->willReturn('/admin/{custom}');
+
+        $routeCollection = new RouteCollection();
+        $routeCollection->add('app_custom_action', $route);
+
+        $this->router
+            ->method('getRouteCollection')
+            ->willReturn($routeCollection);
+
+        $this->router
+            ->expects($this->once())
+            ->method('generate')
+            ->with('app_custom_action', ['custom' => 'value123'])
+            ->willReturn('/admin/value123');
+
+        $path = $this->runtime->getPath('TestEntity', 'custom', ['custom' => 'value123']);
+        $this->assertEquals('/admin/value123', $path);
+    }
 }

@@ -5,8 +5,10 @@ composer.lock
 /var/
 /.idea/
 /.vscode/
-/.claude/
 *~
+
+/.claude/
+.github/instructions/default.instructions.md
 
 # PHPStan
 .phpstan/
