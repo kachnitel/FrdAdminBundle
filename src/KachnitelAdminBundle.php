@@ -64,6 +64,10 @@ class KachnitelAdminBundle extends AbstractBundle
                         ->end()
                     ->end()
                 ->end()
+                ->scalarNode('theme')
+                    ->defaultValue('@KachnitelAdmin/theme/bootstrap.html.twig')
+                    ->info('CSS theme template. Use @KachnitelAdmin/theme/tailwind.html.twig for Tailwind, or provide your own.')
+                ->end()
             ->end();
     }
 
@@ -88,6 +92,7 @@ class KachnitelAdminBundle extends AbstractBundle
         $builder->setParameter('kachnitel_admin.enable_generic_controller', $config['enable_generic_controller']);
         $builder->setParameter('kachnitel_admin.pagination.default_items_per_page', $config['pagination']['default_items_per_page']);
         $builder->setParameter('kachnitel_admin.pagination.allowed_items_per_page', $config['pagination']['allowed_items_per_page']);
+        $builder->setParameter('kachnitel_admin.theme', $config['theme']);
 
         // Load services
         $container->import('../config/services.yaml');

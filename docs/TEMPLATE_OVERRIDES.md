@@ -25,6 +25,7 @@ templates/bundles/KachnitelAdminBundle/
 
 - [How Template Overrides Work](#how-template-overrides-work)
 - [Configuring Base Layout](#configuring-base-layout)
+- [CSS Theming](#css-theming)
 - [Template Hierarchy](#template-hierarchy)
 - [Override Locations](#override-locations)
 - [Common Override Scenarios](#common-override-scenarios)
@@ -97,6 +98,109 @@ Admin templates provide these blocks for your base layout:
 ### Default Behavior
 
 If `base_layout` is not configured (null), admin templates use the bundle's minimal default layout at `@KachnitelAdmin/admin/base.html.twig`.
+
+## CSS Theming
+
+The bundle uses Twig macros for CSS classes, making it easy to switch between CSS frameworks or customize styling.
+
+### Built-in Themes
+
+Two themes are included:
+
+- **Bootstrap 5** (default): `@KachnitelAdmin/theme/bootstrap.html.twig`
+- **Tailwind CSS**: `@KachnitelAdmin/theme/tailwind.html.twig`
+
+### Switching to Tailwind
+
+```yaml
+# config/packages/kachnitel_admin.yaml
+kachnitel_admin:
+    theme: '@KachnitelAdmin/theme/tailwind.html.twig'
+```
+
+### Creating a Custom Theme
+
+Create a Twig file with macros for each CSS class category:
+
+```twig
+{# templates/admin/theme.html.twig #}
+
+{# Buttons #}
+{% macro btn_primary() %}my-custom-btn my-custom-btn-primary{% endmacro %}
+{% macro btn_danger() %}my-custom-btn my-custom-btn-danger{% endmacro %}
+{% macro btn_sm() %}my-custom-btn-sm{% endmacro %}
+
+{# Forms #}
+{% macro form_input() %}my-custom-input{% endmacro %}
+{% macro form_input_sm() %}my-custom-input my-custom-input-sm{% endmacro %}
+{% macro form_checkbox() %}my-custom-checkbox{% endmacro %}
+
+{# Tables #}
+{% macro table() %}my-custom-table{% endmacro %}
+
+{# Text #}
+{% macro text_muted() %}my-custom-muted{% endmacro %}
+
+{# ... see theme files for full list of available macros #}
+```
+
+Then configure it:
+
+```yaml
+kachnitel_admin:
+    theme: 'admin/theme.html.twig'
+```
+
+### Extending a Built-in Theme
+
+You can start from an existing theme and override specific macros:
+
+```twig
+{# templates/admin/theme.html.twig #}
+{# Import all macros from Bootstrap theme #}
+{% import '@KachnitelAdmin/theme/bootstrap.html.twig' as bootstrap %}
+
+{# Re-export with modifications #}
+{% macro btn_primary() %}btn btn-lg btn-primary{% endmacro %}
+{% macro btn_danger() %}{{ bootstrap.btn_danger() }} text-uppercase{% endmacro %}
+
+{# Re-export unchanged macros #}
+{% macro form_input() %}{{ bootstrap.form_input() }}{% endmacro %}
+{% macro table() %}{{ bootstrap.table() }}{% endmacro %}
+{# ... etc #}
+```
+
+### Available CSS Macros
+
+| Macro | Bootstrap Default | Used For |
+|-------|------------------|----------|
+| `btn_primary()` | `btn btn-primary` | Primary action buttons |
+| `btn_danger()` | `btn btn-danger` | Delete/destructive buttons |
+| `btn_outline_primary()` | `btn btn-outline-primary` | Secondary action buttons |
+| `btn_sm()` | `btn-sm` | Small button modifier |
+| `form_input()` | `form-control` | Text inputs |
+| `form_input_sm()` | `form-control form-control-sm` | Small inputs (filters) |
+| `form_checkbox()` | `form-check-input` | Checkboxes |
+| `table()` | `table table-hover` | Data tables |
+| `text_muted()` | `text-muted` | Muted/secondary text |
+| `pagination()` | `pagination pagination-sm mb-0` | Pagination wrapper |
+| `page_link()` | `page-link` | Pagination links |
+
+See `templates/theme/bootstrap.html.twig` for the complete list.
+
+### How Templates Use Themes
+
+Templates import the theme and call macros:
+
+```twig
+{% import kachnitel_admin_theme as css %}
+
+<button class="{{ css.btn_primary() }}">Save</button>
+<input type="text" class="{{ css.form_input() }}">
+<table class="{{ css.table() }}">...</table>
+```
+
+The `kachnitel_admin_theme` global variable contains the configured theme path.
 
 ## Template Hierarchy
 

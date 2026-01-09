@@ -1,3 +1,4 @@
+{% import kachnitel_admin_theme as css %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,7 @@
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
-    <div class="container-fluid">
+    <div class="{{ css.container() }}">
         {% block headerTitle %}{% endblock %}
         {% block content %}{% endblock %}
     </div>

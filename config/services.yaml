@@ -35,6 +35,7 @@ services:
     Kachnitel\AdminBundle\Twig\Extension\AdminConfigExtension:
         arguments:
             $baseLayout: '%kachnitel_admin.base_layout%'
+            $theme: '%kachnitel_admin.theme%'
         tags: ['twig.extension']
 
     # Twig Runtimes

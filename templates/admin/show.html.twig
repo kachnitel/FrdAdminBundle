@@ -8,6 +8,8 @@
  #}
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
+{% import kachnitel_admin_theme as css %}
+
 {% block headerTitle %}
   {{ entity.name|default(entity.label|default('#' ~ entity.id)) }}
 {% endblock %}
@@ -16,14 +18,14 @@
   {{ include('@KachnitelAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
 
   {% if entity|admin_has_route('edit') and admin_can_perform_action(entity, 'edit') %}
-    <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-primary">
+    <a href="{{ admin_object_path(entity, 'edit') }}" class="{{ css.btn_primary() }}">
       Edit
     </a>
   {% endif %}
 {% endblock %}
 
 {% block content %}
-  <table class="table">
+  <table class="{{ css.table_simple() }}">
     <tbody>
       {% for property, value in admin_get_entity_data(entity) %}
         <tr>

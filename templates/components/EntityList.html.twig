@@ -13,6 +13,7 @@
  # @var array columnFilters - Per-column filter values
  #}
 
+{% import kachnitel_admin_theme as css %}
 {% set dataSource = this.dataSource %}
 {% set isDoctrineEntity = this.isDoctrineEntity() %}
 {% set showBatchColumn = this.canBatchDelete() %}
@@ -34,14 +35,14 @@
 
     {# Global Search #}
     {% if block('search') is defined %}
-        <div class="admin-global-search mb-3">
+        <div class="admin-global-search {{ css.mb_3() }}">
             {{ block('search') }}
         </div>
     {% else %}
-        <div class="admin-global-search mb-3">
+        <div class="admin-global-search {{ css.mb_3() }}">
             <input
                 type="text"
-                class="form-control"
+                class="{{ css.form_input() }}"
                 placeholder="Global search across all columns..."
                 data-model="search"
                 value="{{ this.search }}"
@@ -50,14 +51,14 @@
     {% endif %}
 
     {# Entity List Table #}
-    <table class="table table-hover">
+    <table class="{{ css.table() }}">
         <thead>
             <tr>
                 {% if showBatchColumn %}
                     <th style="width: 40px;">
                         <input
                             type="checkbox"
-                            class="form-check-input"
+                            class="{{ css.form_checkbox() }}"
                             title="Select/Deselect All"
                             data-batch-select-target="master"
                             data-action="change->batch-select#toggleAll"
@@ -101,7 +102,7 @@
                         <td>
                             <input
                                 type="checkbox"
-                                class="form-check-input"
+                                class="{{ css.form_checkbox() }}"
                                 value="{{ entityId }}"
                                 {% if entityId in this.selectedIds %}checked{% endif %}
                                 data-model="selectedIds[]"
@@ -170,7 +171,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="{{ this.columns|length + (showBatchColumn ? 2 : 1) }}" class="text-center text-muted py-4">
+                    <td colspan="{{ this.columns|length + (showBatchColumn ? 2 : 1) }}" class="{{ css.text_center() }} {{ css.text_muted() }} {{ css.py_4() }}">
                         No {{ dataSource.label }} found.
                     </td>
                 </tr>

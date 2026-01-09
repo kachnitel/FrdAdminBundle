@@ -9,13 +9,15 @@
  #}
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
+{% import kachnitel_admin_theme as css %}
+
 {% block headerTitle %}
     {{ title|default(entityShortClass ~ ' List') }}
 {% endblock %}
 
 {% block headerButtons %}
     {% if admin_action_accessible(entityShortClass, 'new') %}
-        <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="btn btn-primary">
+        <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="{{ css.btn_primary() }}">
             ➕ New
         </a>
     {% endif %}

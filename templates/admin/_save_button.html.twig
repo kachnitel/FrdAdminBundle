@@ -2,6 +2,8 @@
  # Save button template for forms.
  #}
 
-<button type="submit" form="{{ formId|default(form.vars.id) }}" class="btn btn-primary">
+{% import kachnitel_admin_theme as css %}
+
+<button type="submit" form="{{ formId|default(form.vars.id) }}" class="{{ css.btn_primary() }}">
   Save
 </button>

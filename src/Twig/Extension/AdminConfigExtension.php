@@ -13,13 +13,15 @@ use Twig\Extension\GlobalsInterface;
 class AdminConfigExtension extends AbstractExtension implements GlobalsInterface
 {
     public function __construct(
-        private readonly ?string $baseLayout
+        private readonly ?string $baseLayout,
+        private readonly string $theme
     ) {}
 
     public function getGlobals(): array
     {
         return [
             'kachnitel_admin_base_layout' => $this->baseLayout,
+            'kachnitel_admin_theme' => $this->theme,
         ];
     }
 }

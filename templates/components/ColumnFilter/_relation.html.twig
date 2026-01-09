@@ -1,6 +1,7 @@
+{% import kachnitel_admin_theme as css %}
 <input
     type="text"
-    class="form-control form-control-sm"
+    class="{{ css.form_input_sm() }}"
     placeholder="{{ filterMetadata.placeholder|default('Search ' ~ (filterMetadata.targetEntity|default(column|humanize)) ~ '...') }}"
     data-model="debounce(300)|value"
     value="{{ value }}"

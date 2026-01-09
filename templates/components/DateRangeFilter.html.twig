@@ -1,10 +1,12 @@
+{% import kachnitel_admin_theme as css %}
+
 <div {{ attributes }}>
     {% if compact %}
         {% set popoverId = 'daterange-popover-' ~ column ~ '-' ~ random() %}
         <button
             type="button"
             popovertarget="{{ popoverId }}"
-            class="btn btn-sm btn-outline-secondary"
+            class="{{ css.btn_outline_secondary() }} {{ css.btn_sm() }}"
         >
             📅
             {% if from or to %}
@@ -24,12 +26,12 @@
             {% endif %}
         </button>
         <div popover id="{{ popoverId }}" style="position-area: top; margin: 1em;">
-            <label for="{{ popoverId }}-from" class="form-label mb-1">{{ column }}</label>
-            <div class="float-end">
+            <label for="{{ popoverId }}-from" class="{{ css.form_label_sm() }}">{{ column }}</label>
+            <div class="{{ css.float_end() }}">
                 {% if from or to %}
                     <button
                         type="button"
-                        class="btn btn-sm btn-link text-decoration-none"
+                        class="{{ css.btn_link() }} {{ css.btn_sm() }}"
                         data-action="live#action"
                         data-live-action-param="clear"
                     >
@@ -37,23 +39,23 @@
                     </button>
                 {% endif %}
 
-                <button type="button" class="btn-close" aria-label="Close" popovertarget="{{ popoverId }}"></button>
+                <button type="button" class="{{ css.btn_close() }}" aria-label="Close" popovertarget="{{ popoverId }}"></button>
             </div>
 
-            <div class="d-flex gap-1 align-items-center">
+            <div class="{{ css.flex_center() }} {{ css.gap_sm() }}">
                 <input
                     id="{{ popoverId }}-from"
                     type="date"
-                    class="form-control form-control-sm"
+                    class="{{ css.form_input_sm() }}"
                     data-model="from"
                     value="{{ from|default('') }}"
                     placeholder="From"
                 >
-                <span class="text-muted">–</span>
+                <span class="{{ css.text_muted() }}">–</span>
                 <input
                     id="{{ popoverId }}-to"
                     type="date"
-                    class="form-control form-control-sm"
+                    class="{{ css.form_input_sm() }}"
                     data-model="to"
                     value="{{ to|default('') }}"
                     placeholder="To"
@@ -62,19 +64,19 @@
         </div>
     {% else %}
         <div
-            class="d-flex gap-1 align-items-center"
+            class="{{ css.flex_center() }} {{ css.gap_sm() }}"
         >
             <input
                 type="date"
-                class="form-control form-control-sm"
+                class="{{ css.form_input_sm() }}"
                 data-model="from"
                 value="{{ from|default('') }}"
                 placeholder="From"
             >
-            <span class="text-muted">–</span>
+            <span class="{{ css.text_muted() }}">–</span>
             <input
                 type="date"
-                class="form-control form-control-sm"
+                class="{{ css.form_input_sm() }}"
                 data-model="to"
                 value="{{ to|default('') }}"
                 placeholder="To"

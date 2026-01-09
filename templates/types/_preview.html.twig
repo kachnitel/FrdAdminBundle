@@ -8,14 +8,16 @@
  # @var bool|null cell - Whether this is being rendered in a table cell
  #}
 
+{% import kachnitel_admin_theme as css %}
+
 {% if value is null %}
-    <span class="text-muted">-</span>
+    <span class="{{ css.text_muted() }}">-</span>
 {% elseif value is iterable %}
     {# Handle Collections/Arrays #}
     {% if value is not empty %}
         {{ value|length }} related items
     {% else %}
-        <span class="text-muted">-</span>
+        <span class="{{ css.text_muted() }}">-</span>
     {% endif %}
 {% elseif value is same as(true) or value is same as(false) %}
     {# Handle booleans #}

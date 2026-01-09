@@ -1,5 +1,6 @@
+{% import kachnitel_admin_theme as css %}
 <select
-    class="form-control form-control-sm"
+    class="{{ css.form_input_sm() }}"
     data-model="value"
 >
     {% if filterMetadata.showAllOption|default(true) %}

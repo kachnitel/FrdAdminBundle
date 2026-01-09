@@ -9,10 +9,12 @@
  # @var object component - Reference to parent component for constant access
  #}
 
+{% import kachnitel_admin_theme as css %}
+
 <th>
     <button
         type="button"
-        class="btn btn-link p-0 text-decoration-none"
+        class="{{ css.btn_link() }}"
         data-action="live#action"
         data-live-action-param="sort"
         data-live-column-param="{{ column }}"

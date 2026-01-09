@@ -1,0 +1,82 @@
+{#
+ # Tailwind CSS theme for KachnitelAdmin.
+ #
+ # Configure in kachnitel_admin.yaml:
+ #   kachnitel_admin:
+ #       theme: '@KachnitelAdmin/theme/tailwind.html.twig'
+ #}
+
+{# Buttons #}
+{% macro btn_primary() %}inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150{% endmacro %}
+{% macro btn_secondary() %}inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150{% endmacro %}
+{% macro btn_danger() %}inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150{% endmacro %}
+{% macro btn_outline_primary() %}inline-flex items-center px-4 py-2 bg-transparent border border-blue-600 rounded-md font-semibold text-xs text-blue-600 uppercase tracking-widest hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150{% endmacro %}
+{% macro btn_outline_secondary() %}inline-flex items-center px-4 py-2 bg-transparent border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150{% endmacro %}
+{% macro btn_outline_info() %}inline-flex items-center px-4 py-2 bg-transparent border border-cyan-500 rounded-md font-semibold text-xs text-cyan-600 uppercase tracking-widest hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition ease-in-out duration-150{% endmacro %}
+{% macro btn_link() %}text-blue-600 hover:text-blue-800 hover:underline focus:outline-none{% endmacro %}
+{% macro btn_close() %}text-gray-400 hover:text-gray-600 focus:outline-none{% endmacro %}
+{% macro btn_sm() %}text-xs px-2 py-1{% endmacro %}
+
+{# Forms #}
+{% macro form_input() %}block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500{% endmacro %}
+{% macro form_input_sm() %}block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-1{% endmacro %}
+{% macro form_select() %}form-select{% endmacro %}
+{% macro form_select_sm() %}block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-1{% endmacro %}
+{% macro form_checkbox() %}h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500{% endmacro %}
+{% macro form_label() %}block text-sm font-medium text-gray-700{% endmacro %}
+{% macro form_label_sm() %}block text-xs font-medium text-gray-600 mb-1{% endmacro %}
+
+{# Tables #}
+{% macro table() %}min-w-full divide-y divide-gray-200{% endmacro %}
+{% macro table_simple() %}min-w-full{% endmacro %}
+
+{# Pagination #}
+{% macro pagination() %}inline-flex -space-x-px rounded-md shadow-sm{% endmacro %}
+{% macro page_item() %}{% endmacro %}
+{% macro page_item_disabled() %}opacity-50 cursor-not-allowed{% endmacro %}
+{% macro page_link() %}relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500{% endmacro %}
+
+{# Layout #}
+{% macro container() %}container mx-auto px-4{% endmacro %}
+{% macro flex_row() %}flex{% endmacro %}
+{% macro flex_center() %}flex items-center{% endmacro %}
+{% macro flex_between() %}flex justify-between items-center{% endmacro %}
+{% macro gap_sm() %}gap-1{% endmacro %}
+{% macro gap_md() %}gap-2{% endmacro %}
+{% macro gap_lg() %}gap-3{% endmacro %}
+{% macro inline_block() %}inline-block{% endmacro %}
+{% macro d_inline() %}inline{% endmacro %}
+{% macro float_end() %}float-right{% endmacro %}
+
+{# Cards #}
+{% macro card() %}bg-white rounded-lg shadow{% endmacro %}
+{% macro card_hover() %}bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-200{% endmacro %}
+{% macro card_info() %}bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-200 border-l-4 border-cyan-500{% endmacro %}
+{% macro card_body() %}p-6 text-center flex flex-col justify-center{% endmacro %}
+{% macro card_title() %}text-lg font-medium text-gray-600 mb-3{% endmacro %}
+
+{# Alerts #}
+{% macro alert_warning() %}flex items-center p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700{% endmacro %}
+
+{# Text #}
+{% macro text_muted() %}text-gray-500{% endmacro %}
+{% macro text_center() %}text-center{% endmacro %}
+{% macro text_no_decoration() %}no-underline{% endmacro %}
+
+{# Spacing #}
+{% macro mb_0() %}mb-0{% endmacro %}
+{% macro mb_1() %}mb-1{% endmacro %}
+{% macro mb_3() %}mb-3{% endmacro %}
+{% macro mb_5() %}mb-8{% endmacro %}
+{% macro mt_3() %}mt-3{% endmacro %}
+{% macro me_2() %}mr-2{% endmacro %}
+{% macro py_4() %}py-4{% endmacro %}
+
+{# Grid #}
+{% macro row() %}grid grid-cols-1 gap-4{% endmacro %}
+{% macro row_spaced() %}grid grid-cols-1 gap-4 mb-8{% endmacro %}
+{% macro col_card() %}md:col-span-1{% endmacro %}
+{% macro col_full() %}col-span-full{% endmacro %}
+
+{# Heading #}
+{% macro h4() %}text-xl font-semibold mb-3{% endmacro %}

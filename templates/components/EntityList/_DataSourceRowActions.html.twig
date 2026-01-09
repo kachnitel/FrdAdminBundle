@@ -7,9 +7,11 @@
  # @var string|int entityId - ID of the entry
  #}
 
+{% import kachnitel_admin_theme as css %}
+
 <td class="actions">
     {% if dataSource.supportsAction('show') %}
-        <a href="{{ path('app_admin_datasource_show', { dataSourceId: dataSourceId, id: entityId }) }}" class="btn btn-sm btn-outline-primary">
+        <a href="{{ path('app_admin_datasource_show', { dataSourceId: dataSourceId, id: entityId }) }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
             View
         </a>
     {% endif %}

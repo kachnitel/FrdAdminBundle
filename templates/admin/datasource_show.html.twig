@@ -8,19 +8,21 @@
  #}
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
+{% import kachnitel_admin_theme as css %}
+
 {% block headerTitle %}
     {{ dataSource.label }} - Entry #{{ dataSource.getItemId(item) }}
 {% endblock %}
 
 {% block headerButtons %}
     {# Read-only, no edit/delete buttons #}
-    <a href="{{ path('app_admin_datasource_index', { dataSourceId: dataSourceId }) }}" class="btn btn-outline-secondary">
+    <a href="{{ path('app_admin_datasource_index', { dataSourceId: dataSourceId }) }}" class="{{ css.btn_outline_secondary() }}">
         Back to List
     </a>
 {% endblock %}
 
 {% block content %}
-  <table class="table">
+  <table class="{{ css.table_simple() }}">
     <tbody>
       {% for columnId, column in dataSource.columns %}
         <tr>
@@ -30,7 +32,7 @@
             {% if column.type == 'datetime' %}
               {{ value is empty ? '-' : value|date('Y-m-d H:i:s') }}
             {% elseif column.type == 'json' %}
-              <pre class="mb-0"><code>{{ value|json_encode(constant('JSON_PRETTY_PRINT')) }}</code></pre>
+              <pre class="{{ css.mb_0() }}"><code>{{ value|json_encode(constant('JSON_PRETTY_PRINT')) }}</code></pre>
             {% elseif column.type == 'boolean' %}
               {{ value ? 'Yes' : 'No' }}
             {% else %}

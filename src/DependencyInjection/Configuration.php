@@ -69,6 +69,10 @@ class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+                ->scalarNode('theme')
+                    ->defaultValue('@KachnitelAdmin/theme/bootstrap.html.twig')
+                    ->info('CSS theme template. Use @KachnitelAdmin/theme/tailwind.html.twig for Tailwind, or provide your own.')
+                ->end()
             ->end();
 
         return $treeBuilder;

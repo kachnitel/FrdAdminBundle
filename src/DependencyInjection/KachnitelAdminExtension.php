@@ -28,6 +28,7 @@ class KachnitelAdminExtension extends Extension
         $container->setParameter('kachnitel_admin.enable_generic_controller', $config['enable_generic_controller']);
         $container->setParameter('kachnitel_admin.pagination.default_items_per_page', $config['pagination']['default_items_per_page']);
         $container->setParameter('kachnitel_admin.pagination.allowed_items_per_page', $config['pagination']['allowed_items_per_page']);
+        $container->setParameter('kachnitel_admin.theme', $config['theme']);
 
         // Load services
         $loader = new YamlFileLoader(

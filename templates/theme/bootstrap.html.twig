@@ -1,0 +1,89 @@
+{#
+ # Bootstrap 5 CSS theme for KachnitelAdmin.
+ #
+ # Create your own theme by defining the same macros:
+ #
+ #   {# templates/admin/theme.html.twig #}
+ #   {% macro btn_primary() %}btn btn-lg btn-primary{% endmacro %}
+ #   {% macro form_input() %}form-control form-control-lg{% endmacro %}
+ #   {# ... define all macros you want to override ... #}
+ #
+ # Then configure in kachnitel_admin.yaml:
+ #   kachnitel_admin:
+ #       theme: 'admin/theme.html.twig'
+ #}
+
+{# Buttons #}
+{% macro btn_primary() %}btn btn-primary{% endmacro %}
+{% macro btn_secondary() %}btn btn-secondary{% endmacro %}
+{% macro btn_danger() %}btn btn-danger{% endmacro %}
+{% macro btn_outline_primary() %}btn btn-outline-primary{% endmacro %}
+{% macro btn_outline_secondary() %}btn btn-outline-secondary{% endmacro %}
+{% macro btn_outline_info() %}btn btn-outline-info{% endmacro %}
+{% macro btn_link() %}btn btn-link p-0 text-decoration-none{% endmacro %}
+{% macro btn_close() %}btn-close{% endmacro %}
+{% macro btn_sm() %}btn-sm{% endmacro %}
+
+{# Forms #}
+{% macro form_input() %}form-control{% endmacro %}
+{% macro form_input_sm() %}form-control form-control-sm{% endmacro %}
+{% macro form_select() %}form-select{% endmacro %}
+{% macro form_select_sm() %}form-select form-select-sm{% endmacro %}
+{% macro form_checkbox() %}form-check-input{% endmacro %}
+{% macro form_label() %}form-label{% endmacro %}
+{% macro form_label_sm() %}form-label mb-1{% endmacro %}
+
+{# Tables #}
+{% macro table() %}table table-hover{% endmacro %}
+{% macro table_simple() %}table{% endmacro %}
+
+{# Pagination #}
+{% macro pagination() %}pagination pagination-sm mb-0{% endmacro %}
+{% macro page_item() %}page-item{% endmacro %}
+{% macro page_item_disabled() %}page-item disabled{% endmacro %}
+{% macro page_link() %}page-link{% endmacro %}
+
+{# Layout #}
+{% macro container() %}container-fluid{% endmacro %}
+{% macro flex_row() %}d-flex{% endmacro %}
+{% macro flex_center() %}d-flex align-items-center{% endmacro %}
+{% macro flex_between() %}d-flex justify-content-between align-items-center{% endmacro %}
+{% macro gap_sm() %}gap-1{% endmacro %}
+{% macro gap_md() %}gap-2{% endmacro %}
+{% macro gap_lg() %}gap-3{% endmacro %}
+{% macro inline_block() %}d-inline-block w-auto{% endmacro %}
+{% macro d_inline() %}d-inline{% endmacro %}
+{% macro float_end() %}float-end{% endmacro %}
+
+{# Cards #}
+{% macro card() %}card h-100 shadow-sm{% endmacro %}
+{% macro card_hover() %}card h-100 shadow-sm hover-shadow transition-all{% endmacro %}
+{% macro card_info() %}card h-100 shadow-sm hover-shadow transition-all border-info{% endmacro %}
+{% macro card_body() %}card-body text-center d-flex flex-column justify-content-center p-5{% endmacro %}
+{% macro card_title() %}h5 card-title text-secondary mb-3{% endmacro %}
+
+{# Alerts #}
+{% macro alert_warning() %}alert alert-warning d-flex align-items-center{% endmacro %}
+
+{# Text #}
+{% macro text_muted() %}text-muted{% endmacro %}
+{% macro text_center() %}text-center{% endmacro %}
+{% macro text_no_decoration() %}text-decoration-none{% endmacro %}
+
+{# Spacing #}
+{% macro mb_0() %}mb-0{% endmacro %}
+{% macro mb_1() %}mb-1{% endmacro %}
+{% macro mb_3() %}mb-3{% endmacro %}
+{% macro mb_5() %}mb-5{% endmacro %}
+{% macro mt_3() %}mt-3{% endmacro %}
+{% macro me_2() %}me-2{% endmacro %}
+{% macro py_4() %}py-4{% endmacro %}
+
+{# Grid #}
+{% macro row() %}row g-4{% endmacro %}
+{% macro row_spaced() %}row g-4 mb-5{% endmacro %}
+{% macro col_card() %}col-12 col-md-6 col-lg-4 col-xl-3{% endmacro %}
+{% macro col_full() %}col-12{% endmacro %}
+
+{# Heading #}
+{% macro h4() %}h4 mb-3{% endmacro %}

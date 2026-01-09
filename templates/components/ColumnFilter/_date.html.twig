@@ -1,6 +1,7 @@
+{% import kachnitel_admin_theme as css %}
 <input
     type="date"
-    class="form-control form-control-sm"
+    class="{{ css.form_input_sm() }}"
     data-model="value"
     value="{{ value }}"
 >

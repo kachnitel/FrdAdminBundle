@@ -6,15 +6,17 @@
  # @var string entityShortClass - Short class name for permission checks
  #}
 
+{% import kachnitel_admin_theme as css %}
+
 <td class="actions">
     {% if admin_action_accessible(entityShortClass, 'show') %}
-        <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
+        <a href="{{ admin_object_path(entity, 'show') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
             👀
         </a>
     {% endif %}
 
     {% if admin_action_accessible(entityShortClass, 'edit') %}
-        <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
+        <a href="{{ admin_object_path(entity, 'edit') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
             🖊
         </a>
     {% endif %}

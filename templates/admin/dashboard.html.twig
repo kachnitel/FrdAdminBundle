@@ -1,5 +1,7 @@
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
+{% import kachnitel_admin_theme as css %}
+
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block headerTitle %}
@@ -9,13 +11,13 @@
 {% block content %}
   {# Entities Section #}
   {% if entities|length > 0 %}
-  <h2 class="h4 mb-3">Entities</h2>
-  <div class="row g-4 mb-5">
+  <h2 class="{{ css.h4() }}">Entities</h2>
+  <div class="{{ css.row_spaced() }}">
     {% for entity in entities %}
-      <div class="col-12 col-md-6 col-lg-4 col-xl-3">
-        <div class="card h-100 shadow-sm hover-shadow transition-all">
-          <div class="card-body text-center d-flex flex-column justify-content-center p-5">
-            <h3 class="h5 card-title text-secondary mb-3">
+      <div class="{{ css.col_card() }}">
+        <div class="{{ css.card_hover() }}">
+          <div class="{{ css.card_body() }}">
+            <h3 class="{{ css.card_title() }}">
               {{ entity.label }}
             </h3>
 
@@ -24,7 +26,7 @@
                using the generated slug (e.g. 'work-station')
             #}
             <a href="{{ path('app_admin_entity_index', { entitySlug: entity.slug }) }}"
-               class="btn btn-outline-primary stretched-link">
+               class="{{ css.btn_outline_primary() }}">
               Manage {{ entity.label }}s
             </a>
           </div>
@@ -36,17 +38,17 @@
 
   {# Data Sources Section (e.g., Audit Logs) #}
   {% if dataSources|default([])|length > 0 %}
-  <h2 class="h4 mb-3">Data Sources</h2>
-  <div class="row g-4">
+  <h2 class="{{ css.h4() }}">Data Sources</h2>
+  <div class="{{ css.row() }}">
     {% for ds in dataSources %}
-      <div class="col-12 col-md-6 col-lg-4 col-xl-3">
-        <div class="card h-100 shadow-sm hover-shadow transition-all border-info">
-          <div class="card-body text-center d-flex flex-column justify-content-center p-5">
-            <h3 class="h5 card-title text-secondary mb-3">
+      <div class="{{ css.col_card() }}">
+        <div class="{{ css.card_info() }}">
+          <div class="{{ css.card_body() }}">
+            <h3 class="{{ css.card_title() }}">
               {{ ds.label }}
             </h3>
             <a href="{{ path('app_admin_datasource_index', { dataSourceId: ds.identifier }) }}"
-               class="btn btn-outline-info stretched-link">
+               class="{{ css.btn_outline_info() }}">
               View {{ ds.label }}
             </a>
           </div>
@@ -57,9 +59,9 @@
   {% endif %}
 
   {% if entities|length == 0 and dataSources|default([])|length == 0 %}
-  <div class="row g-4">
-    <div class="col-12">
-      <div class="alert alert-warning d-flex align-items-center">
+  <div class="{{ css.row() }}">
+    <div class="{{ css.col_full() }}">
+      <div class="{{ css.alert_warning() }}">
         <div>
           No entities or data sources configured.
         </div>
