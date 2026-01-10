@@ -187,4 +187,219 @@ class FieldFilterTest extends TestCase
         $this->assertEquals('user_name', $filter->getName());
         $this->assertEquals('Full Name', $filter->getLabel());
     }
+
+    /**
+     * @test
+     */
+    public function applyWithDefaultEqualsOperator(): void
+    {
+        $filter = new FieldFilter('status', 'Status', 'status');
+
+        $qb = $this->createQueryBuilderMock();
+        $qb->expects($this->once())
+            ->method('andWhere')
+            ->with('e.status = :status')
+            ->willReturnSelf();
+        $qb->expects($this->once())
+            ->method('setParameter')
+            ->with('status', 'active')
+            ->willReturnSelf();
+
+        $filter->apply($qb, 'active');
+    }
+
+    /**
+     * @test
+     */
+    public function applyWithLikeOperator(): void
+    {
+        $filter = new FieldFilter('name', 'Name', 'name', 'LIKE');
+
+        $comparison = $this->createMock(\Doctrine\ORM\Query\Expr\Comparison::class);
+
+        $expr = $this->createMock(\Doctrine\ORM\Query\Expr::class);
+        $expr->expects($this->once())
+            ->method('like')
+            ->with('e.name', ':name')
+            ->willReturn($comparison);
+
+        $qb = $this->createQueryBuilderMock();
+        $qb->method('expr')->willReturn($expr);
+        $qb->expects($this->once())
+            ->method('andWhere')
+            ->with($comparison)
+            ->willReturnSelf();
+        $qb->expects($this->once())
+            ->method('setParameter')
+            ->with('name', '%test%')
+            ->willReturnSelf();
+
+        $filter->apply($qb, 'test');
+    }
+
+    /**
+     * @test
+     */
+    public function applyWithInOperatorAndArray(): void
+    {
+        $filter = new FieldFilter('status', 'Status', 'status', 'IN');
+
+        $func = $this->createMock(\Doctrine\ORM\Query\Expr\Func::class);
+
+        $expr = $this->createMock(\Doctrine\ORM\Query\Expr::class);
+        $expr->expects($this->once())
+            ->method('in')
+            ->with('e.status', ':status')
+            ->willReturn($func);
+
+        $qb = $this->createQueryBuilderMock();
+        $qb->method('expr')->willReturn($expr);
+        $qb->expects($this->once())
+            ->method('andWhere')
+            ->with($func)
+            ->willReturnSelf();
+        $qb->expects($this->once())
+            ->method('setParameter')
+            ->with('status', ['active', 'pending'])
+            ->willReturnSelf();
+
+        $filter->apply($qb, ['active', 'pending']);
+    }
+
+    /**
+     * @test
+     */
+    public function applyWithInOperatorAndScalar(): void
+    {
+        $filter = new FieldFilter('status', 'Status', 'status', 'IN');
+
+        $func = $this->createMock(\Doctrine\ORM\Query\Expr\Func::class);
+
+        $expr = $this->createMock(\Doctrine\ORM\Query\Expr::class);
+        $expr->expects($this->once())
+            ->method('in')
+            ->with('e.status', ':status')
+            ->willReturn($func);
+
+        $qb = $this->createQueryBuilderMock();
+        $qb->method('expr')->willReturn($expr);
+        $qb->expects($this->once())
+            ->method('andWhere')
+            ->with($func)
+            ->willReturnSelf();
+        $qb->expects($this->once())
+            ->method('setParameter')
+            ->with('status', ['active'])
+            ->willReturnSelf();
+
+        $filter->apply($qb, 'active');
+    }
+
+    /**
+     * @test
+     */
+    public function applyWithGreaterThanOrEqualOperator(): void
+    {
+        $filter = new FieldFilter('price', 'Min Price', 'price', '>=');
+
+        $qb = $this->createQueryBuilderMock();
+        $qb->expects($this->once())
+            ->method('andWhere')
+            ->with('e.price >= :price')
+            ->willReturnSelf();
+        $qb->expects($this->once())
+            ->method('setParameter')
+            ->with('price', 100)
+            ->willReturnSelf();
+
+        $filter->apply($qb, 100);
+    }
+
+    /**
+     * @test
+     */
+    public function applyWithLessThanOrEqualOperator(): void
+    {
+        $filter = new FieldFilter('price', 'Max Price', 'price', '<=');
+
+        $qb = $this->createQueryBuilderMock();
+        $qb->expects($this->once())
+            ->method('andWhere')
+            ->with('e.price <= :price')
+            ->willReturnSelf();
+        $qb->expects($this->once())
+            ->method('setParameter')
+            ->with('price', 500)
+            ->willReturnSelf();
+
+        $filter->apply($qb, 500);
+    }
+
+    /**
+     * @test
+     */
+    public function applyWithGreaterThanOperator(): void
+    {
+        $filter = new FieldFilter('quantity', 'Quantity', 'quantity', '>');
+
+        $qb = $this->createQueryBuilderMock();
+        $qb->expects($this->once())
+            ->method('andWhere')
+            ->with('e.quantity > :quantity')
+            ->willReturnSelf();
+        $qb->expects($this->once())
+            ->method('setParameter')
+            ->with('quantity', 10)
+            ->willReturnSelf();
+
+        $filter->apply($qb, 10);
+    }
+
+    /**
+     * @test
+     */
+    public function applyWithLessThanOperator(): void
+    {
+        $filter = new FieldFilter('quantity', 'Quantity', 'quantity', '<');
+
+        $qb = $this->createQueryBuilderMock();
+        $qb->expects($this->once())
+            ->method('andWhere')
+            ->with('e.quantity < :quantity')
+            ->willReturnSelf();
+        $qb->expects($this->once())
+            ->method('setParameter')
+            ->with('quantity', 50)
+            ->willReturnSelf();
+
+        $filter->apply($qb, 50);
+    }
+
+    /**
+     * @test
+     */
+    public function applyWithDottedFieldNameConvertsToUnderscoreInParam(): void
+    {
+        $filter = new FieldFilter('category_name', 'Category', 'category.name');
+
+        $qb = $this->createQueryBuilderMock();
+        $qb->expects($this->once())
+            ->method('andWhere')
+            ->with('e.category.name = :category_name')
+            ->willReturnSelf();
+        $qb->expects($this->once())
+            ->method('setParameter')
+            ->with('category_name', 'Electronics')
+            ->willReturnSelf();
+
+        $filter->apply($qb, 'Electronics');
+    }
+
+    /**
+     * @return \Doctrine\ORM\QueryBuilder&\PHPUnit\Framework\MockObject\MockObject
+     */
+    private function createQueryBuilderMock(): \Doctrine\ORM\QueryBuilder
+    {
+        return $this->createMock(\Doctrine\ORM\QueryBuilder::class);
+    }
 }

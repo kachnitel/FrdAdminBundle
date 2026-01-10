@@ -434,4 +434,326 @@ class AdminRouteRuntimeTest extends TestCase
         $path = $this->runtime->getPath('TestEntity', 'custom', ['custom' => 'value123']);
         $this->assertEquals('/admin/value123', $path);
     }
+
+    /**
+     * @test
+     */
+    public function canPerformActionReturnsTrueForAccessibleAction(): void
+    {
+        $entity = new class {
+            public function getId(): int { return 1; }
+        };
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn(true);
+
+        $result = $this->runtime->canPerformAction($entity, 'index');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsFalseWhenAuthDenied(): void
+    {
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn(false);
+
+        $result = $this->runtime->isActionAccessible('Product', 'show');
+        $this->assertFalse($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsTrueForIndexWithPermission(): void
+    {
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn(true);
+
+        $result = $this->runtime->isActionAccessible('Product', 'index');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsTrueForShowWithPermission(): void
+    {
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn(true);
+
+        $result = $this->runtime->isActionAccessible('Product', 'show');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsTrueForDeleteWithPermission(): void
+    {
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn(true);
+
+        $result = $this->runtime->isActionAccessible('Product', 'delete');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsTrueForNewWithFormAndPermission(): void
+    {
+        $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
+        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            $this->authChecker,
+            $entityDiscovery,
+            $formRegistry
+        );
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn(true);
+
+        $entityDiscovery
+            ->method('resolveEntityClass')
+            ->willReturn(TestEntity::class);
+
+        $entityDiscovery
+            ->method('getAdminAttribute')
+            ->willReturn(null);
+
+        $formRegistry
+            ->method('hasType')
+            ->willReturn(true);
+
+        $result = $runtime->isActionAccessible('TestEntity', 'new');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsFalseForNewWithoutForm(): void
+    {
+        $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
+        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            $this->authChecker,
+            $entityDiscovery,
+            $formRegistry
+        );
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn(true);
+
+        $entityDiscovery
+            ->method('resolveEntityClass')
+            ->willReturn(TestEntity::class);
+
+        $entityDiscovery
+            ->method('getAdminAttribute')
+            ->willReturn(null);
+
+        $formRegistry
+            ->method('hasType')
+            ->willReturn(false);
+
+        $result = $runtime->isActionAccessible('TestEntity', 'new');
+        $this->assertFalse($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsTrueForEditWithFormAndPermission(): void
+    {
+        $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
+        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            $this->authChecker,
+            $entityDiscovery,
+            $formRegistry
+        );
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn(true);
+
+        $entityDiscovery
+            ->method('resolveEntityClass')
+            ->willReturn(TestEntity::class);
+
+        $entityDiscovery
+            ->method('getAdminAttribute')
+            ->willReturn(null);
+
+        $formRegistry
+            ->method('hasType')
+            ->willReturn(true);
+
+        $result = $runtime->isActionAccessible('TestEntity', 'edit');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsFalseForEditWithoutForm(): void
+    {
+        $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
+        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            $this->authChecker,
+            $entityDiscovery,
+            $formRegistry
+        );
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn(true);
+
+        $entityDiscovery
+            ->method('resolveEntityClass')
+            ->willReturn(TestEntity::class);
+
+        $entityDiscovery
+            ->method('getAdminAttribute')
+            ->willReturn(null);
+
+        $formRegistry
+            ->method('hasType')
+            ->willReturn(false);
+
+        $result = $runtime->isActionAccessible('TestEntity', 'edit');
+        $this->assertFalse($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsTrueWithNoAuthChecker(): void
+    {
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null  // No auth checker
+        );
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $result = $runtime->isActionAccessible('Product', 'index');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function isActionAccessibleReturnsTrueForNewEditWithNoFormDependencies(): void
+    {
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,  // No auth checker
+            null,  // No entity discovery
+            null   // No form registry
+        );
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        // Should assume form exists when dependencies are not available
+        $result = $runtime->isActionAccessible('Product', 'new');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function hasFormReturnsTrueWhenEntityDiscoveryThrowsException(): void
+    {
+        $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
+        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,
+            $entityDiscovery,
+            $formRegistry
+        );
+
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn(null);
+
+        $entityDiscovery
+            ->method('resolveEntityClass')
+            ->willThrowException(new \Exception('Entity not found'));
+
+        $formRegistry
+            ->method('hasType')
+            ->willReturn(true);
+
+        $result = $runtime->isActionAccessible('UnknownEntity', 'new');
+        $this->assertTrue($result);
+    }
 }

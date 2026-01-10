@@ -33,6 +33,9 @@ abstract class ComponentTestCase extends KernelTestCase
         // Create database schema for all test entities
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
         $schemaTool = new SchemaTool($this->em);
+
+        // Drop existing schema to ensure clean state
+        $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
     }
 
