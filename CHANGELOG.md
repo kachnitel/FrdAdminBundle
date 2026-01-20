@@ -7,7 +7,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.2.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.1.0...v0.2.0) (2025-12-30)
+## [0.3.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.2.0...v0.3.0) (2026-01-20)
+
+### Features
+
+* Date range clear btn ([b16253](https://github.com/kachnitel/FrdAdminBundle/commit/b162535847b3c96f067136a5b2d9628f001619db))
+* Remove hardcoded bootstrap classes and add "presets" for bootstrap 5 and tailwind ([47080d](https://github.com/kachnitel/FrdAdminBundle/commit/47080d5139931bfd7e6184bb50feb30543c9a3dd))
+
+### Bug Fixes
+
+* Make clear emit filter:updated ([464ab9](https://github.com/kachnitel/FrdAdminBundle/commit/464ab9e389896e4fa9b55f6919a0f4f0a3777656))
+
+### Tests
+
+* Improve coverage w/ low hanging fruit ([a8fdeb](https://github.com/kachnitel/FrdAdminBundle/commit/a8fdebf6e42b4602267838c226c815eafc9771aa))
+* Increase test coverage ([8992e3](https://github.com/kachnitel/FrdAdminBundle/commit/8992e37cfa7e71238f07b4e8270c7d1a51baf66d))
+
+
+---
+
+## [0.2.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.1.0...v0.2.0) (2025-12-29)
 
 ### Features
 
