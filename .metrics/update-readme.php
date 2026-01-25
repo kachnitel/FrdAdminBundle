@@ -41,7 +41,7 @@ if (strpos($readme, $badgeMarker) !== false) {
 } else {
     // Insert badges after first heading
     $readme = preg_replace(
-        '/(# FRD Admin Bundle\n\n)/',
+        '/(# Kachnitel Admin Bundle\n\n)/',
         "$1{$badgeSection}\n\n",
         $readme,
         1

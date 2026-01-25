@@ -17,9 +17,7 @@
 {% endblock %}
 
 {% block content %}
-    {% component 'K:Admin:EntityList' with {
-        dataSourceId: dataSourceId
-    } %}
-        {# Override blocks from component template as needed #}
-    {% endcomponent %}
+    <twig:K:Admin:EntityList
+        :dataSourceId="dataSourceId"
+    />
 {% endblock %}

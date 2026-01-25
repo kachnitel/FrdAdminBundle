@@ -9,11 +9,11 @@
  # @var string entityShortClass - Short class name of the entity
  # @var string|null repositoryMethod - Custom repository method for query
  #}
-{% extends 'layout.html.twig' %}
+{% extends '@!KachnitelAdmin/admin/index_live.html.twig' %}
 
-{% block headerTitle %}
+{# {% block headerTitle %}
     {{ title|default(entityShortClass ~ ' List') }}
-{% endblock %}
+{% endblock %} #}
 
 {% block headerButtons %}
     {% if entityClass|admin_has_route('new') and admin_route_accessible(entityClass|admin_get_route('new')) %}
@@ -24,11 +24,9 @@
 {% endblock %}
 
 {% block content %}
-    {% component 'K:Admin:EntityList' with {
-        entityClass: entityClass,
-        entityShortClass: entityShortClass,
-        repositoryMethod: repositoryMethod|default(null)
-    } %}
-        {# Override blocks from component template as needed #}
-    {% endcomponent %}
+    <twig:K:Admin:EntityList
+        :entityClass="entityClass"
+        :entityShortClass="entityShortClass"
+        :repositoryMethod="repositoryMethod|default(null)"
+    />
 {% endblock %}

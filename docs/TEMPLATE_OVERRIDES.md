@@ -318,8 +318,14 @@ Customize the page that wraps the LiveComponent:
 
 ```twig
 {# templates/bundles/KachnitelAdminBundle/admin/index_live.html.twig #}
-{% extends 'admin_layout.html.twig' %}
+{% extends '@!KachnitelAdmin/admin/index_live.html.twig' %}    {# Extend the bundle's default #}
+{# OR #}
+{# {% extends 'admin_layout.html.twig' %} #}                   {# Your app's admin layout #}
 
+{#
+  @var string entityClass - Fully-qualified class name of the entity (e.g., App\Entity\Product)
+  @var string entityShortClass - Short class name of the entity (e.g., Product)
+#}
 {% block title %}{{ entityShortClass }} Management{% endblock %}
 
 {% block content %}
@@ -328,10 +334,11 @@ Customize the page that wraps the LiveComponent:
         <p class="text-muted">Manage your {{ entityShortClass|lower }} records</p>
     </div>
 
-    {% component 'FRD:Admin:EntityList' with {
-        entityClass: entityClass,
-        entityShortClass: entityShortClass
-    } %}{% endcomponent %}
+    <twig:K:Admin:EntityList
+        :entityClass="entityClass"
+        :entityShortClass="entityShortClass"
+        style="border: 2px solid #007bff; padding: 1rem;"
+    />
 {% endblock %}
 ```
 
@@ -421,9 +428,9 @@ Custom boolean rendering with icons:
 
 ## Important Limitations
 
-### ❌ Cannot Use `{% extends %}` in Overrides
+### ⚠️ Use `{% extends '@!...' %}` if extending Bundle Templates
 
-When you override a template, Symfony resolves `@KachnitelAdmin/template.html.twig` to YOUR override. This creates a circular reference:
+When you override a template, Symfony resolves `@KachnitelAdmin/template.html.twig` to YOUR override. This creates a circular reference. To avoid this, use the `@!KachnitelAdmin/...` syntax to bypass overrides and extend the original bundle template. See [Symfony Blog](https://symfony.com/blog/new-in-symfony-3-4-improved-the-overriding-of-templates#overriding-and-extending-templates).
 
 **This WILL NOT work:**
 ```twig
@@ -434,11 +441,9 @@ When you override a template, Symfony resolves `@KachnitelAdmin/template.html.tw
 **Instead, do this:**
 ```twig
 {# templates/bundles/KachnitelAdminBundle/admin/index_live.html.twig #}
-{% extends 'layout.html.twig' %}  {# ✅ Extend your app layout #}
+{% extends '@!KachnitelAdmin/admin/index_live.html.twig' %}  {# ✅ Extends the bundle's default #}
 
-{% block content %}
-    {# Copy and customize the content you need #}
-{% endblock %}
+{% block headerTitle %}Fancier title here{% endblock %}
 ```
 
 ### ❌ Entity-Specific Index Pages Not Supported
@@ -480,6 +485,9 @@ class ProductController extends AbstractController
 Use `#[AdminRoutes]` on your entity to wire up the custom routes:
 
 ```php
+use Kachnitel\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\Attribute\AdminRoutes;
+
 #[Admin(label: 'Products')]
 #[AdminRoutes(['index' => 'app_product_index'])]
 class Product { }
@@ -577,11 +585,11 @@ Add debugging output to see what variables are available:
 - Document why you created the override (comment in template)
 
 ### ❌ DON'T:
-- Use `{% extends %}` to extend bundle templates you're overriding
 - Create entity-specific admin page templates (not supported)
 - Override templates without understanding the available variables
 - Forget to preserve LiveComponent data attributes
 - Remove the `{{ attributes }}` from LiveComponent templates
+- Return more than a single root element in LiveComponent templates
 
 ## Need Help?
 
