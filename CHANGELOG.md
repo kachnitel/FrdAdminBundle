@@ -7,7 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.3.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.2.0...v0.3.0) (2026-01-20)
+## [0.3.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.3.0...v0.3.1) (2026-01-26)
+
+### Features
+
+* Add 'newButtonLabel' block ([567870](https://github.com/kachnitel/FrdAdminBundle/commit/56787092db7ba73661e5feb24c48dc3c0d9f8986))
+* Use twig's HTML syntax for Admin components; clarify extending bundle's templates in docs ([c84455](https://github.com/kachnitel/FrdAdminBundle/commit/c84455fe88cf9e0ce6657d3fab82a5d83dc371db))
+
+
+---
+
+## [0.3.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.2.0...v0.3.0) (2026-01-19)
 
 ### Features
 
