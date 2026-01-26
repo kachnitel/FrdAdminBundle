@@ -18,7 +18,9 @@
 {% block headerButtons %}
     {% if admin_action_accessible(entityShortClass, 'new') %}
         <a href="{{ admin_object_path(entityClass, 'new', { class: entityShortClass }) }}" class="{{ css.btn_primary() }}">
-            ➕ New
+            {% block newButtonLabel %}
+                ➕ New
+            {% endblock %}
         </a>
     {% endif %}
 {% endblock %}
