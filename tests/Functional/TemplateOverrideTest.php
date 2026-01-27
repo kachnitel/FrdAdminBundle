@@ -133,7 +133,7 @@ class TemplateOverrideTest extends ComponentTestCase
     /**
      * Test that type-specific overrides (boolean/_preview.html.twig) take precedence.
      */
-    public function testTypeSpecificOverrideTakesPrecedence(): void
+    public function testTypeSpecificOverrideTakesPrecedenceForEntity(): void
     {
         $container = static::getContainer();
         /** @var EntityManagerInterface $em */
@@ -156,6 +156,42 @@ class TemplateOverrideTest extends ComponentTestCase
         $this->assertStringContainsString('<!-- TEST_OVERRIDE:BOOLEAN -->', $rendered);
         $this->assertStringContainsString('✓ True', $rendered);
         // Note: Can't assert ">Yes<" is absent - the boolean ColumnFilter dropdown has Yes/No options
+    }
+
+    /**
+     * Test that datasource-specific property overrides take precedence.
+     *
+     * DataSource template hierarchy follows:
+     *   1. data/{dataSourceId}/{column}.html.twig - DataSource-specific property (highest priority)
+     *   2. {columnType}/_preview.html.twig        - Type-specific
+     *   3. _preview.html.twig                     - Default fallback
+     */
+    public function testDataSourceSpecificOverrideTakesPrecedence(): void
+    {
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine')->getManager();
+
+        $entity = new TestEntity();
+        $entity->setName('Data Source Test');
+        $em->persist($entity);
+        $em->flush();
+
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:EntityList',
+            data: ['dataSourceId' => 'data-source'],
+        );
+
+        $rendered = (string) $testComponent->render();
+
+        // Should use datasource-specific template for 'active' column
+        // NOT the type-specific boolean template
+        $this->assertStringContainsString('<!-- TEST_OVERRIDE:DATASOURCE_ACTIVE -->', $rendered);
+        $this->assertStringContainsString('datasource-active', $rendered);
+        $this->assertStringContainsString('Active</span>', $rendered);
+
+        // Should NOT use the generic boolean override
+        $this->assertStringNotContainsString('<!-- TEST_OVERRIDE:BOOLEAN -->', $rendered);
     }
 
     /**

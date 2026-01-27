@@ -147,6 +147,7 @@ class TestKernel extends Kernel
         // Register test data source provider for custom column template testing
         // AutowireIterator uses the interface FQCN as the tag for discovery
         $container->register(TestDataSourceProvider::class)
+            ->setAutowired(true)
             ->setPublic(true)
             ->addTag(DataSourceProviderInterface::class);
     }

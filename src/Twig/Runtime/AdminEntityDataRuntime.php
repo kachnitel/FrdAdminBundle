@@ -116,6 +116,56 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
     }
 
     /**
+     * Get template paths for a column in priority order.
+     *
+     * Returns an array of template paths to try for rendering a column value.
+     * The template resolution follows this hierarchy:
+     *
+     * For DataSources (when dataSourceId is set):
+     *   1. data/{dataSourceId}/{column}.html.twig - DataSource-specific property
+     *   2. {columnType}/_preview.html.twig        - Type-specific
+     *   3. _preview.html.twig                     - Default fallback
+     *
+     * For Doctrine Entities (when entityClass is set):
+     *   1. {entityClass}/{column}.html.twig       - Entity-specific property
+     *   2. {propertyType}/_preview.html.twig      - Type-specific
+     *   3. _preview.html.twig                     - Default fallback
+     *
+     * @param string|null $dataSourceId Data source identifier (for custom datasources)
+     * @param string|null $entityClass  Entity class name (for Doctrine entities)
+     * @param string      $column       Column name
+     * @param string      $columnType   Column type (string, boolean, integer, etc.)
+     * @param bool        $isCollection Whether this is a collection field
+     * @return list<string> Template paths in priority order
+     */
+    public function getColumnTemplates(
+        ?string $dataSourceId,
+        ?string $entityClass,
+        string $column,
+        string $columnType,
+        bool $isCollection = false
+    ): array {
+        $templateName = $isCollection ? '_collection.html.twig' : '_preview.html.twig';
+        $templates = [];
+
+        if ($dataSourceId !== null && $entityClass === null) {
+            // DataSource-specific: data/{dataSourceId}/{column}.html.twig
+            $templates[] = '@KachnitelAdmin/types/data/' . $dataSourceId . '/' . $column . '.html.twig';
+        } elseif ($entityClass !== null) {
+            // Entity-specific: {entityClass}/{column}.html.twig
+            $templates[] = '@KachnitelAdmin/types/' . str_replace('\\', '/', $entityClass) . '/' . $column . '.html.twig';
+        }
+
+        // Type-specific: {columnType}/_preview.html.twig
+        $templates[] = '@KachnitelAdmin/types/' . str_replace('\\', '/', $columnType) . '/' . $templateName;
+
+        // Default fallback: _preview.html.twig
+        $templates[] = '@KachnitelAdmin/types/' . $templateName;
+
+        return $templates;
+    }
+
+    /**
      * Get property value using getter method.
      */
     private function getPropertyValue(object $entity, string $property): mixed

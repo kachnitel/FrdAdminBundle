@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface;
 
@@ -13,10 +14,14 @@ use Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface;
 class TestDataSourceProvider implements DataSourceProviderInterface
 {
     private CustomTemplateDataSource $customTemplateDataSource;
+    private TestEntityDataSource $testEntityDataSource;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+    ) {
         $this->customTemplateDataSource = new CustomTemplateDataSource();
+        $this->testEntityDataSource = new TestEntityDataSource();
+        $this->testEntityDataSource->setEntityManager($entityManager);
     }
 
     /**
@@ -25,10 +30,16 @@ class TestDataSourceProvider implements DataSourceProviderInterface
     public function getDataSources(): iterable
     {
         yield $this->customTemplateDataSource;
+        yield $this->testEntityDataSource;
     }
 
     public function getCustomTemplateDataSource(): CustomTemplateDataSource
     {
         return $this->customTemplateDataSource;
+    }
+
+    public function getTestEntityDataSource(): TestEntityDataSource
+    {
+        return $this->testEntityDataSource;
     }
 }

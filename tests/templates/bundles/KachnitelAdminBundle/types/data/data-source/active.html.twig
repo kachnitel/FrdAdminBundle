@@ -1,0 +1,19 @@
+{# Override marker - DO NOT REMOVE #}
+<!-- TEST_OVERRIDE:DATASOURCE_ACTIVE -->
+{#
+ # DataSource-specific active column override.
+ #
+ # This template demonstrates datasource-specific property overrides,
+ # placed in: types/data/{dataSourceId}/{column}.html.twig
+ #
+ # Variables:
+ # @var bool value - The boolean value to display
+ #}
+
+{% if value is same as(true) %}
+    <span class="badge bg-success datasource-active">Active</span>
+{% elseif value is same as(false) %}
+    <span class="badge bg-secondary datasource-active">Inactive</span>
+{% else %}
+    <span class="badge bg-warning datasource-active">Unknown</span>
+{% endif %}

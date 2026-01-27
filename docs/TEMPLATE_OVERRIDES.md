@@ -206,24 +206,29 @@ The `kachnitel_admin_theme` global variable contains the configured theme path.
 
 ### Property Rendering Hierarchy
 
-When rendering entity properties, the bundle uses a **three-level fallback system**:
+When rendering properties, the bundle uses a **three-level fallback system** with separate hierarchies for Doctrine entities and custom DataSources.
 
 ```
-1. Entity-Specific Property
-   └─ types/App/Entity/User/email.html.twig
-
-2. Type-Specific Template
-   └─ types/datetime/_preview.html.twig
-
-3. Default Fallback
-   └─ types/_preview.html.twig
+1. Source-Specific Property   ← Most specific
+2. Type-Specific Template     ← types/{type}/_preview.html.twig
+3. Default Fallback           ← types/_preview.html.twig
 ```
 
-**Example:** Rendering `User.email` (string type)
+The **source-specific path** differs based on configuration:
 
-1. Check: `types/App/Entity/User/email.html.twig` ← Most specific
-2. Check: `types/string/_preview.html.twig` ← Type-specific
-3. Use: `types/_preview.html.twig` ← Default fallback
+| Source | Configuration | Template Path |
+|--------|---------------|---------------|
+| Doctrine Entity | `#[Admin]` attribute on entity class | `types/{ClassName}/{property}.html.twig` |
+| Custom DataSource | `DataSourceInterface` implementation | `types/data/{dataSourceId}/{column}.html.twig` |
+
+**Example:** Rendering a `status` property (string type)
+
+| Source | 1st Check | 2nd Check | Fallback |
+|--------|-----------|-----------|----------|
+| `User` entity | `types/App/Entity/User/status.html.twig` | `types/string/_preview.html.twig` | `types/_preview.html.twig` |
+| `audit-log` datasource | `types/data/audit-log/status.html.twig` | `types/string/_preview.html.twig` | `types/_preview.html.twig` |
+
+**Note:** If a column has a custom `template` property set in its `ColumnMetadata`, that template takes highest priority and bypasses the hierarchy entirely.
 
 ## Override Locations
 
@@ -253,13 +258,20 @@ templates/bundles/KachnitelAdminBundle/
     ├── datetime_immutable/
     │   └── _preview.html.twig
     │
-    └── App/Entity/             # Entity-specific templates
-        ├── User/
-        │   ├── _preview.html.twig  # All User properties
-        │   ├── email.html.twig     # User.email specifically
-        │   └── avatar.html.twig    # User.avatar specifically
-        └── Product/
-            └── price.html.twig
+    ├── App/Entity/             # Entity-specific templates (Doctrine)
+    │   ├── User/
+    │   │   ├── _preview.html.twig  # All User properties
+    │   │   ├── email.html.twig     # User.email specifically
+    │   │   └── avatar.html.twig    # User.avatar specifically
+    │   └── Product/
+    │       └── price.html.twig
+    │
+    └── data/                   # DataSource-specific templates
+        ├── audit-log/          # Overrides for 'audit-log' datasource
+        │   ├── action.html.twig
+        │   └── changes.html.twig
+        └── my-datasource/      # Overrides for 'my-datasource'
+            └── status.html.twig
 ```
 
 ## Common Override Scenarios
@@ -311,8 +323,39 @@ Apply custom rendering to ALL properties of an entity:
 {% endif %}
 ```
 
+### 4. Override DataSource-Specific Property
+
+Custom DataSources use the `data/{dataSourceId}/` path instead of entity class:
+
+```twig
+{# templates/bundles/KachnitelAdminBundle/types/data/audit-log/changes.html.twig #}
+{#
+ # Custom rendering for the 'changes' column of the 'audit-log' datasource.
+ #
+ # Variables:
+ # @var array|object value - The changes data
+ # @var object entity - The row item
+ # @var string property - Column name ('changes')
+ #}
+{% if value is iterable and value|length > 0 %}
+    <ul class="list-unstyled mb-0">
+        {% for field, change in value %}
+            <li>
+                <strong>{{ field }}:</strong>
+                <del class="text-danger">{{ change.old ?? '(empty)' }}</del>
+                → <ins class="text-success">{{ change.new ?? '(empty)' }}</ins>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <span class="text-muted">No changes</span>
+{% endif %}
+```
+
+**Note:** Find your datasource ID using `bin/console debug:datasource` or by checking the `getIdentifier()` method of your `DataSourceInterface` implementation.
+
 <details>
-<summary><strong>4. Override the Entity List Page</strong></summary>
+<summary><strong>5. Override the Entity List Page</strong></summary>
 
 Customize the page that wraps the LiveComponent:
 
@@ -345,7 +388,7 @@ Customize the page that wraps the LiveComponent:
 </details>
 
 <details>
-<summary><strong>5. Override the LiveComponent Itself (Advanced)</strong></summary>
+<summary><strong>6. Override the LiveComponent Itself (Advanced)</strong></summary>
 
 Override the entire entity list component:
 
@@ -377,7 +420,7 @@ Override the entire entity list component:
 </details>
 
 <details>
-<summary><strong>6. Override Collection Display</strong></summary>
+<summary><strong>7. Override Collection Display</strong></summary>
 
 Change how collections (OneToMany, ManyToMany) are rendered:
 
@@ -403,7 +446,7 @@ Change how collections (OneToMany, ManyToMany) are rendered:
 </details>
 
 <details>
-<summary><strong>7. Override Boolean Display</strong></summary>
+<summary><strong>8. Override Boolean Display</strong></summary>
 
 Custom boolean rendering with icons:
 

@@ -83,11 +83,45 @@
                 {% for column in this.columns %}
                     <th>
                         {% if this.filterMetadata[column] is defined %}
-                            <twig:K:Admin:ColumnFilter
-                                column="{{ column }}"
-                                value="{{ this.columnFilters[column] ?? '' }}"
-                                :filterMetadata="this.filterMetadata[column]"
-                            />
+                            {% set meta = this.filterMetadata[column] %}
+                            {% set filterType = meta.type|default('text') %}
+                            {# Inline filter input that directly binds to parent columnFilters #}
+                            {% if filterType == 'enum' and meta.enumClass is defined %}
+                                <select
+                                    class="{{ css.form_input_sm() }}"
+                                    data-model="columnFilters[{{ column }}]"
+                                >
+                                    {% if meta.showAllOption|default(true) %}
+                                        <option value="">All</option>
+                                    {% endif %}
+                                    {% for case in enum(meta.enumClass).cases() %}
+                                        <option value="{{ case.value }}" {{ (this.columnFilters[column]|default('')) == case.value ? 'selected' : '' }}>
+                                            {{ case.displayValue is defined ? case.displayValue() : case.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            {% elseif filterType == 'boolean' %}
+                                <select
+                                    class="{{ css.form_input_sm() }}"
+                                    data-model="columnFilters[{{ column }}]"
+                                >
+                                    <option value="">All</option>
+                                    <option value="1" {{ (this.columnFilters[column]|default('')) == '1' ? 'selected' : '' }}>Yes</option>
+                                    <option value="0" {{ (this.columnFilters[column]|default('')) == '0' ? 'selected' : '' }}>No</option>
+                                </select>
+                            {% else %}
+                                {# text, number, relation - all use text input with debounce #}
+                                <input
+                                    type="text"
+                                    class="{{ css.form_input_sm() }}"
+                                    placeholder="{{ meta.placeholder|default('Filter ' ~ column|humanize ~ '...') }}"
+                                    data-model="debounce(300)|columnFilters[{{ column }}]"
+                                    value="{{ this.columnFilters[column]|default('') }}"
+                                    {% if filterType == 'relation' and meta.searchFields is defined %}
+                                        title="Searches: {{ meta.searchFields|join(', ') }}"
+                                    {% endif %}
+                                >
+                            {% endif %}
                         {% endif %}
                     </th>
                 {% endfor %}
@@ -114,39 +148,31 @@
                     {% for column in this.columns %}
                         <td>
                             {% set value = this.getEntityValue(entity, column) %}
-                            {% if not isDoctrineEntity %}
-                                {# Custom DataSource: use column metadata for type #}
-                                {% set columnMeta = dataSource.columns[column] ?? null %}
+                            {% set columnMeta = dataSource.columns[column] ?? null %}
+                            {% if columnMeta and columnMeta.template %}
+                                {# Custom template specified in column metadata - highest priority #}
+                                {{ include(columnMeta.template, {
+                                    entity: entity,
+                                    item: entity,
+                                    value: value,
+                                    property: column,
+                                    cell: true
+                                }) }}
+                            {% elseif not isDoctrineEntity %}
+                                {# Custom DataSource: use datasource-specific template hierarchy #}
                                 {% set columnType = columnMeta ? columnMeta.type : 'string' %}
-                                {% if columnMeta and columnMeta.template %}
-                                    {# Custom template specified in column metadata #}
-                                    {{ include(columnMeta.template, {
-                                        entity: entity,
-                                        item: entity,
-                                        value: value,
-                                        property: column,
-                                        cell: true
-                                    }) }}
-                                {% else %}
-                                    {% set templateName = columnType == 'collection' ? '_collection.html.twig' : '_preview.html.twig' %}
-                                    {{ include([
-                                        '@KachnitelAdmin/types/' ~ columnType ~ '/' ~ templateName,
-                                        '@KachnitelAdmin/types/' ~ templateName
-                                    ], {
-                                        entity: entity,
-                                        value: value,
-                                        property: column,
-                                        cell: true
-                                    }, ignore_missing = true) }}
-                                {% endif %}
+                                {% set isCollection = columnType == 'collection' %}
+                                {{ include(admin_column_templates(this.dataSourceId, null, column, columnType, isCollection), {
+                                    entity: entity,
+                                    value: value,
+                                    property: column,
+                                    cell: true
+                                }, ignore_missing = true) }}
                             {% else %}
-                                {# Doctrine entity: use entity-based type detection for backwards compatibility #}
-                                {% set templateName = admin_is_collection(entity, column) ? '_collection.html.twig' : '_preview.html.twig' %}
-                                {{ include([
-                                    '@KachnitelAdmin/types/' ~ this.entityClass|replace({'\\': '/'}) ~ '/' ~ column ~ '.html.twig',
-                                    '@KachnitelAdmin/types/' ~ admin_get_property_type(entity, column)|replace({'\\': '/'}) ~ '/' ~ templateName,
-                                    '@KachnitelAdmin/types/' ~ templateName
-                                ], {
+                                {# Doctrine entity: use entity-specific template hierarchy #}
+                                {% set isCollection = admin_is_collection(entity, column) %}
+                                {% set propertyType = admin_get_property_type(entity, column) %}
+                                {{ include(admin_column_templates(null, this.entityClass, column, propertyType, isCollection), {
                                     entity: entity,
                                     value: value,
                                     property: column,
