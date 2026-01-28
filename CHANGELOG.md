@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.4.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.3.1...v0.4.0) (2026-01-28)
+
+### Features
+
+* Add 'multiple' option to Enum column filter; add admin:debug:filters console command ([88efa2](https://github.com/kachnitel/FrdAdminBundle/commit/88efa2dc914d82f760ad49e3de5da33d655157df))
+* Allow filtering by collection relationships (disabled by default) ([16c8cf](https://github.com/kachnitel/FrdAdminBundle/commit/16c8cf6babcd08d1c206226fadaa037fb65bec57))
+* Auto-detect relation search fields based on display priority ([fa0631](https://github.com/kachnitel/FrdAdminBundle/commit/fa0631485b0b9c4269d45ad1a0b428bf1d21dfc4))
+* Implement 'filterableColumns' attribute option ([dc6211](https://github.com/kachnitel/FrdAdminBundle/commit/dc6211ce174a171d111514053c468a892aaa9536))
+* Test and document template overrides for dataSource ([f43536](https://github.com/kachnitel/FrdAdminBundle/commit/f4353671f06151c804f4667348635a7eb916b649)) *[*[*@see*](https://github.com/see)*]*
+* Use component to render multi-select filter ([e005a7](https://github.com/kachnitel/FrdAdminBundle/commit/e005a706d1675ec7be51e070ed7f35e76df0702d))
+
+
+---
+
 ## [0.3.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.3.0...v0.3.1) (2026-01-26)
 
 ### Features
