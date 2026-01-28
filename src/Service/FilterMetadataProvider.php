@@ -26,6 +26,12 @@ class FilterMetadataProvider
         'Customer' => ['name', 'email', 'phone', 'companyName'],
     ];
 
+    /**
+     * Fields to check for display value, in priority order.
+     * This matches the logic in _preview.html.twig for relation values.
+     */
+    private const DISPLAY_FIELD_PRIORITY = ['name', 'label', 'title'];
+
     public function __construct(
         private EntityManagerInterface $em
     ) {}
@@ -215,14 +221,14 @@ class FilterMetadataProvider
             $targetClass = $metadata->getAssociationTargetClass($propertyName);
             $config['targetEntity'] = (new \ReflectionClass($targetClass))->getShortName();
             $config['targetClass'] = $targetClass;
+            $targetMetadata = $this->em->getClassMetadata($targetClass);
 
-            // Get searchFields from attribute or use defaults
+            // Get searchFields from attribute or auto-detect
             $searchFields = !empty($instance->searchFields)
                 ? $instance->searchFields
-                : ['name', 'id'];
+                : $this->getAutoDetectedSearchFields($targetMetadata);
 
             // Validate that searchFields actually exist in the target entity
-            $targetMetadata = $this->em->getClassMetadata($targetClass);
             $validSearchFields = [];
             foreach ($searchFields as $field) {
                 // Only include fields that exist as actual database fields in the target entity
@@ -231,9 +237,9 @@ class FilterMetadataProvider
                 }
             }
 
-            // If no valid search fields remain, fall back to 'id'
+            // If no valid search fields remain, fall back to auto-detected fields
             if (empty($validSearchFields)) {
-                $validSearchFields = ['id'];
+                $validSearchFields = $this->getAutoDetectedSearchFields($targetMetadata);
             }
 
             $config['searchFields'] = $validSearchFields;
@@ -303,14 +309,19 @@ class FilterMetadataProvider
     ): array {
         $targetClass = $metadata->getAssociationTargetClass($associationName);
         $targetEntity = (new ReflectionClass($targetClass))->getShortName();
+        $targetMetadata = $this->em->getClassMetadata($targetClass);
 
         // Get searchable fields from attribute or defaults
         $searchFields = !empty($columnFilter?->newInstance()->searchFields)
             ? $columnFilter->newInstance()->searchFields
-            : (self::DEFAULT_SEARCH_FIELDS[$targetEntity] ?? ['name', 'id']);
+            : (self::DEFAULT_SEARCH_FIELDS[$targetEntity] ?? null);
+
+        // If no explicit or default fields, auto-detect based on display field priority
+        if ($searchFields === null) {
+            $searchFields = $this->getAutoDetectedSearchFields($targetMetadata);
+        }
 
         // Validate that searchFields actually exist in the target entity
-        $targetMetadata = $this->em->getClassMetadata($targetClass);
         $validSearchFields = [];
         foreach ($searchFields as $field) {
             // Only include fields that exist as actual database fields in the target entity
@@ -319,9 +330,9 @@ class FilterMetadataProvider
             }
         }
 
-        // If no valid search fields remain, fall back to 'id'
+        // If no valid search fields remain, fall back to display field priority then 'id'
         if (empty($validSearchFields)) {
-            $validSearchFields = ['id'];
+            $validSearchFields = $this->getAutoDetectedSearchFields($targetMetadata);
         }
 
         return [
@@ -331,6 +342,26 @@ class FilterMetadataProvider
             'searchFields' => $validSearchFields,
             'operator' => 'LIKE',
         ];
+    }
+
+    /**
+     * Auto-detect searchable fields based on display field priority.
+     * Matches the display logic in _preview.html.twig (name → label → title → id).
+     *
+     * @param ClassMetadata<object> $targetMetadata
+     * @return list<string>
+     */
+    private function getAutoDetectedSearchFields(ClassMetadata $targetMetadata): array
+    {
+        // Check for display fields in priority order (same as _preview.html.twig)
+        foreach (self::DISPLAY_FIELD_PRIORITY as $field) {
+            if ($targetMetadata->hasField($field)) {
+                return [$field];
+            }
+        }
+
+        // No display field found, fall back to 'id'
+        return ['id'];
     }
 
     /**

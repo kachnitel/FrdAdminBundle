@@ -61,7 +61,7 @@ class EntityList
      *
      * @var array<string, mixed>
      */
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'onColumnFiltersUpdated')]
     public array $columnFilters = [];
 
     #[LiveProp(writable: true, url: true)]
@@ -304,15 +304,21 @@ class EntityList
     }
 
     /**
-     * Listener for the child component's event.
-     * Updates the specific filter key and triggers a re-render.
+     * Handles ColumnFilter emitUp event (for custom template overrides using the component).
      */
     #[LiveListener('filter:updated')]
     public function onFilterUpdated(#[LiveArg] string $column, #[LiveArg] mixed $value): void
     {
         $this->columnFilters[$column] = $value;
+        $this->page = 1;
+        unset($this->cache['queryResult']);
+    }
 
-        // Reset to first page when filters change
+    /**
+     * Called when columnFilters LiveProp is updated via data-model binding.
+     */
+    public function onColumnFiltersUpdated(): void
+    {
         $this->page = 1;
         unset($this->cache['queryResult']);
     }

@@ -6,8 +6,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\LabelEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\TitleEntity;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -329,6 +331,92 @@ class FilterMetadataProviderTest extends TestCase
         // Should fall back to 'id' when no valid searchFields exist
         $searchFields = $filters['customer']['searchFields'];
         $this->assertContains('id', $searchFields);
+        $this->assertCount(1, $searchFields);
+    }
+
+    public function testRelationFilterAutoDetectsSearchFieldsByDisplayPriority(): void
+    {
+        // For entities not in DEFAULT_SEARCH_FIELDS, should auto-detect
+        // based on display field priority: name → label → title → id
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $mainEntityMetadata = $this->createMock(ClassMetadata::class);
+        $labelEntityMetadata = $this->createMock(ClassMetadata::class);
+
+        // Use LabelEntity which is not in DEFAULT_SEARCH_FIELDS
+        $em->method('getClassMetadata')->willReturnCallback(
+            function ($class) use ($mainEntityMetadata, $labelEntityMetadata) {
+                if ($class === TestEntity::class) {
+                    return $mainEntityMetadata;
+                }
+                if ($class === LabelEntity::class) {
+                    return $labelEntityMetadata;
+                }
+                throw new \InvalidArgumentException("Unexpected class: " . $class);
+            }
+        );
+
+        $mainEntityMetadata->method('getFieldNames')->willReturn([]);
+        $mainEntityMetadata->method('getAssociationNames')->willReturn(['relatedEntity']);
+        $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $mainEntityMetadata->method('hasAssociation')->willReturnCallback(
+            fn ($name) => $name === 'relatedEntity'
+        );
+        $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(LabelEntity::class);
+
+        // LabelEntity has 'label' field but not 'name'
+        $labelEntityMetadata->method('hasField')->willReturnCallback(
+            fn ($field) => in_array($field, ['id', 'label', 'code'])
+        );
+
+        $provider = new FilterMetadataProvider($em);
+        $filters = $provider->getFilters(TestEntity::class);
+
+        // Should auto-detect 'label' since 'name' doesn't exist
+        $this->assertArrayHasKey('relatedEntity', $filters);
+        $searchFields = $filters['relatedEntity']['searchFields'];
+        $this->assertContains('label', $searchFields);
+        $this->assertCount(1, $searchFields);
+    }
+
+    public function testRelationFilterAutoDetectsTitleWhenNoNameOrLabel(): void
+    {
+        $em = $this->createMock(EntityManagerInterface::class);
+        $mainEntityMetadata = $this->createMock(ClassMetadata::class);
+        $titleEntityMetadata = $this->createMock(ClassMetadata::class);
+
+        $em->method('getClassMetadata')->willReturnCallback(
+            function ($class) use ($mainEntityMetadata, $titleEntityMetadata) {
+                if ($class === TestEntity::class) {
+                    return $mainEntityMetadata;
+                }
+                if ($class === TitleEntity::class) {
+                    return $titleEntityMetadata;
+                }
+                throw new \InvalidArgumentException("Unexpected class: " . $class);
+            }
+        );
+
+        $mainEntityMetadata->method('getFieldNames')->willReturn([]);
+        $mainEntityMetadata->method('getAssociationNames')->willReturn(['relatedEntity']);
+        $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $mainEntityMetadata->method('hasAssociation')->willReturnCallback(
+            fn ($name) => $name === 'relatedEntity'
+        );
+        $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(TitleEntity::class);
+
+        // TitleEntity only has 'title' field, no 'name' or 'label'
+        $titleEntityMetadata->method('hasField')->willReturnCallback(
+            fn ($field) => in_array($field, ['id', 'title', 'description'])
+        );
+
+        $provider = new FilterMetadataProvider($em);
+        $filters = $provider->getFilters(TestEntity::class);
+
+        // Should auto-detect 'title' since 'name' and 'label' don't exist
+        $this->assertArrayHasKey('relatedEntity', $filters);
+        $searchFields = $filters['relatedEntity']['searchFields'];
+        $this->assertContains('title', $searchFields);
         $this->assertCount(1, $searchFields);
     }
 }
