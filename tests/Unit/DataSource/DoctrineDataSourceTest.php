@@ -310,6 +310,29 @@ class DoctrineDataSourceTest extends TestCase
         $this->assertCount(0, $filters);
     }
 
+    public function testGetFiltersPassesMultipleOptionToEnumOptions(): void
+    {
+        $this->filterMetadataProvider->method('getFilters')
+            ->willReturn([
+                'status' => [
+                    'type' => 'enum',
+                    'enumClass' => 'App\\Enum\\Status',
+                    'operator' => 'IN',
+                    'multiple' => true,
+                ],
+            ]);
+
+        $dataSource = $this->createDataSource();
+        $filters = $dataSource->getFilters();
+
+        $this->assertArrayHasKey('status', $filters);
+        $this->assertTrue($filters['status']->isMultiple());
+
+        $array = $filters['status']->toArray();
+        $this->assertArrayHasKey('multiple', $array);
+        $this->assertTrue($array['multiple']);
+    }
+
     public function testGetDefaultSortByReturnsAdminAttributeValue(): void
     {
         $admin = new Admin(sortBy: 'name');

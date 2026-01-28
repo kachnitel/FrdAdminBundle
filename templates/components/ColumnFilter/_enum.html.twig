@@ -1,9 +1,11 @@
 {% import kachnitel_admin_theme as css %}
 {% if filterMetadata.multiple|default(false) %}
-    {% include '@KachnitelAdmin/components/ColumnFilter/_enum_multiple.html.twig' with {
-        filterMetadata: filterMetadata,
-        selectedValues: selectedValues|default([])
-    } only %}
+    <twig:K:Admin:EnumMultiFilter
+        :column="column"
+        :value="value"
+        :enumClass="filterMetadata.enumClass"
+        label="{{ filterMetadata.label|default(column|title) }}"
+    />
 {% else %}
     <select
         class="{{ css.form_input_sm() }}"

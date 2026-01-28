@@ -98,11 +98,19 @@ class DoctrineDataSource implements DataSourceInterface
             }
 
             $enumOptions = null;
-            if (isset($config['options']) || isset($config['enumClass']) || isset($config['showAllOption'])) {
+            $keysToCheck = [
+                'options',
+                'enumClass',
+                'showAllOption',
+                'multiple'
+            ];
+
+            if (array_any($keysToCheck, fn($key) => isset($config[$key]))) {
                 $enumOptions = new FilterEnumOptions(
                     values: $config['options'] ?? null,
                     enumClass: $config['enumClass'] ?? null,
                     showAllOption: $config['showAllOption'] ?? true,
+                    multiple: $config['multiple'] ?? false,
                 );
             }
 

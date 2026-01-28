@@ -1,0 +1,62 @@
+{% import kachnitel_admin_theme as css %}
+{% set popoverId = 'enum-multi-popover-' ~ column ~ '-' ~ random() %}
+{% set cases = enum(enumClass).cases() %}
+
+<div {{ attributes }}>
+    <button
+        type="button"
+        popovertarget="{{ popoverId }}"
+        class="{{ css.btn_outline_secondary() }} {{ css.btn_sm() }}"
+    >
+        {% if selectedValues|length > 0 %}
+            {% if selectedValues|length == 1 %}
+                {% for case in cases|filter(c => c.value == selectedValues[0]) %}
+                    {{ case.displayValue is defined ? case.displayValue() : case.name }}
+                {% endfor %}
+            {% elseif selectedValues|length == cases|length %}
+                All ({{ selectedValues|length }})
+            {% else %}
+                {{ selectedValues|length }} selected
+            {% endif %}
+        {% else %}
+            All
+        {% endif %}
+    </button>
+
+    <div popover id="{{ popoverId }}" style="position-area: top; margin: 1em;">
+        <div class="{{ css.flex_between() }} {{ css.mb_1() }}">
+            <strong>{{ label|default(column|title) }}</strong>
+            <div class="{{ css.flex_center() }} {{ css.gap_sm() }}">
+                {% if selectedValues|length > 0 %}
+                    <button
+                        type="button"
+                        class="{{ css.btn_link() }} {{ css.btn_sm() }}"
+                        data-action="live#action"
+                        data-live-action-param="clear"
+                    >
+                        Clear
+                    </button>
+                {% endif %}
+                <button type="button" class="{{ css.btn_close() }}" aria-label="Close" popovertarget="{{ popoverId }}"></button>
+            </div>
+        </div>
+
+        <div style="max-height: 300px; overflow-y: auto;">
+            {% for case in cases %}
+                <div class="form-check">
+                    <input
+                        type="checkbox"
+                        class="{{ css.form_checkbox() }}"
+                        id="{{ popoverId }}-{{ case.value }}"
+                        value="{{ case.value }}"
+                        data-model="selectedValues"
+                        {{ case.value in selectedValues ? 'checked' : '' }}
+                    >
+                    <label class="form-check-label" for="{{ popoverId }}-{{ case.value }}">
+                        {{ case.displayValue is defined ? case.displayValue() : case.name }}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

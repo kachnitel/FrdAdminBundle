@@ -7,7 +7,6 @@
     {% include '@KachnitelAdmin/components/ColumnFilter/_' ~ filterType ~ '.html.twig' with {
         column: column,
         value: this.value,
-        filterMetadata: filterMetadata,
-        selectedValues: this.selectedValues
+        filterMetadata: filterMetadata
     } only %}
 </div>
