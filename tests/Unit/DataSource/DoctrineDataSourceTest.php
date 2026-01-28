@@ -255,6 +255,61 @@ class DoctrineDataSourceTest extends TestCase
         $dataSource->getFilters();
     }
 
+    public function testGetFiltersReturnsAllFiltersWhenFilterableColumnsIsNull(): void
+    {
+        $this->filterMetadataProvider->method('getFilters')
+            ->willReturn([
+                'name' => ['type' => 'text', 'operator' => 'LIKE'],
+                'status' => ['type' => 'enum', 'operator' => '='],
+                'createdAt' => ['type' => 'date', 'operator' => '>='],
+            ]);
+
+        $admin = new Admin(filterableColumns: null);
+        $dataSource = $this->createDataSource($admin);
+        $filters = $dataSource->getFilters();
+
+        $this->assertCount(3, $filters);
+        $this->assertArrayHasKey('name', $filters);
+        $this->assertArrayHasKey('status', $filters);
+        $this->assertArrayHasKey('createdAt', $filters);
+    }
+
+    public function testGetFiltersReturnsOnlySpecifiedFilterableColumns(): void
+    {
+        $this->filterMetadataProvider->method('getFilters')
+            ->willReturn([
+                'name' => ['type' => 'text', 'operator' => 'LIKE'],
+                'status' => ['type' => 'enum', 'operator' => '='],
+                'createdAt' => ['type' => 'date', 'operator' => '>='],
+                'price' => ['type' => 'text', 'operator' => '='],
+            ]);
+
+        $admin = new Admin(filterableColumns: ['name', 'status']);
+        $dataSource = $this->createDataSource($admin);
+        $filters = $dataSource->getFilters();
+
+        $this->assertCount(2, $filters);
+        $this->assertArrayHasKey('name', $filters);
+        $this->assertArrayHasKey('status', $filters);
+        $this->assertArrayNotHasKey('createdAt', $filters);
+        $this->assertArrayNotHasKey('price', $filters);
+    }
+
+    public function testGetFiltersWithEmptyFilterableColumnsReturnsNoFilters(): void
+    {
+        $this->filterMetadataProvider->method('getFilters')
+            ->willReturn([
+                'name' => ['type' => 'text', 'operator' => 'LIKE'],
+                'status' => ['type' => 'enum', 'operator' => '='],
+            ]);
+
+        $admin = new Admin(filterableColumns: []);
+        $dataSource = $this->createDataSource($admin);
+        $filters = $dataSource->getFilters();
+
+        $this->assertCount(0, $filters);
+    }
+
     public function testGetDefaultSortByReturnsAdminAttributeValue(): void
     {
         $admin = new Admin(sortBy: 'name');

@@ -224,10 +224,10 @@ Columns to exclude from display (useful with auto-detection).
 - If `columns` is set, `excludeColumns` is applied to that list
 - If `columns` is `null`, `excludeColumns` removes from auto-detected columns
 
-#### filterableColumns (TODO:)
+#### filterableColumns
 **Type:** `?array<string>` **Default:** `null` (all visible columns)
 
-Specify which columns can be filtered. If `null`, all visible columns are filterable.
+Specify which columns can be filtered. If `null`, all visible columns are filterable if supported.
 
 ```php
 #[Admin(

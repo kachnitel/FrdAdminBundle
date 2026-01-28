@@ -88,7 +88,15 @@ class DoctrineDataSource implements DataSourceInterface
         $legacyFilters = $this->filterMetadataProvider->getFilters($this->entityClass);
         $this->filtersCache = [];
 
+        // If filterableColumns is set, only include those filters
+        $filterableColumns = $this->adminAttribute->getFilterableColumns();
+
         foreach ($legacyFilters as $name => $config) {
+            // Skip filters not in filterableColumns whitelist (when configured)
+            if ($filterableColumns !== null && !in_array($name, $filterableColumns, true)) {
+                continue;
+            }
+
             $enumOptions = null;
             if (isset($config['options']) || isset($config['enumClass']) || isset($config['showAllOption'])) {
                 $enumOptions = new FilterEnumOptions(
