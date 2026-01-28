@@ -30,6 +30,10 @@ use Attribute;
  * #[ColumnFilter(type: 'relation', searchFields: ['name', 'email', 'phone'])]
  * private User $createdBy;
  *
+ * @example Collection (ManyToMany/OneToMany) with searchable fields:
+ * #[ColumnFilter(searchFields: ['name', 'display'])]
+ * private Collection $tags;
+ *
  * @example Disable filtering:
  * #[ColumnFilter(enabled: false)]
  * private string $internalId;
@@ -44,6 +48,7 @@ class ColumnFilter
     public const TYPE_ENUM = 'enum';
     public const TYPE_BOOLEAN = 'boolean';
     public const TYPE_RELATION = 'relation';
+    public const TYPE_COLLECTION = 'collection';
 
     public function __construct(
         /**
@@ -101,5 +106,11 @@ class ColumnFilter
          * Position/order in filter display (lower numbers appear first).
          */
         public ?int $priority = null,
+
+        /**
+         * For collection filters: whether to exclude from global search.
+         * Default is true for performance - collection searches can be expensive.
+         */
+        public bool $excludeFromGlobalSearch = true,
     ) {}
 }

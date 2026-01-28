@@ -476,4 +476,128 @@ class EntityListQueryServiceTest extends TestCase
         );
         $this->assertInstanceOf(QueryBuilder::class, $result);
     }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithCollectionFilter(): void
+    {
+        $filters = ['tags' => 'important'];
+        $filterMetadata = [
+            'tags' => [
+                'type' => 'collection',
+                'searchFields' => ['name'],
+                'targetClass' => 'App\\Entity\\Tag',
+            ],
+        ];
+        $result = $this->service->buildQuery(
+            'App\\Entity\\Order',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+        $this->assertInstanceOf(QueryBuilder::class, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithCollectionFilterMultipleSearchFields(): void
+    {
+        $filters = ['attributes' => 'searchterm'];
+        $filterMetadata = [
+            'attributes' => [
+                'type' => 'collection',
+                'searchFields' => ['display', 'attr'],
+                'targetClass' => 'App\\Entity\\Attribute',
+            ],
+        ];
+        $result = $this->service->buildQuery(
+            'App\\Entity\\Order',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+        $this->assertInstanceOf(QueryBuilder::class, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithCollectionFilterEmptySearchFieldsSkipsFilter(): void
+    {
+        $filters = ['tags' => 'searchterm'];
+        $filterMetadata = [
+            'tags' => [
+                'type' => 'collection',
+                'searchFields' => [],
+                'targetClass' => 'App\\Entity\\Tag',
+            ],
+        ];
+        // Should not throw, just skip the filter
+        $result = $this->service->buildQuery(
+            'App\\Entity\\Order',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+        $this->assertInstanceOf(QueryBuilder::class, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithCollectionFilterGeneratesExistsWithMemberOf(): void
+    {
+        // Need real QueryBuilder to verify DQL generation
+        $em = $this->createMock(EntityManagerInterface::class);
+        $repository = $this->createMock(EntityRepository::class);
+
+        // Create a real QueryBuilder that we can inspect
+        $realQb = new \Doctrine\ORM\QueryBuilder($em);
+        $realQb->select('e')->from('App\\Entity\\Order', 'e');
+
+        $em->method('getRepository')->willReturn($repository);
+        $repository->method('createQueryBuilder')->willReturn($realQb);
+
+        $service = new EntityListQueryService($em);
+
+        $filters = ['attributes' => 'searchterm'];
+        $filterMetadata = [
+            'attributes' => [
+                'type' => 'collection',
+                'searchFields' => ['display', 'attr'],
+                'targetClass' => 'App\\Entity\\Attribute',
+            ],
+        ];
+
+        $result = $service->buildQuery(
+            'App\\Entity\\Order',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+
+        $dql = $result->getDQL();
+
+        // Verify EXISTS clause with MEMBER OF syntax
+        $this->assertStringContainsString('EXISTS', $dql);
+        $this->assertStringContainsString('MEMBER OF', $dql);
+        $this->assertStringContainsString('App\\Entity\\Attribute', $dql);
+        $this->assertStringContainsString('e.attributes', $dql);
+        $this->assertStringContainsString('sub_attributes.display LIKE', $dql);
+        $this->assertStringContainsString('sub_attributes.attr LIKE', $dql);
+    }
 }

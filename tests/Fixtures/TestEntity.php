@@ -74,7 +74,15 @@ class TestEntity
      * @var Collection<int, TagEntity>
      */
     #[ORM\OneToMany(targetEntity: TagEntity::class, mappedBy: 'testEntity')]
+    #[ColumnFilter(searchFields: ['name'], label: 'Tags')]
     private Collection $tags;
+
+    /**
+     * Collection WITHOUT ColumnFilter - used for testing that collections are opt-in.
+     * @var Collection<int, TagEntity>
+     */
+    #[ORM\ManyToMany(targetEntity: TagEntity::class)]
+    private Collection $items;
 
     #[ORM\Column(type: 'string')]
     #[ColumnFilter(enabled: false)]
@@ -84,6 +92,7 @@ class TestEntity
     {
         $this->createdAt = new \DateTime();
         $this->tags = new ArrayCollection();
+        $this->items = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -198,5 +207,13 @@ class TestEntity
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, TagEntity>
+     */
+    public function getItems(): Collection
+    {
+        return $this->items;
     }
 }

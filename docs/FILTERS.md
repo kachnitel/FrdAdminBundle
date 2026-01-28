@@ -29,6 +29,7 @@ The bundle automatically creates appropriate filters based on property types:
 | PHP enum (multi) | Multi-select | IN | Tags, categories |
 | boolean | Yes/No/All | = | Active, published |
 | ManyToOne, OneToOne | Text search | LIKE | User, category |
+| ManyToMany, OneToMany | Text search (EXISTS) | LIKE | Tags, attributes |
 
 ### Date Filters
 
@@ -71,6 +72,49 @@ FilterMetadata::enumClass(
 
 When `multiple: true`, the "All" option is hidden as selecting no values achieves the same effect.
 
+### Collection Filters (ManyToMany / OneToMany)
+
+Collection associations can be filtered by adding the `#[ColumnFilter]` attribute. Unlike single-valued relations, collection filters are **opt-in only** - you must explicitly add the attribute to enable filtering.
+
+```php
+// Minimal - auto-detects TYPE_COLLECTION, auto-detects searchFields
+#[ORM\ManyToMany(targetEntity: Tag::class)]
+#[ColumnFilter]
+private Collection $tags;
+
+// With explicit search fields
+#[ORM\ManyToMany(targetEntity: OrderAttribute::class)]
+#[ColumnFilter(searchFields: ['display', 'attr'])]
+private Collection $attributes;
+
+// Include in global search (not recommended for large collections)
+#[ORM\ManyToMany(targetEntity: Tag::class)]
+#[ColumnFilter(excludeFromGlobalSearch: false)]
+private Collection $tags;
+```
+
+Collection filters use an **EXISTS subquery** for optimal performance:
+- No row multiplication (pagination works correctly)
+- Efficient index usage on join tables
+- Returns entities that have **at least one** matching related item
+
+**Performance Considerations:**
+- Recommended for small-to-medium collections (up to ~1000 items per entity)
+- By default, collection filters are excluded from global search (`excludeFromGlobalSearch: true`)
+- Add database indexes on `searchFields` columns for better performance
+
+**Programmatic configuration:**
+
+```php
+use Kachnitel\AdminBundle\DataSource\FilterMetadata;
+
+FilterMetadata::collection(
+    name: 'tags',
+    searchFields: ['name'],
+    excludeFromGlobalSearch: true,  // default
+);
+```
+
 ## Custom Configuration
 
 Use the `#[ColumnFilter]` attribute to customize filters:
@@ -101,15 +145,16 @@ class Product
 
 ```php
 #[ColumnFilter(
-    type: 'text',              // Override auto-detected type
-    enabled: true,             // Enable/disable
-    label: 'Custom Label',     // Override label
-    searchFields: ['field'],   // For relations
-    operator: 'LIKE',          // SQL operator
-    placeholder: 'Search...',  // Input placeholder
-    priority: 10,              // Display order
-    multiple: false,           // For enums: allow multi-select (uses IN operator)
-    showAllOption: true        // For enums: show "All" option
+    type: 'text',                    // Override auto-detected type
+    enabled: true,                   // Enable/disable
+    label: 'Custom Label',           // Override label
+    searchFields: ['field'],         // For relations/collections: fields to search
+    operator: 'LIKE',                // SQL operator
+    placeholder: 'Search...',        // Input placeholder
+    priority: 10,                    // Display order
+    multiple: false,                 // For enums: allow multi-select (uses IN operator)
+    showAllOption: true,             // For enums: show "All" option
+    excludeFromGlobalSearch: true    // For collections: exclude from global search (default: true)
 )]
 ```
 
@@ -184,7 +229,7 @@ Filter type templates are located in `templates/components/ColumnFilter/`:
 - `_daterange.html.twig` - Date range (from/to)
 - `_boolean.html.twig` - Yes/No/All dropdown
 - `_enum.html.twig` - Enum dropdown (routes to `_enum_multiple.html.twig` when `multiple: true`)
-- `_relation.html.twig` - Text search for related entities
+- `_relation.html.twig` - Text search for related entities (also used for collection filters)
 
 ## Template Customization
 

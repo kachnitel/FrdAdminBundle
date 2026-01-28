@@ -183,15 +183,61 @@ class FilterMetadataProviderTest extends TestCase
         $this->assertArrayNotHasKey('disabledFilter', $filters);
     }
 
-    public function testCollectionAssociationsAreSkipped(): void
+    public function testCollectionAssociationsAreSkippedWithoutColumnFilter(): void
     {
+        // Create a mock for an entity without ColumnFilter on its collection
         $this->metadata->method('getFieldNames')->willReturn([]);
         $this->metadata->method('getAssociationNames')->willReturn(['items']);
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(true);
 
         $filters = $this->provider->getFilters(TestEntity::class);
 
+        // 'items' should be skipped because it doesn't exist on TestEntity
+        // and the mock returns true for isCollectionValuedAssociation
         $this->assertArrayNotHasKey('items', $filters);
+    }
+
+    public function testCollectionAssociationWithColumnFilterIsIncluded(): void
+    {
+        // TestEntity has 'tags' collection with #[ColumnFilter]
+        $em = $this->createMock(EntityManagerInterface::class);
+        $mainEntityMetadata = $this->createMock(ClassMetadata::class);
+        $tagEntityMetadata = $this->createMock(ClassMetadata::class);
+
+        $em->method('getClassMetadata')->willReturnCallback(
+            function ($class) use ($mainEntityMetadata, $tagEntityMetadata) {
+                if ($class === TestEntity::class) {
+                    return $mainEntityMetadata;
+                }
+                if ($class === \Kachnitel\AdminBundle\Tests\Fixtures\TagEntity::class) {
+                    return $tagEntityMetadata;
+                }
+                throw new \InvalidArgumentException("Unexpected class: " . $class);
+            }
+        );
+
+        $mainEntityMetadata->method('getFieldNames')->willReturn([]);
+        $mainEntityMetadata->method('getAssociationNames')->willReturn(['tags']);
+        $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(true);
+        $mainEntityMetadata->method('hasAssociation')->willReturn(true);
+        $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(
+            \Kachnitel\AdminBundle\Tests\Fixtures\TagEntity::class
+        );
+
+        // TagEntity has 'name' field
+        $tagEntityMetadata->method('hasField')->willReturnCallback(
+            fn ($field) => in_array($field, ['id', 'name'])
+        );
+
+        $provider = new FilterMetadataProvider($em);
+        $filters = $provider->getFilters(TestEntity::class);
+
+        // 'tags' should be included because it has #[ColumnFilter]
+        $this->assertArrayHasKey('tags', $filters);
+        $this->assertEquals(ColumnFilter::TYPE_COLLECTION, $filters['tags']['type']);
+        $this->assertEquals(['name'], $filters['tags']['searchFields']);
+        $this->assertEquals('Tags', $filters['tags']['label']);
+        $this->assertTrue($filters['tags']['excludeFromGlobalSearch']);
     }
 
     public function testFiltersAreSortedByPriority(): void

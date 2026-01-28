@@ -60,12 +60,16 @@ class FilterMetadataProvider
 
         // Process associations
         foreach ($metadata->getAssociationNames() as $associationName) {
-            // Skip collection associations in filters (too complex)
+            $property = $reflection->getProperty($associationName);
+
+            // Collection associations require explicit ColumnFilter attribute
             if ($metadata->isCollectionValuedAssociation($associationName)) {
-                continue;
+                $attributes = $property->getAttributes(ColumnFilter::class);
+                if (empty($attributes)) {
+                    continue;
+                }
             }
 
-            $property = $reflection->getProperty($associationName);
             $filterConfig = $this->getFilterConfig($property, $metadata, $associationName);
 
             if ($filterConfig && $filterConfig['enabled']) {
@@ -106,11 +110,19 @@ class FilterMetadataProvider
 
         // Determine filter type
         if ($metadata->hasAssociation($propertyName)) {
-            $config = array_merge($config, $this->getRelationFilterConfig(
-                $metadata,
-                $propertyName,
-                $columnFilter
-            ));
+            if ($metadata->isCollectionValuedAssociation($propertyName)) {
+                $config = array_merge($config, $this->getCollectionFilterConfig(
+                    $metadata,
+                    $propertyName,
+                    $columnFilter
+                ));
+            } else {
+                $config = array_merge($config, $this->getRelationFilterConfig(
+                    $metadata,
+                    $propertyName,
+                    $columnFilter
+                ));
+            }
         } else {
             $config = array_merge($config, $this->getFieldFilterConfig(
                 $metadata,
@@ -184,6 +196,11 @@ class FilterMetadataProvider
             $config = $this->ensureRelationConfig($config, $instance, $metadata, $propertyName);
         }
 
+        // If manually set to collection, ensure collection metadata is set
+        if ($instance->type === ColumnFilter::TYPE_COLLECTION && !isset($config['targetEntity'])) {
+            $config = $this->ensureCollectionConfig($config, $instance, $metadata, $propertyName);
+        }
+
         return $config;
     }
 
@@ -243,6 +260,49 @@ class FilterMetadataProvider
             }
 
             $config['searchFields'] = $validSearchFields;
+        }
+        return $config;
+    }
+
+    /**
+     * Ensure collection configuration is set.
+     * @param array<string, mixed> $config
+     * @param ClassMetadata<object> $metadata
+     * @return array<string, mixed>
+     */
+    private function ensureCollectionConfig(
+        array $config,
+        ColumnFilter $instance,
+        ClassMetadata $metadata,
+        string $propertyName
+    ): array {
+        // Get collection metadata if this is actually an association
+        if ($metadata->hasAssociation($propertyName)) {
+            $targetClass = $metadata->getAssociationTargetClass($propertyName);
+            $config['targetEntity'] = (new \ReflectionClass($targetClass))->getShortName();
+            $config['targetClass'] = $targetClass;
+            $targetMetadata = $this->em->getClassMetadata($targetClass);
+
+            // Get searchFields from attribute or auto-detect
+            $searchFields = !empty($instance->searchFields)
+                ? $instance->searchFields
+                : $this->getAutoDetectedSearchFields($targetMetadata);
+
+            // Validate that searchFields actually exist in the target entity
+            $validSearchFields = [];
+            foreach ($searchFields as $field) {
+                if ($targetMetadata->hasField($field)) {
+                    $validSearchFields[] = $field;
+                }
+            }
+
+            // If no valid search fields remain, fall back to auto-detected fields
+            if (empty($validSearchFields)) {
+                $validSearchFields = $this->getAutoDetectedSearchFields($targetMetadata);
+            }
+
+            $config['searchFields'] = $validSearchFields;
+            $config['excludeFromGlobalSearch'] = $instance->excludeFromGlobalSearch;
         }
         return $config;
     }
@@ -343,6 +403,54 @@ class FilterMetadataProvider
             'targetEntity' => $targetEntity,
             'searchFields' => $validSearchFields,
             'operator' => 'LIKE',
+        ];
+    }
+
+    /**
+     * Get filter config for a collection association (ManyToMany/OneToMany).
+     * @param ClassMetadata<object> $metadata
+     * @param \ReflectionAttribute<ColumnFilter>|null $columnFilter
+     * @return array<string, mixed>
+     */
+    private function getCollectionFilterConfig(
+        ClassMetadata $metadata,
+        string $associationName,
+        ?\ReflectionAttribute $columnFilter
+    ): array {
+        $targetClass = $metadata->getAssociationTargetClass($associationName);
+        $targetEntity = (new ReflectionClass($targetClass))->getShortName();
+        $targetMetadata = $this->em->getClassMetadata($targetClass);
+
+        // Get searchable fields from attribute or defaults
+        $searchFields = !empty($columnFilter?->newInstance()->searchFields)
+            ? $columnFilter->newInstance()->searchFields
+            : (self::DEFAULT_SEARCH_FIELDS[$targetEntity] ?? null);
+
+        // If no explicit or default fields, auto-detect based on display field priority
+        if ($searchFields === null) {
+            $searchFields = $this->getAutoDetectedSearchFields($targetMetadata);
+        }
+
+        // Validate that searchFields actually exist in the target entity
+        $validSearchFields = [];
+        foreach ($searchFields as $field) {
+            if ($targetMetadata->hasField($field)) {
+                $validSearchFields[] = $field;
+            }
+        }
+
+        // If no valid search fields remain, fall back to display field priority then 'id'
+        if (empty($validSearchFields)) {
+            $validSearchFields = $this->getAutoDetectedSearchFields($targetMetadata);
+        }
+
+        return [
+            'type' => ColumnFilter::TYPE_COLLECTION,
+            'targetClass' => $targetClass,
+            'targetEntity' => $targetEntity,
+            'searchFields' => $validSearchFields,
+            'operator' => 'LIKE',
+            'excludeFromGlobalSearch' => $columnFilter?->newInstance()->excludeFromGlobalSearch ?? true,
         ];
     }
 

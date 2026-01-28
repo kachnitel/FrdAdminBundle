@@ -3,6 +3,10 @@
     {% if this.type == 'enum' and filterMetadata.enumClass is not defined %}
         {% set filterType = 'text' %}
     {% endif %}
+    {# Collection filters use the same text input as relation filters #}
+    {% if this.type == 'collection' %}
+        {% set filterType = 'relation' %}
+    {% endif %}
 
     {% include '@KachnitelAdmin/components/ColumnFilter/_' ~ filterType ~ '.html.twig' with {
         column: column,

@@ -20,6 +20,7 @@ class ColumnFilterTest extends TestCase
         $this->assertTrue($filter->showAllOption);
         $this->assertNull($filter->placeholder);
         $this->assertNull($filter->priority);
+        $this->assertTrue($filter->excludeFromGlobalSearch);
     }
 
     public function testTextFilterConfiguration(): void
@@ -144,5 +145,36 @@ class ColumnFilterTest extends TestCase
         $this->assertEquals(ColumnFilter::TYPE_ENUM, $filter->type);
         $this->assertTrue($filter->multiple);
         $this->assertFalse($filter->showAllOption);
+    }
+
+    public function testCollectionFilterConfiguration(): void
+    {
+        $filter = new ColumnFilter(
+            type: ColumnFilter::TYPE_COLLECTION,
+            searchFields: ['name', 'display'],
+            label: 'Tags'
+        );
+
+        $this->assertEquals(ColumnFilter::TYPE_COLLECTION, $filter->type);
+        $this->assertEquals(['name', 'display'], $filter->searchFields);
+        $this->assertEquals('Tags', $filter->label);
+        $this->assertTrue($filter->excludeFromGlobalSearch);
+    }
+
+    public function testCollectionFilterWithGlobalSearchEnabled(): void
+    {
+        $filter = new ColumnFilter(
+            type: ColumnFilter::TYPE_COLLECTION,
+            searchFields: ['name'],
+            excludeFromGlobalSearch: false
+        );
+
+        $this->assertEquals(ColumnFilter::TYPE_COLLECTION, $filter->type);
+        $this->assertFalse($filter->excludeFromGlobalSearch);
+    }
+
+    public function testTypeCollectionConstantExists(): void
+    {
+        $this->assertEquals('collection', ColumnFilter::TYPE_COLLECTION);
     }
 }

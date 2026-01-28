@@ -124,6 +124,8 @@ class DoctrineDataSource implements DataSourceInterface
                 searchFields: $config['searchFields'] ?? null,
                 priority: $config['priority'] ?? 999,
                 enabled: $config['enabled'] ?? true,
+                excludeFromGlobalSearch: $config['excludeFromGlobalSearch'] ?? false,
+                targetClass: $config['targetClass'] ?? null,
             );
         }
 

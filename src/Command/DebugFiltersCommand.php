@@ -399,11 +399,14 @@ class DebugFiltersCommand extends Command
                 }
             }
 
-            // Check for OneToMany/ManyToMany (collections, not filterable by default)
+            // Check for OneToMany/ManyToMany (collections, require explicit ColumnFilter)
             if ($metadata->hasAssociation($propertyName)) {
                 $assocType = $metadata->getAssociationMapping($propertyName)['type'] ?? 0;
                 if ($assocType === ClassMetadata::ONE_TO_MANY || $assocType === ClassMetadata::MANY_TO_MANY) {
-                    $reasons[] = 'Collection association (OneToMany/ManyToMany) - not filterable';
+                    // Only mark as skipped if no ColumnFilter attribute is present
+                    if (empty($attributes)) {
+                        $reasons[] = 'Collection association (OneToMany/ManyToMany) - add #[ColumnFilter] to enable';
+                    }
                 }
             }
 

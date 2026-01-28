@@ -180,6 +180,10 @@ class EntityListQueryService
             case ColumnFilter::TYPE_RELATION:
                 $this->applyRelationFilter($qb, $column, $value, $metadata);
                 break;
+
+            case ColumnFilter::TYPE_COLLECTION:
+                $this->applyCollectionFilter($qb, $column, $value, $metadata);
+                break;
         }
     }
 
@@ -356,6 +360,56 @@ class EntityListQueryService
         // Apply the overall OR condition to the query with a LIKE parameter
         $qb->andWhere($orX)
             ->setParameter($paramName, '%' . $value . '%');
+    }
+
+    /**
+     * Applies filtering logic for collection associations using EXISTS subquery.
+     *
+     * Uses EXISTS for performance: no row multiplication, works with pagination,
+     * and efficiently uses indexes on join tables.
+     *
+     * @param QueryBuilder $qb
+     * @param string $column
+     * @param mixed $value
+     * @param array<string, mixed> $metadata
+     */
+    private function applyCollectionFilter(QueryBuilder $qb, string $column, mixed $value, array $metadata): void
+    {
+        [, $paramName] = $this->getFilterContext($column, $metadata);
+
+        $searchFields = $metadata['searchFields'] ?? [];
+        if (empty($searchFields)) {
+            return; // Cannot filter without searchFields
+        }
+
+        $targetClass = $metadata['targetClass'] ?? null;
+        if ($targetClass === null) {
+            return; // Cannot filter without target class
+        }
+
+        // Create a unique alias for the subquery
+        $subAlias = 'sub_' . $column;
+
+        // Build OR condition for all search fields
+        $subqueryConditions = [];
+        foreach ($searchFields as $field) {
+            $subqueryConditions[] = sprintf('%s.%s LIKE :%s', $subAlias, $field, $paramName);
+        }
+
+        $subqueryWhere = implode(' OR ', $subqueryConditions);
+
+        // Add EXISTS clause with DQL subquery using MEMBER OF to correlate with the collection
+        // This is the correct Doctrine DQL syntax for collection subqueries
+        $qb->andWhere(sprintf(
+            'EXISTS (SELECT 1 FROM %s %s WHERE %s MEMBER OF e.%s AND (%s))',
+            $targetClass,
+            $subAlias,
+            $subAlias,
+            $column,
+            $subqueryWhere
+        ));
+
+        $qb->setParameter($paramName, '%' . $value . '%');
     }
 
     /**

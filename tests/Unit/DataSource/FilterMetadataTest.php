@@ -374,4 +374,83 @@ class FilterMetadataTest extends TestCase
         // multiple should not be included when false (default)
         $this->assertArrayNotHasKey('multiple', $array);
     }
+
+    public function testCollectionFactory(): void
+    {
+        $filter = FilterMetadata::collection(
+            name: 'tags',
+            searchFields: ['name', 'display'],
+            label: 'Tags',
+            excludeFromGlobalSearch: true,
+            priority: 15
+        );
+
+        $this->assertSame('tags', $filter->name);
+        $this->assertSame(ColumnFilter::TYPE_COLLECTION, $filter->type);
+        $this->assertSame('Tags', $filter->label);
+        $this->assertSame('LIKE', $filter->operator);
+        $this->assertSame(['name', 'display'], $filter->searchFields);
+        $this->assertTrue($filter->excludeFromGlobalSearch);
+        $this->assertSame(15, $filter->priority);
+    }
+
+    public function testCollectionFactoryDefaults(): void
+    {
+        $filter = FilterMetadata::collection(name: 'items', searchFields: ['name']);
+
+        $this->assertSame('Items', $filter->label);
+        $this->assertTrue($filter->excludeFromGlobalSearch);
+        $this->assertSame(999, $filter->priority);
+    }
+
+    public function testCollectionFactoryWithGlobalSearchEnabled(): void
+    {
+        $filter = FilterMetadata::collection(
+            name: 'attributes',
+            searchFields: ['name'],
+            excludeFromGlobalSearch: false
+        );
+
+        $this->assertFalse($filter->excludeFromGlobalSearch);
+    }
+
+    public function testExcludeFromGlobalSearchDefaultsFalse(): void
+    {
+        $filter = new FilterMetadata(name: 'test');
+
+        $this->assertFalse($filter->excludeFromGlobalSearch);
+    }
+
+    public function testExcludeFromGlobalSearchCanBeSet(): void
+    {
+        $filter = new FilterMetadata(name: 'test', excludeFromGlobalSearch: true);
+
+        $this->assertTrue($filter->excludeFromGlobalSearch);
+    }
+
+    public function testToArrayIncludesExcludeFromGlobalSearchWhenTrue(): void
+    {
+        $filter = FilterMetadata::collection(
+            name: 'tags',
+            searchFields: ['name'],
+            excludeFromGlobalSearch: true
+        );
+        $array = $filter->toArray();
+
+        $this->assertArrayHasKey('excludeFromGlobalSearch', $array);
+        $this->assertTrue($array['excludeFromGlobalSearch']);
+    }
+
+    public function testToArrayOmitsExcludeFromGlobalSearchWhenFalse(): void
+    {
+        $filter = FilterMetadata::collection(
+            name: 'tags',
+            searchFields: ['name'],
+            excludeFromGlobalSearch: false
+        );
+        $array = $filter->toArray();
+
+        // Should not be included when false (default)
+        $this->assertArrayNotHasKey('excludeFromGlobalSearch', $array);
+    }
 }

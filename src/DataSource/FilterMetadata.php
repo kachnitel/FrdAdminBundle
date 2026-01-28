@@ -15,14 +15,16 @@ readonly class FilterMetadata
 {
     /**
      * @param string $name Internal filter name (used for query parameters)
-     * @param string $type Filter type: 'text', 'number', 'date', 'daterange', 'enum', 'boolean', 'relation'
+     * @param string $type Filter type: 'text', 'number', 'date', 'daterange', 'enum', 'boolean', 'relation', 'collection'
      * @param string|null $label Human-readable label
      * @param string|null $placeholder Placeholder text for input
      * @param string $operator SQL operator: '=', '!=', '<', '>', '<=', '>=', 'LIKE', 'BETWEEN'
      * @param FilterEnumOptions|null $enumOptions Options for enum-type filters
-     * @param array<string>|null $searchFields For relation filters: fields to search on
+     * @param array<string>|null $searchFields For relation/collection filters: fields to search on
      * @param int $priority Display order (lower = first)
      * @param bool $enabled Whether this filter is enabled
+     * @param bool $excludeFromGlobalSearch For collection filters: exclude from global search for performance
+     * @param string|null $targetClass For relation/collection filters: fully qualified class name of related entity
      */
     public function __construct(
         public string $name,
@@ -34,6 +36,8 @@ readonly class FilterMetadata
         public ?array $searchFields = null,
         public int $priority = 999,
         public bool $enabled = true,
+        public bool $excludeFromGlobalSearch = false,
+        public ?string $targetClass = null,
     ) {}
 
     /**
@@ -173,6 +177,32 @@ readonly class FilterMetadata
         );
     }
 
+    /**
+     * Create collection filter for ManyToMany/OneToMany associations.
+     *
+     * @param array<string> $searchFields Fields to search on related entity
+     * @param string|null $targetClass Fully qualified class name of related entity
+     */
+    public static function collection(
+        string $name,
+        array $searchFields,
+        ?string $label = null,
+        bool $excludeFromGlobalSearch = true,
+        int $priority = 999,
+        ?string $targetClass = null
+    ): self {
+        return new self(
+            name: $name,
+            type: ColumnFilter::TYPE_COLLECTION,
+            label: $label ?? self::humanize($name),
+            operator: 'LIKE',
+            searchFields: $searchFields,
+            priority: $priority,
+            excludeFromGlobalSearch: $excludeFromGlobalSearch,
+            targetClass: $targetClass,
+        );
+    }
+
     // --- Backward compatibility accessors for enum options ---
 
     /**
@@ -249,6 +279,14 @@ readonly class FilterMetadata
 
         if ($this->searchFields !== null) {
             $result['searchFields'] = $this->searchFields;
+        }
+
+        if ($this->excludeFromGlobalSearch) {
+            $result['excludeFromGlobalSearch'] = true;
+        }
+
+        if ($this->targetClass !== null) {
+            $result['targetClass'] = $this->targetClass;
         }
 
         return $result;
