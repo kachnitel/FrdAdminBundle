@@ -370,4 +370,110 @@ class EntityListQueryServiceTest extends TestCase
         );
         $this->assertInstanceOf(QueryBuilder::class, $result);
     }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithInOperatorAndArrayValue(): void
+    {
+        $filters = ['status' => ['pending', 'approved']];
+        $filterMetadata = [
+            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
+        ];
+        $result = $this->service->buildQuery(
+            'App\\Entity\\Order',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+        $this->assertInstanceOf(QueryBuilder::class, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithInOperatorAndJsonStringValue(): void
+    {
+        $filters = ['status' => '["pending","approved","rejected"]'];
+        $filterMetadata = [
+            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
+        ];
+        $result = $this->service->buildQuery(
+            'App\\Entity\\Order',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+        $this->assertInstanceOf(QueryBuilder::class, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithInOperatorAndSingleStringValue(): void
+    {
+        // When JSON decode fails, should fall back to single value
+        $filters = ['status' => 'pending'];
+        $filterMetadata = [
+            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
+        ];
+        $result = $this->service->buildQuery(
+            'App\\Entity\\Order',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+        $this->assertInstanceOf(QueryBuilder::class, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithInOperatorAndEmptyArraySkipsFilter(): void
+    {
+        $filters = ['status' => []];
+        $filterMetadata = [
+            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
+        ];
+        $result = $this->service->buildQuery(
+            'App\\Entity\\Order',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+        $this->assertInstanceOf(QueryBuilder::class, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithInOperatorAndEmptyJsonArraySkipsFilter(): void
+    {
+        $filters = ['status' => '[]'];
+        $filterMetadata = [
+            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
+        ];
+        $result = $this->service->buildQuery(
+            'App\\Entity\\Order',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+        $this->assertInstanceOf(QueryBuilder::class, $result);
+    }
 }

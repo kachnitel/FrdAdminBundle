@@ -22,6 +22,10 @@ use Attribute;
  * #[ColumnFilter(type: 'enum')]
  * private SafetyIncidentType $type;
  *
+ * @example Multi-select enum:
+ * #[ColumnFilter(multiple: true)]
+ * private OrderStatus $status;
+ *
  * @example Relationship with custom searchable fields:
  * #[ColumnFilter(type: 'relation', searchFields: ['name', 'email', 'phone'])]
  * private User $createdBy;
@@ -81,6 +85,12 @@ class ColumnFilter
          * For enum filters: whether to show "All" option.
          */
         public bool $showAllOption = true,
+
+        /**
+         * For enum filters: whether to allow multiple selection.
+         * When true, uses IN operator instead of =.
+         */
+        public bool $multiple = false,
 
         /**
          * Custom placeholder text for filter input.

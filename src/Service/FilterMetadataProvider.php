@@ -267,11 +267,13 @@ class FilterMetadataProvider
         if ($propertyType instanceof \ReflectionNamedType && !$propertyType->isBuiltin()) {
             $typeName = $propertyType->getName();
             if (enum_exists($typeName)) {
+                $multiple = $columnFilter?->newInstance()->multiple ?? false;
                 return [
                     'type' => ColumnFilter::TYPE_ENUM,
                     'enumClass' => $typeName,
-                    'operator' => '=',
+                    'operator' => $multiple ? 'IN' : '=',
                     'showAllOption' => $columnFilter?->newInstance()->showAllOption ?? true,
+                    'multiple' => $multiple,
                 ];
             }
         }

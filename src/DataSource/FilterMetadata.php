@@ -118,14 +118,15 @@ readonly class FilterMetadata
         array $options,
         ?string $label = null,
         bool $showAllOption = true,
+        bool $multiple = false,
         int $priority = 999
     ): self {
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_ENUM,
             label: $label ?? self::humanize($name),
-            operator: '=',
-            enumOptions: FilterEnumOptions::fromValues($options, $showAllOption),
+            operator: $multiple ? 'IN' : '=',
+            enumOptions: FilterEnumOptions::fromValues($options, $showAllOption, $multiple),
             priority: $priority,
         );
     }
@@ -140,14 +141,15 @@ readonly class FilterMetadata
         string $enumClass,
         ?string $label = null,
         bool $showAllOption = true,
+        bool $multiple = false,
         int $priority = 999
     ): self {
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_ENUM,
             label: $label ?? self::humanize($name),
-            operator: '=',
-            enumOptions: FilterEnumOptions::fromEnumClass($enumClass, $showAllOption),
+            operator: $multiple ? 'IN' : '=',
+            enumOptions: FilterEnumOptions::fromEnumClass($enumClass, $showAllOption, $multiple),
             priority: $priority,
         );
     }
@@ -202,6 +204,14 @@ readonly class FilterMetadata
     }
 
     /**
+     * Check if multiple selection is enabled (for enum filters).
+     */
+    public function isMultiple(): bool
+    {
+        return $this->enumOptions !== null && $this->enumOptions->multiple;
+    }
+
+    /**
      * Convert to array format compatible with existing FilterMetadataProvider output.
      *
      * @return array<string, mixed>
@@ -231,6 +241,10 @@ readonly class FilterMetadata
 
         if ($this->enumOptions !== null && $this->enumOptions->showAllOption !== true) {
             $result['showAllOption'] = $this->enumOptions->showAllOption;
+        }
+
+        if ($this->enumOptions !== null && $this->enumOptions->multiple) {
+            $result['multiple'] = true;
         }
 
         if ($this->searchFields !== null) {

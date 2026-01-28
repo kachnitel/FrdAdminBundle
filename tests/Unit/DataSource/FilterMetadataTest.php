@@ -305,4 +305,73 @@ class FilterMetadataTest extends TestCase
         $reflection = new \ReflectionClass($filter);
         $this->assertTrue($reflection->isReadOnly());
     }
+
+    public function testIsMultipleDefaultsFalse(): void
+    {
+        $filter = FilterMetadata::enum(name: 'status', options: ['a', 'b']);
+
+        $this->assertFalse($filter->isMultiple());
+    }
+
+    public function testEnumFactoryWithMultiple(): void
+    {
+        $filter = FilterMetadata::enum(
+            name: 'status',
+            options: ['pending', 'approved', 'rejected'],
+            multiple: true
+        );
+
+        $this->assertTrue($filter->isMultiple());
+        $this->assertSame('IN', $filter->operator);
+    }
+
+    public function testEnumClassFactoryWithMultiple(): void
+    {
+        $filter = FilterMetadata::enumClass(
+            name: 'status',
+            enumClass: 'App\\Enum\\Status', // @phpstan-ignore argument.type
+            multiple: true
+        );
+
+        $this->assertTrue($filter->isMultiple());
+        $this->assertSame('IN', $filter->operator);
+    }
+
+    public function testEnumFactoryWithoutMultipleUsesEquals(): void
+    {
+        $filter = FilterMetadata::enum(
+            name: 'status',
+            options: ['a', 'b'],
+            multiple: false
+        );
+
+        $this->assertFalse($filter->isMultiple());
+        $this->assertSame('=', $filter->operator);
+    }
+
+    public function testToArrayIncludesMultipleWhenTrue(): void
+    {
+        $filter = FilterMetadata::enum(
+            name: 'status',
+            options: ['a', 'b'],
+            multiple: true
+        );
+        $array = $filter->toArray();
+
+        $this->assertArrayHasKey('multiple', $array);
+        $this->assertTrue($array['multiple']);
+    }
+
+    public function testToArrayOmitsMultipleWhenFalse(): void
+    {
+        $filter = FilterMetadata::enum(
+            name: 'status',
+            options: ['a', 'b'],
+            multiple: false
+        );
+        $array = $filter->toArray();
+
+        // multiple should not be included when false (default)
+        $this->assertArrayNotHasKey('multiple', $array);
+    }
 }

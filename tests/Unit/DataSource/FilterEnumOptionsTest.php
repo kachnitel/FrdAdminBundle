@@ -31,6 +31,7 @@ class FilterEnumOptionsTest extends TestCase
         $this->assertNull($options->values);
         $this->assertNull($options->enumClass);
         $this->assertTrue($options->showAllOption);
+        $this->assertFalse($options->multiple);
     }
 
     /**
@@ -164,5 +165,59 @@ class FilterEnumOptionsTest extends TestCase
 
         $this->assertSame(['manual', 'options'], $options->values);
         $this->assertSame('App\\Enum\\Status', $options->enumClass);
+    }
+
+    /**
+     * @test
+     */
+    public function multipleCanBeEnabled(): void
+    {
+        $options = new FilterEnumOptions(multiple: true);
+
+        $this->assertTrue($options->multiple);
+    }
+
+    /**
+     * @test
+     */
+    public function fromValuesWithMultiple(): void
+    {
+        $values = ['pending', 'approved', 'rejected'];
+        $options = FilterEnumOptions::fromValues($values, showAllOption: true, multiple: true);
+
+        $this->assertSame($values, $options->values);
+        $this->assertTrue($options->showAllOption);
+        $this->assertTrue($options->multiple);
+    }
+
+    /**
+     * @test
+     */
+    public function fromEnumClassWithMultiple(): void
+    {
+        $options = FilterEnumOptions::fromEnumClass(TestEnumStatus::class, showAllOption: false, multiple: true);
+
+        $this->assertSame(TestEnumStatus::class, $options->enumClass);
+        $this->assertFalse($options->showAllOption);
+        $this->assertTrue($options->multiple);
+    }
+
+    /**
+     * @test
+     */
+    public function allParametersIncludingMultipleCanBeSet(): void
+    {
+        $values = ['a', 'b', 'c'];
+        $options = new FilterEnumOptions(
+            values: $values,
+            enumClass: 'App\\Enum\\Type',
+            showAllOption: false,
+            multiple: true
+        );
+
+        $this->assertSame($values, $options->values);
+        $this->assertSame('App\\Enum\\Type', $options->enumClass);
+        $this->assertFalse($options->showAllOption);
+        $this->assertTrue($options->multiple);
     }
 }

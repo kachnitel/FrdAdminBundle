@@ -1,14 +1,21 @@
 {% import kachnitel_admin_theme as css %}
-<select
-    class="{{ css.form_input_sm() }}"
-    data-model="value"
->
-    {% if filterMetadata.showAllOption|default(true) %}
-        <option value="">All</option>
-    {% endif %}
-    {% for case in enum(filterMetadata.enumClass).cases() %}
-        <option value="{{ case.value }}" {{ value == case.value ? 'selected' : '' }}>
-            {{ case.displayValue is defined ? case.displayValue() : case.name }}
-        </option>
-    {% endfor %}
-</select>
+{% if filterMetadata.multiple|default(false) %}
+    {% include '@KachnitelAdmin/components/ColumnFilter/_enum_multiple.html.twig' with {
+        filterMetadata: filterMetadata,
+        selectedValues: selectedValues|default([])
+    } only %}
+{% else %}
+    <select
+        class="{{ css.form_input_sm() }}"
+        data-model="value"
+    >
+        {% if filterMetadata.showAllOption|default(true) %}
+            <option value="">All</option>
+        {% endif %}
+        {% for case in enum(filterMetadata.enumClass).cases() %}
+            <option value="{{ case.value }}" {{ value == case.value ? 'selected' : '' }}>
+                {{ case.displayValue is defined ? case.displayValue() : case.name }}
+            </option>
+        {% endfor %}
+    </select>
+{% endif %}

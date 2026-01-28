@@ -217,9 +217,46 @@ class EntityListQueryService
     {
         [$operator, $paramName] = $this->getFilterContext($column, $metadata);
 
+        // Handle multi-select enum values (stored as JSON array)
+        if ($operator === 'IN') {
+            $values = $this->parseMultiSelectValue($value);
+            if (empty($values)) {
+                return; // No filter if no values selected
+            }
+
+            $qb->andWhere($qb->expr()->in('e.' . $column, ':' . $paramName))
+                ->setParameter($paramName, $values);
+            return;
+        }
+
         // This structure is common for all simple comparisons (e.g., price > 10, isActive = true)
         $qb->andWhere('e.' . $column . ' ' . $operator . ' :' . $paramName)
             ->setParameter($paramName, $value);
+    }
+
+    /**
+     * Parse multi-select value from JSON array string or array.
+     *
+     * @param mixed $value
+     * @return array<string|int>
+     */
+    private function parseMultiSelectValue(mixed $value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && $value !== '') {
+            // Try JSON decode first
+            $decoded = json_decode($value, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+            // Fall back to single value
+            return [$value];
+        }
+
+        return [];
     }
 
     /**

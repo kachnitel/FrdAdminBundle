@@ -83,45 +83,11 @@
                 {% for column in this.columns %}
                     <th>
                         {% if this.filterMetadata[column] is defined %}
-                            {% set meta = this.filterMetadata[column] %}
-                            {% set filterType = meta.type|default('text') %}
-                            {# Inline filter input that directly binds to parent columnFilters #}
-                            {% if filterType == 'enum' and meta.enumClass is defined %}
-                                <select
-                                    class="{{ css.form_input_sm() }}"
-                                    data-model="columnFilters[{{ column }}]"
-                                >
-                                    {% if meta.showAllOption|default(true) %}
-                                        <option value="">All</option>
-                                    {% endif %}
-                                    {% for case in enum(meta.enumClass).cases() %}
-                                        <option value="{{ case.value }}" {{ (this.columnFilters[column]|default('')) == case.value ? 'selected' : '' }}>
-                                            {{ case.displayValue is defined ? case.displayValue() : case.name }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            {% elseif filterType == 'boolean' %}
-                                <select
-                                    class="{{ css.form_input_sm() }}"
-                                    data-model="columnFilters[{{ column }}]"
-                                >
-                                    <option value="">All</option>
-                                    <option value="1" {{ (this.columnFilters[column]|default('')) == '1' ? 'selected' : '' }}>Yes</option>
-                                    <option value="0" {{ (this.columnFilters[column]|default('')) == '0' ? 'selected' : '' }}>No</option>
-                                </select>
-                            {% else %}
-                                {# text, number, relation - all use text input with debounce #}
-                                <input
-                                    type="text"
-                                    class="{{ css.form_input_sm() }}"
-                                    placeholder="{{ meta.placeholder|default('Filter ' ~ column|humanize ~ '...') }}"
-                                    data-model="debounce(300)|columnFilters[{{ column }}]"
-                                    value="{{ this.columnFilters[column]|default('') }}"
-                                    {% if filterType == 'relation' and meta.searchFields is defined %}
-                                        title="Searches: {{ meta.searchFields|join(', ') }}"
-                                    {% endif %}
-                                >
-                            {% endif %}
+                            <twig:K:Admin:ColumnFilter
+                                column="{{ column }}"
+                                value="{{ this.columnFilters[column]|default('') }}"
+                                :filterMetadata="this.filterMetadata[column]"
+                            />
                         {% endif %}
                     </th>
                 {% endfor %}

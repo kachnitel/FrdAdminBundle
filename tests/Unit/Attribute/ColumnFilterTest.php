@@ -118,4 +118,31 @@ class ColumnFilterTest extends TestCase
         $this->assertEquals('Search products...', $filter->placeholder);
         $this->assertEquals(10, $filter->priority);
     }
+
+    public function testMultiplePropertyDefaultValue(): void
+    {
+        $filter = new ColumnFilter();
+
+        $this->assertFalse($filter->multiple);
+    }
+
+    public function testMultiplePropertyExplicitTrue(): void
+    {
+        $filter = new ColumnFilter(multiple: true);
+
+        $this->assertTrue($filter->multiple);
+    }
+
+    public function testMultipleEnumConfiguration(): void
+    {
+        $filter = new ColumnFilter(
+            type: ColumnFilter::TYPE_ENUM,
+            multiple: true,
+            showAllOption: false
+        );
+
+        $this->assertEquals(ColumnFilter::TYPE_ENUM, $filter->type);
+        $this->assertTrue($filter->multiple);
+        $this->assertFalse($filter->showAllOption);
+    }
 }
