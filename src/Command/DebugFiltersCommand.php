@@ -18,6 +18,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Debug commands require comprehensive output formatting
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Debug commands need access to multiple domain objects
+ */
 #[AsCommand(
     name: 'admin:debug:filters',
     description: 'Debug filter metadata for admin entities'
@@ -165,9 +169,24 @@ class DebugFiltersCommand extends Command
             $this->explainTypeDetection($io, $column, $config, $metadata, $entityClass);
         }
 
+        $details = $this->getCommonFilterDetails($config);
+        $details = array_merge($details, $this->getTypeSpecificDetails($io, $type, $config, $metadata, $column, $verbose));
+
+        if (!empty($details)) {
+            $io->table([], $details);
+        }
+    }
+
+    /**
+     * Get common filter details that apply to all filter types.
+     *
+     * @param array<string, mixed> $config
+     * @return array<int, array{0: string, 1: string}>
+     */
+    private function getCommonFilterDetails(array $config): array
+    {
         $details = [];
 
-        // Common fields
         if (isset($config['operator'])) {
             $details[] = ['Operator', $config['operator']];
         }
@@ -181,41 +200,87 @@ class DebugFiltersCommand extends Command
             $details[] = ['Priority', (string) $config['priority']];
         }
 
-        // Enum-specific
-        if ($type === 'enum') {
-            if (isset($config['enumClass'])) {
-                $details[] = ['Enum Class', $config['enumClass']];
+        return $details;
+    }
+
+    /**
+     * Get type-specific filter details.
+     *
+     * @param array<string, mixed> $config
+     * @param ClassMetadata<object> $metadata
+     * @return array<int, array{0: string, 1: string}>
+     */
+    private function getTypeSpecificDetails(
+        SymfonyStyle $io,
+        string $type,
+        array $config,
+        ClassMetadata $metadata,
+        string $column,
+        bool $verbose
+    ): array {
+        return match ($type) {
+            'enum' => $this->getEnumDetails($config),
+            'relation' => $this->getRelationDetails($io, $config, $metadata, $column, $verbose),
+            default => [],
+        };
+    }
+
+    /**
+     * Get enum-specific filter details.
+     *
+     * @param array<string, mixed> $config
+     * @return array<int, array{0: string, 1: string}>
+     */
+    private function getEnumDetails(array $config): array
+    {
+        $details = [];
+
+        if (isset($config['enumClass'])) {
+            $details[] = ['Enum Class', $config['enumClass']];
+        }
+        $details[] = ['Multiple', ($config['multiple'] ?? false) ? 'Yes' : 'No'];
+        $details[] = ['Show All Option', ($config['showAllOption'] ?? true) ? 'Yes' : 'No'];
+
+        return $details;
+    }
+
+    /**
+     * Get relation-specific filter details.
+     *
+     * @param array<string, mixed> $config
+     * @param ClassMetadata<object> $metadata
+     * @return array<int, array{0: string, 1: string}>
+     */
+    private function getRelationDetails(
+        SymfonyStyle $io,
+        array $config,
+        ClassMetadata $metadata,
+        string $column,
+        bool $verbose
+    ): array {
+        $details = [];
+
+        if (isset($config['targetEntity'])) {
+            $details[] = ['Target Entity', $config['targetEntity']];
+        }
+        if (isset($config['targetClass'])) {
+            $details[] = ['Target Class', $config['targetClass']];
+        }
+        if (isset($config['searchFields'])) {
+            $searchFields = $config['searchFields'];
+            $details[] = [
+                '<options=bold>Search Fields</>',
+                sprintf('<info>%s</info>', implode(', ', $searchFields)),
+            ];
+
+            if ($verbose) {
+                $this->explainSearchFieldDetection($io, $config, $metadata, $column);
             }
-            $details[] = ['Multiple', ($config['multiple'] ?? false) ? 'Yes' : 'No'];
-            $details[] = ['Show All Option', ($config['showAllOption'] ?? true) ? 'Yes' : 'No'];
+        } else {
+            $details[] = ['Search Fields', '<comment>Not configured (will fallback to id)</comment>'];
         }
 
-        // Relation-specific
-        if ($type === 'relation') {
-            if (isset($config['targetEntity'])) {
-                $details[] = ['Target Entity', $config['targetEntity']];
-            }
-            if (isset($config['targetClass'])) {
-                $details[] = ['Target Class', $config['targetClass']];
-            }
-            if (isset($config['searchFields'])) {
-                $searchFields = $config['searchFields'];
-                $details[] = [
-                    '<options=bold>Search Fields</>',
-                    sprintf('<info>%s</info>', implode(', ', $searchFields)),
-                ];
-
-                if ($verbose) {
-                    $this->explainSearchFieldDetection($io, $config, $metadata, $column);
-                }
-            } else {
-                $details[] = ['Search Fields', '<comment>Not configured (will fallback to id)</comment>'];
-            }
-        }
-
-        if (!empty($details)) {
-            $io->table([], $details);
-        }
+        return $details;
     }
 
     /**
@@ -231,68 +296,110 @@ class DebugFiltersCommand extends Command
         string $entityClass
     ): void {
         $type = $config['type'] ?? 'unknown';
-        $reasons = [];
+        [$hasAttribute, $attributeType] = $this->getColumnFilterAttributeInfo($entityClass, $column);
 
-        // Check for ColumnFilter attribute
-        $reflection = new ReflectionClass($entityClass);
-        $hasAttribute = false;
-        $attributeType = null;
-
-        if ($reflection->hasProperty($column)) {
-            $property = $reflection->getProperty($column);
-            $attributes = $property->getAttributes(ColumnFilter::class);
-            if (!empty($attributes)) {
-                $hasAttribute = true;
-                $instance = $attributes[0]->newInstance();
-                $attributeType = $instance->type;
-            }
-        }
-
-        if ($hasAttribute && $attributeType !== null) {
-            $reasons[] = sprintf(
-                '<info>✓</info> Type explicitly set via #[ColumnFilter(type: "%s")]',
-                $attributeType
-            );
-        } elseif ($metadata->hasAssociation($column)) {
-            $assocType = $metadata->getAssociationMapping($column)['type'] ?? 0;
-            $assocTypeName = match ($assocType) {
-                ClassMetadata::ONE_TO_ONE => 'OneToOne',
-                ClassMetadata::MANY_TO_ONE => 'ManyToOne',
-                ClassMetadata::ONE_TO_MANY => 'OneToMany',
-                ClassMetadata::MANY_TO_MANY => 'ManyToMany',
-                default => 'Unknown',
-            };
-            $reasons[] = sprintf(
-                '<info>✓</info> Detected as relation (Doctrine %s association)',
-                $assocTypeName
-            );
-        } elseif ($metadata->hasField($column)) {
-            $doctrineType = $metadata->getTypeOfField($column);
-            $reasons[] = sprintf(
-                '<info>✓</info> Doctrine field type "%s" → filter type "%s"',
-                $doctrineType,
-                $type
-            );
-
-            // Check for PHP enum
-            if ($type === 'enum' && isset($config['enumClass'])) {
-                $reasons[] = sprintf(
-                    '<info>✓</info> Property type is PHP enum: %s',
-                    $config['enumClass']
-                );
-            }
-        }
-
-        if ($hasAttribute) {
-            $reasons[] = '<info>✓</info> Has #[ColumnFilter] attribute';
-        } else {
-            $reasons[] = '<comment>○</comment> No #[ColumnFilter] attribute (using auto-detection)';
-        }
+        $reasons = $this->buildTypeDetectionReasons($hasAttribute, $attributeType, $metadata, $column, $type, $config);
 
         $io->text('Type detection:');
         foreach ($reasons as $reason) {
             $io->text('  ' . $reason);
         }
+    }
+
+    /**
+     * Get ColumnFilter attribute info for a property.
+     *
+     * @param class-string $entityClass
+     * @return array{0: bool, 1: string|null}
+     */
+    private function getColumnFilterAttributeInfo(string $entityClass, string $column): array
+    {
+        $reflection = new ReflectionClass($entityClass);
+
+        if (!$reflection->hasProperty($column)) {
+            return [false, null];
+        }
+
+        $property = $reflection->getProperty($column);
+        $attributes = $property->getAttributes(ColumnFilter::class);
+
+        if (empty($attributes)) {
+            return [false, null];
+        }
+
+        $instance = $attributes[0]->newInstance();
+        return [true, $instance->type];
+    }
+
+    /**
+     * Build reasons list for type detection explanation.
+     *
+     * @param ClassMetadata<object> $metadata
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    private function buildTypeDetectionReasons(
+        bool $hasAttribute,
+        ?string $attributeType,
+        ClassMetadata $metadata,
+        string $column,
+        string $type,
+        array $config
+    ): array {
+        $reasons = [];
+
+        if ($hasAttribute && $attributeType !== null) {
+            $reasons[] = sprintf('<info>✓</info> Type explicitly set via #[ColumnFilter(type: "%s")]', $attributeType);
+        } elseif ($metadata->hasAssociation($column)) {
+            $reasons[] = $this->getAssociationReason($metadata, $column);
+        } elseif ($metadata->hasField($column)) {
+            $reasons = array_merge($reasons, $this->getFieldReasons($metadata, $column, $type, $config));
+        }
+
+        $reasons[] = $hasAttribute
+            ? '<info>✓</info> Has #[ColumnFilter] attribute'
+            : '<comment>○</comment> No #[ColumnFilter] attribute (using auto-detection)';
+
+        return $reasons;
+    }
+
+    /**
+     * Get reason string for association type detection.
+     *
+     * @param ClassMetadata<object> $metadata
+     */
+    private function getAssociationReason(ClassMetadata $metadata, string $column): string
+    {
+        $assocType = $metadata->getAssociationMapping($column)['type'] ?? 0;
+        $assocTypeName = match ($assocType) {
+            ClassMetadata::ONE_TO_ONE => 'OneToOne',
+            ClassMetadata::MANY_TO_ONE => 'ManyToOne',
+            ClassMetadata::ONE_TO_MANY => 'OneToMany',
+            ClassMetadata::MANY_TO_MANY => 'ManyToMany',
+            default => 'Unknown',
+        };
+
+        return sprintf('<info>✓</info> Detected as relation (Doctrine %s association)', $assocTypeName);
+    }
+
+    /**
+     * Get reasons for field type detection.
+     *
+     * @param ClassMetadata<object> $metadata
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    private function getFieldReasons(ClassMetadata $metadata, string $column, string $type, array $config): array
+    {
+        $reasons = [];
+        $doctrineType = $metadata->getTypeOfField($column);
+        $reasons[] = sprintf('<info>✓</info> Doctrine field type "%s" → filter type "%s"', $doctrineType, $type);
+
+        if ($type === 'enum' && isset($config['enumClass'])) {
+            $reasons[] = sprintf('<info>✓</info> Property type is PHP enum: %s', $config['enumClass']);
+        }
+
+        return $reasons;
     }
 
     /**
@@ -372,58 +479,99 @@ class DebugFiltersCommand extends Command
         $reflection = new ReflectionClass($entityClass);
         $metadata = $this->entityManager->getClassMetadata($entityClass);
 
-        $allProperties = $reflection->getProperties();
+        $skipped = $this->collectSkippedProperties($reflection, $metadata, $configuredFilters);
+
+        if (empty($skipped)) {
+            return;
+        }
+
+        $io->section('Skipped Properties');
+        foreach ($skipped as $propertyName => $reasons) {
+            $io->text(sprintf('<comment>%s</comment>:', $propertyName));
+            foreach ($reasons as $reason) {
+                $io->text(sprintf('  <comment>○</comment> %s', $reason));
+            }
+        }
+    }
+
+    /**
+     * Collect skipped properties with their skip reasons.
+     *
+     * @param ReflectionClass<object> $reflection
+     * @param ClassMetadata<object> $metadata
+     * @param array<string, array<string, mixed>> $configuredFilters
+     * @return array<string, list<string>>
+     */
+    private function collectSkippedProperties(
+        ReflectionClass $reflection,
+        ClassMetadata $metadata,
+        array $configuredFilters
+    ): array {
         $skipped = [];
 
-        foreach ($allProperties as $property) {
+        foreach ($reflection->getProperties() as $property) {
             $propertyName = $property->getName();
 
-            // Skip if already configured
             if (isset($configuredFilters[$propertyName])) {
                 continue;
             }
 
-            $reasons = [];
-
-            // Check various skip reasons
-            if (!$metadata->hasField($propertyName) && !$metadata->hasAssociation($propertyName)) {
-                $reasons[] = 'Not a Doctrine field or association';
-            }
-
-            // Check for disabled attribute
-            $attributes = $property->getAttributes(ColumnFilter::class);
-            if (!empty($attributes)) {
-                $instance = $attributes[0]->newInstance();
-                if (!$instance->enabled) {
-                    $reasons[] = '#[ColumnFilter(enabled: false)]';
-                }
-            }
-
-            // Check for OneToMany/ManyToMany (collections, require explicit ColumnFilter)
-            if ($metadata->hasAssociation($propertyName)) {
-                $assocType = $metadata->getAssociationMapping($propertyName)['type'] ?? 0;
-                if ($assocType === ClassMetadata::ONE_TO_MANY || $assocType === ClassMetadata::MANY_TO_MANY) {
-                    // Only mark as skipped if no ColumnFilter attribute is present
-                    if (empty($attributes)) {
-                        $reasons[] = 'Collection association (OneToMany/ManyToMany) - add #[ColumnFilter] to enable';
-                    }
-                }
-            }
+            $reasons = $this->getSkipReasons($property, $metadata);
 
             if (!empty($reasons)) {
                 $skipped[$propertyName] = $reasons;
             }
         }
 
-        if (!empty($skipped)) {
-            $io->section('Skipped Properties');
-            foreach ($skipped as $propertyName => $reasons) {
-                $io->text(sprintf('<comment>%s</comment>:', $propertyName));
-                foreach ($reasons as $reason) {
-                    $io->text(sprintf('  <comment>○</comment> %s', $reason));
-                }
-            }
+        return $skipped;
+    }
+
+    /**
+     * Get reasons why a property was skipped.
+     *
+     * @param ClassMetadata<object> $metadata
+     * @return list<string>
+     */
+    private function getSkipReasons(\ReflectionProperty $property, ClassMetadata $metadata): array
+    {
+        $reasons = [];
+        $propertyName = $property->getName();
+        $attributes = $property->getAttributes(ColumnFilter::class);
+
+        if (!$metadata->hasField($propertyName) && !$metadata->hasAssociation($propertyName)) {
+            $reasons[] = 'Not a Doctrine field or association';
         }
+
+        if (!empty($attributes) && !$attributes[0]->newInstance()->enabled) {
+            $reasons[] = '#[ColumnFilter(enabled: false)]';
+        }
+
+        if ($this->isUnfilteredCollectionAssociation($metadata, $propertyName, $attributes)) {
+            $reasons[] = 'Collection association (OneToMany/ManyToMany) - add #[ColumnFilter] to enable';
+        }
+
+        return $reasons;
+    }
+
+    /**
+     * Check if property is a collection association without ColumnFilter attribute.
+     *
+     * @param ClassMetadata<object> $metadata
+     * @param array<\ReflectionAttribute<ColumnFilter>> $attributes
+     */
+    private function isUnfilteredCollectionAssociation(
+        ClassMetadata $metadata,
+        string $propertyName,
+        array $attributes
+    ): bool {
+        if (!$metadata->hasAssociation($propertyName)) {
+            return false;
+        }
+
+        $assocType = $metadata->getAssociationMapping($propertyName)['type'] ?? 0;
+        $isCollection = $assocType === ClassMetadata::ONE_TO_MANY || $assocType === ClassMetadata::MANY_TO_MANY;
+
+        return $isCollection && empty($attributes);
     }
 
     /**

@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Attribute;
 
 use Attribute;
 
 /**
  * Configure column filtering for entity properties.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList) Attribute classes require flat parameter lists
  *
  * When applied to entity properties, configures how that column should be filtered
  * in admin list views.

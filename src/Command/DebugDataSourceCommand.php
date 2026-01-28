@@ -15,6 +15,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity) Debug output requires conditional formatting
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Methods delegate to helpers, PHPMD counts incorrectly
+ */
 #[AsCommand(
     name: 'debug:datasource',
     description: 'Debug registered data sources and their configuration'

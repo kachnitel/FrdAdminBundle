@@ -10,6 +10,8 @@ use Kachnitel\AdminBundle\Attribute\ColumnFilter;
  * Metadata for a filter in a data source.
  *
  * Describes how a filter should be rendered and how it affects queries.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList) Value objects require flat parameter lists
  */
 readonly class FilterMetadata
 {
@@ -257,26 +259,60 @@ readonly class FilterMetadata
             'priority' => $this->priority,
         ];
 
+        $this->addOptionalFields($result);
+        $this->addEnumOptionsToArray($result);
+        $this->addRelationFieldsToArray($result);
+
+        return $result;
+    }
+
+    /**
+     * Add optional scalar fields to the result array.
+     *
+     * @param array<string, mixed> $result
+     */
+    private function addOptionalFields(array &$result): void
+    {
         if ($this->placeholder !== null) {
             $result['placeholder'] = $this->placeholder;
         }
+    }
 
-        if ($this->enumOptions?->values !== null) {
+    /**
+     * Add enum options to the result array.
+     *
+     * @param array<string, mixed> $result
+     */
+    private function addEnumOptionsToArray(array &$result): void
+    {
+        if ($this->enumOptions === null) {
+            return;
+        }
+
+        if ($this->enumOptions->values !== null) {
             $result['options'] = $this->enumOptions->values;
         }
 
-        if ($this->enumOptions?->enumClass !== null) {
+        if ($this->enumOptions->enumClass !== null) {
             $result['enumClass'] = $this->enumOptions->enumClass;
         }
 
-        if ($this->enumOptions !== null && $this->enumOptions->showAllOption !== true) {
+        if ($this->enumOptions->showAllOption !== true) {
             $result['showAllOption'] = $this->enumOptions->showAllOption;
         }
 
-        if ($this->enumOptions !== null && $this->enumOptions->multiple) {
+        if ($this->enumOptions->multiple) {
             $result['multiple'] = true;
         }
+    }
 
+    /**
+     * Add relation/collection fields to the result array.
+     *
+     * @param array<string, mixed> $result
+     */
+    private function addRelationFieldsToArray(array &$result): void
+    {
         if ($this->searchFields !== null) {
             $result['searchFields'] = $this->searchFields;
         }
@@ -288,8 +324,6 @@ readonly class FilterMetadata
         if ($this->targetClass !== null) {
             $result['targetClass'] = $this->targetClass;
         }
-
-        return $result;
     }
 
     /**

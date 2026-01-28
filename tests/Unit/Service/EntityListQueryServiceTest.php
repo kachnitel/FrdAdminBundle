@@ -564,6 +564,7 @@ class EntityListQueryServiceTest extends TestCase
 
         // Create a real QueryBuilder that we can inspect
         $realQb = new \Doctrine\ORM\QueryBuilder($em);
+        // @phpstan-ignore argument.type (Test entity class doesn't exist)
         $realQb->select('e')->from('App\\Entity\\Order', 'e');
 
         $em->method('getRepository')->willReturn($repository);

@@ -15,8 +15,6 @@ parameters:
         - '#Property .+ is never read, only written#'
         # Match expression in tests handling various types
         - '#Match expression does not handle remaining value#'
-        # Match arm false positive with constants
-        - '#Match arm comparison between .+ and .+ is always true#'
         # Ignore PHPMD @SuppressWarnings annotation parsing errors
         - '#PHPDoc tag @SuppressWarnings has invalid value#'
         # Doctrine repository template type cannot be resolved statically
