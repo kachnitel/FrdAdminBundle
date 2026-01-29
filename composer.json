@@ -49,7 +49,7 @@
         "smnandre/twigmetrics": "^1.1"
     },
     "suggest": {
-        "frd/entity-components-bundle": "For attachment, tag, and comment features"
+        "kachnitel/entity-components-bundle": "For attachment, tag, and comment features"
     },
     "autoload": {
         "psr-4": {
