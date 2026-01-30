@@ -1,0 +1,40 @@
+{#
+ # Renders a single row action button.
+ #
+ # Variables:
+ # @var RowAction action - The action configuration
+ # @var object entity - The entity object
+ # @var string entityShortClass - Entity short class name
+ #}
+
+{% import kachnitel_admin_theme as css %}
+
+{% if action.template %}
+    {{ include(action.template, {
+        action: action,
+        entity: entity,
+        entityShortClass: entityShortClass
+    }) }}
+{% elseif action.method %}
+    {# Form-based action (POST/DELETE) #}
+    <form method="post"
+          action="{% if action.route %}{{ path(action.route, action.routeParams|merge({id: entity.id|default('')})) }}{% elseif action.url %}{{ action.url }}{% else %}{{ admin_object_path(entity, action.name) }}{% endif %}"
+          style="display: inline;"
+          {% if action.confirmMessage %}onsubmit="return confirm('{{ action.confirmMessage|e('js') }}');"{% endif %}>
+        <input type="hidden" name="_method" value="{{ action.method }}">
+        <input type="hidden" name="_token" value="{{ csrf_token(action.name ~ '_' ~ (entity.id|default(''))) }}">
+        <button type="submit" class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
+                title="{{ action.label }}">
+            {% if action.icon %}{{ action.icon }}{% else %}{{ action.label }}{% endif %}
+        </button>
+    </form>
+{% else %}
+    {# Link-based action #}
+    <a href="{% if action.route %}{{ path(action.route, action.routeParams|merge({id: entity.id|default('')})) }}{% elseif action.url %}{{ action.url }}{% else %}{{ admin_object_path(entity, action.name) }}{% endif %}"
+       class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
+       title="{{ action.label }}"
+       {% if action.openInNewTab %}target="_blank" rel="noopener"{% endif %}
+       {% if action.confirmMessage %}onclick="return confirm('{{ action.confirmMessage|e('js') }}');"{% endif %}>
+        {% if action.icon %}{{ action.icon }}{% else %}{{ action.label }}{% endif %}
+    </a>
+{% endif %}

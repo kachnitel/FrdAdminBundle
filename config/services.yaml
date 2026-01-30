@@ -88,3 +88,12 @@ services:
             $entityNamespace: '%kachnitel_admin.entity_namespace%'
             $roleHierarchy: '@?security.role_hierarchy'
         tags: ['security.voter']
+
+    # Row Action services
+    Kachnitel\AdminBundle\RowAction\:
+        resource: '../src/RowAction'
+
+    # RowActionRegistry with tagged providers
+    Kachnitel\AdminBundle\RowAction\RowActionRegistry:
+        arguments:
+            $providers: !tagged_iterator kachnitel_admin.row_action_provider

@@ -4,20 +4,34 @@
  # Variables:
  # @var object entity - The entity object
  # @var string entityShortClass - Short class name for permission checks
+ # @var string|null entityClass - Full entity class (optional, for custom row actions)
  #}
 
 {% import kachnitel_admin_theme as css %}
 
 <td class="actions">
-    {% if admin_action_accessible(entityShortClass, 'show') %}
-        <a href="{{ admin_object_path(entity, 'show') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
-            👀
-        </a>
-    {% endif %}
+    {# Use new row actions system if entityClass is provided #}
+    {% if entityClass is defined and entityClass %}
+        {% set actions = admin_visible_row_actions(entityClass, entity, entityShortClass) %}
+        {% for action in actions %}
+            {% include '@KachnitelAdmin/components/EntityList/_RowActionButton.html.twig' with {
+                action: action,
+                entity: entity,
+                entityShortClass: entityShortClass
+            } only %}
+        {% endfor %}
+    {% else %}
+        {# Fallback to legacy hardcoded actions for backwards compatibility #}
+        {% if admin_action_accessible(entityShortClass, 'show') %}
+            <a href="{{ admin_object_path(entity, 'show') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
+                👀
+            </a>
+        {% endif %}
 
-    {% if admin_action_accessible(entityShortClass, 'edit') %}
-        <a href="{{ admin_object_path(entity, 'edit') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
-            🖊
-        </a>
+        {% if admin_action_accessible(entityShortClass, 'edit') %}
+            <a href="{{ admin_object_path(entity, 'edit') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
+                🖊
+            </a>
+        {% endif %}
     {% endif %}
 </td>

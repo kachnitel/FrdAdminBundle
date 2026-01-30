@@ -157,7 +157,8 @@
                     {% else %}
                         {% include '@KachnitelAdmin/components/EntityList/_RowActions.html.twig' with {
                             entity: entity,
-                            entityShortClass: this.entityShortClass
+                            entityShortClass: this.entityShortClass,
+                            entityClass: this.entityClass
                         } only %}
                     {% endif %}
                 </tr>
