@@ -43,6 +43,12 @@ trait AssociationFilterTrait
             $orX->add($qb->expr()->like($alias . '.' . $field, ':' . $paramName));
         }
 
+        // Also match by exact ID when value is numeric (supports collection admin links)
+        if (is_numeric($value)) {
+            $orX->add($qb->expr()->eq($alias . '.id', ':' . $paramName . '_id'));
+            $qb->setParameter($paramName . '_id', (int) $value);
+        }
+
         $qb->andWhere($orX)
             ->setParameter($paramName, '%' . $value . '%');
     }

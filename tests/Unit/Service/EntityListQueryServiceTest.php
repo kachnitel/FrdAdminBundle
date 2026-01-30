@@ -601,4 +601,90 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertStringContainsString('sub_attributes.display LIKE', $dql);
         $this->assertStringContainsString('sub_attributes.attr LIKE', $dql);
     }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithRelationFilterAlsoMatchesById(): void
+    {
+        $em = $this->createMock(EntityManagerInterface::class);
+        $repository = $this->createMock(EntityRepository::class);
+        $em->method('getExpressionBuilder')->willReturn(new \Doctrine\ORM\Query\Expr());
+
+        $realQb = new \Doctrine\ORM\QueryBuilder($em);
+        // @phpstan-ignore argument.type (Test entity class doesn't exist)
+        $realQb->select('e')->from('App\\Entity\\Product', 'e');
+
+        $em->method('getRepository')->willReturn($repository);
+        $repository->method('createQueryBuilder')->willReturn($realQb);
+
+        $service = new EntityListQueryService($em);
+
+        $filters = ['category' => '42'];
+        $filterMetadata = [
+            'category' => [
+                'type' => 'relation',
+                'searchFields' => ['name'],
+            ],
+        ];
+
+        $result = $service->buildQuery(
+            'App\\Entity\\Product',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+
+        $dql = $result->getDQL();
+
+        // Verify both LIKE and exact ID match are present
+        $this->assertStringContainsString('rel_category.name LIKE', $dql);
+        $this->assertStringContainsString('rel_category.id =', $dql);
+    }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithRelationFilterDoesNotMatchByIdForNonNumeric(): void
+    {
+        $em = $this->createMock(EntityManagerInterface::class);
+        $repository = $this->createMock(EntityRepository::class);
+        $em->method('getExpressionBuilder')->willReturn(new \Doctrine\ORM\Query\Expr());
+
+        $realQb = new \Doctrine\ORM\QueryBuilder($em);
+        // @phpstan-ignore argument.type (Test entity class doesn't exist)
+        $realQb->select('e')->from('App\\Entity\\Product', 'e');
+
+        $em->method('getRepository')->willReturn($repository);
+        $repository->method('createQueryBuilder')->willReturn($realQb);
+
+        $service = new EntityListQueryService($em);
+
+        $filters = ['category' => 'Electronics'];
+        $filterMetadata = [
+            'category' => [
+                'type' => 'relation',
+                'searchFields' => ['name'],
+            ],
+        ];
+
+        $result = $service->buildQuery(
+            'App\\Entity\\Product',
+            null,
+            '',
+            $filters,
+            $filterMetadata,
+            'id',
+            'ASC'
+        );
+
+        $dql = $result->getDQL();
+
+        // Verify LIKE is present but not exact ID match
+        $this->assertStringContainsString('rel_category.name LIKE', $dql);
+        $this->assertStringNotContainsString('rel_category.id =', $dql);
+    }
 }

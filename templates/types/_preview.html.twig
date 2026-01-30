@@ -29,16 +29,26 @@
     {% if value.value is defined and value.id is not defined %}
         {{ value.value }}
     {% elseif value.name is defined and value.value is not defined and value.id is not defined %}
-        {{value.name }}
-    {# Check if it's an entity/object with common display properties #}
-    {% elseif value.name is defined %}
         {{ value.name }}
-    {% elseif value.label is defined %}
-        {{ value.label }}
-    {% elseif value.title is defined %}
-        {{ value.title }}
-    {% elseif value.id is defined %}
-        #{{ value.id }}
+    {# Check if it's an entity/object with common display properties #}
+    {% elseif value.name is defined or value.label is defined or value.title is defined or value.id is defined %}
+        {% set entityUrl = admin_entity_url(value, true) %}
+        {% set label %}
+            {% if value.name is defined %}
+                {{ value.name }}
+            {% elseif value.label is defined %}
+                {{ value.label }}
+            {% elseif value.title is defined %}
+                {{ value.title }}
+            {% else %}
+                #{{ value.id }}
+            {% endif %}
+        {% endset %}
+        {% if entityUrl %}
+            <a href="{{ entityUrl }}">{{ label }}</a>
+        {% else %}
+            {{ label }}
+        {% endif %}
     {% else %}
         {# It's a scalar value (string, int, float, datetime, etc.) #}
         {{ value }}
