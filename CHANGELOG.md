@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.4.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.4.0...v0.4.1) (2026-01-30)
+
+### Features
+
+* Enhance admin routing with automatic collection and entity URL generation ([114d4c](https://github.com/kachnitel/FrdAdminBundle/commit/114d4c1aaf5c7f1f66eabcb121ba06508a51164d))
+
+### Documentation
+
+* Add custom row actions template example ([dc83d6](https://github.com/kachnitel/FrdAdminBundle/commit/dc83d63141f5b9deb0141267ceb81b2f4790f5d6))
+
+
+---
+
 ## [0.4.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.3.1...v0.4.0) (2026-01-28)
 
 ### Features
