@@ -1,5 +1,6 @@
 {#
- # Default collection preview template - shows count.
+ # Default collection preview template - shows count with optional link
+ # to the target entity's admin list (filtered by the parent entity).
  #
  # Variables:
  # @var object entity - The root entity being displayed
@@ -7,4 +8,11 @@
  # @var string property - The property name being displayed
  #}
 
-{{ value|length }} item{{ value|length != 1 ? 's' : '' }}
+{% set collectionUrl = admin_collection_url(entity, property, true) %}
+{% set label %}{{ value|length }} item{{ value|length != 1 ? 's' : '' }}{% endset %}
+
+{% if collectionUrl %}
+    <a href="{{ collectionUrl }}">{{ label }}</a>
+{% else %}
+    {{ label }}
+{% endif %}

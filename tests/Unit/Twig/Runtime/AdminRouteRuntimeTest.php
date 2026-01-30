@@ -2,8 +2,14 @@
 
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
+use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Kachnitel\AdminBundle\Attribute\AdminRoutes;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -18,7 +24,7 @@ class AdminRouteRuntimeTest extends TestCase
     private RouterInterface&MockObject $router;
     private AttributeHelper&MockObject $attributeHelper;
     private AdminRouteRuntime $runtime;
-    private ?AuthorizationCheckerInterface $authChecker = null;
+    private AuthorizationCheckerInterface&MockObject $authChecker;
 
     protected function setUp(): void
     {
@@ -755,5 +761,324 @@ class AdminRouteRuntimeTest extends TestCase
 
         $result = $runtime->isActionAccessible('UnknownEntity', 'new');
         $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function getCollectionAdminUrlReturnsNullWithoutDependencies(): void
+    {
+        $result = $this->runtime->getCollectionAdminUrl(new TestEntity(), 'tags');
+        $this->assertNull($result);
+    }
+
+    /**
+     * @test
+     */
+    public function getCollectionAdminUrlReturnsNullForNonCollectionProperty(): void
+    {
+        $em = $this->createMock(EntityManagerInterface::class);
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
+
+        /** @var ClassMetadata<TestEntity>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $metadata->method('isCollectionValuedAssociation')->with('name')->willReturn(false);
+
+        $em->method('getClassMetadata')->willReturn($metadata);
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,
+            $entityDiscovery,
+            null,
+            $em
+        );
+
+        $result = $runtime->getCollectionAdminUrl(new TestEntity(), 'name');
+        $this->assertNull($result);
+    }
+
+    /**
+     * @test
+     */
+    public function getCollectionAdminUrlReturnsNullWhenTargetHasNoAdmin(): void
+    {
+        $em = $this->createMock(EntityManagerInterface::class);
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
+
+        /** @var ClassMetadata<TestEntity>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $metadata->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
+        $metadata->method('getAssociationTargetClass')->with('tags')->willReturn(TagEntity::class);
+
+        $em->method('getClassMetadata')->willReturn($metadata);
+        $entityDiscovery->method('isAdminEntity')->with(TagEntity::class)->willReturn(false);
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,
+            $entityDiscovery,
+            null,
+            $em
+        );
+
+        $result = $runtime->getCollectionAdminUrl(new TestEntity(), 'tags');
+        $this->assertNull($result);
+    }
+
+    /**
+     * @test
+     */
+    public function getCollectionAdminUrlReturnsUrlWithFilterForOneToMany(): void
+    {
+        $em = $this->createMock(EntityManagerInterface::class);
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
+
+        /** @var ClassMetadata<TestEntity>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $metadata->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
+        $metadata->method('getAssociationTargetClass')->with('tags')->willReturn(TagEntity::class);
+        $oneToManyMapping = new OneToManyAssociationMapping('tags', TestEntity::class, TagEntity::class);
+        $oneToManyMapping->mappedBy = 'testEntity';
+        $metadata->method('getAssociationMapping')->with('tags')->willReturn($oneToManyMapping);
+
+        $em->method('getClassMetadata')->willReturn($metadata);
+        $entityDiscovery->method('isAdminEntity')->with(TagEntity::class)->willReturn(true);
+
+        $this->attributeHelper->method('getAttribute')->willReturn(null);
+
+        $this->router
+            ->expects($this->once())
+            ->method('generate')
+            ->with(
+                'app_admin_entity_index',
+                $this->callback(function (array $params) {
+                    return $params['entitySlug'] === 'tag-entity'
+                        && isset($params['columnFilters']['testEntity'])
+                        && $params['columnFilters']['testEntity'] === '42';
+                })
+            )
+            ->willReturn('/admin/tag-entity?columnFilters%5BtestEntity%5D=42');
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,
+            $entityDiscovery,
+            null,
+            $em
+        );
+
+        $entity = new class {
+            public function getId(): int
+            {
+                return 42;
+            }
+        };
+
+        $result = $runtime->getCollectionAdminUrl($entity, 'tags');
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('tag-entity', $result);
+    }
+
+    /**
+     * @test
+     */
+    public function getCollectionAdminUrlReturnsUrlWithoutFilterForManyToMany(): void
+    {
+        $em = $this->createMock(EntityManagerInterface::class);
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
+
+        /** @var ClassMetadata<TestEntity>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $metadata->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
+        $metadata->method('getAssociationTargetClass')->with('items')->willReturn(TagEntity::class);
+        $manyToManyMapping = new ManyToManyOwningSideMapping('items', TestEntity::class, TagEntity::class);
+        $metadata->method('getAssociationMapping')->with('items')->willReturn($manyToManyMapping);
+
+        $em->method('getClassMetadata')->willReturn($metadata);
+        $entityDiscovery->method('isAdminEntity')->with(TagEntity::class)->willReturn(true);
+
+        $this->attributeHelper->method('getAttribute')->willReturn(null);
+
+        $this->router
+            ->expects($this->once())
+            ->method('generate')
+            ->with(
+                'app_admin_entity_index',
+                $this->callback(function (array $params) {
+                    return $params['entitySlug'] === 'tag-entity'
+                        && !isset($params['columnFilters']);
+                })
+            )
+            ->willReturn('/admin/tag-entity');
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,
+            $entityDiscovery,
+            null,
+            $em
+        );
+
+        $result = $runtime->getCollectionAdminUrl(new TestEntity(), 'items');
+        $this->assertNotNull($result);
+    }
+
+    /**
+     * @test
+     */
+    public function getEntityAdminUrlReturnsNullWithoutDependencies(): void
+    {
+        $result = $this->runtime->getEntityAdminUrl(new TestEntity());
+        $this->assertNull($result);
+    }
+
+    /**
+     * @test
+     */
+    public function getEntityAdminUrlReturnsNullWhenEntityHasNoAdmin(): void
+    {
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
+        $entityDiscovery->method('isAdminEntity')->willReturn(false);
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,
+            $entityDiscovery
+        );
+
+        $result = $runtime->getEntityAdminUrl(new TagEntity());
+        $this->assertNull($result);
+    }
+
+    /**
+     * @test
+     */
+    public function getEntityAdminUrlReturnsShowUrlForAdminEntity(): void
+    {
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
+        $entityDiscovery->method('isAdminEntity')->willReturn(true);
+
+        $this->attributeHelper->method('getAttribute')->willReturn(null);
+
+        $this->router
+            ->expects($this->once())
+            ->method('generate')
+            ->with(
+                'app_admin_entity_show',
+                $this->callback(function (array $params) {
+                    return isset($params['entitySlug'], $params['id'])
+                        && $params['id'] === 42;
+                })
+            )
+            ->willReturn('/admin/test-entity/42');
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,
+            $entityDiscovery
+        );
+
+        $entity = new class {
+            public function getId(): int
+            {
+                return 42;
+            }
+        };
+
+        $result = $runtime->getEntityAdminUrl($entity);
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('42', $result);
+    }
+
+    /**
+     * @test
+     */
+    public function getEntityAdminUrlFallsBackToIndexWhenNoId(): void
+    {
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
+        $entityDiscovery->method('isAdminEntity')->willReturn(true);
+
+        $this->attributeHelper->method('getAttribute')->willReturn(null);
+
+        $this->router
+            ->expects($this->once())
+            ->method('generate')
+            ->with(
+                'app_admin_entity_index',
+                $this->callback(function (array $params) {
+                    return isset($params['entitySlug'])
+                        && !isset($params['columnFilters']);
+                })
+            )
+            ->willReturn('/admin/test-entity');
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,
+            $entityDiscovery
+        );
+
+        $entity = new class {
+            // No getId() method
+            public function getName(): string
+            {
+                return 'Test';
+            }
+        };
+
+        $result = $runtime->getEntityAdminUrl($entity);
+        $this->assertNotNull($result);
+    }
+
+    /**
+     * @test
+     */
+    public function getEntityAdminUrlFallsBackToIndexWithIdFilter(): void
+    {
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
+        $entityDiscovery->method('isAdminEntity')->willReturn(true);
+
+        // Return null for 'show' route so it falls back to 'index'
+        $this->attributeHelper->method('getAttribute')->willReturn(
+            new AdminRoutes(['index' => 'app_admin_entity_index'])
+        );
+
+        $this->router
+            ->expects($this->once())
+            ->method('generate')
+            ->with(
+                'app_admin_entity_index',
+                $this->callback(function (array $params) {
+                    return isset($params['entitySlug'], $params['columnFilters']['id'])
+                        && $params['columnFilters']['id'] === '7';
+                })
+            )
+            ->willReturn('/admin/test-entity?columnFilters%5Bid%5D=7');
+
+        $runtime = new AdminRouteRuntime(
+            $this->router,
+            $this->attributeHelper,
+            null,
+            $entityDiscovery
+        );
+
+        $entity = new class {
+            public function getId(): int
+            {
+                return 7;
+            }
+        };
+
+        $result = $runtime->getEntityAdminUrl($entity);
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('columnFilters', $result);
     }
 }
