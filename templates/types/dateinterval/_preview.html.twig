@@ -1,0 +1,8 @@
+{#
+ # DateInterval preview template.
+ #
+ # Variables:
+ # @var DateInterval|null value - The interval value
+ #}
+
+{{ value ? value.days ~ 'd ' ~ value.h ~ 'h ' ~ value.i ~ 'm' : '' }}

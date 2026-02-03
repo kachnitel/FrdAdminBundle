@@ -1,0 +1,8 @@
+{#
+ # Time preview template.
+ #
+ # Variables:
+ # @var DateTime|null value - The time value
+ #}
+
+{{ value ? value|date('H:i:s') : '' }}
