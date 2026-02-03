@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Attribute\AdminRoutes;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
@@ -24,7 +25,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         private ?AuthorizationCheckerInterface $authChecker = null,
         private ?EntityDiscoveryService $entityDiscovery = null,
         private ?FormRegistryInterface $formRegistry = null,
-        private ?EntityManagerInterface $em = null,
         private string $formNamespace = 'App\\Form\\',
         private string $formSuffix = 'FormType'
     ) {}
@@ -241,113 +241,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         }
 
         return true;
-    }
-
-    /**
-     * Get a URL to the admin page for a single related entity.
-     *
-     * Tries the "show" route first (direct link to the entity's detail page).
-     * Falls back to the "index" route with an id filter if no show route is available.
-     *
-     * Returns null if the entity's class has no #[Admin] attribute.
-     */
-    public function getEntityAdminUrl(object $relatedEntity, bool $checkAccess = true): ?string
-    {
-        if ($this->entityDiscovery === null) {
-            return null;
-        }
-
-        $entityClass = $this->getRealClass($relatedEntity);
-
-        if (!$this->entityDiscovery->isAdminEntity($entityClass)) {
-            return null;
-        }
-
-        $shortName = (new \ReflectionClass($entityClass))->getShortName();
-        $entitySlug = strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($shortName)));
-        $entityId = method_exists($relatedEntity, 'getId') ? $relatedEntity->getId() : null;
-
-        // Try "show" route first
-        if (!$checkAccess || $this->isActionAccessible($shortName, 'show')) {
-            $showRoute = $this->getRoute($entityClass, 'show');
-            if ($showRoute !== null && $entityId !== null) {
-
-                return $this->router->generate($showRoute, [
-                    'entitySlug' => $entitySlug,
-                    'id' => $entityId,
-                ]);
-            }
-        }
-
-        if ($checkAccess && !$this->isActionAccessible($shortName, 'index')) {
-            return null;
-        }
-
-        // Fallback to "index" route, filtered by id if available
-        $indexRoute = $this->getRoute($entityClass, 'index');
-        if ($indexRoute !== null) {
-            $parameters = ['entitySlug' => $entitySlug];
-            if ($entityId !== null) {
-                $parameters['columnFilters'] = ['id' => (string) $entityId];
-            }
-            return $this->router->generate($indexRoute, $parameters);
-        }
-
-        return null;
-    }
-
-    /**
-     * Get a URL to the target entity's admin list, pre-filtered to show items
-     * related to the given entity's collection property.
-     *
-     * For OneToMany associations, the URL includes a columnFilter on the inverse
-     * ManyToOne field so the list shows only items belonging to this entity.
-     * For ManyToMany, the URL links to the target admin without a pre-applied filter.
-     *
-     * Returns null if the target entity has no #[Admin] attribute.
-     */
-    public function getCollectionAdminUrl(object $entity, string $property, bool $checkAccess = true): ?string
-    {
-        if ($this->em === null || $this->entityDiscovery === null) {
-            return null;
-        }
-
-        $entityClass = $this->getRealClass($entity);
-        $metadata = $this->em->getClassMetadata($entityClass);
-
-        if (!$metadata->isCollectionValuedAssociation($property)) {
-            return null;
-        }
-
-        $targetClass = $metadata->getAssociationTargetClass($property);
-
-        if (!$this->entityDiscovery->isAdminEntity($targetClass)) {
-            return null;
-        }
-
-        $route = $this->getRoute($targetClass, 'index');
-        if ($route === null) {
-            return null;
-        }
-
-        $targetShortName = (new \ReflectionClass($targetClass))->getShortName();
-
-        if ($checkAccess && !$this->isActionAccessible($targetShortName, 'index')) {
-            return null;
-        }
-
-        $targetSlug = strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($targetShortName)));
-
-        $mapping = $metadata->getAssociationMapping($property);
-        $mappedBy = $mapping->mappedBy ?? null;
-
-        $parameters = ['entitySlug' => $targetSlug];
-
-        if ($mappedBy !== null && method_exists($entity, 'getId') && $entity->getId() !== null) {
-            $parameters['columnFilters'] = [$mappedBy => (string) $entity->getId()];
-        }
-
-        return $this->router->generate($route, $parameters);
     }
 
     /**

@@ -43,6 +43,12 @@ services:
         resource: '../src/Twig/Runtime'
         tags: ['twig.runtime']
 
+    # AdminEntityUrlRuntime with entity discovery and entity manager
+    Kachnitel\AdminBundle\Twig\Runtime\AdminEntityUrlRuntime:
+        arguments:
+            $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
+        tags: ['twig.runtime']
+
     # AdminRouteRuntime with additional dependencies for permission checks
     Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime:
         arguments:
