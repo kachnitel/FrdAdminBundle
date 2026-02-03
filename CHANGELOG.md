@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.4.2](https://github.com/kachnitel/FrdAdminBundle/compare/v0.4.1...v0.4.2) (2026-02-03)
+
+### Features
+
+* Add date_immutable field type preview ([203f87](https://github.com/kachnitel/FrdAdminBundle/commit/203f87930dd8ba7d685a2f9ba2f2ead4a8434921))
+* Support all types listed in Doctrine\DBAL\Types\Types ([e52375](https://github.com/kachnitel/FrdAdminBundle/commit/e523750ce603a2c44007a784b61cd196f82b7907))
+
+
+---
+
 ## [0.4.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.4.0...v0.4.1) (2026-01-30)
 
 ### Features
