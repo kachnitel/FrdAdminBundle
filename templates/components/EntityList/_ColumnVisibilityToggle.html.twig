@@ -1,0 +1,36 @@
+{#
+ # Partial template for column visibility toggle dropdown.
+ #
+ # Uses native HTML <details>/<summary> for dropdown functionality (no JavaScript needed).
+ #
+ # Variables:
+ # @var array allColumns - All column names (including hidden)
+ # @var array hiddenColumns - Currently hidden column names
+ # @var array columnLabels - Map of column name => label
+ #}
+
+{% import kachnitel_admin_theme as css %}
+
+<div class="admin-column-visibility {{ css.mb_3() }}">
+    <details class="{{ css.inline_block() }}" style="position: relative;">
+        <summary class="{{ css.btn_outline_secondary() }} {{ css.btn_sm() }}" style="cursor: pointer; list-style: none;">
+            Columns
+        </summary>
+        <div style="position: absolute; z-index: 1000; min-width: 200px; background: white; border: 1px solid #dee2e6; border-radius: 4px; padding: 8px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-top: 4px;">
+            {% for column in allColumns %}
+                <label style="display: block; padding: 4px 16px; cursor: pointer; white-space: nowrap;" class="hover-bg-light">
+                    <input
+                        type="checkbox"
+                        class="{{ css.form_checkbox() }}"
+                        value="{{ column }}"
+                        {% if column not in hiddenColumns %}checked{% endif %}
+                        data-action="live#action"
+                        data-live-action-param="toggleColumnVisibility"
+                        data-live-column-param="{{ column }}"
+                    >
+                    <span style="margin-left: 8px;">{{ columnLabels[column] ?? (column|humanize) }}</span>
+                </label>
+            {% endfor %}
+        </div>
+    </details>
+</div>

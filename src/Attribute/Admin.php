@@ -22,6 +22,11 @@ use Attribute;
  *     itemsPerPage: 25
  * )]
  * class Product { }
+ *
+ * REVIEW: allow multiple attributes on one class with different configs?
+ *   - requires diff. alias
+ *   - could be useful to have different admin views for same entity?
+ *   - is it better to add optional per-column permissions and user column settings?
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 class Admin
@@ -29,7 +34,7 @@ class Admin
     /**
      * Configuration attribute constructor.
      *
-     * Note: This attribute has 12 parameters because it serves as a comprehensive
+     * Note: This attribute has 13 parameters because it serves as a comprehensive
      * configuration object for entity admin panels. Each parameter controls a specific
      * aspect of the admin interface behavior. Grouping these into sub-objects would
      * make the attribute API more complex without meaningful benefits.
@@ -39,6 +44,7 @@ class Admin
      * @param string|null $formType Custom form type class for create/edit forms
      * @param bool $enableFilters Enable column filtering in list view
      * @param bool $enableBatchActions Enable batch actions (e.g., bulk delete)
+     * @param bool $enableColumnVisibility Enable column show/hide toggle in list view
      * @param array<string>|null $columns Explicit list of columns to display (null = auto-detect from entity)
      * @param array<string>|null $excludeColumns Columns to exclude from display
      * @param array<string>|null $filterableColumns Columns that can be filtered (null = all visible columns)
@@ -55,6 +61,7 @@ class Admin
         private ?string $formType = null,
         private bool $enableFilters = true,
         private bool $enableBatchActions = false,
+        private bool $enableColumnVisibility = false,
         private ?array $columns = null,
         private ?array $excludeColumns = null,
         private ?array $filterableColumns = null,
@@ -87,6 +94,11 @@ class Admin
     public function isEnableBatchActions(): bool
     {
         return $this->enableBatchActions;
+    }
+
+    public function isEnableColumnVisibility(): bool
+    {
+        return $this->enableColumnVisibility;
     }
 
     /**

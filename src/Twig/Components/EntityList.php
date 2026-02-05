@@ -12,6 +12,8 @@ use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
+use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
+use Kachnitel\AdminBundle\Service\Preferences\ColumnVisibilityPreferenceTrait;
 use Kachnitel\AdminBundle\ValueObject\PaginationInfo;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -45,6 +47,7 @@ class EntityList
     public const SORT_DESC = 'DESC';
 
     use DefaultActionTrait;
+    use ColumnVisibilityPreferenceTrait;
 
     #[LiveProp(writable: true, url: true)]
     public string $search = '';
@@ -77,6 +80,14 @@ class EntityList
      */
     #[LiveProp(writable: true)]
     public array $selectedIds = [];
+
+    /**
+     * Column names currently hidden by the user.
+     *
+     * @var array<string>
+     */
+    #[LiveProp(writable: true)]
+    public array $hiddenColumns = [];
 
     /**
      * Data source identifier (alternative to entityClass).
@@ -125,6 +136,7 @@ class EntityList
         private DataSourceRegistry $dataSourceRegistry,
         private DoctrineDataSourceFactory $doctrineFactory,
         private EntityListBatchService $batchService,
+        private AdminPreferencesStorageInterface $preferencesStorage,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -398,6 +410,81 @@ class EntityList
     public function supportsBatchActions(): bool
     {
         return $this->getDataSource()->supportsAction('batch_delete');
+    }
+
+    /**
+     * Check if column visibility toggle is supported for this data source.
+     */
+    public function supportsColumnVisibility(): bool
+    {
+        return $this->getDataSource()->supportsAction('column_visibility');
+    }
+
+    /**
+     * Get columns that are currently visible (all columns minus hidden ones).
+     *
+     * @return array<int|string, string>
+     */
+    public function getVisibleColumns(): array
+    {
+        $allColumns = $this->getColumns();
+
+        if (empty($this->hiddenColumns)) {
+            return $allColumns;
+        }
+
+        return array_values(array_filter(
+            $allColumns,
+            fn(string $col) => !in_array($col, $this->hiddenColumns, true)
+        ));
+    }
+
+    /**
+     * Toggle column visibility.
+     */
+    #[LiveAction]
+    public function toggleColumnVisibility(#[LiveArg] string $column): void
+    {
+        if (in_array($column, $this->hiddenColumns, true)) {
+            // Show the column
+            $this->hiddenColumns = array_values(array_diff($this->hiddenColumns, [$column]));
+        } else {
+            // Hide the column
+            $this->hiddenColumns[] = $column;
+        }
+
+        // Save to preferences storage
+        $this->saveHiddenColumns($this->hiddenColumns);
+
+        // Clear cached query result to trigger re-render
+        unset($this->cache['queryResult']);
+    }
+
+    /**
+     * Load column visibility preferences after hydration.
+     */
+    #[PostHydrate]
+    public function loadColumnVisibility(): void
+    {
+        if ($this->supportsColumnVisibility() && empty($this->hiddenColumns)) {
+            $this->hiddenColumns = $this->loadHiddenColumns();
+        }
+    }
+
+    /**
+     * Get the preferences storage instance (required by ColumnVisibilityPreferenceTrait).
+     */
+    protected function getPreferencesStorage(): AdminPreferencesStorageInterface
+    {
+        return $this->preferencesStorage;
+    }
+
+    /**
+     * Get the list identifier for this component (required by ColumnVisibilityPreferenceTrait).
+     */
+    protected function getListIdentifier(): string
+    {
+        return $this->dataSourceId ?? $this->entityShortClass;
     }
 
     /**

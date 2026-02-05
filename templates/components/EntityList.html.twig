@@ -17,6 +17,8 @@
 {% set dataSource = this.dataSource %}
 {% set isDoctrineEntity = this.isDoctrineEntity() %}
 {% set showBatchColumn = this.canBatchDelete() %}
+{% set showColumnVisibility = this.supportsColumnVisibility() %}
+{% set visibleColumns = showColumnVisibility ? this.visibleColumns : this.columns %}
 
 <div
     {% if showBatchColumn %}
@@ -32,6 +34,18 @@
         } only %}
     {% endif %}
 
+    {# Column Visibility Toggle #}
+    {% if showColumnVisibility %}
+        {% set columnLabels = {} %}
+        {% for column in this.columns %}
+            {% set columnLabels = columnLabels|merge({ (column): dataSource.columns[column] is defined ? dataSource.columns[column].label : column|humanize }) %}
+        {% endfor %}
+        {% include '@KachnitelAdmin/components/EntityList/_ColumnVisibilityToggle.html.twig' with {
+            allColumns: this.columns,
+            hiddenColumns: this.hiddenColumns,
+            columnLabels: columnLabels,
+        } only %}
+    {% endif %}
 
     {# Global Search #}
     {% if block('search') is defined %}
@@ -65,7 +79,7 @@
                         >
                     </th>
                 {% endif %}
-                {% for column in this.columns %}
+                {% for column in visibleColumns %}
                     {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
                         column: column,
                         columnLabel: dataSource.columns[column] is defined ? dataSource.columns[column].label : null,
@@ -80,7 +94,7 @@
                 {% if showBatchColumn %}
                     <th></th>
                 {% endif %}
-                {% for column in this.columns %}
+                {% for column in visibleColumns %}
                     <th>
                         {% if this.filterMetadata[column] is defined %}
                             <twig:K:Admin:ColumnFilter
@@ -111,7 +125,7 @@
                             >
                         </td>
                     {% endif %}
-                    {% for column in this.columns %}
+                    {% for column in visibleColumns %}
                         <td>
                             {% set value = this.getEntityValue(entity, column) %}
                             {% set columnMeta = dataSource.columns[column] ?? null %}
@@ -163,7 +177,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="{{ this.columns|length + (showBatchColumn ? 2 : 1) }}" class="{{ css.text_center() }} {{ css.text_muted() }} {{ css.py_4() }}">
+                    <td colspan="{{ visibleColumns|length + (showBatchColumn ? 2 : 1) }}" class="{{ css.text_center() }} {{ css.text_muted() }} {{ css.py_4() }}">
                         No {{ dataSource.label }} found.
                     </td>
                 </tr>

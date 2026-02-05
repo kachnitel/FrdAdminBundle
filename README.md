@@ -1,9 +1,9 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-609%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-74%25-yellow>)
-![Assertions](<https://img.shields.io/badge/assertions-1381-blue>)
+![Tests](<https://img.shields.io/badge/tests-616%20passed-brightgreen>)
+![Coverage](<https://img.shields.io/badge/coverage-73%25-yellow>)
+![Assertions](<https://img.shields.io/badge/assertions-1394-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.2-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0|^8.0-000000?logo=symfony&logoColor=white>)
@@ -21,6 +21,7 @@
 - **[Configuration Guide](docs/CONFIGURATION.md)** - Configure entities with the `#[Admin]` attribute
 - **[DataSource Abstraction](docs/DATASOURCE.md)** - Display non-Doctrine data sources in the admin
 - **[Column Filtering](docs/FILTERS.md)** - Automatic per-column filters and customization
+- **[Column Visibility](docs/COLUMN_VISIBILITY.md)** - Let users show/hide columns with persistent preferences
 - **[Batch Actions Setup](docs/BATCH_ACTIONS.md)** - Enable multi-select and bulk operations
 - **[Asset Management](docs/ASSETS.md)** - AssetMapper & Webpack Encore setup for Stimulus controllers
 - **[Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md)** - Customize the admin interface appearance
@@ -33,6 +34,7 @@
 - 🔧 **Type-Based Rendering**: Smart property rendering based on Doctrine types
 - 📝 **Attribute-Driven**: Modern PHP 8+ attribute configuration
 - 🔍 **Filters & Search**: Built-in filtering and search capabilities
+- 👁️ **Column Visibility**: Show/hide columns with session or database-backed preferences
 - ⚡ **Batch Operations**: Multi-select with Shift/Ctrl+Click and bulk delete
 - 📊 **Dashboard & Menu**: Configurable admin dashboard and navigation
 - 🔌 **DataSource Abstraction**: Display data from external APIs, audit logs, or any source
@@ -96,9 +98,24 @@ class Product
 
 That's it! The entity will now appear in the admin dashboard at `/admin`.
 
-### 5. Enable Batch Actions (Optional)
+### 5. Enable Optional Features
 
-For multi-select and batch delete functionality, you'll need to:
+#### Column Visibility (Recommended)
+
+Let users show/hide columns:
+
+```php
+#[Admin(label: 'Products', enableColumnVisibility: true)]
+class Product { /* ... */ }
+```
+
+A "Columns" dropdown appears in the list view. Settings are saved in the user's session (or database with custom storage).
+
+**→ See the [Column Visibility Guide](docs/COLUMN_VISIBILITY.md) for custom storage setup.**
+
+#### Batch Actions
+
+For multi-select and batch delete functionality:
 
 1. Enable batch actions on your entity:
    ```php

@@ -20,6 +20,14 @@ services:
     Kachnitel\AdminBundle\Service\:
         resource: '../src/Service'
 
+    # Admin Preferences services
+    Kachnitel\AdminBundle\Service\Preferences\:
+        resource: '../src/Service/Preferences'
+
+    # Default preferences storage implementation (can be overridden by consuming apps)
+    Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface:
+        alias: Kachnitel\AdminBundle\Service\Preferences\SessionAdminPreferencesStorage
+
     # DataSource services (exclude DoctrineDataSource - created by factory, not a service)
     Kachnitel\AdminBundle\DataSource\:
         resource: '../src/DataSource'

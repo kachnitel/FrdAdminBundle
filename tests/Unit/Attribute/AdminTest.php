@@ -21,6 +21,7 @@ class AdminTest extends TestCase
         $this->assertNull($admin->getFormType());
         $this->assertTrue($admin->isEnableFilters());
         $this->assertFalse($admin->isEnableBatchActions());
+        $this->assertFalse($admin->isEnableColumnVisibility());
         $this->assertNull($admin->getColumns());
         $this->assertNull($admin->getExcludeColumns());
         $this->assertNull($admin->getFilterableColumns());
@@ -78,6 +79,16 @@ class AdminTest extends TestCase
         $admin = new Admin(enableBatchActions: true);
 
         $this->assertTrue($admin->isEnableBatchActions());
+    }
+
+    /**
+     * @test
+     */
+    public function columnVisibilityCanBeEnabled(): void
+    {
+        $admin = new Admin(enableColumnVisibility: true);
+
+        $this->assertTrue($admin->isEnableColumnVisibility());
     }
 
     /**
@@ -208,6 +219,7 @@ class AdminTest extends TestCase
             formType: 'App\\Form\\ProductType',
             enableFilters: true,
             enableBatchActions: true,
+            enableColumnVisibility: true,
             columns: ['id', 'name', 'price'],
             excludeColumns: ['internalNotes'],
             filterableColumns: ['name', 'price'],
@@ -222,6 +234,7 @@ class AdminTest extends TestCase
         $this->assertSame('App\\Form\\ProductType', $admin->getFormType());
         $this->assertTrue($admin->isEnableFilters());
         $this->assertTrue($admin->isEnableBatchActions());
+        $this->assertTrue($admin->isEnableColumnVisibility());
         $this->assertSame(['id', 'name', 'price'], $admin->getColumns());
         $this->assertSame(['internalNotes'], $admin->getExcludeColumns());
         $this->assertSame(['name', 'price'], $admin->getFilterableColumns());
