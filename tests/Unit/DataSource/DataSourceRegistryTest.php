@@ -256,6 +256,81 @@ class DataSourceRegistryTest extends TestCase
         $this->assertArrayHasKey('Category', $registry->all());
     }
 
+    public function testResolveByDataSourceId(): void
+    {
+        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource->method('getIdentifier')->willReturn('custom-source');
+
+        $this->doctrineFactory->method('createAll')->willReturn([]);
+
+        $registry = new DataSourceRegistry([$dataSource], [], $this->doctrineFactory);
+
+        $this->assertSame($dataSource, $registry->resolve('custom-source', '', ''));
+    }
+
+    public function testResolveByDataSourceIdThrowsWhenNotFound(): void
+    {
+        $this->doctrineFactory->method('createAll')->willReturn([]);
+
+        $registry = new DataSourceRegistry([], [], $this->doctrineFactory);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Data source "missing" not found.');
+        $registry->resolve('missing', '', '');
+    }
+
+    public function testResolveByEntityShortClass(): void
+    {
+        $doctrineDs = $this->createMock(DoctrineDataSource::class);
+        $doctrineDs->method('getIdentifier')->willReturn('Product');
+
+        $this->doctrineFactory->method('createAll')->willReturn([$doctrineDs]);
+
+        $registry = new DataSourceRegistry([], [], $this->doctrineFactory);
+
+        $this->assertSame($doctrineDs, $registry->resolve(null, 'Product', ''));
+    }
+
+    public function testResolveByEntityClassFallback(): void
+    {
+        $doctrineDs = $this->createMock(DoctrineDataSource::class);
+
+        $this->doctrineFactory->method('createAll')->willReturn([]);
+        $this->doctrineFactory->method('createForClass')
+            ->with('App\Entity\Product')
+            ->willReturn($doctrineDs);
+
+        $registry = new DataSourceRegistry([], [], $this->doctrineFactory);
+
+        $this->assertSame($doctrineDs, $registry->resolve(null, 'UnknownShort', 'App\Entity\Product'));
+    }
+
+    public function testResolveThrowsWhenNothingConfigured(): void
+    {
+        $this->doctrineFactory->method('createAll')->willReturn([]);
+
+        $registry = new DataSourceRegistry([], [], $this->doctrineFactory);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('No data source or entity class configured.');
+        $registry->resolve(null, '', '');
+    }
+
+    public function testResolveDataSourceIdTakesPriorityOverEntityShortClass(): void
+    {
+        $customDs = $this->createMock(DataSourceInterface::class);
+        $customDs->method('getIdentifier')->willReturn('custom-source');
+
+        $doctrineDs = $this->createMock(DoctrineDataSource::class);
+        $doctrineDs->method('getIdentifier')->willReturn('Product');
+
+        $this->doctrineFactory->method('createAll')->willReturn([$doctrineDs]);
+
+        $registry = new DataSourceRegistry([$customDs], [], $this->doctrineFactory);
+
+        $this->assertSame($customDs, $registry->resolve('custom-source', 'Product', 'App\Entity\Product'));
+    }
+
     public function testMultipleProvidersAreMerged(): void
     {
         $this->doctrineFactory->method('createAll')->willReturn([]);

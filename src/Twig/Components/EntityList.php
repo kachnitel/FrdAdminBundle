@@ -7,7 +7,6 @@ namespace Kachnitel\AdminBundle\Twig\Components;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
-use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
@@ -136,7 +135,6 @@ class EntityList
         private Security $security,
         private EntityListConfig $config,
         private DataSourceRegistry $dataSourceRegistry,
-        private DoctrineDataSourceFactory $doctrineFactory,
         private EntityListBatchService $batchService,
         private AdminPreferencesStorageInterface $preferencesStorage,
         private ColumnPermissionService $columnPermissionService,
@@ -170,36 +168,11 @@ class EntityList
      */
     private function resolveDataSource(): DataSourceInterface
     {
-        if (isset($this->cache['dataSource'])) {
-            return $this->cache['dataSource'];
-        }
-
-        // Try to resolve by dataSourceId first
-        if ($this->dataSourceId !== null) {
-            $dataSource = $this->dataSourceRegistry->get($this->dataSourceId);
-            if ($dataSource === null) {
-                throw new \RuntimeException(sprintf('Data source "%s" not found.', $this->dataSourceId));
-            }
-            $this->cache['dataSource'] = $dataSource;
-            return $dataSource;
-        }
-
-        // Try to resolve by entityShortClass from registry
-        if ($this->entityShortClass !== '') {
-            $dataSource = $this->dataSourceRegistry->get($this->entityShortClass);
-            if ($dataSource !== null) {
-                $this->cache['dataSource'] = $dataSource;
-                return $dataSource;
-            }
-        }
-
-        // Create DoctrineDataSource on-demand for the entity class
-        if ($this->entityClass !== '') {
-            $this->cache['dataSource'] = $this->doctrineFactory->createForClass($this->entityClass);
-            return $this->cache['dataSource'];
-        }
-
-        throw new \RuntimeException('No data source or entity class configured.');
+        return $this->cache['dataSource'] ??= $this->dataSourceRegistry->resolve(
+            $this->dataSourceId,
+            $this->entityShortClass,
+            $this->entityClass,
+        );
     }
 
     /**
