@@ -98,6 +98,7 @@
                     <th>
                         {% if this.filterMetadata[column] is defined %}
                             <twig:K:Admin:ColumnFilter
+                                key="{{ column }}"
                                 column="{{ column }}"
                                 value="{{ this.columnFilters[column]|default('') }}"
                                 :filterMetadata="this.filterMetadata[column]"

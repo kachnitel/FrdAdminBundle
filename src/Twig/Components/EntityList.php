@@ -125,7 +125,8 @@ class EntityList
      *     filterMetadata?: array<string, array<string, mixed>>,
      *     columns?: array<int|string, string>,
      *     dataSource?: DataSourceInterface,
-     *     dataSourceResolved?: bool
+     *     dataSourceResolved?: bool,
+     *     visibilityLoaded?: bool
      * }
      */
     private array $cache = [];
@@ -444,11 +445,20 @@ class EntityList
     /**
      * Get columns that are currently visible (all columns minus hidden ones).
      *
+     * Lazy-loads hidden columns from preferences storage on first access,
+     * which handles both initial page render and LiveComponent re-renders.
+     *
      * @return array<int|string, string>
      */
     public function getVisibleColumns(): array
     {
         $allColumns = $this->getColumns();
+
+        // Lazy-load from storage if not yet loaded (covers initial mount where PostHydrate doesn't fire)
+        if ($this->supportsColumnVisibility() && empty($this->hiddenColumns) && !isset($this->cache['visibilityLoaded'])) {
+            $this->hiddenColumns = $this->loadHiddenColumns();
+            $this->cache['visibilityLoaded'] = true;
+        }
 
         if (empty($this->hiddenColumns)) {
             return $allColumns;
@@ -483,6 +493,10 @@ class EntityList
 
     /**
      * Load column visibility preferences after hydration.
+     *
+     * On subsequent LiveComponent requests, hiddenColumns is hydrated from
+     * the client (writable LiveProp). We only load from storage if empty.
+     * The cache flag prevents getVisibleColumns() from double-loading.
      */
     #[PostHydrate]
     public function loadColumnVisibility(): void
@@ -490,6 +504,7 @@ class EntityList
         if ($this->supportsColumnVisibility() && empty($this->hiddenColumns)) {
             $this->hiddenColumns = $this->loadHiddenColumns();
         }
+        $this->cache['visibilityLoaded'] = true;
     }
 
     /**
