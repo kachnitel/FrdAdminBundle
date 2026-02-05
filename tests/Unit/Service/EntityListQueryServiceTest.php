@@ -6,6 +6,8 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -18,20 +20,32 @@ class EntityListQueryServiceTest extends TestCase
     /** @var EntityRepository<object>&MockObject */
     private MockObject&EntityRepository $repository;
     private MockObject&QueryBuilder $qb;
+    private Expr $expr;
+    /** @var ClassMetadata<object>&MockObject */
+    private MockObject&ClassMetadata $classMetadata;
 
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->repository = $this->createMock(EntityRepository::class);
         $this->qb = $this->createMock(QueryBuilder::class);
+        $this->expr = new Expr();
+        $this->classMetadata = $this->createMock(ClassMetadata::class);
 
         $this->em->method('getRepository')->willReturn($this->repository);
+        $this->em->method('getClassMetadata')->willReturn($this->classMetadata);
         $this->repository->method('createQueryBuilder')->willReturn($this->qb);
         $this->qb->method('andWhere')->willReturnSelf();
+        $this->qb->method('orWhere')->willReturnSelf();
         $this->qb->method('setParameter')->willReturnSelf();
         $this->qb->method('orderBy')->willReturnSelf();
         $this->qb->method('setFirstResult')->willReturnSelf();
         $this->qb->method('setMaxResults')->willReturnSelf();
+        $this->qb->method('expr')->willReturn($this->expr);
+
+        // Mock ClassMetadata methods
+        $this->classMetadata->method('getFieldNames')->willReturn(['id', 'name', 'description']);
+        $this->classMetadata->method('hasField')->willReturn(true);
 
         $this->service = new EntityListQueryService($this->em);
     }
