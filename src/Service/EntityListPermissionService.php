@@ -27,11 +27,23 @@ class EntityListPermissionService
     }
 
     /**
-     * Whether to show batch delete button.
+     * Whether batch delete is allowed.
+     *
+     * For Doctrine entities (entityClass non-empty): checks #[Admin] attribute + ADMIN_DELETE voter.
+     * For non-Doctrine data sources: checks ADMIN_DELETE voter on the identifier.
      */
-    public function canBatchDelete(string $entityClass, string $entityShortClass): bool
-    {
-        return $this->isBatchActionsEnabled($entityClass)
-            && $this->security->isGranted(AdminEntityVoter::ADMIN_DELETE, $entityShortClass);
+    public function canBatchDelete(
+        string $entityClass,
+        string $entityShortClass,
+        ?string $dataSourceId = null,
+    ): bool {
+        if ($entityClass !== '') {
+            return $this->isBatchActionsEnabled($entityClass)
+                && $this->security->isGranted(AdminEntityVoter::ADMIN_DELETE, $entityShortClass);
+        }
+
+        $identifier = $dataSourceId ?? $entityShortClass;
+
+        return $this->security->isGranted(AdminEntityVoter::ADMIN_DELETE, $identifier);
     }
 }

@@ -9,8 +9,8 @@ use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
-use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
+use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\Preferences\ColumnVisibilityPreferenceTrait;
@@ -137,7 +137,7 @@ class EntityList
         private DataSourceRegistry $dataSourceRegistry,
         private EntityListBatchService $batchService,
         private AdminPreferencesStorageInterface $preferencesStorage,
-        private ColumnPermissionService $columnPermissionService,
+        private EntityListColumnService $columnService,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -200,14 +200,11 @@ class EntityList
             return false;
         }
 
-        // For Doctrine entities, check permissions via permission service
-        if ($this->entityClass !== '') {
-            return $this->permissionService->canBatchDelete($this->entityClass, $this->entityShortClass);
-        }
-
-        // For non-Doctrine data sources, check ADMIN_DELETE permission on the identifier
-        $identifier = $this->dataSourceId ?? $this->entityShortClass;
-        return $this->security->isGranted(AdminEntityVoter::ADMIN_DELETE, $identifier);
+        return $this->permissionService->canBatchDelete(
+            $this->entityClass,
+            $this->entityShortClass,
+            $this->dataSourceId,
+        );
     }
 
     // --- UI ---
@@ -364,16 +361,10 @@ class EntityList
      */
     public function getFilterMetadata(): array
     {
-        if (!isset($this->cache['filterMetadata'])) {
-            $permittedColumns = $this->getColumns();
-            $this->cache['filterMetadata'] = [];
-            foreach ($this->getDataSource()->getFilters() as $name => $filter) {
-                if (in_array($name, $permittedColumns, true)) {
-                    $this->cache['filterMetadata'][$name] = $filter->toArray();
-                }
-            }
-        }
-        return $this->cache['filterMetadata'];
+        return $this->cache['filterMetadata'] ??= $this->columnService->getPermittedFilters(
+            $this->getDataSource(),
+            $this->entityClass,
+        );
     }
 
     /**
@@ -383,20 +374,10 @@ class EntityList
      */
     public function getColumns(): array
     {
-        if (!isset($this->cache['columns'])) {
-            $allColumns = array_keys($this->getDataSource()->getColumns());
-
-            if ($this->entityClass !== '') {
-                $denied = $this->columnPermissionService->getDeniedColumns($this->entityClass);
-                $allColumns = array_values(array_filter(
-                    $allColumns,
-                    fn(string $col) => !in_array($col, $denied, true)
-                ));
-            }
-
-            $this->cache['columns'] = $allColumns;
-        }
-        return $this->cache['columns'];
+        return $this->cache['columns'] ??= $this->columnService->getPermittedColumns(
+            $this->getDataSource(),
+            $this->entityClass,
+        );
     }
 
     /**

@@ -184,4 +184,72 @@ class EntityListPermissionServiceTest extends TestCase
 
         $this->service->canBatchDelete('App\\Entity\\Product', 'Product');
     }
+
+    // --- Non-Doctrine data source tests ---
+
+    /**
+     * @test
+     */
+    public function canBatchDeleteReturnsTrueForNonDoctrineWhenGranted(): void
+    {
+        $this->security->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_DELETE, 'custom-source')
+            ->willReturn(true);
+
+        $result = $this->service->canBatchDelete('', '', 'custom-source');
+
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @test
+     */
+    public function canBatchDeleteReturnsFalseForNonDoctrineWhenNotGranted(): void
+    {
+        $this->security->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_DELETE, 'custom-source')
+            ->willReturn(false);
+
+        $result = $this->service->canBatchDelete('', '', 'custom-source');
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * @test
+     */
+    public function canBatchDeleteUsesEntityShortClassWhenNoDataSourceId(): void
+    {
+        $this->security->expects($this->once())
+            ->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_DELETE, 'MyShortClass')
+            ->willReturn(true);
+
+        $this->service->canBatchDelete('', 'MyShortClass');
+    }
+
+    /**
+     * @test
+     */
+    public function canBatchDeletePrefersDataSourceIdOverEntityShortClass(): void
+    {
+        $this->security->expects($this->once())
+            ->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_DELETE, 'custom-source')
+            ->willReturn(true);
+
+        $this->service->canBatchDelete('', 'MyShortClass', 'custom-source');
+    }
+
+    /**
+     * @test
+     */
+    public function canBatchDeleteSkipsAttributeCheckForNonDoctrine(): void
+    {
+        $this->entityDiscovery->expects($this->never())->method('getAdminAttribute');
+
+        $this->security->method('isGranted')->willReturn(true);
+
+        $this->service->canBatchDelete('', '', 'custom-source');
+    }
 }
