@@ -10,6 +10,7 @@ use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
@@ -137,6 +138,7 @@ class EntityList
         private DoctrineDataSourceFactory $doctrineFactory,
         private EntityListBatchService $batchService,
         private AdminPreferencesStorageInterface $preferencesStorage,
+        private ColumnPermissionService $columnPermissionService,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -245,6 +247,12 @@ class EntityList
     {
         if (isset($this->cache['queryResult'])) {
             return $this->cache['queryResult']->items;
+        }
+
+        // Fall back to default sort if current sortBy column is permission-denied
+        if (!in_array($this->sortBy, $this->getColumns(), true)) {
+            $this->sortBy = $this->getDataSource()->getDefaultSortBy();
+            $this->sortDirection = $this->getDataSource()->getDefaultSortDirection();
         }
 
         $this->cache['queryResult'] = $this->getDataSource()->query(
@@ -376,30 +384,43 @@ class EntityList
     }
 
     /**
-     * Get filter metadata for template rendering.
+     * Get filter metadata for template rendering (filtered by column permissions).
      *
      * @return array<string, array<string, mixed>>
      */
     public function getFilterMetadata(): array
     {
         if (!isset($this->cache['filterMetadata'])) {
+            $permittedColumns = $this->getColumns();
             $this->cache['filterMetadata'] = [];
             foreach ($this->getDataSource()->getFilters() as $name => $filter) {
-                $this->cache['filterMetadata'][$name] = $filter->toArray();
+                if (in_array($name, $permittedColumns, true)) {
+                    $this->cache['filterMetadata'][$name] = $filter->toArray();
+                }
             }
         }
         return $this->cache['filterMetadata'];
     }
 
     /**
-     * Get columns for display.
+     * Get columns for display (filtered by column permissions).
      *
      * @return array<int|string, string>
      */
     public function getColumns(): array
     {
         if (!isset($this->cache['columns'])) {
-            $this->cache['columns'] = array_keys($this->getDataSource()->getColumns());
+            $allColumns = array_keys($this->getDataSource()->getColumns());
+
+            if ($this->entityClass !== '') {
+                $denied = $this->columnPermissionService->getDeniedColumns($this->entityClass);
+                $allColumns = array_values(array_filter(
+                    $allColumns,
+                    fn(string $col) => !in_array($col, $denied, true)
+                ));
+            }
+
+            $this->cache['columns'] = $allColumns;
         }
         return $this->cache['columns'];
     }

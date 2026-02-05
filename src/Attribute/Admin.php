@@ -23,10 +23,8 @@ use Attribute;
  * )]
  * class Product { }
  *
- * REVIEW: allow multiple attributes on one class with different configs?
- *   - requires diff. alias
- *   - could be useful to have different admin views for same entity?
- *   - is it better to add optional per-column permissions and user column settings?
+ * For per-column role-based visibility, @see ColumnPermission
+ * For user-toggleable column visibility, use enableColumnVisibility: true
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 class Admin
