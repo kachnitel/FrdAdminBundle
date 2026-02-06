@@ -7,6 +7,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.5.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.4.2...v0.5.0) (2026-02-06)
+
+### Features
+
+* Add per-column permissions; implement ColumnPermission attribute and related service ([0a8994](https://github.com/kachnitel/FrdAdminBundle/commit/0a89948588ef0e9ecba297e5ae612d02db037a46))
+* Implement column visibility preferences and storage; add related services and UI components ([f94cba](https://github.com/kachnitel/FrdAdminBundle/commit/f94cba9028b1080e5359253a87fc930f01bd0042))
+
+##### Tests
+
+* Add functional tests for column permission enforcement and visibility features ([2cca7b](https://github.com/kachnitel/FrdAdminBundle/commit/2cca7b1075ccf67bc669dcbb7a589c873293b11b))
+
+### Bug Fixes
+
+* Add key to ColumnFilters to ensure re-render on column select ([d3e334](https://github.com/kachnitel/FrdAdminBundle/commit/d3e3349b92465963bb3ed96978cadfa66d95ceea))
+* Update doctrine/orm and twig/twig dependencies; enhance test mocks for ClassMetadata ([de3941](https://github.com/kachnitel/FrdAdminBundle/commit/de394195d5cd5d66f2961989aa0304c3094cba39))
+
+##### Tests
+
+* Improve output buffering handling in bootstrap for test synchronization to fix lowest dependency test pass ([a296e7](https://github.com/kachnitel/FrdAdminBundle/commit/a296e77905acd0185e073ec01083d0e92f4900ce))
+
+### Code Refactoring
+
+* Create EntityListColumnService for column permission filtering and add unit tests ([52eb19](https://github.com/kachnitel/FrdAdminBundle/commit/52eb19a68e4b289ab80c6cc8e76b17203a66ed09))
+
+
+---
+
 ## [0.4.2](https://github.com/kachnitel/FrdAdminBundle/compare/v0.4.1...v0.4.2) (2026-02-03)
 
 ### Features
