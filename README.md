@@ -11,6 +11,17 @@
 
 A modern Symfony admin bundle powered by [LiveComponents](https://symfony.com/bundles/ux-live-component/current/index.html). Add one attribute to your entity and get a full CRUD interface with search, filters, pagination, and batch actions.
 
+<details>
+<summary><strong>Why another admin bundle?</strong></summary>
+#### Motivation
+
+I have struggled with keeping my controllers DRY as my applications grew. All my attempts at solving the issue eventually timed perfectly with [Live Components](https://symfony.com/bundles/ux-live-component/current/index.html) growing up into a mature and stable UX system. This bundle is the result of my attempts at previous reusable tables and admin generators, rebuilt on top of Live Components at its core.
+
+While there's excellent admin bundles out there, I felt like defining their configuration replaced my controller problem with a new "configuration problem". I wanted something that was easy to get started with, non-repetitive, but also flexible enough to handle complex use cases while leaning on established patterns.
+
+By leveraging Symfony UX, I was able to create a bundle that provides an admin interface with minimal boilerplate, while still allowing for deep customization through Twig templates and your own components.
+</details>
+
 ## Quick Start
 
 ### 1. Install
