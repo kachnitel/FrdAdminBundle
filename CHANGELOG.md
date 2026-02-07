@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.5.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.5.0...v0.5.1) (2026-02-07)
+
+### Features
+
+* Enhance release script and documentation for Flex recipe integration, update configuration examples, and fix routing configuration ([60e40f](https://github.com/kachnitel/FrdAdminBundle/commit/60e40f8eaada42c0a2385918a11a38a7cebcbc82))
+
+
+---
+
 ## [0.5.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.4.2...v0.5.0) (2026-02-06)
 
 ### Features
