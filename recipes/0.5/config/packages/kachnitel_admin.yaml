@@ -1,0 +1,14 @@
+kachnitel_admin:
+    # Your app's base layout template (admin extends this)
+    # base_layout: 'base.html.twig'
+
+    # Role required to access admin (set to ~ to disable)
+    # required_role: 'ROLE_ADMIN'
+
+    # Theme: bootstrap (default) or tailwind
+    # theme: '@KachnitelAdmin/theme/bootstrap.html.twig'
+
+    # Pagination defaults
+    # pagination:
+    #     default_items_per_page: 20
+    #     allowed_items_per_page: [10, 20, 50, 100]

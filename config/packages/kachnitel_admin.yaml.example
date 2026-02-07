@@ -1,48 +1,50 @@
 # Kachnitel Admin Bundle Configuration
+#
+# Entities are discovered automatically via #[Admin] attribute.
+# See docs/CONFIGURATION.md for entity attribute options.
 
 kachnitel_admin:
-    # Base namespace for entities (default: 'App\Entity\')
-    entity_namespace: 'App\Entity\'
+    # Your app's base layout template (admin extends this)
+    # base_layout: 'base.html.twig'
 
-    # Base namespace for form types (default: 'App\Form\')
-    form_namespace: 'App\Form\'
+    # Role required to access admin (set to ~ to disable)
+    # required_role: 'ROLE_ADMIN'
 
-    # Suffix for form type classes (default: 'FormType')
-    form_suffix: 'FormType'
+    # Theme: bootstrap (default) or tailwind
+    # theme: '@KachnitelAdmin/theme/bootstrap.html.twig'
 
-    # Route prefix for generic entity CRUD operations (default: 'app_admin_entity')
-    route_prefix: 'app_admin_entity'
+    # Entity and form namespaces (usually don't need to change)
+    # entity_namespace: 'App\Entity\'
+    # form_namespace: 'App\Form\'
+    # form_suffix: 'FormType'
 
-    # Dashboard route name (default: 'app_admin_dashboard')
-    dashboard_route: 'app_admin_dashboard'
+    # Route configuration (usually don't need to change)
+    # route_prefix: 'app_admin_entity'
+    # dashboard_route: 'app_admin_dashboard'
 
-    # Required role for accessing admin (default: 'ROLE_ADMIN')
-    # Set to null (or ~) to disable authentication
-    required_role: 'ROLE_ADMIN'
+    # Pagination
+    # pagination:
+    #     default_items_per_page: 20
+    #     allowed_items_per_page: [10, 20, 50, 100]
 
-    # Enable the generic admin controller with dynamic routes (default: true)
-    # Set to false if you want to use your own custom controller
-    enable_generic_controller: true
+    # Disable the generic controller if using custom controllers
+    # enable_generic_controller: true
 
-    # List of entities to manage via the generic admin controller
-    # Entity names should be simple class names (without namespace)
-    # URLs will be automatically kebab-cased: WorkStation -> /admin/work-station
-    entities:
-        - Region
-        - FulfillmentMethod
-        - WorkStation
-        - SafetyIncident
-
-## How it works:
+## Quick Start:
 ##
-## The generic controller provides zero-code admin CRUD for configured entities:
-##   - Dashboard at /admin lists all entities
-##   - /admin/{entity-slug} shows entity list (LiveComponent with filters)
-##   - /admin/{entity-slug}/new creates new entity
-##   - /admin/{entity-slug}/{id} shows entity details
-##   - /admin/{entity-slug}/{id}/edit edits entity
-##   - DELETE /admin/{entity-slug}/{id} deletes entity
+## 1. Add #[Admin] attribute to your entity:
 ##
-## Override for specific entities:
-##   Create your own controller extending AbstractAdminController
-##   and define routes with higher priority to override specific entities
+##    use Kachnitel\AdminBundle\Attribute\Admin;
+##
+##    #[Admin(label: 'Products', icon: 'inventory')]
+##    class Product { }
+##
+## 2. Import routes in config/routes/kachnitel_admin.yaml:
+##
+##    kachnitel_admin:
+##        resource: '@KachnitelAdminBundle/config/routes.yaml'
+##        prefix: /admin
+##
+## 3. Visit /admin - your entity appears automatically!
+##
+## See docs/ for column configuration, permissions, and customization.

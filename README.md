@@ -1,162 +1,156 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-655%20passed-brightgreen>)
+![Tests](<https://img.shields.io/badge/tests-655%20passed-red>)
 ![Coverage](<https://img.shields.io/badge/coverage-75%25-yellow>)
-![Assertions](<https://img.shields.io/badge/assertions-1470-blue>)
+![Assertions](<https://img.shields.io/badge/assertions-1437-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0|^8.0-000000?logo=symfony&logoColor=white>)
 <!-- BADGES -->
 
-### Modern Symfony admin bundle for managing entities
+A modern Symfony admin bundle powered by [LiveComponents](https://symfony.com/bundles/ux-live-component/current/index.html). Add one attribute to your entity and get a full CRUD interface with search, filters, pagination, and batch actions.
 
-- Powered by [Symfony's LiveComponents](https://symfony.com/bundles/ux-live-component/current/index.html)
-- Minimal config
-- Extensive customization capabilities
-- Requires no front end libraries beyond Live Components
+## Quick Start
 
-## Documentation
-
-- **[Configuration Guide](docs/CONFIGURATION.md)** - Configure entities with the `#[Admin]` attribute
-- **[DataSource Abstraction](docs/DATASOURCE.md)** - Display non-Doctrine data sources in the admin
-- **[Column Filtering](docs/FILTERS.md)** - Automatic per-column filters and customization
-- **[Column Visibility](docs/COLUMN_VISIBILITY.md)** - Let users show/hide columns with persistent preferences
-- **[Batch Actions Setup](docs/BATCH_ACTIONS.md)** - Enable multi-select and bulk operations
-- **[Asset Management](docs/ASSETS.md)** - AssetMapper & Webpack Encore setup for Stimulus controllers
-- **[Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md)** - Customize the admin interface appearance
-- **[Development Guide](docs/DEVELOPMENT.md)** - Running tests, code quality, and contributing
-
-## Features
-
-- 🚀 **LiveComponent-Ready**: Built for Symfony UX LiveComponents
-- 🎨 **Template Override System**: Hierarchical template resolution for easy customization
-- 🔧 **Type-Based Rendering**: Smart property rendering based on Doctrine types
-- 📝 **Attribute-Driven**: Modern PHP 8+ attribute configuration
-- 🔍 **Filters & Search**: Built-in filtering and search capabilities
-- 👁️ **Column Visibility**: Show/hide columns with session or database-backed preferences
-- ⚡ **Batch Operations**: Multi-select with Shift/Ctrl+Click and bulk delete
-- 📊 **Dashboard & Menu**: Configurable admin dashboard and navigation
-- 🔌 **DataSource Abstraction**: Display data from external APIs, audit logs, or any source
-
-## 🏗️ Installation & Quick Start
-
-### 1. Installation
+### 1. Install
 
 ```bash
 composer require kachnitel/admin-bundle
 ```
 
-The bundle is registered automatically by **Symfony Flex**. If not using Flex, enable the bundle manually in `config/bundles.php`:
+### 2. Add attribute to any entity
 
 ```php
-return [
-    // ...
-    Kachnitel\AdminBundle\KachnitelAdminBundle::class => ['all' => true],
-];
+use Kachnitel\AdminBundle\Attribute\Admin;
+
+#[Admin]
+class Product
+{
+    // Your existing entity...
+}
 ```
 
-### 2. Configure the Bundle
+### 3. Visit `/admin`
 
-Create the bundle configuration file:
+Your entity appears with auto-detected columns, search, filters, and CRUD.
 
-```yaml
-# config/packages/kachnitel_admin.yaml
-kachnitel_admin:
-    base_layout: 'base.html.twig'  # Your app's base template
-    required_role: 'ROLE_ADMIN'    # Role required to access admin (null for no restriction)
+<details>
+<summary><strong>Manual setup (if not using Symfony Flex)</strong></summary>
+
+1. Enable the bundle in `config/bundles.php`:
+```php
+Kachnitel\AdminBundle\KachnitelAdminBundle::class => ['all' => true],
 ```
 
-> **Note:** The `kachnitel_admin:` key **must** be present for the bundle to load. Use `kachnitel_admin: ~` for all defaults.
-
-See the [Configuration Guide](docs/CONFIGURATION.md) for all available options.
-
-### 3. Add Routes
-
-Import the bundle's routes:
-
+2. Import routes in `config/routes/kachnitel_admin.yaml`:
 ```yaml
-# config/routes/kachnitel_admin.yaml
 kachnitel_admin:
     resource: '@KachnitelAdminBundle/config/routes.yaml'
     prefix: /admin
 ```
 
-### 4. Mark Entities with #[Admin] Attribute
-
-Add the `#[Admin]` attribute to any Doctrine entity:
-
-```php
-use Kachnitel\AdminBundle\Attribute\Admin;
-
-#[Admin(label: 'Products', icon: 'inventory')]
-class Product
-{
-    // ...
-}
+3. Create config in `config/packages/kachnitel_admin.yaml`:
+```yaml
+kachnitel_admin:
+    base_layout: 'base.html.twig'  # Your app's base template
 ```
 
-That's it! The entity will now appear in the admin dashboard at `/admin`.
+</details>
 
-### 5. Enable Optional Features
+## What's Next?
 
-#### Column Visibility (Recommended)
+<details>
+<summary><strong>Control Your Columns</strong></summary>
 
-Let users show/hide columns:
+**Level 1:** Auto-detection (zero config) - all properties shown automatically
 
+**Level 2:** Specify columns and order:
 ```php
-#[Admin(label: 'Products', enableColumnVisibility: true)]
-class Product { /* ... */ }
+#[Admin(columns: ['id', 'name', 'price'])]
+```
+Or exclude: `excludeColumns: ['costPrice']`
+
+**Level 3:** Role-based visibility:
+```php
+#[ColumnPermission('ROLE_HR')]
+private float $salary;
 ```
 
-A "Columns" dropdown appears in the list view. Settings are saved in the user's session (or database with custom storage).
+**Level 4:** User-toggleable:
+```php
+#[Admin(enableColumnVisibility: true)]
+```
 
-**→ See the [Column Visibility Guide](docs/COLUMN_VISIBILITY.md) for custom storage setup.**
+**Details:** [Configuration Guide](docs/CONFIGURATION.md#column-configuration) | [Column Visibility](docs/COLUMN_VISIBILITY.md)
 
-#### Batch Actions
+</details>
 
-For multi-select and batch delete functionality:
+<details>
+<summary><strong>Customize the Look</strong></summary>
 
-1. Enable batch actions on your entity:
-   ```php
-   #[Admin(label: 'Products', enableBatchActions: true)]
-   class Product { /* ... */ }
-   ```
+**Level 1:** Use your layout:
+```yaml
+kachnitel_admin:
+    base_layout: 'base.html.twig'
+```
 
-2. Register the Stimulus controller in your asset configuration
+**Level 2:** Switch theme (Bootstrap/Tailwind):
+```yaml
+kachnitel_admin:
+    theme: '@KachnitelAdmin/theme/tailwind.html.twig'
+```
 
-**→ See the [Batch Actions Setup Guide](docs/BATCH_ACTIONS.md) for complete setup instructions.**
+**Level 3:** Override type templates:
+```
+templates/bundles/KachnitelAdminBundle/types/datetime/_preview.html.twig
+```
 
----
+**Level 4:** Entity-specific:
+```
+templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
+```
 
-## 📋 Installation Summary
+**Details:** [Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md)
 
-| Step | Automated by Flex | Manual Setup Required |
-|------|-------------------|----------------------|
-| Bundle registration (`bundles.php`) | ✅ Yes | Only if not using Flex |
-| Config file (`kachnitel_admin.yaml`) | ✅ Creates template | Customize `base_layout`, `required_role` |
-| Routes import | ✅ Creates file | Adjust prefix if needed |
-| Entity `#[Admin]` attribute | ❌ No | Add to each entity |
-| Security/access control | ❌ No | Configure in `security.yaml` |
-| Batch actions Stimulus controller | ❌ No | Manual registration in `controllers.json` |
-| Template overrides | ❌ No | Create in `templates/bundles/KachnitelAdminBundle/` |
-| Form types for edit/new | ❌ No | Create form classes |
+</details>
 
-For template customization, see the [Template Overrides Guide](docs/TEMPLATE_OVERRIDES.md).
+## Features
 
-## 🛠️ Core Technology Stack
+- **Multi-Layer Permissions** - Entity, action, and column-level control
+- **Easy start** - Add `#[Admin]` to entity, auto-detects columns
+- **Highly Customizable** - From [cell level templates](docs/TEMPLATE_OVERRIDES.md#common-override-scenarios) to entire layout overrides using [Symfony's Twig inheritance](https://symfony.com/doc/current/bundles/override.html#templates)
+- **LiveComponent-Powered** - Real-time search, filters, and updates without page reloads
+- **Column Visibility** - Show/hide columns with session or database-backed preferences
+- **DataSource Abstraction** - Display data from external APIs, audit logs, or any source
 
-Kachnitel Admin is built purely on the established **Symfony stack**.
+## Documentation
 
-It relies only on **Symfony**, **Doctrine ORM**, and **Live Components** (part of the Symfony UX initiative) for all functionality and interactivity. This approach ensures the administration interface is built using server-side PHP without requiring any external JavaScript frameworks or frontend libraries.
+| Guide | Description |
+|-------|-------------|
+| [Configuration](docs/CONFIGURATION.md) | Entity attributes and bundle config |
+| [Column Visibility](docs/COLUMN_VISIBILITY.md) | Permissions and user preferences |
+| [Filters](docs/FILTERS.md) | Automatic filtering and customization |
+| [Template Overrides](docs/TEMPLATE_OVERRIDES.md) | Customize the admin appearance |
+| [Batch Actions](docs/BATCH_ACTIONS.md) | Multi-select and bulk operations |
+| [DataSource](docs/DATASOURCE.md) | Non-Doctrine data sources |
+| [Assets](docs/ASSETS.md) | AssetMapper and Webpack Encore setup |
+| [Development](docs/DEVELOPMENT.md) | Contributing and running tests |
 
-> **DataSource Abstraction:** While Doctrine entities work out-of-the-box with the `#[Admin]` attribute, the bundle also supports custom data sources via the `DataSourceInterface`. This allows displaying data from external APIs, audit logs, or other non-Doctrine sources using the same admin UI. See the [DataSource Guide](docs/DATASOURCE.md) for details.
+<details>
+<summary><strong>How does this compare to EasyAdmin?</strong></summary>
+
+EasyAdmin and SonataAdmin use PHP configuration, while this bundle leans heavily on a single Live Component with Twig templates for customization. This allows for real-time UI updates, and separates configuration (security, columns) from presentation (templates).
+
+**[Full comparison](docs/COMPARISON.md)** - philosophy, features, and when to choose each.
+
+</details>
 
 ## Requirements
 
-- PHP 8.2 or higher
-- Symfony 6.4 or 7.0+
-- Doctrine ORM 2.0 or 3.0+
+- PHP 8.4 or higher
+- Symfony 6.4 / 7.0 / 8.0
+- Doctrine ORM 3.5+
 
 ## License
 

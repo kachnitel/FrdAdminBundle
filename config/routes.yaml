@@ -1,0 +1,20 @@
+# KachnitelAdminBundle Routes
+#
+# Import this file in your application to enable admin routes.
+#
+# Example (in config/routes/kachnitel_admin.yaml):
+#   kachnitel_admin:
+#       resource: '@KachnitelAdminBundle/config/routes.yaml'
+#       prefix: /admin
+#
+# Routes provided:
+#   - /admin              Dashboard listing all entities
+#   - /admin/{entity}     Entity list with filters and pagination
+#   - /admin/{entity}/new Create new entity
+#   - /admin/{entity}/{id} Show entity details
+#   - /admin/{entity}/{id}/edit Edit entity
+#   - DELETE /admin/{entity}/{id} Delete entity
+
+kachnitel_admin:
+    resource: '../src/Controller/'
+    type: attribute
