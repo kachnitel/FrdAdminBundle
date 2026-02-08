@@ -101,4 +101,110 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $component = $testComponent->component();
         $this->assertSame('new', $component->value);
     }
+
+    /**
+     * @test
+     */
+    public function enumWithOptionsRendersSelectDropdown(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:ColumnFilter',
+            data: [
+                'column' => 'category',
+                'value' => '',
+                'filterMetadata' => [
+                    'type' => 'enum',
+                    'options' => ['small', 'medium', 'large'],
+                ],
+            ],
+        );
+
+        $rendered = (string) $testComponent->render();
+        $this->assertStringContainsString('<select', $rendered);
+        $this->assertStringContainsString('small', $rendered);
+        $this->assertStringContainsString('medium', $rendered);
+        $this->assertStringContainsString('large', $rendered);
+    }
+
+    /**
+     * @test
+     */
+    public function enumWithOptionsShowsAllOptionByDefault(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:ColumnFilter',
+            data: [
+                'column' => 'size',
+                'value' => '',
+                'filterMetadata' => [
+                    'type' => 'enum',
+                    'options' => ['S', 'M', 'L'],
+                ],
+            ],
+        );
+
+        $rendered = (string) $testComponent->render();
+        $this->assertStringContainsString('>All</option>', $rendered);
+    }
+
+    /**
+     * @test
+     */
+    public function enumWithOptionsHidesAllOptionWhenDisabled(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:ColumnFilter',
+            data: [
+                'column' => 'size',
+                'value' => '',
+                'filterMetadata' => [
+                    'type' => 'enum',
+                    'options' => ['S', 'M', 'L'],
+                    'showAllOption' => false,
+                ],
+            ],
+        );
+
+        $rendered = (string) $testComponent->render();
+        $this->assertStringNotContainsString('>All</option>', $rendered);
+    }
+
+    /**
+     * @test
+     */
+    public function enumWithOptionsPreservesSelectedValue(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:ColumnFilter',
+            data: [
+                'column' => 'priority',
+                'value' => 'high',
+                'filterMetadata' => [
+                    'type' => 'enum',
+                    'options' => ['low', 'medium', 'high'],
+                ],
+            ],
+        );
+
+        $rendered = (string) $testComponent->render();
+        $this->assertMatchesRegularExpression('/value="high"[^>]*selected/', $rendered);
+    }
+
+    /**
+     * @test
+     */
+    public function enumWithoutEnumClassOrOptionsFallsBackToText(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:ColumnFilter',
+            data: [
+                'column' => 'broken',
+                'value' => '',
+                'filterMetadata' => ['type' => 'enum'],
+            ],
+        );
+
+        $rendered = (string) $testComponent->render();
+        $this->assertStringContainsString('type="text"', $rendered);
+    }
 }

@@ -610,7 +610,7 @@ class User implements UserInterface
 - Use `#[Admin]` for all entities you want in the admin
 - Set meaningful `label` and `icon` for better UX
 - Use `permissions` for fine-grained access control
-- Exclude sensitive fields with `excludeColumns`
+- Exclude sensitive fields with `excludeColumns: [...]` or selectively with `#[ColumnPermission('ROLE_ADMIN')]`
 - Set appropriate `itemsPerPage` for entities with many records
 - Use `filterableColumns` to limit filtering to useful fields
 - Enable `enableBatchActions: true` only for entities where bulk operations make sense
@@ -618,11 +618,9 @@ class User implements UserInterface
 
 ### ❌ DON'T:
 
-- Mix YAML and attribute configuration for the same entity
 - Include sensitive data (passwords, tokens) in `columns`
 - Set `itemsPerPage` too high (causes performance issues)
 - Forget to set permissions for sensitive entities
-- Use `columns` when auto-detection works fine
 - Enable batch actions on critical entities (users, financial records) without careful consideration
 
 <details>

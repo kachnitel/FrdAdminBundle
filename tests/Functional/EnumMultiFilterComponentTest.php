@@ -120,4 +120,105 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame('', $component->value);
         $this->assertSame([], $component->selectedValues);
     }
+
+    /**
+     * @test
+     */
+    public function getChoicesReturnsEnumCasesWhenEnumClass(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:EnumMultiFilter',
+            data: [
+                'column' => 'status',
+                'value' => '',
+                'enumClass' => \Kachnitel\AdminBundle\Tests\Fixtures\TestStatus::class,
+            ],
+        );
+
+        $component = $testComponent->component();
+        $choices = $component->getChoices();
+        $this->assertSame(['active' => 'ACTIVE', 'inactive' => 'INACTIVE'], $choices);
+    }
+
+    /**
+     * @test
+     */
+    public function getChoicesReturnsOptionsWhenNoEnumClass(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:EnumMultiFilter',
+            data: [
+                'column' => 'category',
+                'value' => '',
+                'options' => ['electronics', 'clothing', 'food'],
+            ],
+        );
+
+        $component = $testComponent->component();
+        $this->assertSame(
+            ['electronics' => 'electronics', 'clothing' => 'clothing', 'food' => 'food'],
+            $component->getChoices()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function rendersWithStringOptions(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:EnumMultiFilter',
+            data: [
+                'column' => 'category',
+                'value' => '',
+                'options' => ['electronics', 'clothing', 'food'],
+            ],
+        );
+
+        $rendered = (string) $testComponent->render();
+        $this->assertStringContainsString('electronics', $rendered);
+        $this->assertStringContainsString('clothing', $rendered);
+        $this->assertStringContainsString('food', $rendered);
+    }
+
+    /**
+     * @test
+     */
+    public function selectionWorksWithStringOptions(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:EnumMultiFilter',
+            data: [
+                'column' => 'category',
+                'value' => '',
+                'options' => ['electronics', 'clothing', 'food'],
+            ],
+        );
+
+        $testComponent->set('selectedValues', ['electronics', 'food']);
+
+        $component = $testComponent->component();
+        $this->assertSame('["electronics","food"]', $component->value);
+    }
+
+    /**
+     * @test
+     */
+    public function clearWorksWithStringOptions(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:EnumMultiFilter',
+            data: [
+                'column' => 'category',
+                'value' => '["electronics","food"]',
+                'options' => ['electronics', 'clothing', 'food'],
+            ],
+        );
+
+        $testComponent->call('clear');
+
+        $component = $testComponent->component();
+        $this->assertSame('', $component->value);
+        $this->assertSame([], $component->selectedValues);
+    }
 }

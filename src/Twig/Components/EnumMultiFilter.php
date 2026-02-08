@@ -27,8 +27,18 @@ class EnumMultiFilter
     #[LiveProp(writable: true)]
     public string $value = '';
 
+    /**
+     * PHP BackedEnum class name. Either this or $options must be provided.
+     */
     #[LiveProp]
-    public string $enumClass;
+    public string $enumClass = '';
+
+    /**
+     * String options array. Either this or $enumClass must be provided.
+     * @var array<string>
+     */
+    #[LiveProp]
+    public array $options = [];
 
     #[LiveProp]
     public string $label = '';
@@ -39,6 +49,29 @@ class EnumMultiFilter
      */
     #[LiveProp(writable: true, onUpdated: 'onSelectedValuesUpdated')]
     public array $selectedValues = [];
+
+    /**
+     * Get all available options as value => label pairs.
+     *
+     * @return array<string, string>
+     */
+    public function getChoices(): array
+    {
+        if ($this->enumClass !== '') {
+            $choices = [];
+            /** @var \BackedEnum $case */
+            foreach ($this->enumClass::cases() as $case) {
+                $label = method_exists($case, 'displayValue')
+                    ? $case->displayValue()
+                    : $case->name;
+                $choices[(string) $case->value] = $label;
+            }
+
+            return $choices;
+        }
+
+        return array_combine($this->options, $this->options);
+    }
 
     #[PostHydrate]
     public function deserializeValue(): void
