@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.5.2](https://github.com/kachnitel/FrdAdminBundle/compare/v0.5.1...v0.5.2) (2026-02-08)
+
+### Features
+
+* Support non-enum filter dropdowns ([e9244c](https://github.com/kachnitel/FrdAdminBundle/commit/e9244cc5c72f931fb337900649df1f3bbe794c1b))
+
+### Documentation
+
+* Add "motivation" to README ([da1d4e](https://github.com/kachnitel/FrdAdminBundle/commit/da1d4e3b5e87762bb8eb4b0aab38357a98ac0ccf))
+
+
+---
+
 ## [0.5.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.5.0...v0.5.1) (2026-02-07)
 
 ### Features
