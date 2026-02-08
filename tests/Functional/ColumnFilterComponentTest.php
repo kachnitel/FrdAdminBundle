@@ -45,7 +45,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
     /**
      * @test
      */
-    public function onUpdatedEmitsFilterUpdatedEvent(): void
+    public function onUpdatedSetsValueAndColumn(): void
     {
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:ColumnFilter',
