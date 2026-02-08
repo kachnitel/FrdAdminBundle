@@ -170,6 +170,27 @@ class EntityListQueryServiceTest extends TestCase
     /**
      * @test
      */
+    public function buildQueryWithSingleEnumFilterAppliesEqualityWhere(): void
+    {
+        $this->service->buildQuery(
+            'App\\Entity\\Product',
+            null,
+            '',
+            ['status' => 'active'],
+            ['status' => ['type' => 'enum']],
+            'id',
+            'ASC'
+        );
+
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame('active', $this->setParameterCalls[0][1]);
+    }
+
+    /**
+     * @test
+     */
     public function buildQueryWithGlobalSearchAppliesSearchFilter(): void
     {
         $this->service->buildQuery(
@@ -409,9 +430,10 @@ class EntityListQueryServiceTest extends TestCase
             'ASC'
         );
 
-        // Array IN filter should produce a where clause
-        $this->assertNotEmpty($this->andWhereCalls);
-        $this->assertNotEmpty($this->setParameterCalls);
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame(['active', 'pending'], $this->setParameterCalls[0][1]);
     }
 
     /**
@@ -452,8 +474,10 @@ class EntityListQueryServiceTest extends TestCase
             'ASC'
         );
 
-        $this->assertNotEmpty($this->andWhereCalls);
-        $this->assertNotEmpty($this->setParameterCalls);
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame(['pending', 'approved'], $this->setParameterCalls[0][1]);
     }
 
     /**
@@ -471,8 +495,10 @@ class EntityListQueryServiceTest extends TestCase
             'ASC'
         );
 
-        $this->assertNotEmpty($this->andWhereCalls);
-        $this->assertNotEmpty($this->setParameterCalls);
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame(['pending', 'approved', 'rejected'], $this->setParameterCalls[0][1]);
     }
 
     /**
@@ -491,8 +517,10 @@ class EntityListQueryServiceTest extends TestCase
         );
 
         // Single string that's not valid JSON should fall back to single-value IN
-        $this->assertNotEmpty($this->andWhereCalls);
-        $this->assertNotEmpty($this->setParameterCalls);
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame(['pending'], $this->setParameterCalls[0][1]);
     }
 
     /**

@@ -193,6 +193,31 @@ class ColumnFilterComponentTest extends ComponentTestCase
     /**
      * @test
      */
+    public function enumWithMultipleTrueRendersCheckboxesInsteadOfSelect(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:ColumnFilter',
+            data: [
+                'column' => 'status',
+                'value' => '',
+                'filterMetadata' => [
+                    'type' => 'enum',
+                    'multiple' => true,
+                    'options' => ['active', 'inactive'],
+                ],
+            ],
+        );
+
+        $rendered = (string) $testComponent->render();
+        $this->assertStringContainsString('type="checkbox"', $rendered);
+        $this->assertStringNotContainsString('<select', $rendered);
+        $this->assertStringContainsString('active', $rendered);
+        $this->assertStringContainsString('inactive', $rendered);
+    }
+
+    /**
+     * @test
+     */
     public function enumWithoutEnumClassOrOptionsFallsBackToText(): void
     {
         $testComponent = $this->createLiveComponent(

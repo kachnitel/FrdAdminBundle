@@ -221,4 +221,45 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame('', $component->value);
         $this->assertSame([], $component->selectedValues);
     }
+
+    /**
+     * @test
+     */
+    public function rendersWithEnumClassOptions(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:EnumMultiFilter',
+            data: [
+                'column' => 'status',
+                'value' => '',
+                'enumClass' => \Kachnitel\AdminBundle\Tests\Fixtures\TestStatus::class,
+            ],
+        );
+
+        $rendered = (string) $testComponent->render();
+        $this->assertStringContainsString('type="checkbox"', $rendered);
+        $this->assertStringContainsString('ACTIVE', $rendered);
+        $this->assertStringContainsString('INACTIVE', $rendered);
+    }
+
+    /**
+     * @test
+     */
+    public function rendersSelectedCheckboxesAsChecked(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:EnumMultiFilter',
+            data: [
+                'column' => 'status',
+                'value' => '["active"]',
+                'enumClass' => \Kachnitel\AdminBundle\Tests\Fixtures\TestStatus::class,
+            ],
+        );
+
+        $rendered = (string) $testComponent->render();
+        // The "active" checkbox should be checked
+        $this->assertMatchesRegularExpression('/value="active"[^>]*checked/', $rendered);
+        // The "inactive" checkbox should NOT be checked
+        $this->assertDoesNotMatchRegularExpression('/value="inactive"[^>]*checked/', $rendered);
+    }
 }
