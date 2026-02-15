@@ -71,6 +71,15 @@ class GenericAdminController extends AbstractAdminController
         // Dashboard uses global required_role (doesn't check entity-specific permissions)
         $this->checkGlobalPermission();
 
+        $supportedEntities = $this->getSupportedEntities();
+
+        // sort entities alphabetically by label (with fallback to name if no label)
+        usort($supportedEntities, function($a, $b) {
+            $labelA = $this->entityDiscovery->getAdminAttribute($this->entityNamespace . $a)?->getLabel() ?? $a;
+            $labelB = $this->entityDiscovery->getAdminAttribute($this->entityNamespace . $b)?->getLabel() ?? $b;
+            return strcasecmp($labelA, $labelB);
+        });
+
         // Convert entities to view data with label and icon from #[Admin] attribute
         $entities = array_map(function($entityName) {
             // Resolve full class name
@@ -89,7 +98,7 @@ class GenericAdminController extends AbstractAdminController
                 'slug'  => strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($entityName))),
                 'type' => 'entity',
             ];
-        }, $this->getSupportedEntities());
+        }, $supportedEntities);
 
         // Collect non-Doctrine data sources (e.g., audit logs)
         $dataSources = [];
