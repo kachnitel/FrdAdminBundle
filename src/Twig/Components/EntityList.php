@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components;
 
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
@@ -113,6 +115,13 @@ class EntityList
     #[LiveProp]
     public ?string $repositoryMethod = null;
 
+    /**
+     * Integer PK of the row currently in edit mode. Null = no row is being edited.
+     * ?int — nullable because no row is selected by default. Not a union type.
+     */
+    #[LiveProp(writable: true)]
+    public ?int $editingRowId = null;
+
     /** @var array<int> Allowed items per page options */
     public array $allowedItemsPerPage;
 
@@ -138,12 +147,13 @@ class EntityList
         private EntityListBatchService $batchService,
         private AdminPreferencesStorageInterface $preferencesStorage,
         private EntityListColumnService $columnService,
+        private EntityManagerInterface $entityManager,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
     }
 
-    // --- Security ---
+    // ── Security ───────────────────────────────────────────────────────────────
 
     /**
      * Check permissions after component hydration.
@@ -161,11 +171,8 @@ class EntityList
         }
     }
 
-    // --- Data Source Resolution ---
+    // ── Data Source Resolution ─────────────────────────────────────────────────
 
-    /**
-     * Resolve the data source from registry or create from entity class.
-     */
     private function resolveDataSource(): DataSourceInterface
     {
         return $this->cache['dataSource'] ??= $this->dataSourceRegistry->resolve(
@@ -175,25 +182,16 @@ class EntityList
         );
     }
 
-    /**
-     * Get the resolved data source.
-     */
     public function getDataSource(): DataSourceInterface
     {
         return $this->resolveDataSource();
     }
 
-    /**
-     * Check if this is a Doctrine entity (for template rendering mode).
-     */
     public function isDoctrineEntity(): bool
     {
         return $this->entityClass !== '';
     }
 
-    /**
-     * Check if user can perform batch delete on this data source.
-     */
     public function canBatchDelete(): bool
     {
         if (!$this->supportsBatchActions()) {
@@ -207,7 +205,7 @@ class EntityList
         );
     }
 
-    // --- UI ---
+    // ── Queries ────────────────────────────────────────────────────────────────
 
     /**
      * Get filtered, sorted, and paginated entities.
@@ -220,7 +218,6 @@ class EntityList
             return $this->cache['queryResult']->items;
         }
 
-        // Fall back to default sort if current sortBy column is permission-denied
         if (!in_array($this->sortBy, $this->getColumns(), true)) {
             $this->sortBy = $this->getDataSource()->getDefaultSortBy();
             $this->sortDirection = $this->getDataSource()->getDefaultSortDirection();
@@ -235,15 +232,11 @@ class EntityList
             itemsPerPage: $this->itemsPerPage
         );
 
-        // Update page if clamped by query
         $this->page = $this->cache['queryResult']->currentPage;
 
         return $this->cache['queryResult']->items;
     }
 
-    /**
-     * Get pagination information (pages, start/end items).
-     */
     public function getPaginationInfo(): PaginationInfo
     {
         if (!isset($this->cache['queryResult'])) {
@@ -253,18 +246,18 @@ class EntityList
         return $this->cache['queryResult']->toPaginationInfo();
     }
 
+    // ── LiveActions: sorting / pagination ─────────────────────────────────────
+
     #[LiveAction]
     public function sort(#[LiveArg] string $column): void
     {
         if ($column === $this->sortBy) {
-            $this->sortDirection = match($this->sortDirection) {
+            $this->sortDirection = match ($this->sortDirection) {
                 self::SORT_ASC => self::SORT_DESC,
-                default => self::SORT_ASC
+                default        => self::SORT_ASC,
             };
         }
         $this->sortBy = $column;
-
-        // Reset to first page when sorting changes
         $this->page = 1;
         unset($this->cache['queryResult']);
     }
@@ -294,9 +287,8 @@ class EntityList
         unset($this->cache['queryResult']);
     }
 
-    /**
-     * Handles ColumnFilter emitUp event (for custom template overrides using the component).
-     */
+    // ── LiveListeners ──────────────────────────────────────────────────────────
+
     #[LiveListener('filter:updated')]
     public function onFilterUpdated(#[LiveArg] string $column, #[LiveArg] mixed $value): void
     {
@@ -305,18 +297,14 @@ class EntityList
         unset($this->cache['queryResult']);
     }
 
-    /**
-     * Called when columnFilters LiveProp is updated via data-model binding.
-     */
     public function onColumnFiltersUpdated(): void
     {
         $this->page = 1;
         unset($this->cache['queryResult']);
     }
 
-    /**
-     * Batch delete selected entities.
-     */
+    // ── LiveActions: batch operations ─────────────────────────────────────────
+
     #[LiveAction]
     public function batchDelete(): void
     {
@@ -331,9 +319,6 @@ class EntityList
         unset($this->cache['queryResult']);
     }
 
-    /**
-     * Select all entities on current page.
-     */
     #[LiveAction]
     public function selectAll(): void
     {
@@ -345,18 +330,158 @@ class EntityList
         $this->selectedIds = array_values(array_unique(array_merge($this->selectedIds, $newIds)));
     }
 
-    /**
-     * Deselect all entities.
-     */
     #[LiveAction]
     public function deselectAll(): void
     {
         $this->selectedIds = [];
     }
 
+    // ── LiveActions: inline row editing ───────────────────────────────────────
+
     /**
-     * Get filter metadata for template rendering (filtered by column permissions).
+     * Check whether the current user may edit rows of this entity type.
      *
+     * IMPORTANT: Always pass $this->entityShortClass (string) as the voter subject,
+     * NOT the entity object. AdminEntityVoter::supports() accepts only string subjects;
+     * passing an object causes the voter to abstain → ACCESS_DENIED even for valid roles.
+     */
+    public function canEditRow(): bool
+    {
+        if (!$this->isDoctrineEntity()) {
+            return false;
+        }
+
+        return $this->security->isGranted(AdminEntityVoter::ADMIN_EDIT, $this->entityShortClass);
+    }
+
+    /**
+     * Open a row for editing. Closes any currently open row first.
+     */
+    #[LiveAction]
+    public function editRow(#[LiveArg] int $id): void
+    {
+        if (!$this->canEditRow()) {
+            throw new AccessDeniedException('Access denied for inline editing.');
+        }
+
+        $this->editingRowId = $id;
+    }
+
+    /**
+     * Flush in-memory changes to the DB and close the row.
+     */
+    #[LiveAction]
+    public function saveRow(#[LiveArg] int $id): void
+    {
+        if (!$this->canEditRow()) {
+            throw new AccessDeniedException('Access denied for inline editing.');
+        }
+
+        $this->entityManager->flush();
+        $this->editingRowId = null;
+        unset($this->cache['queryResult']);
+    }
+
+    /**
+     * Discard in-memory changes and close the row.
+     */
+    #[LiveAction]
+    public function cancelRowEdit(#[LiveArg] int $id): void
+    {
+        /** @var class-string $class */
+        $class  = $this->entityClass;
+        $entity = $this->entityManager->find($class, $id);
+        if ($entity !== null) {
+            $this->entityManager->refresh($entity);
+        }
+
+        $this->editingRowId = null;
+        unset($this->cache['queryResult']);
+    }
+
+    /**
+     * Whether a specific entity row is currently open for editing.
+     */
+    public function isRowEditing(object $entity): bool
+    {
+        if ($this->editingRowId === null) {
+            return false;
+        }
+
+        if (!method_exists($entity, 'getId')) {
+            return false;
+        }
+
+        return $entity->getId() === $this->editingRowId;
+    }
+
+    // ── Field component routing ────────────────────────────────────────────────
+
+    /**
+     * Resolve the LiveComponent name for a column's inline-edit field.
+     *
+     * Uses PHP reflection on the entity class property type.
+     *
+     * Resolution order:
+     *   1. DateTime / DateTimeImmutable / DateTimeInterface → K:Admin:Field:Date
+     *   2. PHP enum (backed or unit)                       → K:Admin:Field:Enum
+     *   3. Doctrine Collection                             → K:Admin:Field:Collection
+     *   4. Any other non-builtin class                     → K:Admin:Field:Relationship
+     *   5. int                                             → K:Admin:Field:Int
+     *   6. float                                           → K:Admin:Field:Float
+     *   7. bool                                            → K:Admin:Field:Bool
+     *   8. string / fallback                               → K:Admin:Field:String
+     *
+     * Falls back to K:Admin:Field:String when type information is unavailable.
+     */
+    public function getFieldComponentName(string $column): string
+    {
+        if ($this->entityClass === '') {
+            return 'K:Admin:Field:String';
+        }
+
+        try {
+            $metadata = $this->entityManager->getClassMetadata($this->entityClass);
+
+            if ($metadata->hasAssociation($column)) {
+                return $metadata->isSingleValuedAssociation($column)
+                    ? 'K:Admin:Field:Relationship'
+                    : 'K:Admin:Field:Collection';
+            }
+
+            if (!$metadata->hasField($column)) {
+                return 'K:Admin:Field:String';  // unknown column → safe fallback
+            }
+
+            // Date & Time types
+            $fieldType = $metadata->getTypeOfField($column);
+
+            if (in_array($fieldType, [
+                'date', 'datetime', 'datetimetz', 'time',
+                'date_immutable', 'datetime_immutable', 'datetimetz_immutable', 'time_immutable',
+            ], true)) {
+                return 'K:Admin:Field:Date';
+            }
+
+            // Enum
+            if (!empty($metadata->getFieldMapping($column)->enumType)) {
+                return 'K:Admin:Field:Enum';
+            }
+
+            return match ($fieldType) {
+                'integer', 'bigint', 'smallint' => 'K:Admin:Field:Int',
+                'float', 'decimal'              => 'K:Admin:Field:Float',
+                'boolean'                       => 'K:Admin:Field:Bool',
+                default                         => 'K:Admin:Field:String',
+            };
+        } catch (\ReflectionException) {
+            return 'K:Admin:Field:String';
+        }
+    }
+
+    // ── Column / filter helpers ────────────────────────────────────────────────
+
+    /**
      * @return array<string, array<string, mixed>>
      */
     public function getFilterMetadata(): array
@@ -368,8 +493,6 @@ class EntityList
     }
 
     /**
-     * Get columns for display (filtered by column permissions).
-     *
      * @return array<int|string, string>
      */
     public function getColumns(): array
@@ -380,35 +503,23 @@ class EntityList
         );
     }
 
-    /**
-     * Check if batch actions are supported for this data source.
-     */
     public function supportsBatchActions(): bool
     {
         return $this->getDataSource()->supportsAction('batch_delete');
     }
 
-    /**
-     * Check if column visibility toggle is supported for this data source.
-     */
     public function supportsColumnVisibility(): bool
     {
         return $this->getDataSource()->supportsAction('column_visibility');
     }
 
     /**
-     * Get columns that are currently visible (all columns minus hidden ones).
-     *
-     * Lazy-loads hidden columns from preferences storage on first access,
-     * which handles both initial page render and LiveComponent re-renders.
-     *
      * @return array<int|string, string>
      */
     public function getVisibleColumns(): array
     {
         $allColumns = $this->getColumns();
 
-        // Lazy-load from storage if not yet loaded (covers initial mount where PostHydrate doesn't fire)
         if ($this->supportsColumnVisibility() && empty($this->hiddenColumns) && !isset($this->cache['visibilityLoaded'])) {
             $this->hiddenColumns = $this->loadHiddenColumns();
             $this->cache['visibilityLoaded'] = true;
@@ -424,34 +535,19 @@ class EntityList
         ));
     }
 
-    /**
-     * Toggle column visibility.
-     */
     #[LiveAction]
     public function toggleColumnVisibility(#[LiveArg] string $column): void
     {
         if (in_array($column, $this->hiddenColumns, true)) {
-            // Show the column
             $this->hiddenColumns = array_values(array_diff($this->hiddenColumns, [$column]));
         } else {
-            // Hide the column
             $this->hiddenColumns[] = $column;
         }
 
-        // Save to preferences storage
         $this->saveHiddenColumns($this->hiddenColumns);
-
-        // Clear cached query result to trigger re-render
         unset($this->cache['queryResult']);
     }
 
-    /**
-     * Load column visibility preferences after hydration.
-     *
-     * On subsequent LiveComponent requests, hiddenColumns is hydrated from
-     * the client (writable LiveProp). We only load from storage if empty.
-     * The cache flag prevents getVisibleColumns() from double-loading.
-     */
     #[PostHydrate]
     public function loadColumnVisibility(): void
     {
@@ -461,33 +557,21 @@ class EntityList
         $this->cache['visibilityLoaded'] = true;
     }
 
-    /**
-     * Get the preferences storage instance (required by ColumnVisibilityPreferenceTrait).
-     */
     protected function getPreferencesStorage(): AdminPreferencesStorageInterface
     {
         return $this->preferencesStorage;
     }
 
-    /**
-     * Get the list identifier for this component (required by ColumnVisibilityPreferenceTrait).
-     */
     protected function getListIdentifier(): string
     {
         return $this->dataSourceId ?? $this->entityShortClass;
     }
 
-    /**
-     * Get the value of a field for an entity.
-     */
     public function getEntityValue(object $entity, string $field): mixed
     {
         return $this->getDataSource()->getItemValue($entity, $field);
     }
 
-    /**
-     * Get the ID of an entity.
-     */
     public function getEntityId(object $entity): string|int
     {
         return $this->getDataSource()->getItemId($entity);

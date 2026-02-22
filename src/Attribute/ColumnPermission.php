@@ -7,25 +7,67 @@ namespace Kachnitel\AdminBundle\Attribute;
 use Attribute;
 
 /**
- * Restrict column visibility based on user role.
+ * Defines column-level permissions for entity properties in admin interface.
  *
- * When applied to an entity property, the corresponding admin list column
- * will only be visible to users with the specified role. Uses Symfony's
- * built-in role voter via isGranted() — supports role hierarchy.
- *
- * Denied columns are also excluded from filters and the column visibility toggle picker.
+ * This attribute allows fine-grained control over which users can view or edit
+ * specific properties of an entity, complementing the entity-level permissions
+ * defined in the #[Admin] attribute.
  *
  * @example
- * #[ColumnPermission('ROLE_HR')]
- * private float $salary;
+ * ```php
+ * use Kachnitel\AdminBundle\Attribute\ColumnPermission;
+ * use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+ *
+ * class Product
+ * {
+ *     #[ColumnPermission([
+ *         AdminEntityVoter::ADMIN_SHOW => 'ROLE_PRODUCT_COST_SHOW',
+ *         AdminEntityVoter::ADMIN_EDIT => 'ROLE_PRODUCT_COST_EDIT',
+ *     ])]
+ *     private float $cost;
+ * }
+ * ```
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class ColumnPermission
+final readonly class ColumnPermission
 {
+    /**
+     * @param array<string, string|string[]> $permissions Map of operation to required roles
+     *                                                     Key: AdminEntityVoter constant (e.g., ADMIN_SHOW, ADMIN_EDIT)
+     *                                                     Value: Role string or array of role strings
+     */
     public function __construct(
-        /**
-         * Required role to view this column (e.g. 'ROLE_HR').
-         */
-        public string $role,
+        private array $permissions = [],
     ) {}
+
+    /**
+     * Get all configured permissions.
+     *
+     * @return array<string, string|string[]>
+     */
+    public function getPermissions(): array
+    {
+        return $this->permissions;
+    }
+
+    /**
+     * Get permission requirements for a specific operation.
+     *
+     * @param string $operation AdminEntityVoter constant (e.g., ADMIN_SHOW, ADMIN_EDIT)
+     * @return string|string[]|null Required role(s) or null if not configured
+     */
+    public function getPermission(string $operation): string|array|null
+    {
+        return $this->permissions[$operation] ?? null;
+    }
+
+    /**
+     * Check if a specific operation has permission requirements.
+     *
+     * @param string $operation AdminEntityVoter constant
+     */
+    public function hasPermission(string $operation): bool
+    {
+        return isset($this->permissions[$operation]);
+    }
 }

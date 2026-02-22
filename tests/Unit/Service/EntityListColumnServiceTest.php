@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\FilterMetadata;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -41,7 +42,7 @@ class EntityListColumnServiceTest extends TestCase
             'email' => ColumnMetadata::create('col'),
         ]);
 
-        $this->columnPermissionService->expects($this->never())->method('getDeniedColumns');
+        $this->columnPermissionService->expects($this->never())->method('getDeniedColumnsForAction');
 
         $result = $this->service->getPermittedColumns($this->dataSource, '');
 
@@ -58,8 +59,8 @@ class EntityListColumnServiceTest extends TestCase
             'secret' => ColumnMetadata::create('col'),
         ]);
 
-        $this->columnPermissionService->method('getDeniedColumns')
-            ->with('App\\Entity\\User')
+        $this->columnPermissionService->method('getDeniedColumnsForAction')
+            ->with('App\\Entity\\User', AdminEntityVoter::ADMIN_SHOW)
             ->willReturn(['secret']);
 
         $result = $this->service->getPermittedColumns($this->dataSource, 'App\\Entity\\User');
@@ -75,8 +76,8 @@ class EntityListColumnServiceTest extends TestCase
             'name' => ColumnMetadata::create('col'),
         ]);
 
-        $this->columnPermissionService->method('getDeniedColumns')
-            ->with('App\\Entity\\Product')
+        $this->columnPermissionService->method('getDeniedColumnsForAction')
+            ->with('App\\Entity\\Product', AdminEntityVoter::ADMIN_SHOW)
             ->willReturn([]);
 
         $result = $this->service->getPermittedColumns($this->dataSource, 'App\\Entity\\Product');
@@ -94,7 +95,7 @@ class EntityListColumnServiceTest extends TestCase
             'ssn' => ColumnMetadata::create('col'),
         ]);
 
-        $this->columnPermissionService->method('getDeniedColumns')
+        $this->columnPermissionService->method('getDeniedColumnsForAction')
             ->willReturn(['salary', 'ssn']);
 
         $result = $this->service->getPermittedColumns($this->dataSource, 'App\\Entity\\Employee');
@@ -120,7 +121,7 @@ class EntityListColumnServiceTest extends TestCase
             'email' => $emailFilter,
         ]);
 
-        $this->columnPermissionService->expects($this->never())->method('getDeniedColumns');
+        $this->columnPermissionService->expects($this->never())->method('getDeniedColumnsForAction');
 
         $result = $this->service->getPermittedFilters($this->dataSource, '');
 
@@ -146,8 +147,8 @@ class EntityListColumnServiceTest extends TestCase
             'secret' => $secretFilter,
         ]);
 
-        $this->columnPermissionService->method('getDeniedColumns')
-            ->with('App\\Entity\\User')
+        $this->columnPermissionService->method('getDeniedColumnsForAction')
+            ->with('App\\Entity\\User', AdminEntityVoter::ADMIN_SHOW)
             ->willReturn(['secret']);
 
         $result = $this->service->getPermittedFilters($this->dataSource, 'App\\Entity\\User');
@@ -169,7 +170,7 @@ class EntityListColumnServiceTest extends TestCase
             'secret' => $secretFilter,
         ]);
 
-        $this->columnPermissionService->method('getDeniedColumns')
+        $this->columnPermissionService->method('getDeniedColumnsForAction')
             ->willReturn(['secret']);
 
         $result = $this->service->getPermittedFilters($this->dataSource, 'App\\Entity\\User');
@@ -189,7 +190,7 @@ class EntityListColumnServiceTest extends TestCase
             'price' => $filter,
         ]);
 
-        $this->columnPermissionService->method('getDeniedColumns')->willReturn([]);
+        $this->columnPermissionService->method('getDeniedColumnsForAction')->willReturn([]);
 
         $result = $this->service->getPermittedFilters($this->dataSource, 'App\\Entity\\Product');
 

@@ -1,0 +1,25 @@
+{#
+ # StringField - inline text/textarea editor for string properties.
+ #
+ # Available from component:
+ #   this.currentValue   - ?string  - current live value
+ #   this.editMode       - bool     - whether input is shown
+ #   this.canEdit()      - bool     - ADMIN_EDIT permission check
+ #   this.renderValue()  - string   - formatted display value
+ #}
+<span {{ attributes }}>
+    {% if editMode and this.canEdit() %}
+        <input
+            type="text"
+            class="form-control form-control-sm"
+            data-model="currentValue"
+            value="{{ this.currentValue }}"
+        />
+        <button type="button" data-action="live#action" data-live-action-param="save"
+            class="btn btn-sm btn-success">✓</button>
+        <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
+            class="btn btn-sm btn-secondary">✕</button>
+    {% else %}
+        {{ this.renderValue() }}
+    {% endif %}
+</span>

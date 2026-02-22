@@ -1,23 +1,66 @@
 {#
- # Partial template for entity row action buttons.
+ # Row actions with inline edit support.
  #
- # Variables:
- # @var object entity - The entity object
- # @var string entityShortClass - Short class name for permission checks
+ # Put this in your app at:
+ # templates/bundles/KachnitelAdminBundle/components/EntityList/_RowActions.html.twig
+ #
+ # NOTE: the bundle include passes {entity, entityShortClass} only.
+ # 'this' (the EntityList component) and 'entityId' are accessible from the parent scope.
+ #
+ # Variables (from include):
+ # @var object entity
+ # @var string entityShortClass
+ # @var bool canEditRow
+ # @var bool isRowEditing
  #}
 
 {% import kachnitel_admin_theme as css %}
 
 <td class="actions">
-    {% if admin_action_accessible(entityShortClass, 'show') %}
-        <a href="{{ admin_object_path(entity, 'show') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
-            👀
-        </a>
-    {% endif %}
+    {% if isRowEditing %}
+        {# ── Edit mode: save / cancel ── #}
+        <button
+            type="button"
+            class="{{ css.btn_sm() }} btn-success"
+            data-action="live#action"
+            data-live-action-param="saveRow"
+            data-live-id-param="{{ entity.id }}"
+        >
+            💾 Save
+        </button>
+        <button
+            type="button"
+            class="{{ css.btn_sm() }} btn-outline-secondary"
+            data-action="live#action"
+            data-live-action-param="cancelRowEdit"
+            data-live-id-param="{{ entity.id }}"
+        >
+            ✕ Cancel
+        </button>
+    {% else %}
+        {# ── View mode ── #}
+        {% if canEditRow %}
+            <button
+                type="button"
+                class="{{ css.btn_sm() }} btn-outline-primary"
+                data-action="live#action"
+                data-live-action-param="editRow"
+                data-live-id-param="{{ entity.id }}"
+            >
+                ✏️
+            </button>
+        {% endif %}
 
-    {% if admin_action_accessible(entityShortClass, 'edit') %}
-        <a href="{{ admin_object_path(entity, 'edit') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
-            🖊
-        </a>
+        {% if admin_action_accessible(entityShortClass, 'show') %}
+            <a href="{{ admin_object_path(entity, 'show') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
+                👀
+            </a>
+        {% endif %}
+
+        {% if admin_action_accessible(entityShortClass, 'edit') %}
+            <a href="{{ admin_object_path(entity, 'edit') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
+                🖊
+            </a>
+        {% endif %}
     {% endif %}
 </td>

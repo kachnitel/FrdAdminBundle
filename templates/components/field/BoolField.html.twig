@@ -1,0 +1,24 @@
+{#
+ # BoolField - inline checkbox toggle for boolean properties.
+ #
+ #   this.currentValue   - ?bool  (null = uninitialized sentinel, treated as false)
+ #   this.editMode       - bool
+ #   this.canEdit()      - bool
+ #   this.renderValue()  - string  ('Yes' / 'No')
+ #}
+<span {{ attributes }}>
+    {% if editMode and this.canEdit() %}
+        <input
+            type="checkbox"
+            class="form-check-input"
+            data-model="currentValue"
+            {% if this.currentValue ?? false %}checked{% endif %}
+        />
+        <button type="button" data-action="live#action" data-live-action-param="save"
+            class="btn btn-sm btn-success">✓</button>
+        <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
+            class="btn btn-sm btn-secondary">✕</button>
+    {% else %}
+        {{ this.renderValue() }}
+    {% endif %}
+</span>

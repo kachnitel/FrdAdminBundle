@@ -148,6 +148,13 @@ class TestEntity
         return $this->active;
     }
 
+    // public function setStatus(?TestEnum $status): self
+    public function setStatus(?TestStatus $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
     public function getStatus(): TestStatus
     {
         return $this->status;

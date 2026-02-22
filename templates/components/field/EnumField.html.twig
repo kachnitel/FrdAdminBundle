@@ -1,0 +1,60 @@
+{#
+ # EnumField component template - renders enum values as dropdown select
+ #
+ # Variables (from component):
+ # @var bool editMode - Whether the field is in edit mode
+ # @var object entity - The entity being edited
+ # @var string property - The property name
+ # @var string|null selectedValue - Currently selected enum value
+ # @var array enumCases - Map of value => label for enum cases
+ # @var bool canEdit - Whether user can edit this field
+ #}
+
+{% import kachnitel_admin_theme as css %}
+
+<div {{ attributes }}>
+    {% if this.editMode and this.canEdit %}
+        {# Edit mode: show dropdown select #}
+        <div class="enum-field-edit">
+            <select
+                class="{{ css.form_select() }} {{ css.form_input() }}"
+                data-model="selectedValue"
+                aria-label="{{ this.label }}"
+            >
+                <option value="">— Select {{ this.label }} —</option>
+                {% for value, label in this.enumCases %}
+                    <option
+                        value="{{ value }}"
+                        {% if this.selectedValue == value %}selected{% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <div class="field-actions">
+                <button
+                    type="button"
+                    class="{{ css.btn_sm() }} {{ css.btn_primary() }}"
+                    data-action="live#action"
+                    data-live-action-param="save"
+                >
+                    Save
+                </button>
+                <button
+                    type="button"
+                    class="{{ css.btn_sm() }} {{ css.btn_secondary() }}"
+                    data-action="live#action"
+                    data-live-action-param="cancelEdit"
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    {% else %}
+        {# Display mode: show formatted value #}
+        <div class="enum-field-display">
+            {{ this.renderValue()|raw }}
+        </div>
+    {% endif %}
+</div>

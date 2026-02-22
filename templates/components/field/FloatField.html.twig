@@ -1,0 +1,25 @@
+{#
+ # FloatField - inline number editor for float/decimal properties.
+ #
+ #   this.currentValue   - ?float
+ #   this.editMode       - bool
+ #   this.canEdit()      - bool
+ #   this.renderValue()  - string
+ #}
+<span {{ attributes }}>
+    {% if editMode and this.canEdit() %}
+        <input
+            type="number"
+            step="any"
+            class="form-control form-control-sm"
+            data-model="currentValue"
+            value="{{ this.currentValue }}"
+        />
+        <button type="button" data-action="live#action" data-live-action-param="save"
+            class="btn btn-sm btn-success">✓</button>
+        <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
+            class="btn btn-sm btn-secondary">✕</button>
+    {% else %}
+        {{ this.renderValue() }}
+    {% endif %}
+</span>
