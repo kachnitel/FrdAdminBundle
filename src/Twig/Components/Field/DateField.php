@@ -74,33 +74,6 @@ class DateField extends AbstractEditableField
 
     /**
      * {@inheritdoc}
-     */
-    public function renderValue(): string
-    {
-        $value = $this->readValue();
-
-        if ($value === null) {
-            return '<span class="text-muted">—</span>';
-        }
-
-        if (!$value instanceof DateTimeInterface) {
-            return '<span class="text-danger">Invalid date</span>';
-        }
-
-        $type = $this->getDateType();
-        $formatted = match($type) {
-            'date' => $value->format('Y-m-d'),
-            'time' => $value->format('H:i'),
-            default => $value->format('Y-m-d H:i'),
-        };
-
-        return '<time datetime="' . htmlspecialchars($value->format('c'), ENT_QUOTES, 'UTF-8') . '">'
-            . htmlspecialchars($formatted, ENT_QUOTES, 'UTF-8')
-            . '</time>';
-    }
-
-    /**
-     * {@inheritdoc}
      *
      * @return array<string, mixed>
      */

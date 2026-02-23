@@ -1,55 +1,28 @@
 {#
- # DateField component template - renders date/datetime/time inputs
- #
- # Variables (from component):
- # @var bool editMode - Whether the field is in edit mode
- # @var object entity - The entity being edited
- # @var string property - The property name
- # @var string|null dateValue - Current date as string for input
- # @var array options - Configuration options (type: 'date'|'datetime'|'time')
- # @var bool canEdit - Whether user can edit this field
+ # DateField - inline date/datetime/time editor.
+ #   this.editMode        - bool
+ #   this.canEdit         - bool   (#[ExposeInTemplate] on canEdit())
+ #   this.dateValue       - ?string
+ #   this.formFieldConfig - array  ({type, required})
+ #   this.label           - string
  #}
-
 {% import kachnitel_admin_theme as css %}
 
 <div {{ attributes }}>
     {% if this.editMode and this.canEdit %}
-        {# Edit mode: show date/datetime/time input #}
-        <div class="date-field-edit">
-            {% set inputType = this.formFieldConfig.type %}
-
-            <input
-                type="{{ inputType }}"
-                class="{{ css.form_input() }}"
-                data-model="dateValue"
-                value="{{ this.dateValue }}"
-                aria-label="{{ this.label }}"
-                {% if this.formFieldConfig.required %}required{% endif %}
-            />
-
-            <div class="field-actions">
-                <button
-                    type="button"
-                    class="{{ css.btn_sm() }} {{ css.btn_primary() }}"
-                    data-action="live#action"
-                    data-live-action-param="save"
-                >
-                    Save
-                </button>
-                <button
-                    type="button"
-                    class="{{ css.btn_sm() }} {{ css.btn_secondary() }}"
-                    data-action="live#action"
-                    data-live-action-param="cancelEdit"
-                >
-                    Cancel
-                </button>
-            </div>
-        </div>
+        <input
+            type="{{ this.formFieldConfig.type }}"
+            class="{{ css.form_input() }}"
+            data-model="dateValue"
+            value="{{ this.dateValue }}"
+            aria-label="{{ this.label }}"
+            {% if this.formFieldConfig.required %}required{% endif %}
+        />
+        <button type="button" data-action="live#action" data-live-action-param="save"
+            class="{{ css.btn_sm() }} {{ css.btn_primary() }}">Save</button>
+        <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
+            class="{{ css.btn_sm() }} {{ css.btn_secondary() }}">Cancel</button>
     {% else %}
-        {# Display mode: show formatted value #}
-        <div class="date-field-display">
-            {{ this.renderValue()|raw }}
-        </div>
+        {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
     {% endif %}
 </div>

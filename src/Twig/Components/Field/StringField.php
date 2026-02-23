@@ -52,20 +52,10 @@ final class StringField extends AbstractEditableField
 
     /**
      * Called on every re-render to restore $currentValue from the dehydrated client state.
-     *
-     * Null means "uninitialized" — happens after cancelEdit() nulls the value.
-     * In that case we re-read from the (already refreshed) entity.
-     * $entityClass, $entityId, $property are guaranteed to be hydrated first
-     * (they are declared in the parent class; PHP reflection yields parent props first).
      */
     public function hydrateCurrentValue(mixed $data): ?string
     {
-        if ($data === null) {
-            $raw = $this->readValue();
-            return $raw !== null ? (string) $raw : null;
-        }
-
-        return (string) $data;
+        return $data !== null ? (string) $data : null;
     }
 
     public function dehydrateCurrentValue(?string $value): ?string
@@ -78,8 +68,9 @@ final class StringField extends AbstractEditableField
     #[LiveAction]
     public function cancelEdit(): void
     {
-        $this->currentValue = null; // hydrateCurrentValue will re-read entity on next cycle
         parent::cancelEdit();
+        $raw = $this->readValue();
+        $this->currentValue = $raw !== null ? (string) $raw : null;
     }
 
     #[LiveAction]
@@ -87,14 +78,5 @@ final class StringField extends AbstractEditableField
     {
         $this->writeValue($this->currentValue);
         parent::save();
-    }
-
-    // ── Template helpers ───────────────────────────────────────────────────────
-
-    public function renderValue(): string
-    {
-        $value = $this->readValue();
-
-        return ($value !== null && $value !== '') ? (string) $value : '—';
     }
 }

@@ -166,6 +166,102 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
     }
 
     /**
+     * Get template paths for a Doctrine entity column in one call.
+     *
+     * Consolidates the three-step pattern used in templates:
+     *   admin_is_collection + admin_get_property_type + admin_column_templates
+     * into a single function, keeping all type-detection logic in PHP.
+     *
+     * @return list<string>
+     */
+    public function getEntityColumnTemplates(object $entity, string $column): array
+    {
+        $entityClass = $this->resolveEntityClass($entity);
+        $metadata    = $this->em->getClassMetadata($entityClass);
+
+        $isCollection = $metadata->isCollectionValuedAssociation($column);
+        $propertyType = $metadata->hasAssociation($column)
+            ? $metadata->getAssociationTargetClass($column)
+            : ($metadata->getTypeOfField($column) ?? 'string');
+
+        return $this->getColumnTemplates(null, $entityClass, $column, $propertyType, $isCollection);
+    }
+
+    /**
+     * Resolve the LiveComponent name for a column's inline-edit field.
+     *
+     * Moved from EntityList::getFieldComponentName() so the resolution lives
+     * in the extension layer and templates need only one call:
+     *
+     *   {{ component(admin_field_component_name(entity, column), { ... }) }}
+     *
+     * Resolution order:
+     *   Doctrine association (collection)  → K:Admin:Field:Collection
+     *   Doctrine association (single)      → K:Admin:Field:Relationship
+     *   Date/time types                    → K:Admin:Field:Date
+     *   PHP enum field                     → K:Admin:Field:Enum
+     *   integer/bigint/smallint            → K:Admin:Field:Int
+     *   float/decimal                      → K:Admin:Field:Float
+     *   boolean                            → K:Admin:Field:Bool
+     *   string / unknown / fallback        → K:Admin:Field:String
+     */
+    public function getFieldComponentName(object $entity, string $column): ?string
+    {
+        $entityClass = $this->resolveEntityClass($entity);
+
+        try {
+            $metadata = $this->em->getClassMetadata($entityClass);
+
+            if ($metadata->hasAssociation($column)) {
+                return $metadata->isSingleValuedAssociation($column)
+                    ? 'K:Admin:Field:Relationship'
+                    : 'K:Admin:Field:Collection';
+            }
+
+            if (!$metadata->hasField($column)) {
+                return null;
+            }
+
+            $fieldType = $metadata->getTypeOfField($column);
+
+            if (in_array($fieldType, [
+                'date', 'datetime', 'datetimetz', 'time',
+                'date_immutable', 'datetime_immutable', 'datetimetz_immutable', 'time_immutable',
+            ], true)) {
+                return 'K:Admin:Field:Date';
+            }
+
+            if (!empty($metadata->getFieldMapping($column)->enumType)) {
+                return 'K:Admin:Field:Enum';
+            }
+
+            return match ($fieldType) {
+                'integer', 'bigint', 'smallint' => 'K:Admin:Field:Int',
+                'float', 'decimal'              => 'K:Admin:Field:Float',
+                'boolean'                       => 'K:Admin:Field:Bool',
+                default                         => 'K:Admin:Field:String',
+            };
+        } catch (\ReflectionException) {
+            return null;
+        }
+    }
+
+    /**
+     * Resolve the real entity class from an object, stripping Doctrine proxy prefixes.
+     * Doctrine proxies are subclasses; get_parent_class() gives the mapped entity class.
+     */
+    private function resolveEntityClass(object $entity): string
+    {
+        $class = $entity::class;
+        if (str_contains($class, 'Proxies\\__CG__\\')) {
+            $parent = get_parent_class($entity);
+            return $parent !== false ? $parent : $class;
+        }
+
+        return $class;
+    }
+
+    /**
      * Get property value using getter method.
      */
     private function getPropertyValue(object $entity, string $property): mixed

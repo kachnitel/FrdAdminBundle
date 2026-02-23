@@ -1,18 +1,18 @@
 {
-    "generated_at": "2026-02-22 21:22:17",
+    "generated_at": "2026-02-23 06:56:02",
     "tests": {
-        "count": 779,
-        "assertions": 1610,
+        "count": 681,
+        "assertions": 1555,
         "status": "failing(errors)"
     },
     "coverage": {
-        "lines": 65.38,
+        "lines": 65.09,
         "percentage": 65,
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {
         "level": 6,
-        "status": "errors"
+        "status": "pass"
     },
     "requirements": {
         "php": ">=8.4",

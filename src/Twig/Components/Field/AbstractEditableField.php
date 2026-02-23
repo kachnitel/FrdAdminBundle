@@ -9,6 +9,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
+use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 
 /**
@@ -51,6 +52,8 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  */
 abstract class AbstractEditableField
 {
+    use DefaultActionTrait;
+
     #[LiveProp(writable: true)]
     public bool $editMode = false;
 
@@ -66,7 +69,8 @@ abstract class AbstractEditableField
     #[LiveProp]
     public string $property = '';
 
-    protected ?object $resolvedEntity = null;
+    #[ExposeInTemplate('entity')]
+    public ?object $resolvedEntity = null;
 
     public function __construct(
         protected readonly EntityManagerInterface $entityManager,
@@ -137,6 +141,7 @@ abstract class AbstractEditableField
         return end($parts);
     }
 
+    #[ExposeInTemplate('value')]
     public function readValue(): mixed
     {
         return $this->propertyAccessor->getValue($this->getEntity(), $this->property);
@@ -191,7 +196,6 @@ abstract class AbstractEditableField
     {
         $this->editMode = false;
         $this->entityManager->refresh($this->getEntity());
-        $this->resolvedEntity = null;
     }
 
     /**
@@ -208,6 +212,4 @@ abstract class AbstractEditableField
         $this->entityManager->flush();
         $this->editMode = false;
     }
-
-    abstract public function renderValue(): string;
 }

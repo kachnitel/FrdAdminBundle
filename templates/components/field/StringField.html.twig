@@ -1,11 +1,8 @@
 {#
- # StringField - inline text/textarea editor for string properties.
- #
- # Available from component:
- #   this.currentValue   - ?string  - current live value
- #   this.editMode       - bool     - whether input is shown
- #   this.canEdit()      - bool     - ADMIN_EDIT permission check
- #   this.renderValue()  - string   - formatted display value
+ # StringField - inline text editor for string properties.
+ #   this.currentValue - ?string
+ #   this.editMode     - bool
+ #   this.canEdit()    - bool
  #}
 <span {{ attributes }}>
     {% if editMode and this.canEdit() %}
@@ -20,6 +17,6 @@
         <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
             class="btn btn-sm btn-secondary">✕</button>
     {% else %}
-        {{ this.renderValue() }}
+        {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
     {% endif %}
 </span>

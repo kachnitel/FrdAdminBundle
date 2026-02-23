@@ -50,14 +50,9 @@ final class BoolField extends AbstractEditableField
     }
 
     // ── Hydration ──────────────────────────────────────────────────────────────
-
     public function hydrateCurrentValue(mixed $data): bool
     {
-        if ($data === null) {
-            return (bool) $this->readValue();
-        }
-
-        return (bool) $data;
+        return (bool) $data;                                    // null → false, which is correct for bool
     }
 
     public function dehydrateCurrentValue(?bool $value): ?bool
@@ -66,12 +61,11 @@ final class BoolField extends AbstractEditableField
     }
 
     // ── LiveActions ────────────────────────────────────────────────────────────
-
     #[LiveAction]
     public function cancelEdit(): void
     {
-        $this->currentValue = null;
         parent::cancelEdit();
+        $this->currentValue = (bool) $this->readValue();
     }
 
     #[LiveAction]
@@ -79,12 +73,5 @@ final class BoolField extends AbstractEditableField
     {
         $this->writeValue($this->currentValue ?? false);
         parent::save();
-    }
-
-    // ── Template helpers ───────────────────────────────────────────────────────
-
-    public function renderValue(): string
-    {
-        return (bool) $this->readValue() ? 'Yes' : 'No';
     }
 }

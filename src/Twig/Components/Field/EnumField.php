@@ -112,24 +112,6 @@ class EnumField extends AbstractEditableField
 
     /**
      * {@inheritdoc}
-     */
-    public function renderValue(): string
-    {
-        $value = $this->readValue();
-
-        if ($value === null) {
-            return '<span class="text-muted">—</span>';
-        }
-
-        if (!$value instanceof \UnitEnum) {
-            return '<span class="text-danger">Invalid enum</span>';
-        }
-
-        return htmlspecialchars($this->formatEnumLabel($value), ENT_QUOTES, 'UTF-8');
-    }
-
-    /**
-     * {@inheritdoc}
      *
      * @return array<string, mixed>
      */

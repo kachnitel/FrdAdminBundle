@@ -133,31 +133,22 @@
                                 }, ignore_missing = true) }}
 
                             {% elseif rowEditing %}
-                                {#
-                                 # Inline edit mode for Doctrine entities.
-                                 #
-                                 # component() resolves names at runtime — <twig:> requires a literal name
-                                 # at parse time so it cannot be used here.
-                                 #
-                                 # getFieldComponentName() inspects the entity property via reflection:
-                                 #   string → K:Admin:Field:String
-                                 #   int    → K:Admin:Field:Int
-                                 #   float  → K:Admin:Field:Float
-                                 #   bool   → K:Admin:Field:Bool
-                                 #   DateTime* → K:Admin:Field:Date
-                                 #   enum   → K:Admin:Field:Enum
-                                 #   Collection → K:Admin:Field:Collection
-                                 #   other class → K:Admin:Field:Relationship
-                                 #
-                                 # mount(object $entity, string $property) extracts entityClass + entityId
-                                 # as non-nullable scalar LiveProps, so they survive JSON serialization.
-                                 # The entity object itself is never stored as a LiveProp.
-                                 #}
-                                {{ component(this.getFieldComponentName(column), {
-                                    entity: entity,
-                                    property: column,
-                                    editMode: true
-                                }) }}
+                                {# Inline edit mode for Doctrine entities. #}
+                                {% set fieldComponent = admin_field_component_name(entity, column) %}
+                                {% if fieldComponent %}
+                                    {{ component(fieldComponent, {
+                                        entity: entity,
+                                        property: column,
+                                        editMode: true
+                                    }) }}
+                                {% else %}
+                                    {{ include(admin_entity_column_templates(entity, column), {
+                                        value: value,
+                                        entity: entity,
+                                        property: column,
+                                        cell: false
+                                    }, ignore_missing = true) }}
+                                {% endif %}
 
                             {% else %}
                                 {# Read-only Doctrine entity cell #}

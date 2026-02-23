@@ -1,0 +1,20 @@
+{#
+ # Shared read-only display partial for all inline-edit Field components.
+ #
+ # Delegates to the same template hierarchy used by the EntityList read-only cells:
+ #   1. types/{App/Entity/Foo}/{property}.html.twig  — entity+property specific
+ #   2. types/{doctrineType}/_preview.html.twig      — type specific
+ #   3. types/_preview.html.twig                     — default fallback
+ #
+ # Variables are inherited from the parent field template scope (no 'only'):
+ #   entity      - object  (#[ExposeInTemplate] on $resolvedEntity)
+ #   value       - mixed   (#[ExposeInTemplate] on readValue())
+ #   property    - string  (LiveProp)
+ #   entityClass - string  (LiveProp, FQCN without proxy prefix)
+ #}
+{{ include(admin_entity_column_templates(entity, property), {
+    value: value,
+    entity: entity,
+    property: property,
+    cell: false
+}, ignore_missing = true) }}

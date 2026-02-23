@@ -21,6 +21,9 @@ class AdminEntityDataExtension extends AbstractExtension
             new TwigFunction('admin_get_association_type', [AdminEntityDataRuntime::class, 'getAssociationType']),
             new TwigFunction('admin_get_property_type', [AdminEntityDataRuntime::class, 'getPropertyType']),
             new TwigFunction('admin_column_templates', [AdminEntityDataRuntime::class, 'getColumnTemplates']),
+            // Convenience: combines admin_is_collection + admin_get_property_type + admin_column_templates
+            new TwigFunction('admin_entity_column_templates', [AdminEntityDataRuntime::class, 'getEntityColumnTemplates']),
+            new TwigFunction('admin_field_component_name', [AdminEntityDataRuntime::class, 'getFieldComponentName']),
         ];
     }
 }

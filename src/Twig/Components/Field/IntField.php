@@ -45,12 +45,7 @@ final class IntField extends AbstractEditableField
 
     public function hydrateCurrentValue(mixed $data): ?int
     {
-        if ($data === null) {
-            $raw = $this->readValue();
-            return $raw !== null ? (int) $raw : null;
-        }
-
-        return (int) $data;
+        return $data !== null ? (int) $data : null;
     }
 
     public function dehydrateCurrentValue(?int $value): ?int
@@ -59,12 +54,12 @@ final class IntField extends AbstractEditableField
     }
 
     // ── LiveActions ────────────────────────────────────────────────────────────
-
     #[LiveAction]
     public function cancelEdit(): void
     {
-        $this->currentValue = null;
         parent::cancelEdit();
+        $raw = $this->readValue();
+        $this->currentValue = $raw !== null ? (int) $raw : null;
     }
 
     #[LiveAction]
@@ -72,14 +67,5 @@ final class IntField extends AbstractEditableField
     {
         $this->writeValue($this->currentValue);
         parent::save();
-    }
-
-    // ── Template helpers ───────────────────────────────────────────────────────
-
-    public function renderValue(): string
-    {
-        $value = $this->readValue();
-
-        return $value !== null ? (string) (int) $value : '—';
     }
 }

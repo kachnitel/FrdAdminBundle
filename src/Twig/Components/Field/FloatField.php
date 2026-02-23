@@ -42,15 +42,9 @@ final class FloatField extends AbstractEditableField
     }
 
     // ── Hydration ──────────────────────────────────────────────────────────────
-
     public function hydrateCurrentValue(mixed $data): ?float
     {
-        if ($data === null) {
-            $raw = $this->readValue();
-            return $raw !== null ? (float) $raw : null;
-        }
-
-        return (float) $data;
+        return $data !== null ? (float) $data : null;
     }
 
     public function dehydrateCurrentValue(?float $value): ?float
@@ -59,12 +53,12 @@ final class FloatField extends AbstractEditableField
     }
 
     // ── LiveActions ────────────────────────────────────────────────────────────
-
     #[LiveAction]
     public function cancelEdit(): void
     {
-        $this->currentValue = null;
         parent::cancelEdit();
+        $raw = $this->readValue();
+        $this->currentValue = $raw !== null ? (float) $raw : null;
     }
 
     #[LiveAction]
@@ -72,14 +66,5 @@ final class FloatField extends AbstractEditableField
     {
         $this->writeValue($this->currentValue);
         parent::save();
-    }
-
-    // ── Template helpers ───────────────────────────────────────────────────────
-
-    public function renderValue(): string
-    {
-        $value = $this->readValue();
-
-        return $value !== null ? (string) (float) $value : '—';
     }
 }

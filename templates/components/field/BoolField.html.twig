@@ -1,10 +1,8 @@
 {#
  # BoolField - inline checkbox toggle for boolean properties.
- #
- #   this.currentValue   - ?bool  (null = uninitialized sentinel, treated as false)
- #   this.editMode       - bool
- #   this.canEdit()      - bool
- #   this.renderValue()  - string  ('Yes' / 'No')
+ #   this.currentValue - ?bool  (null = uninitialized sentinel)
+ #   this.editMode     - bool
+ #   this.canEdit()    - bool
  #}
 <span {{ attributes }}>
     {% if editMode and this.canEdit() %}
@@ -19,6 +17,6 @@
         <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
             class="btn btn-sm btn-secondary">✕</button>
     {% else %}
-        {{ this.renderValue() }}
+        {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
     {% endif %}
 </span>

@@ -78,17 +78,6 @@ final class RelationshipField extends AbstractEditableField
         return $entity !== null ? $this->resolveLabel($entity) : "#{$this->selectedId}";
     }
 
-    public function renderValue(): string
-    {
-        $value = $this->readValue();
-
-        if ($value === null) {
-            return '—';
-        }
-
-        return htmlspecialchars($this->resolveLabel($value), ENT_QUOTES, 'UTF-8');
-    }
-
     // ── LiveActions ────────────────────────────────────────────────────────────
 
     /**

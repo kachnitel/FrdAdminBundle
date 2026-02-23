@@ -88,19 +88,6 @@ class CollectionField extends AbstractEditableField
         }, $this->selectedIds);
     }
 
-    public function renderValue(): string
-    {
-        $collection = $this->readValue();
-
-        if (!$collection instanceof Collection || $collection->isEmpty()) {
-            return '—';
-        }
-
-        $count = $collection->count();
-
-        return $count . ' ' . ($count === 1 ? 'item' : 'items');
-    }
-
     // ── LiveActions ────────────────────────────────────────────────────────────
 
     /**
