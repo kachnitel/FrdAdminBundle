@@ -17,6 +17,13 @@
         <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
             class="btn btn-sm btn-secondary">✕</button>
     {% else %}
-        {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+        <span class="field-editable-cell">
+            {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+            {% if this.canEdit() %}
+                <button type="button" class="field-edit-trigger"
+                    data-action="live#action" data-live-action-param="activateEditing"
+                    title="Edit">✎</button>
+            {% endif %}
+        </span>
     {% endif %}
 </span>

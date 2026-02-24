@@ -1,51 +1,43 @@
 {#
  # Row actions with inline edit support.
  #
- # Put this in your app at:
- # templates/bundles/KachnitelAdminBundle/components/EntityList/_RowActions.html.twig
- #
- # NOTE: the bundle include passes {entity, entityShortClass} only.
- # 'this' (the EntityList component) and 'entityId' are accessible from the parent scope.
+ # When canEditRow is true, shows ✏️ to enter row-edit mode (enabling per-field
+ # edit overlays) and ✕ to exit it. Individual field components handle their
+ # own save/cancel; there is no row-level flush.
  #
  # Variables (from include):
  # @var object entity
  # @var string entityShortClass
  # @var bool canEditRow
- # @var bool isRowEditing
  #}
 
 {% import kachnitel_admin_theme as css %}
 
 <td class="actions">
     {% if isRowEditing %}
-        {# ── Edit mode: save / cancel ── #}
+        {# ── Editing mode: exit button only ── #}
         <button
             type="button"
-            class="{{ css.btn_sm() }} btn-success"
-            data-action="live#action"
-            data-live-action-param="saveRow"
-            data-live-id-param="{{ entity.id }}"
+            class="{{ css.btn_sm() }} {{ css.btn_secondary() }}"
+            {# data-action="live#action"
+            data-live-action-param="exitRowEdit" #}
+            data-action="live#update"
+            data-model="editingRowId"
+            data-value=""
+            title="Exit edit mode"
         >
-            💾 Save
-        </button>
-        <button
-            type="button"
-            class="{{ css.btn_sm() }} btn-outline-secondary"
-            data-action="live#action"
-            data-live-action-param="cancelRowEdit"
-            data-live-id-param="{{ entity.id }}"
-        >
-            ✕ Cancel
+            ✕
         </button>
     {% else %}
         {# ── View mode ── #}
         {% if canEditRow %}
             <button
                 type="button"
-                class="{{ css.btn_sm() }} btn-outline-primary"
+                class="{{ css.btn_sm() }} {{ css.btn_outline_primary() }}"
                 data-action="live#action"
                 data-live-action-param="editRow"
                 data-live-id-param="{{ entity.id }}"
+                title="Edit row"
             >
                 ✏️
             </button>

@@ -133,14 +133,22 @@
                                 }, ignore_missing = true) }}
 
                             {% elseif rowEditing %}
-                                {# Inline edit mode for Doctrine entities. #}
+                                {# Inline edit mode for Doctrine entities.
+                                   The Field LiveComponent renders both the display value and its own
+                                   activateEditing trigger button internally — the trigger must live
+                                   inside the component's root element so that live#action targets the
+                                   correct component rather than EntityList.
+                                   The wrapper span is provided solely for the Bootstrap optional
+                                   hover-CSS upgrade path (see theme/bootstrap.html.twig). #}
                                 {% set fieldComponent = admin_field_component_name(entity, column) %}
                                 {% if fieldComponent %}
-                                    {{ component(fieldComponent, {
-                                        entity: entity,
-                                        property: column,
-                                        editMode: true
-                                    }) }}
+                                    <span class="{{ css.field_editable_cell() }}">
+                                        {{ component(fieldComponent, {
+                                            entity: entity,
+                                            property: column,
+                                            editMode: false
+                                        }) }}
+                                    </span>
                                 {% else %}
                                     {{ include(admin_entity_column_templates(entity, column), {
                                         value: value,
@@ -175,8 +183,7 @@
                             entity: entity,
                             entityShortClass: this.entityShortClass,
                             canEditRow: this.canEditRow(),
-                            isRowEditing: rowEditing,
-                            editingRowId: this.editingRowId
+                            isRowEditing: rowEditing
                         } only %}
                     {% endif %}
                 </tr>

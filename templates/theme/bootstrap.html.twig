@@ -89,3 +89,22 @@
 
 {# Heading #}
 {% macro h4() %}h4 mb-3{% endmacro %}
+
+{# Inline Edit
+   field_editable_cell — wrapper around a cell's display value.
+   field_edit_trigger  — the ✏️ button that activates per-field editing.
+
+   Default (no extra CSS required):
+     The trigger is always visible but visually recessive — a muted, small link
+     button that does not distract until the row is in edit mode.
+
+   Optional upgrade (hover-reveal, matches Tailwind behaviour):
+     Add these 2 rules to your project's CSS (e.g. app.css) to hide the trigger
+     until the cell is hovered or keyboard-focused:
+
+         .field-edit-trigger { opacity: 0; transition: opacity .15s; }
+         .field-editable-cell:hover .field-edit-trigger,
+         .field-editable-cell:focus-within .field-edit-trigger { opacity: 1; }
+#}
+{% macro field_editable_cell() %}d-inline-flex align-items-center gap-1 field-editable-cell{% endmacro %}
+{% macro field_edit_trigger() %}btn btn-link p-0 text-body-tertiary lh-1 field-edit-trigger{% endmacro %}

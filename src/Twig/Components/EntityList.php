@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components;
 
-use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
@@ -147,7 +145,6 @@ class EntityList
         private EntityListBatchService $batchService,
         private AdminPreferencesStorageInterface $preferencesStorage,
         private EntityListColumnService $columnService,
-        private EntityManagerInterface $entityManager,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -368,36 +365,14 @@ class EntityList
     }
 
     /**
-     * Flush in-memory changes to the DB and close the row.
+     * Exit row edit mode. Any field component currently open will silently
+     * discard its unsaved input (LiveComponents are isolated per-request).
      */
-    #[LiveAction]
-    public function saveRow(#[LiveArg] int $id): void
-    {
-        if (!$this->canEditRow()) {
-            throw new AccessDeniedException('Access denied for inline editing.');
-        }
-
-        $this->entityManager->flush();
-        $this->editingRowId = null;
-        unset($this->cache['queryResult']);
-    }
-
-    /**
-     * Discard in-memory changes and close the row.
-     */
-    #[LiveAction]
-    public function cancelRowEdit(#[LiveArg] int $id): void
-    {
-        /** @var class-string $class */
-        $class  = $this->entityClass;
-        $entity = $this->entityManager->find($class, $id);
-        if ($entity !== null) {
-            $this->entityManager->refresh($entity);
-        }
-
-        $this->editingRowId = null;
-        unset($this->cache['queryResult']);
-    }
+    // #[LiveAction]
+    // public function exitRowEdit(): void
+    // {
+    //     $this->editingRowId = null;
+    // }
 
     /**
      * Whether a specific entity row is currently open for editing.

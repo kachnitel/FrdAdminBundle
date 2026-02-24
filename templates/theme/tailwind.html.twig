@@ -82,3 +82,13 @@
 
 {# Heading #}
 {% macro h4() %}text-xl font-semibold mb-3{% endmacro %}
+
+{# Inline Edit
+   field_editable_cell — wrapper around a cell's display value.
+     The `group` class enables group-hover targeting for the child trigger.
+   field_edit_trigger  — the ✏️ button revealed on hover.
+     Stays invisible until the parent cell is hovered or focused-within.
+     No extra CSS required — all behaviour is expressed via Tailwind utilities.
+#}
+{% macro field_editable_cell() %}group relative inline-flex items-center gap-1{% endmacro %}
+{% macro field_edit_trigger() %}opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 text-gray-400 hover:text-gray-600 p-0.5 rounded leading-none{% endmacro %}

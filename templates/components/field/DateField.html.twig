@@ -16,6 +16,7 @@
             data-model="dateValue"
             value="{{ this.dateValue }}"
             aria-label="{{ this.label }}"
+            autofocus
             {% if this.formFieldConfig.required %}required{% endif %}
         />
         <button type="button" data-action="live#action" data-live-action-param="save"
@@ -23,6 +24,13 @@
         <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
             class="{{ css.btn_sm() }} {{ css.btn_secondary() }}">Cancel</button>
     {% else %}
-        {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+        <span class="field-editable-cell">
+            {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+            {% if this.canEdit %}
+                <button type="button" class="field-edit-trigger"
+                    data-action="live#action" data-live-action-param="activateEditing"
+                    title="Edit">✎</button>
+            {% endif %}
+        </span>
     {% endif %}
 </div>
