@@ -1,0 +1,8 @@
+{#
+ # DateTime with timezone preview template.
+ #
+ # Variables:
+ # @var DateTime|null value - The datetime value with timezone
+ #}
+
+{{ value ? value|date('Y-m-d H:i:s T') : '' }}

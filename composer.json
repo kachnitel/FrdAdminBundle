@@ -20,7 +20,7 @@
         }
     ],
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.4",
         "symfony/framework-bundle": "^6.4|^7.0|^8.0",
         "symfony/twig-bundle": "^6.4|^7.0|^8.0",
         "symfony/form": "^6.4|^7.0|^8.0",
@@ -28,9 +28,9 @@
         "symfony/serializer": "^6.4|^7.0|^8.0",
         "symfony/ux-live-component": "^2.13",
         "symfony/ux-twig-component": "^2.13",
-        "doctrine/orm": "^2.0|^3.0",
-        "doctrine/doctrine-bundle": "^2.11|^3.0",
-        "twig/twig": "^3.0"
+        "doctrine/orm": "^3.5",
+        "doctrine/doctrine-bundle": "^3.0",
+        "twig/twig": "^3.15"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.5",
@@ -89,8 +89,11 @@
             "phpstan/extension-installer": true
         }
     },
-    "version": "0.4.0",
+    "version": "0.5.2",
     "extra": {
-        "symfony": {}
+        "symfony": {
+            "allow-contrib": false,
+            "require": "^6.4|^7.0|^8.0"
+        }
     }
 }

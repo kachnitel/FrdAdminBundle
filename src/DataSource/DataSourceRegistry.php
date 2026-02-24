@@ -92,6 +92,35 @@ class DataSourceRegistry
     }
 
     /**
+     * Resolve a data source using a fallback chain:
+     * 1. Explicit dataSourceId from registry
+     * 2. Entity short class from registry
+     * 3. On-demand DoctrineDataSource for entity class
+     *
+     * @throws \RuntimeException If no data source can be resolved
+     */
+    public function resolve(?string $dataSourceId, string $entityShortClass, string $entityClass): DataSourceInterface
+    {
+        if ($dataSourceId !== null) {
+            return $this->get($dataSourceId)
+                ?? throw new \RuntimeException(sprintf('Data source "%s" not found.', $dataSourceId));
+        }
+
+        if ($entityShortClass !== '') {
+            $dataSource = $this->get($entityShortClass);
+            if ($dataSource !== null) {
+                return $dataSource;
+            }
+        }
+
+        if ($entityClass !== '') {
+            return $this->doctrineFactory->createForClass($entityClass);
+        }
+
+        throw new \RuntimeException('No data source or entity class configured.');
+    }
+
+    /**
      * Clear the cached data sources.
      *
      * Useful for testing or when data sources change dynamically.

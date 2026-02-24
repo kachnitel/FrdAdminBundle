@@ -3,7 +3,8 @@
     <twig:K:Admin:EnumMultiFilter
         :column="column"
         :value="value"
-        :enumClass="filterMetadata.enumClass"
+        :enumClass="filterMetadata.enumClass|default('')"
+        :options="filterMetadata.options|default([])"
         label="{{ filterMetadata.label|default(column|title) }}"
     />
 {% else %}
@@ -11,13 +12,21 @@
         class="{{ css.form_input_sm() }}"
         data-model="value"
     >
-        {% if filterMetadata.showAllOption|default(true) %}
+        {% if filterMetadata.showAllOption ?? true %}
             <option value="">All</option>
         {% endif %}
-        {% for case in enum(filterMetadata.enumClass).cases() %}
-            <option value="{{ case.value }}" {{ value == case.value ? 'selected' : '' }}>
-                {{ case.displayValue is defined ? case.displayValue() : case.name }}
-            </option>
-        {% endfor %}
+        {% if filterMetadata.enumClass is defined %}
+            {% for case in enum(filterMetadata.enumClass).cases() %}
+                <option value="{{ case.value }}" {{ value == case.value ? 'selected' : '' }}>
+                    {{ case.displayValue is defined ? case.displayValue() : case.name }}
+                </option>
+            {% endfor %}
+        {% elseif filterMetadata.options is defined %}
+            {% for option in filterMetadata.options %}
+                <option value="{{ option }}" {{ value == option ? 'selected' : '' }}>
+                    {{ option }}
+                </option>
+            {% endfor %}
+        {% endif %}
     </select>
 {% endif %}

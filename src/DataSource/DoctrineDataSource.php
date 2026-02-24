@@ -188,6 +188,7 @@ class DoctrineDataSource implements DataSourceInterface
         return match ($action) {
             'index', 'show', 'new', 'edit', 'delete' => true,
             'batch_delete' => $this->adminAttribute->isEnableBatchActions(),
+            'column_visibility' => $this->adminAttribute->isEnableColumnVisibility(),
             default => false,
         };
     }

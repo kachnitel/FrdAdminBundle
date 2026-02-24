@@ -130,12 +130,8 @@ class AdminEntityVoterTest extends TestCase
             'App\\Entity\\'
         );
 
-        // Mock Admin attribute with custom permission
-        $adminAttr = $this->createMock(Admin::class);
-        $adminAttr->expects($this->once())
-            ->method('getPermissionForAction')
-            ->with('index')
-            ->willReturn('ROLE_USER'); // Override: only needs ROLE_USER
+        // Admin attribute with custom permission override
+        $adminAttr = new Admin(permissions: ['index' => 'ROLE_USER']);
 
         // Mock entity discovery
         $this->entityDiscovery->expects($this->once())
@@ -172,12 +168,8 @@ class AdminEntityVoterTest extends TestCase
             'App\\Entity\\'
         );
 
-        // Mock Admin attribute with null permission (falls back to global default)
-        $adminAttr = $this->createMock(Admin::class);
-        $adminAttr->expects($this->once())
-            ->method('getPermissionForAction')
-            ->with('index')
-            ->willReturn(null); // Falls back to global default (null)
+        // Admin attribute with no permissions (falls back to global default)
+        $adminAttr = new Admin();
 
         // Mock entity discovery
         $this->entityDiscovery->expects($this->once())

@@ -1,0 +1,4 @@
+kachnitel_admin:
+    resource: '@KachnitelAdminBundle/config/routes.yaml'
+    # Change prefix to mount admin at different URL
+    # prefix: /admin

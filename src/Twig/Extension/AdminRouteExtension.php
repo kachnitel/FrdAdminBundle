@@ -2,6 +2,7 @@
 
 namespace Kachnitel\AdminBundle\Twig\Extension;
 
+use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityUrlRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -27,8 +28,8 @@ class AdminRouteExtension extends AbstractExtension
             new TwigFunction('admin_route_accessible', [AdminRouteRuntime::class, 'isRouteAccessible']),
             new TwigFunction('admin_action_accessible', [AdminRouteRuntime::class, 'isActionAccessible']),
             new TwigFunction('admin_can_perform_action', [AdminRouteRuntime::class, 'canPerformAction']),
-            new TwigFunction('admin_collection_url', [AdminRouteRuntime::class, 'getCollectionAdminUrl']),
-            new TwigFunction('admin_entity_url', [AdminRouteRuntime::class, 'getEntityAdminUrl']),
+            new TwigFunction('admin_collection_url', [AdminEntityUrlRuntime::class, 'getCollectionAdminUrl']),
+            new TwigFunction('admin_entity_url', [AdminEntityUrlRuntime::class, 'getEntityAdminUrl']),
         ];
     }
 }

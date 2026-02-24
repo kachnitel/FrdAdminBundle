@@ -42,29 +42,21 @@ class AdminEntityDataRuntimeTest extends TestCase
     /**
      * @test
      */
-    public function registryIsStored(): void
-    {
-        // Test that runtime stores and uses registry
-        $this->assertInstanceOf(AdminEntityDataRuntime::class, $this->runtime);
-    }
-
-    /**
-     * @test
-     */
-    public function normalizerIsStored(): void
-    {
-        // Test that runtime stores normalizer
-        $this->assertInstanceOf(AdminEntityDataRuntime::class, $this->runtime);
-    }
-
-    /**
-     * @test
-     */
-    public function getDataWithValidEntity(): void
+    public function getDataReturnsExpectedKeys(): void
     {
         $entity = new class {
             public int $id = 1;
             public string $name = 'Test';
+
+            public function getId(): int
+            {
+                return $this->id;
+            }
+
+            public function getName(): string
+            {
+                return $this->name;
+            }
         };
 
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name']);
@@ -72,43 +64,51 @@ class AdminEntityDataRuntimeTest extends TestCase
 
         $data = $this->runtime->getData($entity);
 
-        $this->assertNotEmpty($data);
+        $this->assertArrayHasKey('id', $data);
+        $this->assertArrayHasKey('name', $data);
+        $this->assertCount(2, $data);
     }
 
     /**
      * @test
      */
-    public function getDataReturnsNormalizedData(): void
+    public function getDataReturnsFieldValues(): void
     {
         $entity = new class {
-            public int $id = 1;
+            public int $id = 42;
+
+            public function getId(): int
+            {
+                return $this->id;
+            }
         };
 
         $this->metadata->method('getFieldNames')->willReturn(['id']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
+        $this->normalizer->method('normalize')->willReturnArgument(0);
 
         $data = $this->runtime->getData($entity);
 
-        $this->assertNotEmpty($data);
+        $this->assertSame(42, $data['id']);
     }
 
     /**
      * @test
      */
-    public function getColumnsReturnsFieldMetadata(): void
+    public function getColumnsReturnsFieldNames(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'email']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertSame(['id', 'name', 'email'], $columns);
     }
 
     /**
      * @test
      */
-    public function getColumnsIncludesFields(): void
+    public function getColumnsIncludesAllFields(): void
     {
         $fieldNames = ['id', 'name', 'description', 'createdAt'];
         $this->metadata->method('getFieldNames')->willReturn($fieldNames);
@@ -116,13 +116,17 @@ class AdminEntityDataRuntimeTest extends TestCase
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertCount(4, $columns);
+        $this->assertContains('id', $columns);
+        $this->assertContains('name', $columns);
+        $this->assertContains('description', $columns);
+        $this->assertContains('createdAt', $columns);
     }
 
     /**
      * @test
      */
-    public function getColumnsIncludesAssociations(): void
+    public function getColumnsIncludesSingleValuedAssociations(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name']);
         $this->metadata->method('getAssociationNames')->willReturn(['category', 'author']);
@@ -130,147 +134,134 @@ class AdminEntityDataRuntimeTest extends TestCase
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertCount(4, $columns);
+        $this->assertContains('category', $columns);
+        $this->assertContains('author', $columns);
     }
 
     /**
      * @test
      */
-    public function getColumnsHandlesEmptyFields(): void
+    public function getColumnsReturnsEmptyArrayForEmptyEntity(): void
     {
         $this->metadata->method('getFieldNames')->willReturn([]);
         $this->metadata->method('getAssociationNames')->willReturn([]);
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        // Verify method completed execution
-        $this->addToAssertionCount(1);
+        $this->assertSame([], $columns);
     }
 
     /**
      * @test
      */
-    public function getColumnTypeForStringField(): void
+    public function getColumnsWithSingleStringField(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['name']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->metadata->method('getTypeOfField')->with('name')->willReturn('string');
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertSame(['name'], $columns);
     }
 
     /**
      * @test
      */
-    public function getColumnTypeForIntegerField(): void
+    public function getColumnsWithSingleIntegerField(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->metadata->method('getTypeOfField')->with('id')->willReturn('integer');
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertSame(['id'], $columns);
     }
 
     /**
      * @test
      */
-    public function getColumnTypeForDateField(): void
+    public function getColumnsWithDatetimeField(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['createdAt']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->metadata->method('getTypeOfField')->with('createdAt')->willReturn('datetime');
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertSame(['createdAt'], $columns);
     }
 
     /**
      * @test
      */
-    public function getColumnTypeForBooleanField(): void
+    public function getColumnsWithBooleanField(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['isActive']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->metadata->method('getTypeOfField')->with('isActive')->willReturn('boolean');
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertSame(['isActive'], $columns);
     }
 
     /**
      * @test
      */
-    public function associationMetadata(): void
+    public function singleValuedAssociationIncludedInColumns(): void
     {
         $this->metadata->method('getFieldNames')->willReturn([]);
         $this->metadata->method('getAssociationNames')->willReturn(['relatedEntity']);
         $this->metadata->method('isCollectionValuedAssociation')->with('relatedEntity')->willReturn(false);
-        $this->metadata->method('getAssociationTargetClass')->with('relatedEntity')->willReturn(TestEntity::class);
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertSame(['relatedEntity'], $columns);
     }
 
     /**
      * @test
      */
-    public function collectionAssociationHandling(): void
+    public function collectionAssociationExcludedFromColumns(): void
     {
         $this->metadata->method('getFieldNames')->willReturn([]);
         $this->metadata->method('getAssociationNames')->willReturn(['items']);
         $this->metadata->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
-        $this->metadata->method('getAssociationTargetClass')->with('items')->willReturn(TestEntity::class);
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        // Verify method completed execution
-        $this->addToAssertionCount(1);
+        $this->assertNotContains('items', $columns);
+        $this->assertSame([], $columns);
     }
 
     /**
      * @test
      */
-    public function multipleFieldTypes(): void
+    public function multipleFieldsAllIncluded(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'price', 'active']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->metadata->method('getTypeOfField')->willReturnCallback(fn ($f) => match ($f) {
-            'id' => 'integer',
-            'name' => 'string',
-            'price' => 'decimal',
-            'active' => 'boolean',
-        });
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertSame(['id', 'name', 'price', 'active'], $columns);
     }
 
     /**
      * @test
      */
-    public function complexEntityStructure(): void
+    public function complexEntityExcludesCollectionAssociations(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'createdAt', 'active']);
         $this->metadata->method('getAssociationNames')->willReturn(['category', 'author', 'tags']);
         $this->metadata->method('isCollectionValuedAssociation')->willReturnCallback(fn ($a) => $a === 'tags');
-        $this->metadata->method('getAssociationTargetClass')->willReturn(TestEntity::class);
-        $this->metadata->method('getTypeOfField')->willReturnCallback(fn ($f) => match ($f) {
-            'id' => 'integer',
-            'name' => 'string',
-            'createdAt' => 'datetime',
-            'active' => 'boolean',
-        });
 
         $columns = $this->runtime->getColumns(TestEntity::class);
 
-        $this->assertNotEmpty($columns);
+        $this->assertContains('id', $columns);
+        $this->assertContains('name', $columns);
+        $this->assertContains('category', $columns);
+        $this->assertContains('author', $columns);
+        $this->assertNotContains('tags', $columns);
+        $this->assertCount(6, $columns);
     }
 }

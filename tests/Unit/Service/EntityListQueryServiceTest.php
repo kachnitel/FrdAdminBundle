@@ -6,6 +6,8 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -18,20 +20,59 @@ class EntityListQueryServiceTest extends TestCase
     /** @var EntityRepository<object>&MockObject */
     private MockObject&EntityRepository $repository;
     private MockObject&QueryBuilder $qb;
+    private Expr $expr;
+    /** @var ClassMetadata<object>&MockObject */
+    private MockObject&ClassMetadata $classMetadata;
+
+    /** @var list<array{string, string}> */
+    private array $orderByCalls = [];
+    /** @var list<mixed> */
+    private array $andWhereCalls = [];
+    /** @var list<array{string, mixed}> */
+    private array $setParameterCalls = [];
 
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->repository = $this->createMock(EntityRepository::class);
         $this->qb = $this->createMock(QueryBuilder::class);
+        $this->expr = new Expr();
+        $this->classMetadata = $this->createMock(ClassMetadata::class);
 
         $this->em->method('getRepository')->willReturn($this->repository);
+        $this->em->method('getClassMetadata')->willReturn($this->classMetadata);
         $this->repository->method('createQueryBuilder')->willReturn($this->qb);
-        $this->qb->method('andWhere')->willReturnSelf();
-        $this->qb->method('setParameter')->willReturnSelf();
-        $this->qb->method('orderBy')->willReturnSelf();
+
+        $this->orderByCalls = [];
+        $this->andWhereCalls = [];
+        $this->setParameterCalls = [];
+
+        $this->qb->method('orderBy')->willReturnCallback(function (string $sort, string $order) {
+            $this->orderByCalls[] = [$sort, $order];
+            return $this->qb;
+        });
+        $this->qb->method('andWhere')->willReturnCallback(function (mixed $where) {
+            $this->andWhereCalls[] = $where;
+            return $this->qb;
+        });
+        $this->qb->method('orWhere')->willReturnSelf();
+        $this->qb->method('setParameter')->willReturnCallback(function (string $key, mixed $value) {
+            $this->setParameterCalls[] = [$key, $value];
+            return $this->qb;
+        });
         $this->qb->method('setFirstResult')->willReturnSelf();
         $this->qb->method('setMaxResults')->willReturnSelf();
+        $this->qb->method('expr')->willReturn($this->expr);
+
+        // Mock ClassMetadata methods
+        $this->classMetadata->method('getFieldNames')->willReturn(['id', 'name', 'description']);
+        $this->classMetadata->method('hasField')->willReturn(true);
+        $this->classMetadata->method('getTypeOfField')->willReturnCallback(fn (string $field) => match ($field) {
+            'id' => 'integer',
+            'name' => 'string',
+            'description' => 'text',
+            default => 'string',
+        });
 
         $this->service = new EntityListQueryService($this->em);
     }
@@ -64,9 +105,9 @@ class EntityListQueryServiceTest extends TestCase
     /**
      * @test
      */
-    public function buildQueryWithEmptyFilters(): void
+    public function buildQueryWithEmptyFiltersOnlyAppliesSort(): void
     {
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
@@ -75,61 +116,84 @@ class EntityListQueryServiceTest extends TestCase
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertSame([['e.id', 'ASC']], $this->orderByCalls);
+        $this->assertEmpty($this->andWhereCalls);
+        $this->assertEmpty($this->setParameterCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithSingleFilter(): void
+    public function buildQueryWithSingleFilterAppliesWhereClause(): void
     {
-        $filters = ['name' => 'Test Product'];
-        $filterMetadata = ['name' => ['type' => 'text']];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['name' => 'Test Product'],
+            ['name' => ['type' => 'text']],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertNotEmpty($this->andWhereCalls);
+        $this->assertNotEmpty($this->setParameterCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithMultipleFilters(): void
+    public function buildQueryWithMultipleFiltersAppliesMultipleWhereClauses(): void
     {
-        $filters = [
-            'name' => 'Test',
-            'status' => 'active',
-            'category' => 1,
-        ];
-        $filterMetadata = [
-            'name' => ['type' => 'text'],
-            'status' => ['type' => 'simple'],
-            'category' => ['type' => 'relation'],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            [
+                'name' => 'Test',
+                'status' => 'active',
+            ],
+            [
+                'name' => ['type' => 'text'],
+                'status' => ['type' => 'enum'],
+            ],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // Each filter should produce an andWhere call
+        $this->assertCount(2, $this->andWhereCalls);
+        $this->assertCount(2, $this->setParameterCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithGlobalSearch(): void
+    public function buildQueryWithSingleEnumFilterAppliesEqualityWhere(): void
     {
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
+            'App\\Entity\\Product',
+            null,
+            '',
+            ['status' => 'active'],
+            ['status' => ['type' => 'enum']],
+            'id',
+            'ASC'
+        );
+
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame('active', $this->setParameterCalls[0][1]);
+    }
+
+    /**
+     * @test
+     */
+    public function buildQueryWithGlobalSearchAppliesSearchFilter(): void
+    {
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             'search term',
@@ -138,15 +202,22 @@ class EntityListQueryServiceTest extends TestCase
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // Global search should add andWhere for the orX expression
+        $this->assertNotEmpty($this->andWhereCalls);
+        // Should set globalSearch parameter with wildcard wrapping
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('globalSearch', $this->setParameterCalls[0][0]);
+        $this->assertSame('%search term%', $this->setParameterCalls[0][1]);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithCustomRepositoryMethod(): void
+    public function buildQueryWithCustomRepositoryMethodFallsBackToCreateQueryBuilder(): void
     {
-        $result = $this->service->buildQuery(
+        // Mock repository doesn't have 'findActive' method, so it falls back
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             'findActive',
             '',
@@ -155,15 +226,16 @@ class EntityListQueryServiceTest extends TestCase
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertSame([['e.id', 'ASC']], $this->orderByCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithAscendingSort(): void
+    public function buildQueryWithAscendingSortUsesASC(): void
     {
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
@@ -172,15 +244,16 @@ class EntityListQueryServiceTest extends TestCase
             'name',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertSame([['e.name', 'ASC']], $this->orderByCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithDescendingSort(): void
+    public function buildQueryWithDescendingSortUsesDESC(): void
     {
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
@@ -189,15 +262,16 @@ class EntityListQueryServiceTest extends TestCase
             'id',
             'DESC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertSame([['e.id', 'DESC']], $this->orderByCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithDotNotationSort(): void
+    public function buildQueryWithDotNotationSortPrefixesAlias(): void
     {
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
@@ -206,120 +280,132 @@ class EntityListQueryServiceTest extends TestCase
             'category.name',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertSame([['e.category.name', 'ASC']], $this->orderByCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithNullValues(): void
+    public function buildQueryWithNullFilterValueSkipsFilter(): void
     {
-        $filters = ['name' => null];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
-            $filters,
-            [],
+            ['name' => null],
+            ['name' => ['type' => 'text']],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // Null values should be skipped — no where clause added
+        $this->assertEmpty($this->andWhereCalls);
+        $this->assertEmpty($this->setParameterCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithEmptyStringValues(): void
+    public function buildQueryWithEmptyStringFilterValueSkipsFilter(): void
     {
-        $filters = ['name' => ''];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
-            $filters,
-            [],
+            ['name' => ''],
+            ['name' => ['type' => 'text']],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // Empty string values should be skipped
+        $this->assertEmpty($this->andWhereCalls);
+        $this->assertEmpty($this->setParameterCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithSearchAndFilters(): void
+    public function buildQueryWithSearchAndFiltersAppliesBoth(): void
     {
-        $filters = ['status' => 'active'];
-        $filterMetadata = ['status' => ['type' => 'simple']];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             'laptop',
-            $filters,
-            $filterMetadata,
+            ['status' => 'active'],
+            ['status' => ['type' => 'enum']],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // Should have andWhere calls from both global search and column filter
+        $this->assertGreaterThanOrEqual(2, count($this->andWhereCalls));
+        // Global search parameter + filter parameter
+        $this->assertGreaterThanOrEqual(2, count($this->setParameterCalls));
     }
 
     /**
      * @test
      */
-    public function buildQueryWithRepositoryMethodAndFilters(): void
+    public function buildQueryWithRepositoryMethodAndFiltersCombinesBoth(): void
     {
-        $filters = ['status' => 'active'];
-        $filterMetadata = ['status' => ['type' => 'simple']];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             'findPublished',
             '',
-            $filters,
-            $filterMetadata,
+            ['status' => 'active'],
+            ['status' => ['type' => 'enum']],
             'createdAt',
             'DESC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertSame([['e.createdAt', 'DESC']], $this->orderByCalls);
+        $this->assertNotEmpty($this->andWhereCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithComplexFilterCombination(): void
+    public function buildQueryWithComplexFilterCombinationAppliesAllFilters(): void
     {
-        $filters = [
-            'name' => 'Product',
-            'status' => 'active',
-            'minPrice' => 10,
-            'maxPrice' => 100,
-        ];
-        $filterMetadata = [
-            'name' => ['type' => 'text'],
-            'status' => ['type' => 'simple'],
-            'minPrice' => ['type' => 'number'],
-            'maxPrice' => ['type' => 'number'],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            [
+                'name' => 'Product',
+                'status' => 'active',
+                'minPrice' => 10,
+                'maxPrice' => 100,
+            ],
+            [
+                'name' => ['type' => 'text'],
+                'status' => ['type' => 'enum'],
+                'minPrice' => ['type' => 'number'],
+                'maxPrice' => ['type' => 'number'],
+            ],
             'name',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertSame([['e.name', 'ASC']], $this->orderByCalls);
+        // Each of the 4 filters should produce at least one andWhere
+        $this->assertCount(4, $this->andWhereCalls);
+        $this->assertCount(4, $this->setParameterCalls);
     }
 
     /**
      * @test
      */
-    public function buildQueryPreservesEntityClass(): void
+    public function buildQueryPassesEntityClassToRepository(): void
     {
-        $entityClass = 'App\\Entity\\Order';
-        $result = $this->service->buildQuery(
-            $entityClass,
+        $this->em->expects($this->once())
+            ->method('getRepository')
+            ->with('App\\Entity\\Order');
+
+        $this->service->buildQuery(
+            'App\\Entity\\Order',
             null,
             '',
             [],
@@ -327,48 +413,50 @@ class EntityListQueryServiceTest extends TestCase
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithArrayFilterValues(): void
+    public function buildQueryWithArrayFilterValuesAppliesFilter(): void
     {
-        $filters = ['status' => ['active', 'pending']];
-        $filterMetadata = ['status' => ['type' => 'multi']];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['status' => ['active', 'pending']],
+            ['status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true]],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame(['active', 'pending'], $this->setParameterCalls[0][1]);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithNumericFilterValues(): void
+    public function buildQueryWithNumericFilterValuesAppliesFilters(): void
     {
-        $filters = ['quantity' => 100, 'price' => 99.99];
-        $filterMetadata = [
-            'quantity' => ['type' => 'number'],
-            'price' => ['type' => 'number'],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Product',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['quantity' => 100, 'price' => 99.99],
+            [
+                'quantity' => ['type' => 'number'],
+                'price' => ['type' => 'number'],
+            ],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // Two numeric filters should each produce a where clause
+        $this->assertCount(2, $this->andWhereCalls);
+        $this->assertCount(2, $this->setParameterCalls);
     }
 
     /**
@@ -376,20 +464,20 @@ class EntityListQueryServiceTest extends TestCase
      */
     public function buildQueryWithInOperatorAndArrayValue(): void
     {
-        $filters = ['status' => ['pending', 'approved']];
-        $filterMetadata = [
-            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Order',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['status' => ['pending', 'approved']],
+            ['status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true]],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame(['pending', 'approved'], $this->setParameterCalls[0][1]);
     }
 
     /**
@@ -397,42 +485,42 @@ class EntityListQueryServiceTest extends TestCase
      */
     public function buildQueryWithInOperatorAndJsonStringValue(): void
     {
-        $filters = ['status' => '["pending","approved","rejected"]'];
-        $filterMetadata = [
-            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Order',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['status' => '["pending","approved","rejected"]'],
+            ['status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true]],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame(['pending', 'approved', 'rejected'], $this->setParameterCalls[0][1]);
     }
 
     /**
      * @test
      */
-    public function buildQueryWithInOperatorAndSingleStringValue(): void
+    public function buildQueryWithInOperatorAndSingleStringValueFallsBack(): void
     {
-        // When JSON decode fails, should fall back to single value
-        $filters = ['status' => 'pending'];
-        $filterMetadata = [
-            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Order',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['status' => 'pending'],
+            ['status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true]],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // Single string that's not valid JSON should fall back to single-value IN
+        $this->assertCount(1, $this->andWhereCalls);
+        $this->assertCount(1, $this->setParameterCalls);
+        $this->assertSame('filter_status', $this->setParameterCalls[0][0]);
+        $this->assertSame(['pending'], $this->setParameterCalls[0][1]);
     }
 
     /**
@@ -440,20 +528,18 @@ class EntityListQueryServiceTest extends TestCase
      */
     public function buildQueryWithInOperatorAndEmptyArraySkipsFilter(): void
     {
-        $filters = ['status' => []];
-        $filterMetadata = [
-            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Order',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['status' => []],
+            ['status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true]],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // Empty array should skip the filter entirely
+        $this->assertEmpty($this->andWhereCalls);
     }
 
     /**
@@ -461,20 +547,18 @@ class EntityListQueryServiceTest extends TestCase
      */
     public function buildQueryWithInOperatorAndEmptyJsonArraySkipsFilter(): void
     {
-        $filters = ['status' => '[]'];
-        $filterMetadata = [
-            'status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Order',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['status' => '[]'],
+            ['status' => ['type' => 'enum', 'operator' => 'IN', 'multiple' => true]],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // JSON "[]" should be decoded to empty array and skip the filter
+        $this->assertEmpty($this->andWhereCalls);
     }
 
     /**
@@ -482,24 +566,23 @@ class EntityListQueryServiceTest extends TestCase
      */
     public function buildQueryWithCollectionFilter(): void
     {
-        $filters = ['tags' => 'important'];
-        $filterMetadata = [
-            'tags' => [
-                'type' => 'collection',
-                'searchFields' => ['name'],
-                'targetClass' => 'App\\Entity\\Tag',
-            ],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Order',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['tags' => 'important'],
+            [
+                'tags' => [
+                    'type' => 'collection',
+                    'searchFields' => ['name'],
+                    'targetClass' => 'App\\Entity\\Tag',
+                ],
+            ],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertNotEmpty($this->andWhereCalls);
     }
 
     /**
@@ -507,24 +590,23 @@ class EntityListQueryServiceTest extends TestCase
      */
     public function buildQueryWithCollectionFilterMultipleSearchFields(): void
     {
-        $filters = ['attributes' => 'searchterm'];
-        $filterMetadata = [
-            'attributes' => [
-                'type' => 'collection',
-                'searchFields' => ['display', 'attr'],
-                'targetClass' => 'App\\Entity\\Attribute',
-            ],
-        ];
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Order',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['attributes' => 'searchterm'],
+            [
+                'attributes' => [
+                    'type' => 'collection',
+                    'searchFields' => ['display', 'attr'],
+                    'targetClass' => 'App\\Entity\\Attribute',
+                ],
+            ],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        $this->assertNotEmpty($this->andWhereCalls);
     }
 
     /**
@@ -532,25 +614,24 @@ class EntityListQueryServiceTest extends TestCase
      */
     public function buildQueryWithCollectionFilterEmptySearchFieldsSkipsFilter(): void
     {
-        $filters = ['tags' => 'searchterm'];
-        $filterMetadata = [
-            'tags' => [
-                'type' => 'collection',
-                'searchFields' => [],
-                'targetClass' => 'App\\Entity\\Tag',
-            ],
-        ];
-        // Should not throw, just skip the filter
-        $result = $this->service->buildQuery(
+        $this->service->buildQuery(
             'App\\Entity\\Order',
             null,
             '',
-            $filters,
-            $filterMetadata,
+            ['tags' => 'searchterm'],
+            [
+                'tags' => [
+                    'type' => 'collection',
+                    'searchFields' => [],
+                    'targetClass' => 'App\\Entity\\Tag',
+                ],
+            ],
             'id',
             'ASC'
         );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
+
+        // Empty searchFields should skip the collection filter
+        $this->assertEmpty($this->andWhereCalls);
     }
 
     /**

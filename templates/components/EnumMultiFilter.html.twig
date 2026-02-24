@@ -1,6 +1,6 @@
 {% import kachnitel_admin_theme as css %}
 {% set popoverId = 'enum-multi-popover-' ~ column ~ '-' ~ random() %}
-{% set cases = enum(enumClass).cases() %}
+{% set choices = this.choices %}
 
 <div {{ attributes }}>
     <button
@@ -10,10 +10,8 @@
     >
         {% if selectedValues|length > 0 %}
             {% if selectedValues|length == 1 %}
-                {% for case in cases|filter(c => c.value == selectedValues[0]) %}
-                    {{ case.displayValue is defined ? case.displayValue() : case.name }}
-                {% endfor %}
-            {% elseif selectedValues|length == cases|length %}
+                {{ choices[selectedValues[0]]|default(selectedValues[0]) }}
+            {% elseif selectedValues|length == choices|length %}
                 All ({{ selectedValues|length }})
             {% else %}
                 {{ selectedValues|length }} selected
@@ -42,18 +40,18 @@
         </div>
 
         <div style="max-height: 300px; overflow-y: auto;">
-            {% for case in cases %}
+            {% for choiceValue, choiceLabel in choices %}
                 <div class="form-check">
                     <input
                         type="checkbox"
                         class="{{ css.form_checkbox() }}"
-                        id="{{ popoverId }}-{{ case.value }}"
-                        value="{{ case.value }}"
+                        id="{{ popoverId }}-{{ choiceValue }}"
+                        value="{{ choiceValue }}"
                         data-model="selectedValues"
-                        {{ case.value in selectedValues ? 'checked' : '' }}
+                        {{ choiceValue in selectedValues ? 'checked' : '' }}
                     >
-                    <label class="form-check-label" for="{{ popoverId }}-{{ case.value }}">
-                        {{ case.displayValue is defined ? case.displayValue() : case.name }}
+                    <label class="form-check-label" for="{{ popoverId }}-{{ choiceValue }}">
+                        {{ choiceLabel }}
                     </label>
                 </div>
             {% endfor %}

@@ -15,11 +15,17 @@ class EntityListEnhancedTest extends ComponentTestCase
         $component = $this->createLiveComponent(
             name: EntityList::class,
             data: [
-                'dataSourceId' => 'test_datasource',
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
             ],
         );
-        // Component created successfully
-        $this->addToAssertionCount(1);
+
+        $inner = $component->component();
+        $this->assertSame(TestEntity::class, $inner->entityClass);
+        $this->assertSame('', $inner->search);
+        $this->assertSame(1, $inner->page);
+        $this->assertSame([], $inner->columnFilters);
+        $this->assertSame([], $inner->selectedIds);
     }
 
     /**
@@ -35,7 +41,10 @@ class EntityListEnhancedTest extends ComponentTestCase
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame(TestEntity::class, $inner->entityClass);
+        $this->assertSame('TestEntity', $inner->entityShortClass);
+        $this->assertTrue($inner->isDoctrineEntity());
     }
 
     /**
@@ -46,12 +55,14 @@ class EntityListEnhancedTest extends ComponentTestCase
         $component = $this->createLiveComponent(
             name: EntityList::class,
             data: [
-                'dataSourceId' => 'test_datasource',
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
                 'search' => 'test search term',
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame('test search term', $inner->search);
     }
 
     /**
@@ -62,13 +73,16 @@ class EntityListEnhancedTest extends ComponentTestCase
         $component = $this->createLiveComponent(
             name: EntityList::class,
             data: [
-                'dataSourceId' => 'test_datasource',
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
                 'sortBy' => 'name',
                 'sortDirection' => 'ASC',
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame('name', $inner->sortBy);
+        $this->assertSame('ASC', $inner->sortDirection);
     }
 
     /**
@@ -79,13 +93,16 @@ class EntityListEnhancedTest extends ComponentTestCase
         $component = $this->createLiveComponent(
             name: EntityList::class,
             data: [
-                'dataSourceId' => 'test_datasource',
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
                 'page' => 2,
-                'itemsPerPage' => 20,
+                'itemsPerPage' => 50,
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame(2, $inner->page);
+        $this->assertSame(50, $inner->itemsPerPage);
     }
 
     /**
@@ -96,12 +113,14 @@ class EntityListEnhancedTest extends ComponentTestCase
         $component = $this->createLiveComponent(
             name: EntityList::class,
             data: [
-                'dataSourceId' => 'test_datasource',
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
                 'columnFilters' => ['name' => 'test', 'status' => 'active'],
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame(['name' => 'test', 'status' => 'active'], $inner->columnFilters);
     }
 
     /**
@@ -112,12 +131,14 @@ class EntityListEnhancedTest extends ComponentTestCase
         $component = $this->createLiveComponent(
             name: EntityList::class,
             data: [
-                'dataSourceId' => 'test_datasource',
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
                 'selectedIds' => [1, 2, 3],
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame([1, 2, 3], $inner->selectedIds);
     }
 
     /**
@@ -140,7 +161,17 @@ class EntityListEnhancedTest extends ComponentTestCase
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame('search_term', $inner->search);
+        $this->assertSame('name', $inner->sortBy);
+        $this->assertSame('DESC', $inner->sortDirection);
+        $this->assertSame(['status' => 'active'], $inner->columnFilters);
+        $this->assertSame(1, $inner->page);
+        $this->assertSame(15, $inner->itemsPerPage);
+        $this->assertSame([1], $inner->selectedIds);
+
+        $rendered = (string) $component->render();
+        $this->assertStringContainsString('<table', $rendered);
     }
 
     /**
@@ -151,12 +182,14 @@ class EntityListEnhancedTest extends ComponentTestCase
         $component = $this->createLiveComponent(
             name: EntityList::class,
             data: [
-                'dataSourceId' => 'test_datasource',
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
                 'search' => '',
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame('', $inner->search);
     }
 
     /**
@@ -167,12 +200,14 @@ class EntityListEnhancedTest extends ComponentTestCase
         $component = $this->createLiveComponent(
             name: EntityList::class,
             data: [
-                'dataSourceId' => 'test_datasource',
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
                 'columnFilters' => [],
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame([], $inner->columnFilters);
     }
 
     /**
@@ -183,11 +218,13 @@ class EntityListEnhancedTest extends ComponentTestCase
         $component = $this->createLiveComponent(
             name: EntityList::class,
             data: [
-                'dataSourceId' => 'test_datasource',
+                'entityClass' => TestEntity::class,
+                'entityShortClass' => 'TestEntity',
                 'selectedIds' => [],
             ],
         );
 
-        $this->addToAssertionCount(1);
+        $inner = $component->component();
+        $this->assertSame([], $inner->selectedIds);
     }
 }

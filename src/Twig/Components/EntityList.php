@@ -7,11 +7,13 @@ namespace Kachnitel\AdminBundle\Twig\Components;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
-use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
+use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
+use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
+use Kachnitel\AdminBundle\Service\Preferences\ColumnVisibilityPreferenceTrait;
 use Kachnitel\AdminBundle\ValueObject\PaginationInfo;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -45,6 +47,7 @@ class EntityList
     public const SORT_DESC = 'DESC';
 
     use DefaultActionTrait;
+    use ColumnVisibilityPreferenceTrait;
 
     #[LiveProp(writable: true, url: true)]
     public string $search = '';
@@ -77,6 +80,14 @@ class EntityList
      */
     #[LiveProp(writable: true)]
     public array $selectedIds = [];
+
+    /**
+     * Column names currently hidden by the user.
+     *
+     * @var array<string>
+     */
+    #[LiveProp(writable: true)]
+    public array $hiddenColumns = [];
 
     /**
      * Data source identifier (alternative to entityClass).
@@ -113,7 +124,8 @@ class EntityList
      *     filterMetadata?: array<string, array<string, mixed>>,
      *     columns?: array<int|string, string>,
      *     dataSource?: DataSourceInterface,
-     *     dataSourceResolved?: bool
+     *     dataSourceResolved?: bool,
+     *     visibilityLoaded?: bool
      * }
      */
     private array $cache = [];
@@ -123,8 +135,9 @@ class EntityList
         private Security $security,
         private EntityListConfig $config,
         private DataSourceRegistry $dataSourceRegistry,
-        private DoctrineDataSourceFactory $doctrineFactory,
         private EntityListBatchService $batchService,
+        private AdminPreferencesStorageInterface $preferencesStorage,
+        private EntityListColumnService $columnService,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -155,36 +168,11 @@ class EntityList
      */
     private function resolveDataSource(): DataSourceInterface
     {
-        if (isset($this->cache['dataSource'])) {
-            return $this->cache['dataSource'];
-        }
-
-        // Try to resolve by dataSourceId first
-        if ($this->dataSourceId !== null) {
-            $dataSource = $this->dataSourceRegistry->get($this->dataSourceId);
-            if ($dataSource === null) {
-                throw new \RuntimeException(sprintf('Data source "%s" not found.', $this->dataSourceId));
-            }
-            $this->cache['dataSource'] = $dataSource;
-            return $dataSource;
-        }
-
-        // Try to resolve by entityShortClass from registry
-        if ($this->entityShortClass !== '') {
-            $dataSource = $this->dataSourceRegistry->get($this->entityShortClass);
-            if ($dataSource !== null) {
-                $this->cache['dataSource'] = $dataSource;
-                return $dataSource;
-            }
-        }
-
-        // Create DoctrineDataSource on-demand for the entity class
-        if ($this->entityClass !== '') {
-            $this->cache['dataSource'] = $this->doctrineFactory->createForClass($this->entityClass);
-            return $this->cache['dataSource'];
-        }
-
-        throw new \RuntimeException('No data source or entity class configured.');
+        return $this->cache['dataSource'] ??= $this->dataSourceRegistry->resolve(
+            $this->dataSourceId,
+            $this->entityShortClass,
+            $this->entityClass,
+        );
     }
 
     /**
@@ -212,14 +200,11 @@ class EntityList
             return false;
         }
 
-        // For Doctrine entities, check permissions via permission service
-        if ($this->entityClass !== '') {
-            return $this->permissionService->canBatchDelete($this->entityClass, $this->entityShortClass);
-        }
-
-        // For non-Doctrine data sources, check ADMIN_DELETE permission on the identifier
-        $identifier = $this->dataSourceId ?? $this->entityShortClass;
-        return $this->security->isGranted(AdminEntityVoter::ADMIN_DELETE, $identifier);
+        return $this->permissionService->canBatchDelete(
+            $this->entityClass,
+            $this->entityShortClass,
+            $this->dataSourceId,
+        );
     }
 
     // --- UI ---
@@ -233,6 +218,12 @@ class EntityList
     {
         if (isset($this->cache['queryResult'])) {
             return $this->cache['queryResult']->items;
+        }
+
+        // Fall back to default sort if current sortBy column is permission-denied
+        if (!in_array($this->sortBy, $this->getColumns(), true)) {
+            $this->sortBy = $this->getDataSource()->getDefaultSortBy();
+            $this->sortDirection = $this->getDataSource()->getDefaultSortDirection();
         }
 
         $this->cache['queryResult'] = $this->getDataSource()->query(
@@ -364,32 +355,29 @@ class EntityList
     }
 
     /**
-     * Get filter metadata for template rendering.
+     * Get filter metadata for template rendering (filtered by column permissions).
      *
      * @return array<string, array<string, mixed>>
      */
     public function getFilterMetadata(): array
     {
-        if (!isset($this->cache['filterMetadata'])) {
-            $this->cache['filterMetadata'] = [];
-            foreach ($this->getDataSource()->getFilters() as $name => $filter) {
-                $this->cache['filterMetadata'][$name] = $filter->toArray();
-            }
-        }
-        return $this->cache['filterMetadata'];
+        return $this->cache['filterMetadata'] ??= $this->columnService->getPermittedFilters(
+            $this->getDataSource(),
+            $this->entityClass,
+        );
     }
 
     /**
-     * Get columns for display.
+     * Get columns for display (filtered by column permissions).
      *
      * @return array<int|string, string>
      */
     public function getColumns(): array
     {
-        if (!isset($this->cache['columns'])) {
-            $this->cache['columns'] = array_keys($this->getDataSource()->getColumns());
-        }
-        return $this->cache['columns'];
+        return $this->cache['columns'] ??= $this->columnService->getPermittedColumns(
+            $this->getDataSource(),
+            $this->entityClass,
+        );
     }
 
     /**
@@ -398,6 +386,95 @@ class EntityList
     public function supportsBatchActions(): bool
     {
         return $this->getDataSource()->supportsAction('batch_delete');
+    }
+
+    /**
+     * Check if column visibility toggle is supported for this data source.
+     */
+    public function supportsColumnVisibility(): bool
+    {
+        return $this->getDataSource()->supportsAction('column_visibility');
+    }
+
+    /**
+     * Get columns that are currently visible (all columns minus hidden ones).
+     *
+     * Lazy-loads hidden columns from preferences storage on first access,
+     * which handles both initial page render and LiveComponent re-renders.
+     *
+     * @return array<int|string, string>
+     */
+    public function getVisibleColumns(): array
+    {
+        $allColumns = $this->getColumns();
+
+        // Lazy-load from storage if not yet loaded (covers initial mount where PostHydrate doesn't fire)
+        if ($this->supportsColumnVisibility() && empty($this->hiddenColumns) && !isset($this->cache['visibilityLoaded'])) {
+            $this->hiddenColumns = $this->loadHiddenColumns();
+            $this->cache['visibilityLoaded'] = true;
+        }
+
+        if (empty($this->hiddenColumns)) {
+            return $allColumns;
+        }
+
+        return array_values(array_filter(
+            $allColumns,
+            fn(string $col) => !in_array($col, $this->hiddenColumns, true)
+        ));
+    }
+
+    /**
+     * Toggle column visibility.
+     */
+    #[LiveAction]
+    public function toggleColumnVisibility(#[LiveArg] string $column): void
+    {
+        if (in_array($column, $this->hiddenColumns, true)) {
+            // Show the column
+            $this->hiddenColumns = array_values(array_diff($this->hiddenColumns, [$column]));
+        } else {
+            // Hide the column
+            $this->hiddenColumns[] = $column;
+        }
+
+        // Save to preferences storage
+        $this->saveHiddenColumns($this->hiddenColumns);
+
+        // Clear cached query result to trigger re-render
+        unset($this->cache['queryResult']);
+    }
+
+    /**
+     * Load column visibility preferences after hydration.
+     *
+     * On subsequent LiveComponent requests, hiddenColumns is hydrated from
+     * the client (writable LiveProp). We only load from storage if empty.
+     * The cache flag prevents getVisibleColumns() from double-loading.
+     */
+    #[PostHydrate]
+    public function loadColumnVisibility(): void
+    {
+        if ($this->supportsColumnVisibility() && empty($this->hiddenColumns)) {
+            $this->hiddenColumns = $this->loadHiddenColumns();
+        }
+        $this->cache['visibilityLoaded'] = true;
+    }
+
+    /**
+     * Get the preferences storage instance (required by ColumnVisibilityPreferenceTrait).
+     */
+    protected function getPreferencesStorage(): AdminPreferencesStorageInterface
+    {
+        return $this->preferencesStorage;
+    }
+
+    /**
+     * Get the list identifier for this component (required by ColumnVisibilityPreferenceTrait).
+     */
+    protected function getListIdentifier(): string
+    {
+        return $this->dataSourceId ?? $this->entityShortClass;
     }
 
     /**

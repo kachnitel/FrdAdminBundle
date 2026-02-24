@@ -29,6 +29,9 @@ class FilterMetadataProviderTest extends TestCase
         $this->metadata = $this->createMock(ClassMetadata::class);
         $this->em->method('getClassMetadata')
             ->willReturn($this->metadata);
+
+        // Default hasField to return true unless overridden in specific tests
+        $this->metadata->method('hasField')->willReturn(true);
     }
 
     public function testGetFiltersReturnsAllEnabledFilters(): void
@@ -38,6 +41,9 @@ class FilterMetadataProviderTest extends TestCase
         ]);
         $this->metadata->method('getAssociationNames')->willReturn(['relatedEntity']);
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $this->metadata->method('hasField')->willReturnCallback(
+            fn($name) => in_array($name, ['name', 'description', 'quantity', 'price', 'createdAt', 'active', 'status', 'disabledFilter'], true)
+        );
         $this->metadata->method('hasAssociation')->willReturnCallback(
             fn($name) => $name === 'relatedEntity'
         );
@@ -72,6 +78,7 @@ class FilterMetadataProviderTest extends TestCase
     {
         $this->metadata->method('getFieldNames')->willReturn(['name']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
+        $this->metadata->method('hasField')->willReturn(true);
         $this->metadata->method('hasAssociation')->willReturn(false);
         $this->metadata->method('getTypeOfField')->willReturn('string');
 

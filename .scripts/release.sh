@@ -56,3 +56,18 @@ echo "📤 Push to remote:"
 echo "  git push origin master --tags"
 echo ""
 echo "📦 Publish to Packagist (auto-updates via webhook)"
+
+# Check for Flex recipe
+MAJOR_MINOR=$(echo "$NEW_TAG" | sed 's/^v//' | cut -d. -f1,2)
+RECIPE_DIR="recipes/$MAJOR_MINOR"
+
+if [[ -d "$RECIPE_DIR" ]]; then
+  echo ""
+  echo "📋 Flex recipe found at $RECIPE_DIR"
+  echo "   Submit PR to: https://github.com/symfony/recipes-contrib"
+  echo "   Path: kachnitel/admin-bundle/$MAJOR_MINOR/"
+else
+  echo ""
+  echo "📦 No Flex recipe found for version $MAJOR_MINOR"
+  echo "   Consider creating: $RECIPE_DIR/{manifest.json,config/...}"
+fi
