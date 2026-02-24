@@ -8,11 +8,13 @@ use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 
 /**
- * Registry that collects row actions from all providers and resolves the final action list.
+ * Collects row actions from all providers and resolves the final action list for an entity.
  *
- * Actions are merged based on priority and the override flag:
- * - Without override: non-null properties from higher-priority providers merge into existing actions
- * - With override: completely replaces the existing action
+ * Merge strategy (per action name):
+ *  - Without override flag: non-null properties from higher-priority providers merge into existing actions
+ *  - With override flag (#[AdminAction(override: true)]): completely replaces the existing action
+ *
+ * Final filtering is applied via #[AdminActionsConfig] (disableDefaults, exclude, include).
  */
 class RowActionRegistry
 {
@@ -31,8 +33,9 @@ class RowActionRegistry
     ) {}
 
     /**
-     * Get all actions for an entity class.
+     * Get the final resolved action list for an entity class.
      *
+     * @param class-string $entityClass
      * @return array<RowAction>
      */
     public function getActions(string $entityClass): array
@@ -43,30 +46,29 @@ class RowActionRegistry
 
         $this->ensureProvidersSorted();
 
-        // Collect actions from all providers (sorted by priority)
         /** @var array<string, RowAction> $actionsByName */
         $actionsByName = [];
 
         /** @var array<string, RowAction> $overrides */
         $overrides = [];
 
-        foreach ($this->sortedProviders as $provider) {
+        /** @var array<RowActionProviderInterface> $sortedProviders */
+        $sortedProviders = $this->sortedProviders;
+
+        foreach ($sortedProviders as $provider) {
             if (!$provider->supports($entityClass)) {
                 continue;
             }
 
             foreach ($provider->getActions($entityClass) as $action) {
-                // Check if this is a full override (from attribute provider)
-                if ($provider instanceof AttributeRowActionProvider) {
-                    if ($this->attributeProvider->isOverride($entityClass, $action->name)) {
-                        $overrides[$action->name] = $action;
-                        continue;
-                    }
+                // Full override: collect separately, applied after merging
+                if ($provider instanceof AttributeRowActionProvider
+                    && $this->attributeProvider->isOverride($entityClass, $action->name)) {
+                    $overrides[$action->name] = $action;
+                    continue;
                 }
 
-                // Merge or add the action
                 if (isset($actionsByName[$action->name])) {
-                    // Merge non-null properties from new action into existing
                     $actionsByName[$action->name] = $actionsByName[$action->name]->merge($action);
                 } else {
                     $actionsByName[$action->name] = $action;
@@ -74,16 +76,13 @@ class RowActionRegistry
             }
         }
 
-        // Apply full overrides
         foreach ($overrides as $name => $action) {
             $actionsByName[$name] = $action;
         }
 
-        // Apply AdminActionsConfig filters
         $config = $this->attributeProvider->getActionsConfig($entityClass);
         $actions = $this->applyConfig($actionsByName, $config);
 
-        // Sort by priority
         usort($actions, fn (RowAction $a, RowAction $b) => $a->priority <=> $b->priority);
 
         $this->cache[$entityClass] = $actions;
@@ -91,7 +90,7 @@ class RowActionRegistry
     }
 
     /**
-     * Clear the cache (useful for testing).
+     * Clear the resolved action cache (useful in tests).
      */
     public function clearCache(): void
     {
@@ -119,24 +118,21 @@ class RowActionRegistry
             return array_values($actionsByName);
         }
 
-        // Remove defaults if disabled
         if ($config->disableDefaults) {
             unset($actionsByName['show'], $actionsByName['edit']);
         }
 
-        // Apply exclude filter
         if ($config->exclude !== null) {
-            foreach ($config->exclude as $excluded) {
-                unset($actionsByName[$excluded]);
+            foreach ($config->exclude as $name) {
+                unset($actionsByName[$name]);
             }
         }
 
-        // Apply include filter (whitelist)
         if ($config->include !== null) {
             $actionsByName = array_filter(
                 $actionsByName,
                 fn (string $name) => in_array($name, $config->include, true),
-                ARRAY_FILTER_USE_KEY
+                ARRAY_FILTER_USE_KEY,
             );
         }
 

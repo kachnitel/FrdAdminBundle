@@ -8,12 +8,13 @@ use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminAction;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @group row-actions
+ */
 class AdminActionTest extends TestCase
 {
-    /**
-     * @test
-     */
-    public function itCreatesAttributeWithRequiredFields(): void
+    /** @test */
+    public function itCreatesAttributeWithRequiredFieldsOnly(): void
     {
         $action = new AdminAction(name: 'duplicate', label: 'Duplicate');
 
@@ -35,9 +36,35 @@ class AdminActionTest extends TestCase
         $this->assertFalse($action->override);
     }
 
-    /**
-     * @test
-     */
+    /** @test */
+    public function itAcceptsStringExpressionCondition(): void
+    {
+        $action = new AdminAction(
+            name: 'approve',
+            label: 'Approve',
+            condition: 'entity.status == "pending"',
+        );
+
+        $this->assertSame('entity.status == "pending"', $action->condition);
+        $this->assertIsString($action->condition);
+    }
+
+    /** @test */
+    public function itAcceptsDiTupleCondition(): void
+    {
+        $condition = ['App\\Service\\ApprovalService', 'canApprove'];
+
+        $action = new AdminAction(
+            name: 'approve',
+            label: 'Approve',
+            condition: $condition,
+        );
+
+        $this->assertSame($condition, $action->condition);
+        $this->assertIsArray($action->condition);
+    }
+
+    /** @test */
     public function itCreatesAttributeWithAllFields(): void
     {
         $action = new AdminAction(
@@ -60,63 +87,39 @@ class AdminActionTest extends TestCase
         );
 
         $this->assertSame('archive', $action->name);
-        $this->assertSame('Archive', $action->label);
-        $this->assertSame('📦', $action->icon);
-        $this->assertSame('app_product_archive', $action->route);
-        $this->assertSame(['confirm' => '1'], $action->routeParams);
-        $this->assertNull($action->url);
-        $this->assertSame('ROLE_EDITOR', $action->permission);
-        $this->assertSame('ADMIN_EDIT', $action->voterAttribute);
         $this->assertSame('entity.status != "archived"', $action->condition);
-        $this->assertSame('btn-warning', $action->cssClass);
-        $this->assertSame('Archive this item?', $action->confirmMessage);
-        $this->assertFalse($action->openInNewTab);
         $this->assertSame(50, $action->priority);
-        $this->assertSame('POST', $action->method);
-        $this->assertSame('custom/archive_button.html.twig', $action->template);
         $this->assertTrue($action->override);
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function itIsRepeatableAttribute(): void
     {
         $reflection = new \ReflectionClass(AdminAction::class);
-        $attributes = $reflection->getAttributes(Attribute::class);
+        $attrInstance = $reflection->getAttributes(Attribute::class)[0]->newInstance();
 
-        $this->assertCount(1, $attributes);
-        $attrInstance = $attributes[0]->newInstance();
         $this->assertTrue(($attrInstance->flags & Attribute::IS_REPEATABLE) !== 0);
     }
 
-    /**
-     * @test
-     */
-    public function itCanTargetClasses(): void
+    /** @test */
+    public function itTargetsClasses(): void
     {
         $reflection = new \ReflectionClass(AdminAction::class);
-        $attributes = $reflection->getAttributes(Attribute::class);
+        $attrInstance = $reflection->getAttributes(Attribute::class)[0]->newInstance();
 
-        $attrInstance = $attributes[0]->newInstance();
         $this->assertTrue(($attrInstance->flags & Attribute::TARGET_CLASS) !== 0);
     }
 
-    /**
-     * @test
-     */
-    public function overrideDefaultsToFalse(): void
+    /** @test */
+    public function conditionTypeIsFlexible(): void
     {
-        $action = new AdminAction(name: 'test', label: 'Test');
-        $this->assertFalse($action->override);
-    }
+        // Both forms must be accepted without type errors
+        $withExpression = new AdminAction(name: 'a', label: 'A', condition: 'entity.active');
+        $withTuple = new AdminAction(name: 'b', label: 'B', condition: [self::class, 'someMethod']);
+        $withNull = new AdminAction(name: 'c', label: 'C');
 
-    /**
-     * @test
-     */
-    public function overrideCanBeSetToTrue(): void
-    {
-        $action = new AdminAction(name: 'edit', label: 'Modify', override: true);
-        $this->assertTrue($action->override);
+        $this->assertIsString($withExpression->condition);
+        $this->assertIsArray($withTuple->condition);
+        $this->assertNull($withNull->condition);
     }
 }

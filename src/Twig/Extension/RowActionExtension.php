@@ -9,7 +9,7 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * Twig extension for row action functions.
+ * Registers row action Twig functions.
  */
 class RowActionExtension extends AbstractExtension
 {

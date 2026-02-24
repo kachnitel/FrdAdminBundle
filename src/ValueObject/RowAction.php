@@ -7,25 +7,35 @@ namespace Kachnitel\AdminBundle\ValueObject;
 /**
  * Represents a single row action configuration.
  * Immutable value object with all properties needed to render an action button.
+ *
+ * Conditions can be expressed in two ways:
+ *
+ *   1. String expression (simple property checks):
+ *      condition: 'entity.status == "pending"'
+ *      condition: '!entity.archived'
+ *
+ *   2. DI tuple (complex logic with injected dependencies):
+ *      condition: [ApprovalService::class, 'canApprove']
+ *      The service method receives the entity object and must return bool.
  */
 final class RowAction
 {
     /**
-     * @param string $name Unique action identifier (e.g., 'show', 'edit', 'duplicate')
-     * @param string $label Display label for the action button
-     * @param string|null $icon Emoji or icon identifier (e.g., '👀', 'edit')
-     * @param string|null $route Named route for the action (null = uses admin_object_path automatic resolution)
-     * @param array<string, mixed> $routeParams Additional route parameters
-     * @param string|null $url Static URL (alternative to route)
-     * @param string|null $permission Required permission/role (e.g., 'ROLE_ADMIN')
-     * @param string|null $voterAttribute Admin voter attribute (e.g., 'ADMIN_EDIT')
-     * @param string|null $condition Expression for conditional display (e.g., 'entity.status != "archived"')
-     * @param string|null $cssClass Additional CSS classes for the button
-     * @param string|null $confirmMessage Confirmation message (if set, shows confirm dialog)
-     * @param bool $openInNewTab Whether to open link in new tab
-     * @param int $priority Sort priority (lower = earlier, default 100)
-     * @param string|null $method HTTP method for form-based actions ('POST', 'DELETE')
-     * @param string|null $template Custom Twig template for rendering the action
+     * @param string                                        $name           Unique action identifier (e.g., 'show', 'edit', 'duplicate')
+     * @param string                                        $label          Display label for the action button
+     * @param string|null                                   $icon           Emoji or icon identifier (e.g., '👀', 'edit')
+     * @param string|null                                   $route          Named route (null = uses admin_object_path automatic resolution)
+     * @param array<string, mixed>                          $routeParams    Additional route parameters
+     * @param string|null                                   $url            Static URL (alternative to route)
+     * @param string|null                                   $permission     Required role (e.g., 'ROLE_ADMIN')
+     * @param string|null                                   $voterAttribute Admin voter attribute (e.g., 'ADMIN_EDIT')
+     * @param string|array<class-string, string>|null $condition      Expression string OR [ServiceClass::class, 'method'] DI tuple
+     * @param string|null                                   $cssClass       Additional CSS classes for the button
+     * @param string|null                                   $confirmMessage Confirmation message (if set, shows confirm dialog before action)
+     * @param bool                                          $openInNewTab   Whether to open link in new tab
+     * @param int                                           $priority       Sort priority (lower = earlier, default 100)
+     * @param string|null                                   $method         HTTP method for form-based actions ('POST', 'DELETE')
+     * @param string|null                                   $template       Custom Twig template for rendering the action button
      */
     public function __construct(
         public readonly string $name,
@@ -36,7 +46,7 @@ final class RowAction
         public readonly ?string $url = null,
         public readonly ?string $permission = null,
         public readonly ?string $voterAttribute = null,
-        public readonly ?string $condition = null,
+        public readonly string|array|null $condition = null,
         public readonly ?string $cssClass = null,
         public readonly ?string $confirmMessage = null,
         public readonly bool $openInNewTab = false,
@@ -47,7 +57,7 @@ final class RowAction
 
     /**
      * Create a modified copy with overridden properties.
-     * Only non-null values in $overrides will replace existing values.
+     * Only provided keys will replace existing values; use array_key_exists to allow explicit null.
      *
      * @param array<string, mixed> $overrides
      */
@@ -73,8 +83,9 @@ final class RowAction
     }
 
     /**
-     * Merge non-null properties from another action into this one.
-     * Used for partial overrides without the override flag.
+     * Merge non-null/non-default properties from another action into this one.
+     * Used by RowActionRegistry for partial overrides (without the override flag).
+     * The name is always preserved from the original.
      */
     public function merge(self $other): self
     {
@@ -98,7 +109,7 @@ final class RowAction
     }
 
     /**
-     * Check if this action uses a route (vs static URL).
+     * Whether this action resolves its URL via a named Symfony route.
      */
     public function hasRoute(): bool
     {
@@ -106,7 +117,7 @@ final class RowAction
     }
 
     /**
-     * Check if this action requires confirmation.
+     * Whether clicking this action should show a browser confirm dialog first.
      */
     public function requiresConfirmation(): bool
     {
@@ -114,10 +125,19 @@ final class RowAction
     }
 
     /**
-     * Check if this action is form-based (POST/DELETE).
+     * Whether this action renders as a form (POST/DELETE) rather than a plain link.
      */
     public function isFormAction(): bool
     {
         return $this->method !== null;
+    }
+
+    /**
+     * Whether the condition is a DI service tuple ([ServiceClass::class, 'method']).
+     * Returns false for string expressions and when no condition is set.
+     */
+    public function hasDiCondition(): bool
+    {
+        return is_array($this->condition);
     }
 }

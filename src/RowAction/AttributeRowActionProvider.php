@@ -9,7 +9,7 @@ use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 
 /**
- * Provides actions defined via #[AdminAction] attributes on entity classes.
+ * Provides row actions declared via #[AdminAction] attributes on entity classes.
  */
 class AttributeRowActionProvider implements RowActionProviderInterface
 {
@@ -66,14 +66,13 @@ class AttributeRowActionProvider implements RowActionProviderInterface
 
                 $actions[] = $rowAction;
 
-                // Cache the AdminAction attribute for override checking
                 $this->adminActionsCache[$entityClass . '::' . $adminAction->name] = [
                     'action' => $adminAction,
                     'rowAction' => $rowAction,
                 ];
             }
         } catch (\ReflectionException) {
-            // Entity class doesn't exist, return empty
+            // Class not found — return empty
         }
 
         $this->actionsCache[$entityClass] = $actions;
@@ -82,11 +81,11 @@ class AttributeRowActionProvider implements RowActionProviderInterface
 
     public function getPriority(): int
     {
-        return 50; // Higher than default, actions can override defaults
+        return 50;
     }
 
     /**
-     * Get AdminActionsConfig for an entity class.
+     * Get the #[AdminActionsConfig] attribute for an entity class, or null if absent.
      */
     public function getActionsConfig(string $entityClass): ?AdminActionsConfig
     {
@@ -105,7 +104,7 @@ class AttributeRowActionProvider implements RowActionProviderInterface
                 $config = $attributes[0]->newInstance();
             }
         } catch (\ReflectionException) {
-            // Entity class doesn't exist
+            // Class not found
         }
 
         $this->configCache[$entityClass] = $config;
@@ -113,19 +112,16 @@ class AttributeRowActionProvider implements RowActionProviderInterface
     }
 
     /**
-     * Get the AdminAction attribute for a specific action name.
+     * Get the raw #[AdminAction] attribute for a specific action name.
      */
     public function getAdminActionAttribute(string $entityClass, string $actionName): ?AdminAction
     {
-        // Ensure actions are loaded
-        $this->getActions($entityClass);
-
-        $cacheKey = $entityClass . '::' . $actionName;
-        return $this->adminActionsCache[$cacheKey]['action'] ?? null;
+        $this->getActions($entityClass); // ensure cache is populated
+        return $this->adminActionsCache[$entityClass . '::' . $actionName]['action'] ?? null;
     }
 
     /**
-     * Check if an action has the override flag set.
+     * Whether the given action has the override flag set (fully replaces vs merges).
      */
     public function isOverride(string $entityClass, string $actionName): bool
     {

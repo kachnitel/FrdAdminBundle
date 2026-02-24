@@ -8,16 +8,16 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 
 /**
- * Provides default show/edit actions for all entities.
+ * Provides the default show/edit actions for all entities.
  *
- * These are the actions that were previously hardcoded in the template.
- * Priority is 0 (lowest) so custom providers can add/merge actions.
+ * These replace the actions that were previously hardcoded in _RowActions.html.twig.
+ * Priority 0 (lowest) means custom providers can extend or merge on top of these.
  */
 class DefaultRowActionProvider implements RowActionProviderInterface
 {
     public function supports(string $entityClass): bool
     {
-        return true; // Applies to all entities
+        return true;
     }
 
     /**
@@ -30,7 +30,7 @@ class DefaultRowActionProvider implements RowActionProviderInterface
                 name: 'show',
                 label: 'Show',
                 icon: '👀',
-                route: null, // Uses admin_object_path automatic route resolution
+                route: null, // null = admin_object_path auto-resolution in template
                 voterAttribute: AdminEntityVoter::ADMIN_SHOW,
                 priority: 10,
             ),

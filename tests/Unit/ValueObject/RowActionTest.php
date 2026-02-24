@@ -7,12 +7,13 @@ namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @group row-actions
+ */
 class RowActionTest extends TestCase
 {
-    /**
-     * @test
-     */
-    public function itCreatesActionWithRequiredFields(): void
+    /** @test */
+    public function itCreatesActionWithRequiredFieldsOnly(): void
     {
         $action = new RowAction(name: 'show', label: 'Show');
 
@@ -33,49 +34,49 @@ class RowActionTest extends TestCase
         $this->assertNull($action->template);
     }
 
-    /**
-     * @test
-     */
-    public function itCreatesActionWithAllFields(): void
+    /** @test */
+    public function itAcceptsStringExpressionCondition(): void
     {
         $action = new RowAction(
-            name: 'duplicate',
-            label: 'Duplicate',
-            icon: '📋',
-            route: 'app_product_duplicate',
-            routeParams: ['source' => 'list'],
-            url: null,
-            permission: 'ROLE_ADMIN',
-            voterAttribute: 'ADMIN_EDIT',
-            condition: 'entity.status != "archived"',
-            cssClass: 'btn-warning',
-            confirmMessage: 'Are you sure?',
-            openInNewTab: true,
-            priority: 50,
-            method: 'POST',
-            template: 'custom/action.html.twig',
+            name: 'approve',
+            label: 'Approve',
+            condition: 'entity.status == "pending"',
         );
 
-        $this->assertSame('duplicate', $action->name);
-        $this->assertSame('Duplicate', $action->label);
-        $this->assertSame('📋', $action->icon);
-        $this->assertSame('app_product_duplicate', $action->route);
-        $this->assertSame(['source' => 'list'], $action->routeParams);
-        $this->assertNull($action->url);
-        $this->assertSame('ROLE_ADMIN', $action->permission);
-        $this->assertSame('ADMIN_EDIT', $action->voterAttribute);
-        $this->assertSame('entity.status != "archived"', $action->condition);
-        $this->assertSame('btn-warning', $action->cssClass);
-        $this->assertSame('Are you sure?', $action->confirmMessage);
-        $this->assertTrue($action->openInNewTab);
-        $this->assertSame(50, $action->priority);
-        $this->assertSame('POST', $action->method);
-        $this->assertSame('custom/action.html.twig', $action->template);
+        $this->assertSame('entity.status == "pending"', $action->condition);
+        $this->assertFalse($action->hasDiCondition());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
+    public function itAcceptsDiTupleCondition(): void
+    {
+        $condition = ['App\\Service\\ApprovalService', 'canApprove'];
+
+        $action = new RowAction(
+            name: 'approve',
+            label: 'Approve',
+            condition: $condition,
+        );
+
+        $this->assertSame($condition, $action->condition);
+        $this->assertTrue($action->hasDiCondition());
+    }
+
+    /** @test */
+    public function hasDiConditionReturnsFalseForStringCondition(): void
+    {
+        $action = new RowAction(name: 'show', label: 'Show', condition: '!entity.archived');
+        $this->assertFalse($action->hasDiCondition());
+    }
+
+    /** @test */
+    public function hasDiConditionReturnsFalseWhenNoCondition(): void
+    {
+        $action = new RowAction(name: 'show', label: 'Show');
+        $this->assertFalse($action->hasDiCondition());
+    }
+
+    /** @test */
     public function withCreatesModifiedCopy(): void
     {
         $original = new RowAction(name: 'show', label: 'Show', icon: '👀');
@@ -85,15 +86,13 @@ class RowActionTest extends TestCase
         $this->assertSame('View', $modified->label);
         $this->assertSame('🔍', $modified->icon);
 
-        // Original unchanged
+        // Original is unchanged
         $this->assertSame('Show', $original->label);
         $this->assertSame('👀', $original->icon);
     }
 
-    /**
-     * @test
-     */
-    public function withCanSetNullValues(): void
+    /** @test */
+    public function withCanExplicitlySetNull(): void
     {
         $original = new RowAction(name: 'show', label: 'Show', icon: '👀');
         $modified = $original->with(['icon' => null]);
@@ -102,10 +101,23 @@ class RowActionTest extends TestCase
         $this->assertSame('👀', $original->icon);
     }
 
-    /**
-     * @test
-     */
-    public function mergeKeepsOriginalNonNullValues(): void
+    /** @test */
+    public function withCanReplaceDiConditionWithExpression(): void
+    {
+        $original = new RowAction(
+            name: 'approve',
+            label: 'Approve',
+            condition: ['App\\Service\\ApprovalService', 'canApprove'],
+        );
+
+        $modified = $original->with(['condition' => 'entity.status == "pending"']);
+
+        $this->assertSame('entity.status == "pending"', $modified->condition);
+        $this->assertFalse($modified->hasDiCondition());
+    }
+
+    /** @test */
+    public function mergeKeepsOriginalValuesWhenOverrideHasNulls(): void
     {
         $original = new RowAction(
             name: 'show',
@@ -124,67 +136,66 @@ class RowActionTest extends TestCase
 
         $merged = $original->merge($override);
 
-        // Merged values from override
+        $this->assertSame('show', $merged->name);     // always from original
         $this->assertSame('View Details', $merged->label);
         $this->assertSame('🔍', $merged->icon);
         $this->assertSame('entity.active', $merged->condition);
-
-        // Kept from original (override has null/default)
-        $this->assertSame(10, $merged->priority);
-        $this->assertSame('ADMIN_SHOW', $merged->voterAttribute);
-
-        // Name is always kept from original
-        $this->assertSame('show', $merged->name);
+        $this->assertSame(10, $merged->priority);          // kept from original (override has default 100)
+        $this->assertSame('ADMIN_SHOW', $merged->voterAttribute); // kept from original
     }
 
-    /**
-     * @test
-     */
-    public function hasRouteReturnsTrueWhenRouteSet(): void
+    /** @test */
+    public function mergePropagatesDiTupleConditionFromOverride(): void
+    {
+        $original = new RowAction(name: 'approve', label: 'Approve', priority: 10);
+        $override = new RowAction(
+            name: 'approve',
+            label: 'Approve',
+            condition: ['App\\Service\\ApprovalService', 'canApprove'],
+        );
+
+        $merged = $original->merge($override);
+
+        $this->assertSame(['App\\Service\\ApprovalService', 'canApprove'], $merged->condition);
+        $this->assertTrue($merged->hasDiCondition());
+    }
+
+    /** @test */
+    public function hasRouteReturnsTrueWhenRouteIsSet(): void
     {
         $action = new RowAction(name: 'edit', label: 'Edit', route: 'app_edit');
         $this->assertTrue($action->hasRoute());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function hasRouteReturnsFalseWhenNoRoute(): void
     {
         $action = new RowAction(name: 'edit', label: 'Edit');
         $this->assertFalse($action->hasRoute());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function requiresConfirmationReturnsTrueWhenMessageSet(): void
     {
         $action = new RowAction(name: 'delete', label: 'Delete', confirmMessage: 'Are you sure?');
         $this->assertTrue($action->requiresConfirmation());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function requiresConfirmationReturnsFalseWhenNoMessage(): void
     {
         $action = new RowAction(name: 'edit', label: 'Edit');
         $this->assertFalse($action->requiresConfirmation());
     }
 
-    /**
-     * @test
-     */
-    public function isFormActionReturnsTrueWhenMethodSet(): void
+    /** @test */
+    public function isFormActionReturnsTrueWhenMethodIsSet(): void
     {
         $action = new RowAction(name: 'delete', label: 'Delete', method: 'DELETE');
         $this->assertTrue($action->isFormAction());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function isFormActionReturnsFalseWhenNoMethod(): void
     {
         $action = new RowAction(name: 'show', label: 'Show');

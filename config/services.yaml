@@ -111,3 +111,9 @@ services:
     Kachnitel\AdminBundle\RowAction\RowActionRegistry:
         arguments:
             $providers: !tagged_iterator kachnitel_admin.row_action_provider
+
+    # RowActionRuntime needs the service container to resolve DI-tuple conditions
+    Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime:
+        arguments:
+            $container: '@service_container'
+
