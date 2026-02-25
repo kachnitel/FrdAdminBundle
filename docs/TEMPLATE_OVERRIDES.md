@@ -471,30 +471,6 @@ Custom boolean rendering with icons:
 
 </details>
 
-<details>
-<summary><strong>5. Add custom action to each row</strong></summary>
-
-Use the `components/EntityList/_RowActions.html.twig` template to customize row actions:
-
-```twig
-{# templates/bundles/KachnitelAdminBundle/components/EntityList/_RowActions.html.twig #}
-{% import kachnitel_admin_theme as css %}
-
-<div class="d-flex gap-2">
-    {# Existing actions #}
-    {% for action in admin_visible_row_actions(entityClass, entity, entityShortClass) %}
-        <a href="{{ action.url }}" class="{{ css.btn_sm() }} {{ action.class }}">
-            {{ action.label }}
-        </a>
-    {% endfor %}
-    {# Custom action #}
-    <a href="{{ path('app_custom_action', {'id': entity.id}) }}" class="{{ css.btn_sm() }} btn-info">
-        Custom Action
-    </a>
-</div>
-```
-</details>
-
 ## Important Limitations
 
 ### ⚠️ Use `{% extends '@!...' %}` if extending Bundle Templates

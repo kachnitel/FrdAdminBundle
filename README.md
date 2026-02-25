@@ -126,6 +126,40 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 
 </details>
 
+<details>
+<summary><strong>Add Custom Row Actions</strong></summary>
+
+**Level 1:** Route-based link, always visible:
+```php
+#[AdminAction(name: 'duplicate', label: 'Duplicate', route: 'app_product_duplicate')]
+```
+
+**Level 2:** With a condition (expression):
+```php
+#[AdminAction(name: 'approve', label: 'Approve', condition: 'entity.status == "pending"')]
+```
+
+**Level 3:** With a condition (service logic) and confirmation:
+```php
+#[AdminAction(
+    name: 'refund',
+    label: 'Refund',
+    method: 'POST',
+    condition: [RefundService::class, 'canRefund'],
+    confirmMessage: 'Refund this order?',
+)]
+```
+
+**Level 4:** Remove or replace default Show/Edit:
+```php
+#[AdminActionsConfig(exclude: ['edit'])]
+#[AdminAction(name: 'show', label: 'Preview', icon: '🔍', override: true)]
+```
+
+**Details:** [Row Actions Guide](docs/ROW_ACTIONS.md)
+
+</details>
+
 ## Features
 
 - **Multi-Layer Permissions** - Entity, action, and column-level control
@@ -133,6 +167,7 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 - **Highly Customizable** - From [cell level templates](docs/TEMPLATE_OVERRIDES.md#common-override-scenarios) to entire layout overrides using [Symfony's Twig inheritance](https://symfony.com/doc/current/bundles/override.html#templates)
 - **LiveComponent-Powered** - Real-time search, filters, and updates without page reloads
 - **Column Visibility** - Show/hide columns with session or database-backed preferences
+- **Row Actions** — Per-row buttons with conditions, permissions, and priority ordering; extend defaults or replace them
 - **DataSource Abstraction** - Display data from external APIs, audit logs, or any source
 
 ## Documentation
@@ -142,6 +177,7 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 | [Configuration](docs/CONFIGURATION.md) | Entity attributes and bundle config |
 | [Column Visibility](docs/COLUMN_VISIBILITY.md) | Permissions and user preferences |
 | [Filters](docs/FILTERS.md) | Automatic filtering and customization |
+| [Row Actions](docs/ROW_ACTIONS.md) | Custom action buttons per row — conditions, ordering, providers |
 | [Template Overrides](docs/TEMPLATE_OVERRIDES.md) | Customize the admin appearance |
 | [Batch Actions](docs/BATCH_ACTIONS.md) | Multi-select and bulk operations |
 | [DataSource](docs/DATASOURCE.md) | Non-Doctrine data sources |

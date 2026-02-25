@@ -296,6 +296,79 @@ Per-action permission requirements. Map of action name to required role.
 
 **Fallback:** If no specific permission is set, the global `kachnitel_admin.required_role` is used (default: `ROLE_ADMIN`).
 
+## Row Actions
+
+Row action buttons appear in each entity row alongside the default Show and Edit buttons.
+
+See the full [Row Actions Guide](ROW_ACTIONS.md) for conditions, overrides, and programmatic providers.
+
+### Quick Example
+
+```php
+use Kachnitel\AdminBundle\Attribute\AdminAction;
+use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
+
+#[Admin(label: 'Orders')]
+#[AdminActionsConfig(exclude: ['edit'])]   // Remove default Edit
+#[AdminAction(
+    name: 'approve',
+    label: 'Approve',
+    icon: '✅',
+    route: 'app_order_approve',
+    method: 'POST',
+    condition: 'entity.status == "pending"',
+    priority: 30,
+)]
+class Order { }
+```
+
+Actions render in `priority` order — lower numbers appear first. Default Show is 10, Edit is 20.
+
+---
+
+=== INSERT into the API Reference <details> block, after the ColumnFilter entry ===
+
+### AdminAction Attribute
+
+```php
+#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
+class AdminAction
+{
+    public function __construct(
+        string $name,                           // Unique identifier
+        string $label,                          // Button text
+        ?string $icon = null,                   // Emoji or icon
+        ?string $route = null,                  // Symfony route name
+        array $routeParams = [],                // Extra route params
+        ?string $url = null,                    // Static URL
+        ?string $permission = null,             // Required role
+        ?string $voterAttribute = null,         // Admin voter constant
+        string|array|null $condition = null,    // String expression or [Service::class, 'method']
+        ?string $cssClass = null,               // Override button CSS
+        ?string $confirmMessage = null,         // Confirm dialog text
+        bool $openInNewTab = false,
+        int $priority = 100,                    // Sort order (Show=10, Edit=20)
+        ?string $method = null,                 // 'POST'/'DELETE' → renders form
+        ?string $template = null,               // Custom button template
+        bool $override = false,                 // Replace vs merge with same-name action
+    ) {}
+}
+```
+
+### AdminActionsConfig Attribute
+
+```php
+#[Attribute(Attribute::TARGET_CLASS)]
+class AdminActionsConfig
+{
+    public function __construct(
+        bool $disableDefaults = false,      // Remove default Show and Edit
+        ?array $exclude = null,             // Remove specific actions by name
+        ?array $include = null,             // Whitelist — only show these names
+    ) {}
+}
+```
+
 ## AdminRoutes Attribute
 
 The `#[AdminRoutes]` attribute defines custom routes for CRUD operations.
