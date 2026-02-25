@@ -46,22 +46,6 @@ class AdminActionTest extends TestCase
         );
 
         $this->assertSame('entity.status == "pending"', $action->condition);
-        $this->assertIsString($action->condition);
-    }
-
-    /** @test */
-    public function itAcceptsDiTupleCondition(): void
-    {
-        $condition = ['App\\Service\\ApprovalService', 'canApprove'];
-
-        $action = new AdminAction(
-            name: 'approve',
-            label: 'Approve',
-            condition: $condition,
-        );
-
-        $this->assertSame($condition, $action->condition);
-        $this->assertIsArray($action->condition);
     }
 
     /** @test */

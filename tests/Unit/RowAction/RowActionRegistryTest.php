@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\RowAction;
 
-use Kachnitel\AdminBundle\Attribute\AdminAction;
 use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
 use Kachnitel\AdminBundle\RowAction\AttributeRowActionProvider;
 use Kachnitel\AdminBundle\RowAction\DefaultRowActionProvider;
@@ -15,6 +14,12 @@ use PHPUnit\Framework\TestCase;
 
 class RowActionRegistryTest extends TestCase
 {
+    /** @var class-string */
+    private const PRODUCT_CLASS = 'App\\Entity\\Product'; // @phpstan-ignore classConstant.phpDocType
+
+    /** @var class-string */
+    private const AUDIT_LOG_CLASS = 'App\\Entity\\AuditLog'; // @phpstan-ignore classConstant.phpDocType
+
     /**
      * @test
      */
@@ -34,7 +39,7 @@ class RowActionRegistryTest extends TestCase
             $attributeProvider
         );
 
-        $actions = $registry->getActions('App\\Entity\\Product');
+        $actions = $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
 
         $this->assertCount(2, $actions);
         $this->assertSame('show', $actions[0]->name);
@@ -67,7 +72,7 @@ class RowActionRegistryTest extends TestCase
             $attributeProvider
         );
 
-        $actions = $registry->getActions('App\\Entity\\Product');
+        $actions = $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
 
         $this->assertCount(3, $actions);
         // Actions should be sorted by priority: show(10), edit(20), duplicate(30)
@@ -103,7 +108,7 @@ class RowActionRegistryTest extends TestCase
             $attributeProvider
         );
 
-        $actions = $registry->getActions('App\\Entity\\Product');
+        $actions = $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
 
         $this->assertCount(2, $actions);
 
@@ -135,7 +140,7 @@ class RowActionRegistryTest extends TestCase
         $attributeProvider->method('getActions')->willReturn([$customShowAction]);
         $attributeProvider->method('getPriority')->willReturn(50);
         // This action has override flag
-        $attributeProvider->method('isOverride')->with('App\\Entity\\Product', 'show')->willReturn(true);
+        $attributeProvider->method('isOverride')->with(self::PRODUCT_CLASS, 'show')->willReturn(true);
 
         $defaultProvider = new DefaultRowActionProvider();
 
@@ -144,7 +149,7 @@ class RowActionRegistryTest extends TestCase
             $attributeProvider
         );
 
-        $actions = $registry->getActions('App\\Entity\\Product');
+        $actions = $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
 
         $this->assertCount(2, $actions);
 
@@ -184,7 +189,7 @@ class RowActionRegistryTest extends TestCase
             $attributeProvider
         );
 
-        $actions = $registry->getActions('App\\Entity\\Product');
+        $actions = $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
 
         $this->assertCount(1, $actions);
         $this->assertSame('show', $actions[0]->name);
@@ -212,7 +217,7 @@ class RowActionRegistryTest extends TestCase
             $attributeProvider
         );
 
-        $actions = $registry->getActions('App\\Entity\\Product');
+        $actions = $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
 
         $this->assertCount(2, $actions);
         $actionNames = array_map(fn ($a) => $a->name, $actions);
@@ -243,7 +248,7 @@ class RowActionRegistryTest extends TestCase
             $attributeProvider
         );
 
-        $actions = $registry->getActions('App\\Entity\\AuditLog');
+        $actions = $registry->getActions(self::AUDIT_LOG_CLASS); // @phpstan-ignore argument.type
 
         $this->assertCount(1, $actions);
         $this->assertSame('details', $actions[0]->name);
@@ -273,9 +278,9 @@ class RowActionRegistryTest extends TestCase
         );
 
         // First call
-        $actions1 = $registry->getActions('App\\Entity\\Product');
+        $actions1 = $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
         // Second call - should use cache
-        $actions2 = $registry->getActions('App\\Entity\\Product');
+        $actions2 = $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
 
         $this->assertSame($actions1, $actions2);
     }
@@ -306,12 +311,12 @@ class RowActionRegistryTest extends TestCase
             $attributeProvider
         );
 
-        $registry->getActions('App\\Entity\\Product');
+        $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
         $this->assertSame(1, $callCount);
 
         $registry->clearCache();
-        $registry->getActions('App\\Entity\\Product');
-        $this->assertSame(2, $callCount);
+        $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
+        $this->assertSame(2, $callCount); // @phpstan-ignore method.impossibleType
     }
 
     /**
@@ -338,7 +343,7 @@ class RowActionRegistryTest extends TestCase
             $attributeProvider
         );
 
-        $actions = $registry->getActions('App\\Entity\\Product');
+        $actions = $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
 
         $this->assertCount(4, $actions);
         // Should be sorted: archive(5), show(10), edit(20), duplicate(25)

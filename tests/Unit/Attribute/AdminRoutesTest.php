@@ -110,7 +110,6 @@ class AdminRoutesTest extends TestCase
         $routes = new AdminRoutes($routeMap);
 
         $this->assertSame($routeMap, $routes->all());
-        $this->assertCount(2, $routes->all());
     }
 
     /**

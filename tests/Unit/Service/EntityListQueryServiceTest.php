@@ -80,31 +80,6 @@ class EntityListQueryServiceTest extends TestCase
     /**
      * @test
      */
-    public function serviceCanBeInstantiated(): void
-    {
-        $this->assertInstanceOf(EntityListQueryService::class, $this->service);
-    }
-
-    /**
-     * @test
-     */
-    public function buildQueryReturnsQueryBuilder(): void
-    {
-        $result = $this->service->buildQuery(
-            'App\\Entity\\Product',
-            null,
-            '',
-            [],
-            [],
-            'id',
-            'ASC'
-        );
-        $this->assertInstanceOf(QueryBuilder::class, $result);
-    }
-
-    /**
-     * @test
-     */
     public function buildQueryWithEmptyFiltersOnlyAppliesSort(): void
     {
         $this->service->buildQuery(

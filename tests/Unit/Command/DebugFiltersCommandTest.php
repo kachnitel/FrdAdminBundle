@@ -49,14 +49,6 @@ class DebugFiltersCommandTest extends TestCase
     /**
      * @test
      */
-    public function commandCanBeInstantiated(): void
-    {
-        $this->assertInstanceOf(DebugFiltersCommand::class, $this->command);
-    }
-
-    /**
-     * @test
-     */
     public function commandHasCorrectName(): void
     {
         $this->assertSame('admin:debug:filters', $this->command->getName());

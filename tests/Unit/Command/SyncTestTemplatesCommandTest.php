@@ -88,14 +88,6 @@ class SyncTestTemplatesCommandTest extends TestCase
     /**
      * @test
      */
-    public function commandIsSymfonyCommand(): void
-    {
-        $this->assertInstanceOf(\Symfony\Component\Console\Command\Command::class, $this->command);
-    }
-
-    /**
-     * @test
-     */
     public function commandCanBeExecuted(): void
     {
         $tester = new CommandTester($this->command);

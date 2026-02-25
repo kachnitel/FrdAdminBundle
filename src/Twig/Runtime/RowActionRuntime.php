@@ -160,6 +160,7 @@ class RowActionRuntime implements RuntimeExtensionInterface
             $operators = ['!==', '===', '!=', '==', '>=', '<=', '>', '<'];
             $operator = null;
             $leftSide = $condition;
+            /** @var ?string */
             $rightSide = null;
 
             foreach ($operators as $op) {
@@ -179,7 +180,9 @@ class RowActionRuntime implements RuntimeExtensionInterface
                 return $negated ? !$result : $result;
             }
 
-            $compareValue = $this->parseLiteral($rightSide ?? '');
+            // $operator !== null guarantees $rightSide was assigned in the loop above
+            assert($rightSide !== null);
+            $compareValue = $this->parseLiteral($rightSide);
 
             $result = match ($operator) {
                 '===' => $value === $compareValue,
@@ -189,8 +192,7 @@ class RowActionRuntime implements RuntimeExtensionInterface
                 '>' => $value > $compareValue,
                 '<' => $value < $compareValue,
                 '>=' => $value >= $compareValue,
-                '<=' => $value <= $compareValue,
-                default => false,
+                default => $value <= $compareValue, // <=
             };
 
             return $negated ? !$result : $result;

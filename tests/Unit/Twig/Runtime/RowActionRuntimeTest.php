@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
+use Kachnitel\AdminBundle\Tests\Unit\ValueObject\ApprovalService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
@@ -146,16 +147,18 @@ class RowActionRuntimeTest extends TestCase
     {
         $entity = $this->makeEntity();
 
-        $conditionService = new class {
+        $conditionService = new class () {
             public function canApprove(object $entity): bool { return false; }
         };
 
         $this->container->method('get')->willReturn($conditionService);
 
+        /** @var class-string $serviceClass */
+        $serviceClass = get_class($conditionService);
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: [get_class($conditionService), 'canApprove'],
+            condition: [$serviceClass, 'canApprove'],
         );
 
         $runtime = $this->createRuntime();
@@ -167,17 +170,19 @@ class RowActionRuntimeTest extends TestCase
     {
         $entity = $this->makeEntity();
 
-        $conditionService = new class {
+        $conditionService = new class () {
             public function canApprove(object $entity): bool { return true; }
         };
 
         $this->container->method('get')->willReturn($conditionService);
         $this->routeRuntime->method('isActionAccessible')->willReturn(true);
 
+        /** @var class-string $serviceClass */
+        $serviceClass = get_class($conditionService);
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: [get_class($conditionService), 'canApprove'],
+            condition: [$serviceClass, 'canApprove'],
         );
 
         $runtime = $this->createRuntime();
@@ -188,9 +193,8 @@ class RowActionRuntimeTest extends TestCase
     public function diTupleReceivesEntityObject(): void
     {
         $entity = $this->makeEntity(status: 'pending');
-        $receivedEntity = null;
 
-        $conditionService = new class (\stdClass::class) {
+        $conditionService = new class () {
             public mixed $received = null;
             public function check(object $entity): bool
             {
@@ -201,10 +205,12 @@ class RowActionRuntimeTest extends TestCase
 
         $this->container->method('get')->willReturn($conditionService);
 
+        /** @var class-string $serviceClass */
+        $serviceClass = get_class($conditionService);
         $action = new RowAction(
             name: 'check',
             label: 'Check',
-            condition: [get_class($conditionService), 'check'],
+            condition: [$serviceClass, 'check'],
         );
 
         $runtime = $this->createRuntime();
@@ -217,10 +223,12 @@ class RowActionRuntimeTest extends TestCase
     public function diTupleFailsOpenWhenContainerNotAvailable(): void
     {
         $entity = $this->makeEntity();
+        /** @var array{class-string, string} $condition */
+        $condition = [ApprovalService::class, 'canApprove'];
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: ['App\\Service\\SomeService', 'canApprove'],
+            condition: $condition,
         );
 
         // Runtime without container
@@ -236,10 +244,12 @@ class RowActionRuntimeTest extends TestCase
 
         $this->container->method('get')->willThrowException(new \RuntimeException('Service not found'));
 
+        /** @var array{class-string, string} $condition */
+        $condition = ['App\\Service\\MissingService', 'canApprove']; // @phpstan-ignore varTag.nativeType
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: ['App\\Service\\MissingService', 'canApprove'],
+            condition: $condition,
         );
 
         $runtime = $this->createRuntime();

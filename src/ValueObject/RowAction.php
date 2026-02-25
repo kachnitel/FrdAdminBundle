@@ -29,7 +29,7 @@ final class RowAction
      * @param string|null                                   $url            Static URL (alternative to route)
      * @param string|null                                   $permission     Required role (e.g., 'ROLE_ADMIN')
      * @param string|null                                   $voterAttribute Admin voter attribute (e.g., 'ADMIN_EDIT')
-     * @param string|array<class-string, string>|null $condition      Expression string OR [ServiceClass::class, 'method'] DI tuple
+     * @param string|array{class-string, string}|null $condition      Expression string OR [ServiceClass::class, 'method'] DI tuple
      * @param string|null                                   $cssClass       Additional CSS classes for the button
      * @param string|null                                   $confirmMessage Confirmation message (if set, shows confirm dialog before action)
      * @param bool                                          $openInNewTab   Whether to open link in new tab

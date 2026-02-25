@@ -34,14 +34,6 @@ class AdminEntityDataRuntimeTest extends TestCase
     /**
      * @test
      */
-    public function runtimeCanBeInstantiated(): void
-    {
-        $this->assertInstanceOf(AdminEntityDataRuntime::class, $this->runtime);
-    }
-
-    /**
-     * @test
-     */
     public function getDataReturnsExpectedKeys(): void
     {
         $entity = new class {

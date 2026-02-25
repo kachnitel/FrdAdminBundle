@@ -50,7 +50,8 @@ class RowActionTest extends TestCase
     /** @test */
     public function itAcceptsDiTupleCondition(): void
     {
-        $condition = ['App\\Service\\ApprovalService', 'canApprove'];
+        /** @var array{class-string, string} $condition */
+        $condition = [ApprovalService::class, 'canApprove'];
 
         $action = new RowAction(
             name: 'approve',
@@ -104,10 +105,12 @@ class RowActionTest extends TestCase
     /** @test */
     public function withCanReplaceDiConditionWithExpression(): void
     {
+        /** @var array{class-string, string} $condition */
+        $condition = [ApprovalService::class, 'canApprove'];
         $original = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: ['App\\Service\\ApprovalService', 'canApprove'],
+            condition: $condition,
         );
 
         $modified = $original->with(['condition' => 'entity.status == "pending"']);
@@ -148,15 +151,17 @@ class RowActionTest extends TestCase
     public function mergePropagatesDiTupleConditionFromOverride(): void
     {
         $original = new RowAction(name: 'approve', label: 'Approve', priority: 10);
+        /** @var array{class-string, string} $condition */
+        $condition = [ApprovalService::class, 'canApprove'];
         $override = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: ['App\\Service\\ApprovalService', 'canApprove'],
+            condition: $condition,
         );
 
         $merged = $original->merge($override);
 
-        $this->assertSame(['App\\Service\\ApprovalService', 'canApprove'], $merged->condition);
+        $this->assertSame([ApprovalService::class, 'canApprove'], $merged->condition);
         $this->assertTrue($merged->hasDiCondition());
     }
 
@@ -200,5 +205,13 @@ class RowActionTest extends TestCase
     {
         $action = new RowAction(name: 'show', label: 'Show');
         $this->assertFalse($action->isFormAction());
+    }
+}
+
+class ApprovalService
+{
+    public function canApprove(): bool
+    {
+        return true;
     }
 }
