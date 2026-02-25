@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\PropertyAccess\PropertyAccess;
-use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
 
@@ -19,14 +18,23 @@ use Twig\Extension\RuntimeExtensionInterface;
  *  - admin_row_actions(entityClass) — all actions (regardless of visibility)
  *  - admin_visible_row_actions(entityClass, entity, entityShortClass) — filtered for current user/entity state
  *  - admin_is_action_visible(action, entity, entityShortClass) — single-action visibility check
+ *
+ * String condition expressions are evaluated via Symfony's ExpressionLanguage component (see
+ * RowActionExpressionLanguage). Supported syntax includes property comparisons, logical operators
+ * (&&, ||, and, or, not, !), and the is_granted() security function:
+ *
+ *   entity.status == "pending"
+ *   entity.stock > 0 && is_granted("ROLE_EDITOR")
+ *   is_granted("ROLE_ADMIN") || entity.ownedBy == currentUser
+ *
+ * DI-tuple conditions ([ServiceClass::class, 'method']) are resolved from the service container.
  */
 class RowActionRuntime implements RuntimeExtensionInterface
 {
-    private ?PropertyAccessorInterface $propertyAccessor = null;
-
     public function __construct(
         private readonly RowActionRegistry $registry,
         private readonly AdminRouteRuntime $routeRuntime,
+        private readonly RowActionExpressionLanguage $expressionLanguage,
         private readonly ?AuthorizationCheckerInterface $authChecker = null,
         private readonly ?ContainerInterface $container = null,
     ) {}
@@ -101,7 +109,7 @@ class RowActionRuntime implements RuntimeExtensionInterface
             return $this->evaluateDiCondition($condition, $entity);
         }
 
-        return $this->evaluateExpressionCondition($condition, $entity);
+        return $this->expressionLanguage->evaluate($condition, $entity, $this->authChecker);
     }
 
     /**
@@ -127,117 +135,6 @@ class RowActionRuntime implements RuntimeExtensionInterface
             // Service not found or method threw — hide the action (safe default)
             return false;
         }
-    }
-
-    /**
-     * Evaluate a simple property expression against an entity.
-     *
-     * Supported syntax:
-     *   'entity.property'              — boolean check
-     *   '!entity.property'             — negated boolean check
-     *   'entity.property == "value"'   — equality
-     *   'entity.property != "value"'   — inequality
-     *   'entity.property === true'     — strict equality
-     *   'entity.property !== null'     — strict inequality
-     *   'entity.property > 5'          — numeric comparison
-     *
-     * Both 'entity.' and 'item.' prefixes are supported.
-     *
-     * REVIEW: use symfony's expression component - optional dep?
-     */
-    private function evaluateExpressionCondition(string $condition, object $entity): bool
-    {
-        try {
-            $condition = trim($condition);
-
-            $negated = false;
-            if (str_starts_with($condition, '!')) {
-                $negated = true;
-                $condition = trim(substr($condition, 1));
-            }
-
-            // Parse comparison operator (longest first to avoid '!=' matching before '!==')
-            $operators = ['!==', '===', '!=', '==', '>=', '<=', '>', '<'];
-            $operator = null;
-            $leftSide = $condition;
-            /** @var ?string */
-            $rightSide = null;
-
-            foreach ($operators as $op) {
-                if (str_contains($condition, $op)) {
-                    $parts = explode($op, $condition, 2);
-                    $leftSide = trim($parts[0]);
-                    $rightSide = trim($parts[1]);
-                    $operator = $op;
-                    break;
-                }
-            }
-
-            $value = $this->resolvePropertyPath($leftSide, $entity);
-
-            if ($operator === null) {
-                $result = (bool) $value;
-                return $negated ? !$result : $result;
-            }
-
-            // $operator !== null guarantees $rightSide was assigned in the loop above
-            assert($rightSide !== null);
-            $compareValue = $this->parseLiteral($rightSide);
-
-            $result = match ($operator) {
-                '===' => $value === $compareValue,
-                '!==' => $value !== $compareValue,
-                '==' => $value == $compareValue,
-                '!=' => $value != $compareValue,
-                '>' => $value > $compareValue,
-                '<' => $value < $compareValue,
-                '>=' => $value >= $compareValue,
-                default => $value <= $compareValue, // <=
-            };
-
-            return $negated ? !$result : $result;
-        } catch (\Exception) {
-            // If expression evaluation fails, hide the action (safe default)
-            return false;
-        }
-    }
-
-    /**
-     * Resolve a property path like 'entity.status' or 'item.isActive' against an entity.
-     */
-    private function resolvePropertyPath(string $path, object $entity): mixed
-    {
-        if (str_starts_with($path, 'entity.')) {
-            $path = substr($path, 7);
-        } elseif (str_starts_with($path, 'item.')) {
-            $path = substr($path, 5);
-        }
-
-        if ($this->propertyAccessor === null) {
-            $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
-        }
-
-        return $this->propertyAccessor->getValue($entity, $path);
-    }
-
-    /**
-     * Parse a literal value from an expression string (string, bool, null, int, float).
-     */
-    private function parseLiteral(string $value): mixed
-    {
-        if ((str_starts_with($value, '"') && str_ends_with($value, '"'))
-            || (str_starts_with($value, "'") && str_ends_with($value, "'"))) {
-            return substr($value, 1, -1);
-        }
-
-        return match (strtolower($value)) {
-            'true' => true,
-            'false' => false,
-            'null' => null,
-            default => is_numeric($value)
-                ? (str_contains($value, '.') ? (float) $value : (int) $value)
-                : $value,
-        };
     }
 
     /**

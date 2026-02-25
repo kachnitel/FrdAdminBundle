@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
 use Kachnitel\AdminBundle\Tests\Unit\ValueObject\ApprovalService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
@@ -31,12 +32,15 @@ class RowActionRuntimeTest extends TestCase
     /** @var ContainerInterface&MockObject */
     private ContainerInterface $container;
 
+    private RowActionExpressionLanguage $expressionLanguage;
+
     protected function setUp(): void
     {
         $this->registry = $this->createMock(RowActionRegistry::class);
         $this->routeRuntime = $this->createMock(AdminRouteRuntime::class);
         $this->authChecker = $this->createMock(AuthorizationCheckerInterface::class);
         $this->container = $this->createMock(ContainerInterface::class);
+        $this->expressionLanguage = new RowActionExpressionLanguage();
     }
 
     private function createRuntime(
@@ -46,6 +50,7 @@ class RowActionRuntimeTest extends TestCase
         return new RowActionRuntime(
             registry: $this->registry,
             routeRuntime: $this->routeRuntime,
+            expressionLanguage: $this->expressionLanguage,
             authChecker: $withAuthChecker ? $this->authChecker : null,
             container: $withContainer ? $this->container : null,
         );
@@ -135,6 +140,148 @@ class RowActionRuntimeTest extends TestCase
         $action = new RowAction(name: 'edit', label: 'Edit', condition: 'entity.nonExistentProperty == true');
 
         $runtime = $this->createRuntime();
+        $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Combining conditions (&&, ||)
+    // -------------------------------------------------------------------------
+
+    /** @test */
+    public function andCombinationRequiresBothConditionsTrue(): void
+    {
+        $entity = $this->makeEntity(status: 'pending', active: true);
+        $action = new RowAction(
+            name: 'approve',
+            label: 'Approve',
+            condition: 'entity.status == "pending" && entity.active',
+        );
+
+        $runtime = $this->createRuntime();
+        $this->assertTrue($runtime->isActionVisible($action, $entity, 'Order'));
+    }
+
+    /** @test */
+    public function andCombinationHidesActionWhenOneConditionFails(): void
+    {
+        $entity = $this->makeEntity(status: 'archived', active: true);
+        $action = new RowAction(
+            name: 'approve',
+            label: 'Approve',
+            condition: 'entity.status == "pending" && entity.active',
+        );
+
+        $runtime = $this->createRuntime();
+        $this->assertFalse($runtime->isActionVisible($action, $entity, 'Order'));
+    }
+
+    /** @test */
+    public function orCombinationShowsActionWhenEitherTrue(): void
+    {
+        $entity = $this->makeEntity(status: 'archived', active: true);
+        $action = new RowAction(
+            name: 'view',
+            label: 'View',
+            condition: 'entity.status == "pending" || entity.active',
+        );
+
+        $runtime = $this->createRuntime();
+        $this->assertTrue($runtime->isActionVisible($action, $entity, 'Order'));
+    }
+
+    /** @test */
+    public function orCombinationHidesActionWhenBothFalse(): void
+    {
+        $entity = $this->makeEntity(status: 'archived', active: false);
+        $action = new RowAction(
+            name: 'view',
+            label: 'View',
+            condition: 'entity.status == "pending" || entity.active',
+        );
+
+        $runtime = $this->createRuntime();
+        $this->assertFalse($runtime->isActionVisible($action, $entity, 'Order'));
+    }
+
+    // -------------------------------------------------------------------------
+    // is_granted() in expressions
+    // -------------------------------------------------------------------------
+
+    /** @test */
+    public function isGrantedInExpressionShowsActionWhenRoleGranted(): void
+    {
+        $this->authChecker->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
+
+        $entity = $this->makeEntity();
+        $action = new RowAction(
+            name: 'promote',
+            label: 'Promote',
+            condition: 'is_granted("ROLE_EDITOR")',
+        );
+
+        $runtime = $this->createRuntime();
+        $this->assertTrue($runtime->isActionVisible($action, $entity, 'User'));
+    }
+
+    /** @test */
+    public function isGrantedInExpressionHidesActionWhenRoleNotGranted(): void
+    {
+        $this->authChecker->method('isGranted')->with('ROLE_SUPER_ADMIN', null)->willReturn(false);
+
+        $entity = $this->makeEntity();
+        $action = new RowAction(
+            name: 'impersonate',
+            label: 'Impersonate',
+            condition: 'is_granted("ROLE_SUPER_ADMIN")',
+        );
+
+        $runtime = $this->createRuntime();
+        $this->assertFalse($runtime->isActionVisible($action, $entity, 'User'));
+    }
+
+    /** @test */
+    public function isGrantedCombinedWithPropertyCondition(): void
+    {
+        $this->authChecker->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
+
+        $entity = $this->makeEntity(status: 'pending');
+        $action = new RowAction(
+            name: 'approve',
+            label: 'Approve',
+            condition: 'entity.status == "pending" && is_granted("ROLE_EDITOR")',
+        );
+
+        $runtime = $this->createRuntime();
+        $this->assertTrue($runtime->isActionVisible($action, $entity, 'Order'));
+    }
+
+    /** @test */
+    public function isGrantedCombinedFalseWhenPropertyConditionFails(): void
+    {
+        $this->authChecker->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
+
+        $entity = $this->makeEntity(status: 'archived');
+        $action = new RowAction(
+            name: 'approve',
+            label: 'Approve',
+            condition: 'entity.status == "pending" && is_granted("ROLE_EDITOR")',
+        );
+
+        $runtime = $this->createRuntime();
+        $this->assertFalse($runtime->isActionVisible($action, $entity, 'Order'));
+    }
+
+    /** @test */
+    public function isGrantedReturnsFalseWhenNoAuthCheckerProvided(): void
+    {
+        $entity = $this->makeEntity();
+        $action = new RowAction(
+            name: 'admin',
+            label: 'Admin only',
+            condition: 'is_granted("ROLE_ADMIN")',
+        );
+
+        $runtime = $this->createRuntime(withAuthChecker: false);
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
     }
 

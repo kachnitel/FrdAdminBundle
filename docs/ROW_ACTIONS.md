@@ -88,37 +88,100 @@ For link-based actions, the URL is resolved in this order:
 
 ## Conditions (Visibility)
 
-The `condition` parameter controls whether the button is shown for a specific row. A button is hidden when the condition evaluates to `false`; it is not disabled.
+The `condition` parameter controls whether the button is shown for a specific row. A button is **hidden** when the condition evaluates to `false`; it is not disabled.
 
-Two styles are supported:
+Two styles are supported — string expressions and DI tuples (service class and method name)
 
-### String Expressions (Simple)
+### String Expressions
 
-Use for straightforward property checks — no extra class needed:
+String expressions use [Symfony's ExpressionLanguage](https://symfony.com/doc/current/components/expression_language.html) syntax. The entity is available as `entity` (or `item` as an alias).
+
+#### Property comparisons
 
 ```php
-// Equality check
+// Equality
 #[AdminAction(name: 'approve', label: 'Approve', condition: 'entity.status == "pending"')]
 
 // Inequality
 #[AdminAction(name: 'reactivate', label: 'Reactivate', condition: 'entity.status != "active"')]
 
-// Boolean check
-#[AdminAction(name: 'publish', label: 'Publish', condition: 'entity.isDraft')]
+// Boolean property (calls isActive() / getActive() via PropertyAccess)
+#[AdminAction(name: 'publish', label: 'Publish', condition: 'entity.active')]
 
 // Negation
-#[AdminAction(name: 'edit', label: 'Edit', condition: '!entity.isLocked')]
+#[AdminAction(name: 'edit', label: 'Edit', condition: '!entity.locked')]
+// or: condition: 'not entity.locked'
 
 // Numeric comparison
 #[AdminAction(name: 'discount', label: 'Discount', condition: 'entity.stock > 0')]
 
-// Strict equality
+// Strict null check
 #[AdminAction(name: 'verify', label: 'Verify', condition: 'entity.verifiedAt === null')]
 ```
 
-Both `entity.` and `item.` prefixes work. The expression uses Symfony's `PropertyAccess` component to read values, so `entity.status` calls `getStatus()`, `isStatus()`, or accesses the public property.
+Both `entity.` and `item.` prefixes work. The expression uses Symfony's `PropertyAccess` component, so `entity.status` calls `getStatus()`, `isStatus()`, or reads the public property.
 
-If the expression fails to evaluate (e.g., property doesn't exist), the action is **hidden** as a safe default.
+#### Combining conditions
+
+Use `&&` / `||` (or `and` / `or`) to combine multiple checks:
+
+```php
+// Both must be true
+#[AdminAction(
+    name: 'approve',
+    label: 'Approve',
+    condition: 'entity.status == "pending" && entity.stock > 0',
+)]
+
+// Either is enough
+#[AdminAction(
+    name: 'view',
+    label: 'View',
+    condition: 'entity.active || entity.status == "draft"',
+)]
+
+// Mix of comparisons and negations
+#[AdminAction(
+    name: 'submit',
+    label: 'Submit',
+    condition: '!entity.locked && entity.status != "submitted"',
+)]
+```
+
+#### Security checks with `is_granted()`
+
+Use `is_granted()` inside an expression to check roles — useful when the visibility of an action depends on **both** a role **and** an entity property:
+
+```php
+// Show only to editors
+#[AdminAction(
+    name: 'approve',
+    label: 'Approve',
+    condition: 'is_granted("ROLE_EDITOR")',
+)]
+
+// Pending + must be an editor
+#[AdminAction(
+    name: 'approve',
+    label: 'Approve',
+    condition: 'entity.status == "pending" && is_granted("ROLE_EDITOR")',
+)]
+
+// Super-admin can see the impersonate button, or the user is inactive
+#[AdminAction(
+    name: 'impersonate',
+    label: 'Login as',
+    condition: 'is_granted("ROLE_SUPER_ADMIN") || !entity.active',
+)]
+```
+
+> **Note:** For a simple role gate with no entity property involved, prefer the dedicated `permission` parameter — it's cleaner and doesn't require an expression:
+> ```php
+> #[AdminAction(name: 'impersonate', label: 'Login as', permission: 'ROLE_SUPER_ADMIN')]
+> ```
+> Use `is_granted()` in an expression when you need to combine a role check with an entity condition.
+
+If the expression fails to evaluate (e.g., property doesn't exist, syntax error), the action is **hidden** as a safe default.
 
 ### DI Tuple Conditions (Complex)
 
@@ -151,6 +214,15 @@ class ApprovalService
 The service is resolved from the DI container at render time. Any class under `src/` with `autoconfigure: true` (the Symfony default) is available without extra registration.
 
 If the service is not found or the method throws, the action is **hidden** as a safe default.
+
+### Choosing Between Expression and DI Tuple
+
+| Use case | Recommended |
+|----------|------------|
+| Simple property check | String expression |
+| Role + property combined | String expression with `is_granted()` |
+| Complex logic / injected services / database queries | DI tuple |
+| Workflow transitions | DI tuple |
 
 ## Controlling Default Actions
 

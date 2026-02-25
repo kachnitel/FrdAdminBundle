@@ -21,6 +21,7 @@
     ],
     "require": {
         "php": ">=8.4",
+        "symfony/expression-language": "^6.4|^7.0|^8.0",
         "symfony/framework-bundle": "^6.4|^7.0|^8.0",
         "symfony/twig-bundle": "^6.4|^7.0|^8.0",
         "symfony/form": "^6.4|^7.0|^8.0",
