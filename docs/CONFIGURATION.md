@@ -324,9 +324,6 @@ class Order { }
 
 Actions render in `priority` order — lower numbers appear first. Default Show is 10, Edit is 20.
 
----
-
-=== INSERT into the API Reference <details> block, after the ColumnFilter entry ===
 
 ### AdminAction Attribute
 
