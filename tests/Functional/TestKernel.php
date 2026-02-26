@@ -142,6 +142,7 @@ class TestKernel extends Kernel
 
         $container->loadFromExtension('kachnitel_admin', [
             'entity_namespace' => 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\',
+            'form_namespace'   => 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\',
         ]);
 
         // Register test data source provider for custom column template testing
@@ -156,6 +157,8 @@ class TestKernel extends Kernel
     {
         $routes->import(__DIR__ . '/../../vendor/symfony/ux-live-component/config/routes.php')
             ->prefix('/_components');
+
+        $routes->import(\Kachnitel\AdminBundle\Controller\GenericAdminController::class, 'attribute');
     }
 
     public function getProjectDir(): string

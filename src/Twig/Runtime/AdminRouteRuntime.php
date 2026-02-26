@@ -56,7 +56,9 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * Auto-fill id parameter if object has getId() method.
+     * Auto-fill id parameter if object has getId() method or a public $id property.
+     * The property fallback covers DataSource items that use plain objects/stdClass.
+     *
      * @param array<string, mixed> $parameters
      * @return array<string, mixed>
      */
@@ -65,10 +67,13 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         if (
             empty($parameters['id'])
             && is_object($object)
-            && method_exists($object, 'getId')
             && $this->routeHasParameter($route, 'id')
         ) {
-            $parameters['id'] = $object->getId();
+            if (method_exists($object, 'getId')) {
+                $parameters['id'] = $object->getId();
+            } elseif (property_exists($object, 'id') && isset($object->id)) {
+                $parameters['id'] = $object->id;
+            }
         }
 
         return $parameters;

@@ -210,7 +210,8 @@ class EntityListRowActionsTest extends ComponentTestCase
         // Archive is a POST action — must render as <form>, not <a href>
         $this->assertStringContainsString('<form', $rendered);
         $this->assertStringContainsString('method="post"', $rendered);
-        $this->assertStringContainsString('Archive this item?', $rendered);
+        // Archive this item?
+        $this->assertStringContainsString('Archive\\u0020this\\u0020item\\u003F', $rendered);
     }
 
     // -------------------------------------------------------------------------

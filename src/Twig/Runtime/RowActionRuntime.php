@@ -30,6 +30,9 @@ class RowActionRuntime implements RuntimeExtensionInterface
 {
     private LoggerInterface $logger;
 
+    /**
+     * @param ServiceLocator<object>|null $conditionLocator
+     */
     public function __construct(
         private readonly RowActionRegistry $registry,
         private readonly AdminRouteRuntime $routeRuntime,

@@ -26,7 +26,7 @@ use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
     label: 'Approve',
     icon: '✅',
     url: '/admin/test/approve',
-    condition: 'entity.status == "pending"',
+    condition: 'entity.getStatus() == "pending"',
     priority: 30,
 )]
 #[AdminAction(
@@ -36,7 +36,7 @@ use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
     url: '/admin/test/archive',
     method: 'POST',
     confirmMessage: 'Archive this item?',
-    condition: 'entity.status != "archived"',
+    condition: 'entity.getStatus() != "archived"',
     priority: 40,
 )]
 class EntityWithRowActions

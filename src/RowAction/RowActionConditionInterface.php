@@ -36,6 +36,4 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
  * No methods are required by this interface — it is a marker for service discovery.
  */
 #[AutoconfigureTag]
-interface RowActionConditionInterface
-{
-}
+interface RowActionConditionInterface {}

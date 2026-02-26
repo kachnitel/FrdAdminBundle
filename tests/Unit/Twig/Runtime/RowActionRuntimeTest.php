@@ -30,7 +30,7 @@ class RowActionRuntimeTest extends TestCase
     /** @var AuthorizationCheckerInterface&MockObject */
     private AuthorizationCheckerInterface $authChecker;
 
-    /** @var ServiceLocator&MockObject */
+    /** @var ServiceLocator<object>&MockObject */
     private ServiceLocator $conditionLocator;
 
     private RowActionExpressionLanguage $expressionLanguage;
