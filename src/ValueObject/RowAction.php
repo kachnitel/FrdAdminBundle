@@ -17,6 +17,7 @@ namespace Kachnitel\AdminBundle\ValueObject;
  *   2. DI tuple (complex logic with injected dependencies):
  *      condition: [ApprovalService::class, 'canApprove']
  *      The service method receives the entity object and must return bool.
+ *      The service must implement RowActionConditionInterface.
  */
 final class RowAction
 {
@@ -32,6 +33,8 @@ final class RowAction
     public const DEFAULT_PRIORITY = 100;
 
     /**
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     *
      * @param string                                        $name           Unique action identifier (e.g., 'show', 'edit', 'duplicate')
      * @param string                                        $label          Display label for the action button
      * @param string|null                                   $icon           Emoji or icon identifier (e.g., '👀', 'edit')
@@ -68,28 +71,28 @@ final class RowAction
 
     /**
      * Create a modified copy with overridden properties.
-     * Only provided keys will replace existing values; use array_key_exists to allow explicit null.
+     * Only provided keys will replace existing values; array_key_exists allows explicit null overrides.
      *
      * @param array<string, mixed> $overrides
      */
     public function with(array $overrides): self
     {
         return new self(
-            name: $overrides['name'] ?? $this->name,
-            label: $overrides['label'] ?? $this->label,
-            icon: array_key_exists('icon', $overrides) ? $overrides['icon'] : $this->icon,
-            route: array_key_exists('route', $overrides) ? $overrides['route'] : $this->route,
-            routeParams: !empty($overrides['routeParams']) ? $overrides['routeParams'] : $this->routeParams,
-            url: array_key_exists('url', $overrides) ? $overrides['url'] : $this->url,
-            permission: array_key_exists('permission', $overrides) ? $overrides['permission'] : $this->permission,
-            voterAttribute: array_key_exists('voterAttribute', $overrides) ? $overrides['voterAttribute'] : $this->voterAttribute,
-            condition: array_key_exists('condition', $overrides) ? $overrides['condition'] : $this->condition,
-            cssClass: array_key_exists('cssClass', $overrides) ? $overrides['cssClass'] : $this->cssClass,
-            confirmMessage: array_key_exists('confirmMessage', $overrides) ? $overrides['confirmMessage'] : $this->confirmMessage,
-            openInNewTab: $overrides['openInNewTab'] ?? $this->openInNewTab,
-            priority: $overrides['priority'] ?? $this->priority,
-            method: array_key_exists('method', $overrides) ? $overrides['method'] : $this->method,
-            template: array_key_exists('template', $overrides) ? $overrides['template'] : $this->template,
+            name:          $overrides['name']          ?? $this->name,
+            label:         $overrides['label']         ?? $this->label,
+            icon:          $this->pick($overrides, 'icon',          $this->icon),
+            route:         $this->pick($overrides, 'route',         $this->route),
+            routeParams:   !empty($overrides['routeParams']) ? $overrides['routeParams'] : $this->routeParams,
+            url:           $this->pick($overrides, 'url',           $this->url),
+            permission:    $this->pick($overrides, 'permission',    $this->permission),
+            voterAttribute:$this->pick($overrides, 'voterAttribute',$this->voterAttribute),
+            condition:     $this->pick($overrides, 'condition',     $this->condition),
+            cssClass:      $this->pick($overrides, 'cssClass',      $this->cssClass),
+            confirmMessage:$this->pick($overrides, 'confirmMessage',$this->confirmMessage),
+            openInNewTab:  $overrides['openInNewTab']  ?? $this->openInNewTab,
+            priority:      $overrides['priority']      ?? $this->priority,
+            method:        $this->pick($overrides, 'method',        $this->method),
+            template:      $this->pick($overrides, 'template',      $this->template),
         );
     }
 
@@ -108,21 +111,21 @@ final class RowAction
     public function merge(self $other): self
     {
         return new self(
-            name: $this->name,
-            label: $other->label,
-            icon: $other->icon ?? $this->icon,
-            route: $other->route ?? $this->route,
-            routeParams: !empty($other->routeParams) ? $other->routeParams : $this->routeParams,
-            url: $other->url ?? $this->url,
-            permission: $other->permission ?? $this->permission,
-            voterAttribute: $other->voterAttribute ?? $this->voterAttribute,
-            condition: $other->condition ?? $this->condition,
-            cssClass: $other->cssClass ?? $this->cssClass,
-            confirmMessage: $other->confirmMessage ?? $this->confirmMessage,
-            openInNewTab: $other->openInNewTab,
-            priority: $other->priority !== self::DEFAULT_PRIORITY ? $other->priority : $this->priority,
-            method: $other->method ?? $this->method,
-            template: $other->template ?? $this->template,
+            name:          $this->name,
+            label:         $other->label,
+            icon:          $other->icon           ?? $this->icon,
+            route:         $other->route          ?? $this->route,
+            routeParams:   !empty($other->routeParams) ? $other->routeParams : $this->routeParams,
+            url:           $other->url            ?? $this->url,
+            permission:    $other->permission     ?? $this->permission,
+            voterAttribute:$other->voterAttribute ?? $this->voterAttribute,
+            condition:     $other->condition      ?? $this->condition,
+            cssClass:      $other->cssClass       ?? $this->cssClass,
+            confirmMessage:$other->confirmMessage ?? $this->confirmMessage,
+            openInNewTab:  $other->openInNewTab,
+            priority:      $other->priority !== self::DEFAULT_PRIORITY ? $other->priority : $this->priority,
+            method:        $other->method         ?? $this->method,
+            template:      $other->template       ?? $this->template,
         );
     }
 
@@ -157,5 +160,19 @@ final class RowAction
     public function hasDiCondition(): bool
     {
         return is_array($this->condition);
+    }
+
+    /**
+     * Return $overrides[$key] when the key is explicitly present (allows null),
+     * or fall back to $default when the key is absent entirely.
+     *
+     * This is the single branching point replacing the repeated array_key_exists
+     * ternaries that previously inflated with()'s cyclomatic complexity.
+     *
+     * @param array<string, mixed> $overrides
+     */
+    private function pick(array $overrides, string $key, mixed $default): mixed
+    {
+        return array_key_exists($key, $overrides) ? $overrides[$key] : $default;
     }
 }

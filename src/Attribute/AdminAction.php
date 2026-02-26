@@ -26,6 +26,7 @@ use Attribute;
  *     label: 'Approve',
  *     condition: [ApprovalService::class, 'canApprove'],
  * )]
+ * The service must implement RowActionConditionInterface.
  * The method receives the entity object and must return bool.
  *
  * Usage (override existing action):
@@ -35,6 +36,8 @@ use Attribute;
 class AdminAction
 {
     /**
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     *
      * @param string                                         $name           Unique action identifier
      * @param string                                         $label          Display label for the button
      * @param string|null                                    $icon           Emoji or icon identifier
@@ -43,7 +46,8 @@ class AdminAction
      * @param string|null                                    $url            Static URL (alternative to route)
      * @param string|null                                    $permission     Required role (e.g., 'ROLE_ADMIN')
      * @param string|null                                    $voterAttribute Admin voter attribute (e.g., 'ADMIN_EDIT')
-     * @param string|array{0: class-string, 1: string}|null $condition      String expression OR [ServiceClass::class, 'method'] DI tuple
+     * @param string|array{0: class-string, 1: string}|null  $condition      String expression OR [ServiceClass::class, 'method'] DI tuple.
+     *                                                                       The service must implement RowActionConditionInterface.
      * @param string|null                                    $cssClass       Additional CSS classes
      * @param string|null                                    $confirmMessage Confirmation dialog message before action
      * @param bool                                           $openInNewTab   Open link in new tab
