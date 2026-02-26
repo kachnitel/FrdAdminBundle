@@ -90,8 +90,9 @@ class AttributeRowActionProviderTest extends TestCase
             $byName[$action->name] = $action;
         }
 
-        $this->assertSame('entity.getStatus() == "pending"', $byName['approve']->condition);
-        $this->assertSame('entity.getStatus() != "archived"', $byName['archive']->condition);
+        // Uses PropertyAccess syntax (entity.status) consistent with docs
+        $this->assertSame('entity.status == "pending"', $byName['approve']->condition);
+        $this->assertSame('entity.status != "archived"', $byName['archive']->condition);
     }
 
     /** @test */
@@ -207,24 +208,9 @@ class AttributeRowActionProviderTest extends TestCase
     /** @test */
     public function isOverrideReturnsTrueForActionWithOverrideFlag(): void
     {
-        // Create a one-off inline class with override: true
-        $overrideEntity = new class () {};
-        $overrideClass = new class () {
-            /**
-             * @return array<\ReflectionAttribute<AdminAction>>
-             */
-            public static function getAttributes(): array
-            {
-                return [];
-            }
-        };
-
-        // Use a separate provider instance with a custom entity that has override: true
-        // We test this via a real entity to avoid reflection gymnastics.
-        // The EntityWithRowActions fixture has no override actions; that path is covered
-        // in RowActionRegistryTest which exercises the full merge pipeline.
-
-        // Confirm the inverse: non-override is false
+        // The EntityWithRowActions fixture has no override actions; the override path
+        // is covered in RowActionRegistryTest which exercises the full merge pipeline.
+        // Confirm the inverse: non-override is false.
         $provider = new AttributeRowActionProvider();
         $this->assertFalse($provider->isOverride(EntityWithRowActions::class, 'approve'));
     }

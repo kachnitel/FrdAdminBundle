@@ -96,6 +96,8 @@ Two styles are supported — string expressions and DI tuples (service class and
 
 String expressions use [Symfony's ExpressionLanguage](https://symfony.com/doc/current/components/expression_language.html) syntax. The entity is available as `entity` (or `item` as an alias).
 
+The expression uses Symfony's `PropertyAccess` component, so `entity.status` calls `getStatus()`, `isStatus()`, or reads the public property. Both `entity.` and `item.` prefixes work.
+
 #### Property comparisons
 
 ```php
@@ -118,8 +120,6 @@ String expressions use [Symfony's ExpressionLanguage](https://symfony.com/doc/cu
 // Strict null check
 #[AdminAction(name: 'verify', label: 'Verify', condition: 'entity.verifiedAt === null')]
 ```
-
-Both `entity.` and `item.` prefixes work. The expression uses Symfony's `PropertyAccess` component, so `entity.status` calls `getStatus()`, `isStatus()`, or reads the public property.
 
 #### Combining conditions
 
@@ -185,20 +185,16 @@ If the expression fails to evaluate (e.g., property doesn't exist, syntax error)
 
 ### DI Tuple Conditions (Complex)
 
-Use when the condition requires injected services, database queries, or multi-entity logic:
+Use when the condition requires injected services, database queries, or multi-entity logic.
+
+#### Step 1 — Implement `RowActionConditionInterface`
+
+Your service **must implement `RowActionConditionInterface`**. This is a marker interface that registers the service in the row action condition locator, making it available at render time. Without it, the action will be silently hidden (production) or throw a `RuntimeException` (debug mode).
 
 ```php
-#[AdminAction(
-    name: 'approve',
-    label: 'Approve',
-    condition: [ApprovalService::class, 'canApprove'],
-)]
-```
+use Kachnitel\AdminBundle\RowAction\RowActionConditionInterface;
 
-The method receives the **entity object** and must return `bool`:
-
-```php
-class ApprovalService
+class ApprovalService implements RowActionConditionInterface
 {
     public function __construct(
         private readonly WorkflowInterface $workflow,
@@ -211,9 +207,21 @@ class ApprovalService
 }
 ```
 
-The service is resolved from the DI container at render time. Any class under `src/` with `autoconfigure: true` (the Symfony default) is available without extra registration.
+The method receives the **entity object** and must return `bool`. The method name is specified in the condition tuple.
 
-If the service is not found or the method throws, the action is **hidden** as a safe default.
+#### Step 2 — Reference the service in the attribute
+
+```php
+#[AdminAction(
+    name: 'approve',
+    label: 'Approve',
+    condition: [ApprovalService::class, 'canApprove'],
+)]
+```
+
+Services implementing `RowActionConditionInterface` are auto-discovered via `#[AutoconfigureTag]` — no manual registration needed as long as your services use `autoconfigure: true` (the Symfony default).
+
+If the service is not found or the method throws, the action is **hidden** as a safe default in production. In `debug` mode, a `RuntimeException` is thrown immediately to surface misconfiguration early.
 
 ### Choosing Between Expression and DI Tuple
 
@@ -323,6 +331,8 @@ class WorkflowRowActionProvider implements RowActionProviderInterface
 }
 ```
 
+> **Note:** If your provider's `RowAction` objects use DI tuple conditions (the `[ServiceClass::class, 'method']` form), the referenced service must implement `RowActionConditionInterface`. See [DI Tuple Conditions](#di-tuple-conditions-complex) above.
+
 Providers are **auto-discovered** — implement the interface and they're registered automatically via `#[AutoconfigureTag]`. No manual service configuration needed.
 
 **Priority rules:**
@@ -394,6 +404,20 @@ Three functions are available in templates:
 )]
 ```
 
+The `StripeService` must implement `RowActionConditionInterface`:
+
+```php
+use Kachnitel\AdminBundle\RowAction\RowActionConditionInterface;
+
+class StripeService implements RowActionConditionInterface
+{
+    public function hasCustomer(object $entity): bool
+    {
+        return $entity->getStripeCustomerId() !== null;
+    }
+}
+```
+
 ### Custom Button Template
 
 ```php
@@ -450,4 +474,22 @@ Three functions are available in templates:
     priority: 40,
 )]
 class Order { }
+```
+
+`OrderRefundService` must implement `RowActionConditionInterface`:
+
+```php
+use Kachnitel\AdminBundle\RowAction\RowActionConditionInterface;
+
+class OrderRefundService implements RowActionConditionInterface
+{
+    public function __construct(
+        private readonly OrderRepository $orders,
+    ) {}
+
+    public function canRefund(object $entity): bool
+    {
+        return $this->orders->isEligibleForRefund($entity);
+    }
+}
 ```

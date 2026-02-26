@@ -22,6 +22,9 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->authChecker = $this->createMock(AuthorizationCheckerInterface::class);
     }
 
+    /**
+     * Entity with PUBLIC properties — original test helper, kept for baseline coverage.
+     */
     private function entity(mixed $status = 'pending', bool $active = true, int $stock = 10): object
     {
         return new class ($status, $active, $stock) {
@@ -37,8 +40,71 @@ class RowActionExpressionLanguageTest extends TestCase
         };
     }
 
+    /**
+     * Entity with PRIVATE properties — verifies PropertyAccess proxy resolves getters.
+     * This is the realistic Doctrine entity shape.
+     */
+    private function privateEntity(string $status = 'pending', bool $active = true): object
+    {
+        return new class ($status, $active) {
+            private string $status;
+            private bool $active;
+
+            public function __construct(string $status, bool $active)
+            {
+                $this->status = $status;
+                $this->active = $active;
+            }
+
+            public function getStatus(): string { return $this->status; }
+            public function isActive(): bool { return $this->active; }
+        };
+    }
+
     // -------------------------------------------------------------------------
-    // Simple property expressions
+    // PropertyAccess proxy — private properties via getters (key regression tests)
+    // -------------------------------------------------------------------------
+
+    /** @test */
+    public function propertyAccessProxyCallsGetterForPrivateProperty(): void
+    {
+        $lang = new RowActionExpressionLanguage();
+        $entity = $this->privateEntity(status: 'pending');
+
+        // entity.status on a private $status field must call getStatus() via PropertyAccess
+        $this->assertTrue($lang->evaluate('entity.status == "pending"', $entity));
+    }
+
+    /** @test */
+    public function propertyAccessProxyCallsIsGetterForPrivateBooleanProperty(): void
+    {
+        $lang = new RowActionExpressionLanguage();
+
+        $this->assertTrue($lang->evaluate('entity.active', $this->privateEntity(active: true)));
+        $this->assertFalse($lang->evaluate('entity.active', $this->privateEntity(active: false)));
+    }
+
+    /** @test */
+    public function propertyAccessProxyWorksWithInequalityOnPrivateProperty(): void
+    {
+        $lang = new RowActionExpressionLanguage();
+
+        $this->assertFalse($lang->evaluate('entity.status != "archived"', $this->privateEntity(status: 'archived')));
+        $this->assertTrue($lang->evaluate('entity.status != "archived"', $this->privateEntity(status: 'pending')));
+    }
+
+    /** @test */
+    public function explicitMethodCallSyntaxStillWorks(): void
+    {
+        $lang = new RowActionExpressionLanguage();
+        $entity = $this->privateEntity(status: 'pending');
+
+        // entity.getStatus() explicit call should also work via __call on proxy
+        $this->assertTrue($lang->evaluate('entity.getStatus() == "pending"', $entity));
+    }
+
+    // -------------------------------------------------------------------------
+    // Simple property expressions (public properties — baseline)
     // -------------------------------------------------------------------------
 
     /** @test */
@@ -217,6 +283,26 @@ class RowActionExpressionLanguageTest extends TestCase
     }
 
     /** @test */
+    public function isGrantedWithEntitySubjectUnwrapsProxy(): void
+    {
+        // When is_granted("ATTR", entity) is used, voters must receive the real object,
+        // not the PropertyAccessProxy wrapper.
+        $realEntity = $this->entity(status: 'pending');
+
+        $this->authChecker
+            ->method('isGranted')
+            ->with(
+                'ADMIN_EDIT',
+                $this->callback(fn (mixed $subject) => !($subject instanceof \Kachnitel\AdminBundle\RowAction\PropertyAccessProxy)),
+            )
+            ->willReturn(true);
+
+        $lang = new RowActionExpressionLanguage();
+
+        $this->assertTrue($lang->evaluate('is_granted("ADMIN_EDIT", entity)', $realEntity, $this->authChecker));
+    }
+
+    /** @test */
     public function isGrantedWithSingleQuotes(): void
     {
         $this->authChecker->method('isGranted')->with('ROLE_ADMIN', null)->willReturn(true);
@@ -235,7 +321,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $lang = new RowActionExpressionLanguage();
         $entity = $this->entity();
 
-        // Non-existent property
+        // Non-existent property — PropertyAccess throws, proxy re-throws, evaluator catches
         $this->assertFalse($lang->evaluate('entity.nonExistentProperty == true', $entity));
     }
 

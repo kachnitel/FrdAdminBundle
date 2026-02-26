@@ -9,6 +9,9 @@
 
 {% import kachnitel_admin_theme as css %}
 
+{# Resolve entity id once, safely — avoids broken URLs when id is null or missing #}
+{% set entityId = entity.id is defined and entity.id is not null ? entity.id : null %}
+
 {% if action.template %}
     {{ include(action.template, {
         action: action,
@@ -18,11 +21,11 @@
 {% elseif action.method %}
     {# Form-based action (POST/DELETE) #}
     <form method="post"
-          action="{% if action.route %}{{ path(action.route, action.routeParams|merge({id: entity.id|default('')})) }}{% elseif action.url %}{{ action.url }}{% else %}{{ admin_object_path(entity, action.name) }}{% endif %}"
+          action="{% if action.route %}{{ path(action.route, action.routeParams|merge(entityId is not null ? {id: entityId} : {})) }}{% elseif action.url %}{{ action.url }}{% else %}{{ admin_object_path(entity, action.name) }}{% endif %}"
           style="display: inline;"
           {% if action.confirmMessage %}onsubmit="return confirm('{{ action.confirmMessage|e('js') }}');"{% endif %}>
         <input type="hidden" name="_method" value="{{ action.method }}">
-        <input type="hidden" name="_token" value="{{ csrf_token(action.name ~ '_' ~ (entity.id|default(''))) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token(action.name ~ '_' ~ (entityId ?? '')) }}">
         <button type="submit" class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
                 title="{{ action.label }}">
             {% if action.icon %}{{ action.icon }}{% else %}{{ action.label }}{% endif %}
@@ -30,7 +33,7 @@
     </form>
 {% else %}
     {# Link-based action #}
-    <a href="{% if action.route %}{{ path(action.route, action.routeParams|merge({id: entity.id|default('')})) }}{% elseif action.url %}{{ action.url }}{% else %}{{ admin_object_path(entity, action.name) }}{% endif %}"
+    <a href="{% if action.route %}{{ path(action.route, action.routeParams|merge(entityId is not null ? {id: entityId} : {})) }}{% elseif action.url %}{{ action.url }}{% else %}{{ admin_object_path(entity, action.name) }}{% endif %}"
        class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
        title="{{ action.label }}"
        {% if action.openInNewTab %}target="_blank" rel="noopener"{% endif %}

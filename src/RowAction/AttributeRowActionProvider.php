@@ -19,7 +19,7 @@ class AttributeRowActionProvider implements RowActionProviderInterface
     /** @var array<string, AdminActionsConfig|null> */
     private array $configCache = [];
 
-    /** @var array<string, array{action: AdminAction, rowAction: RowAction}> */
+    /** @var array<string, AdminAction> */
     private array $adminActionsCache = [];
 
     public function supports(string $entityClass): bool
@@ -65,11 +65,7 @@ class AttributeRowActionProvider implements RowActionProviderInterface
                 );
 
                 $actions[] = $rowAction;
-
-                $this->adminActionsCache[$entityClass . '::' . $adminAction->name] = [
-                    'action' => $adminAction,
-                    'rowAction' => $rowAction,
-                ];
+                $this->adminActionsCache[$entityClass . '::' . $adminAction->name] = $adminAction;
             }
         } catch (\ReflectionException) {
             // Class not found — return empty
@@ -117,7 +113,7 @@ class AttributeRowActionProvider implements RowActionProviderInterface
     public function getAdminActionAttribute(string $entityClass, string $actionName): ?AdminAction
     {
         $this->getActions($entityClass); // ensure cache is populated
-        return $this->adminActionsCache[$entityClass . '::' . $actionName]['action'] ?? null;
+        return $this->adminActionsCache[$entityClass . '::' . $actionName] ?? null;
     }
 
     /**

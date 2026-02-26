@@ -13,7 +13,7 @@ use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
  * Test fixture entity for row actions feature tests.
  *
  * Covers:
- *  - String expression conditions (entity.status == "pending")
+ *  - String expression conditions using PropertyAccess syntax (entity.status)
  *  - AdminActionsConfig(exclude: ['edit']) — no Edit button
  *  - POST form action with confirmMessage
  *  - Static URL (no routing dependency in tests)
@@ -26,7 +26,7 @@ use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
     label: 'Approve',
     icon: '✅',
     url: '/admin/test/approve',
-    condition: 'entity.getStatus() == "pending"',
+    condition: 'entity.status == "pending"',
     priority: 30,
 )]
 #[AdminAction(
@@ -36,7 +36,7 @@ use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
     url: '/admin/test/archive',
     method: 'POST',
     confirmMessage: 'Archive this item?',
-    condition: 'entity.getStatus() != "archived"',
+    condition: 'entity.status != "archived"',
     priority: 40,
 )]
 class EntityWithRowActions
