@@ -21,6 +21,17 @@ namespace Kachnitel\AdminBundle\ValueObject;
 final class RowAction
 {
     /**
+     * Sentinel value meaning "priority not explicitly set".
+     *
+     * Used in merge() to decide whether to inherit the original action's priority.
+     * If both actions have DEFAULT_PRIORITY, the original is kept.
+     *
+     * To force a specific priority of 100, set it on the lower-priority provider
+     * (e.g., DefaultRowActionProvider) rather than relying on the merge default.
+     */
+    public const DEFAULT_PRIORITY = 100;
+
+    /**
      * @param string                                        $name           Unique action identifier (e.g., 'show', 'edit', 'duplicate')
      * @param string                                        $label          Display label for the action button
      * @param string|null                                   $icon           Emoji or icon identifier (e.g., '👀', 'edit')
@@ -33,7 +44,7 @@ final class RowAction
      * @param string|null                                   $cssClass       Additional CSS classes for the button
      * @param string|null                                   $confirmMessage Confirmation message (if set, shows confirm dialog before action)
      * @param bool                                          $openInNewTab   Whether to open link in new tab
-     * @param int                                           $priority       Sort priority (lower = earlier, default 100)
+     * @param int                                           $priority       Sort priority (lower = earlier). Use DEFAULT_PRIORITY (100) for "unset".
      * @param string|null                                   $method         HTTP method for form-based actions ('POST', 'DELETE')
      * @param string|null                                   $template       Custom Twig template for rendering the action button
      */
@@ -50,7 +61,7 @@ final class RowAction
         public readonly ?string $cssClass = null,
         public readonly ?string $confirmMessage = null,
         public readonly bool $openInNewTab = false,
-        public readonly int $priority = 100,
+        public readonly int $priority = self::DEFAULT_PRIORITY,
         public readonly ?string $method = null,
         public readonly ?string $template = null,
     ) {}
@@ -86,6 +97,13 @@ final class RowAction
      * Merge non-null/non-default properties from another action into this one.
      * Used by RowActionRegistry for partial overrides (without the override flag).
      * The name is always preserved from the original.
+     *
+     * Priority merge rule: if the incoming action uses DEFAULT_PRIORITY (meaning the
+     * developer did not explicitly set a priority), the original priority is kept.
+     * This prevents accidental priority resets when adding a condition to a default action.
+     *
+     * Limitation: a developer cannot use merge() to explicitly set priority to DEFAULT_PRIORITY
+     * (100) from a lower value — use override: true for that case.
      */
     public function merge(self $other): self
     {
@@ -102,7 +120,7 @@ final class RowAction
             cssClass: $other->cssClass ?? $this->cssClass,
             confirmMessage: $other->confirmMessage ?? $this->confirmMessage,
             openInNewTab: $other->openInNewTab,
-            priority: $other->priority !== 100 ? $other->priority : $this->priority,
+            priority: $other->priority !== self::DEFAULT_PRIORITY ? $other->priority : $this->priority,
             method: $other->method ?? $this->method,
             template: $other->template ?? $this->template,
         );

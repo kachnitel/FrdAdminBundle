@@ -206,6 +206,37 @@ class RowActionTest extends TestCase
         $action = new RowAction(name: 'show', label: 'Show');
         $this->assertFalse($action->isFormAction());
     }
+
+    /** @test */
+    public function mergeKeepsOriginalPriorityWhenOtherUsesDefaultPriority(): void
+    {
+        $original = new RowAction(name: 'show', label: 'Show', priority: 10);
+        // Other uses DEFAULT_PRIORITY (100) — meaning "not explicitly set"
+        $other = new RowAction(name: 'show', label: 'Custom Show');
+
+        $merged = $original->merge($other);
+
+        // Priority from original is preserved because other has DEFAULT_PRIORITY
+        $this->assertSame(10, $merged->priority);
+    }
+
+    /** @test */
+    public function mergeUsesOtherPriorityWhenExplicitlySet(): void
+    {
+        $original = new RowAction(name: 'show', label: 'Show', priority: 10);
+        $other = new RowAction(name: 'show', label: 'Custom Show', priority: 5);
+
+        $merged = $original->merge($other);
+
+        $this->assertSame(5, $merged->priority);
+    }
+
+    /** @test */
+    public function defaultPriorityIsUsedWhenNotExplicitlySet(): void
+    {
+        $action = new RowAction(name: 'show', label: 'Show');
+        $this->assertSame(RowAction::DEFAULT_PRIORITY, $action->priority);
+    }
 }
 
 class ApprovalService

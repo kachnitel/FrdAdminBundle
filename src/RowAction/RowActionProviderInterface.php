@@ -31,7 +31,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
  *     public function getPriority(): int { return 50; }
  * }
  */
-#[AutoconfigureTag('kachnitel_admin.row_action_provider')]
+#[AutoconfigureTag]
 interface RowActionProviderInterface
 {
     /**

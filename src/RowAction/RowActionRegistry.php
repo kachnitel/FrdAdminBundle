@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\RowAction;
 
 use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
  * Collects row actions from all providers and resolves the final action list for an entity.
@@ -28,6 +29,7 @@ class RowActionRegistry
      * @param iterable<RowActionProviderInterface> $providers
      */
     public function __construct(
+        #[AutowireIterator(RowActionProviderInterface::class)]
         private readonly iterable $providers,
         private readonly AttributeRowActionProvider $attributeProvider,
     ) {}
@@ -95,6 +97,7 @@ class RowActionRegistry
     public function clearCache(): void
     {
         $this->cache = [];
+        $this->sortedProviders = null;
     }
 
     private function ensureProvidersSorted(): void

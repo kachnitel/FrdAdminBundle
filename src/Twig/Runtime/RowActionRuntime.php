@@ -4,40 +4,44 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
+use Kachnitel\AdminBundle\RowAction\RowActionConditionInterface;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
 
 /**
  * Twig runtime for row action rendering.
  *
- * Provides three Twig functions:
- *  - admin_row_actions(entityClass) — all actions (regardless of visibility)
- *  - admin_visible_row_actions(entityClass, entity, entityShortClass) — filtered for current user/entity state
- *  - admin_is_action_visible(action, entity, entityShortClass) — single-action visibility check
+ * DI-tuple conditions ([ServiceClass::class, 'method']) are resolved from a scoped ServiceLocator
+ * containing only services that implement RowActionConditionInterface.
  *
- * String condition expressions are evaluated via Symfony's ExpressionLanguage component (see
- * RowActionExpressionLanguage). Supported syntax includes property comparisons, logical operators
- * (&&, ||, and, or, not, !), and the is_granted() security function:
- *
- *   entity.status == "pending"
- *   entity.stock > 0 && is_granted("ROLE_EDITOR")
- *   is_granted("ROLE_ADMIN") || entity.ownedBy == currentUser
- *
- * DI-tuple conditions ([ServiceClass::class, 'method']) are resolved from the service container.
+ * Error behaviour (DI tuple failures only — string expression errors always fail-safe):
+ *  - conditionLocator === null:  fail-open (should not occur in normal wiring, no log)
+ *  - service not in locator / method throws + debug=true:  throws \RuntimeException immediately
+ *  - service not in locator / method throws + debug=false: logs warning, hides action (fail-safe)
  */
 class RowActionRuntime implements RuntimeExtensionInterface
 {
+    private LoggerInterface $logger;
+
     public function __construct(
         private readonly RowActionRegistry $registry,
         private readonly AdminRouteRuntime $routeRuntime,
         private readonly RowActionExpressionLanguage $expressionLanguage,
         private readonly ?AuthorizationCheckerInterface $authChecker = null,
-        private readonly ?ContainerInterface $container = null,
-    ) {}
+        #[AutowireLocator(RowActionConditionInterface::class)]
+        private readonly ?ServiceLocator $conditionLocator = null,
+        ?LoggerInterface $logger = null,
+        private readonly bool $debug = false,
+    ) {
+        $this->logger = $logger ?? new NullLogger();
+    }
 
     /**
      * Get all registered actions for an entity class (unfiltered).
@@ -99,8 +103,6 @@ class RowActionRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * Evaluate a condition, dispatching to the appropriate evaluator based on type.
-     *
      * @param string|array{0: class-string, 1: string} $condition
      */
     private function evaluateCondition(string|array $condition, object $entity): bool
@@ -113,42 +115,73 @@ class RowActionRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * Resolve and invoke a [ServiceClass::class, 'method'] tuple from the DI container.
-     * The method receives the entity object and must return bool.
+     * Resolve and invoke a [ServiceClass::class, 'method'] tuple from the condition locator.
+     *
+     * Fail-open when the locator itself is null (no condition services registered at all) —
+     * this is the "feature not in use" state and should not hide actions.
      *
      * @param array{0: class-string, 1: string} $condition
+     *
+     * @throws \RuntimeException in debug mode when the service is missing or method throws
      */
     private function evaluateDiCondition(array $condition, object $entity): bool
     {
-        if ($this->container === null) {
-            // No container available — fail open (show the action) so misconfiguration
-            // doesn't silently hide actions in environments without the container.
+        // Locator not configured at all — no RowActionConditionInterface services exist.
+        // Fail open: don't hide actions just because the feature isn't in use.
+        if ($this->conditionLocator === null) {
             return true;
         }
 
         [$serviceClass, $method] = $condition;
 
         try {
-            $service = $this->container->get($serviceClass);
+            if (!$this->conditionLocator->has($serviceClass)) {
+                throw new \RuntimeException(sprintf(
+                    'Condition service "%s" not found. Does it implement %s?',
+                    $serviceClass,
+                    RowActionConditionInterface::class,
+                ));
+            }
+
+            $service = $this->conditionLocator->get($serviceClass);
             return (bool) $service->{$method}($entity);
-        } catch (\Exception) {
-            // Service not found or method threw — hide the action (safe default)
+        } catch (\Exception $e) {
+            if ($this->debug) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'Row action DI condition [%s::%s] failed for entity %s: %s',
+                        $serviceClass,
+                        $method,
+                        $entity::class,
+                        $e->getMessage(),
+                    ),
+                    previous: $e,
+                );
+            }
+
+            $this->logger->warning(
+                'Row action DI condition failed — action will be hidden.',
+                [
+                    'service'   => $serviceClass,
+                    'method'    => $method,
+                    'entity'    => $entity::class,
+                    'exception' => $e->getMessage(),
+                ],
+            );
+
             return false;
         }
     }
 
-    /**
-     * Map an AdminEntityVoter attribute constant to the route action name used by AdminRouteRuntime.
-     */
     private function mapVoterAttributeToActionName(string $voterAttribute): string
     {
         return match ($voterAttribute) {
-            'ADMIN_INDEX' => 'index',
-            'ADMIN_SHOW' => 'show',
-            'ADMIN_NEW' => 'new',
-            'ADMIN_EDIT' => 'edit',
+            'ADMIN_INDEX'  => 'index',
+            'ADMIN_SHOW'   => 'show',
+            'ADMIN_NEW'    => 'new',
+            'ADMIN_EDIT'   => 'edit',
             'ADMIN_DELETE' => 'delete',
-            default => 'show',
+            default        => 'show',
         };
     }
 }

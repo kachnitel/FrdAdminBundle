@@ -12,7 +12,8 @@ use Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
@@ -29,8 +30,8 @@ class RowActionRuntimeTest extends TestCase
     /** @var AuthorizationCheckerInterface&MockObject */
     private AuthorizationCheckerInterface $authChecker;
 
-    /** @var ContainerInterface&MockObject */
-    private ContainerInterface $container;
+    /** @var ServiceLocator&MockObject */
+    private ServiceLocator $conditionLocator;
 
     private RowActionExpressionLanguage $expressionLanguage;
 
@@ -39,7 +40,7 @@ class RowActionRuntimeTest extends TestCase
         $this->registry = $this->createMock(RowActionRegistry::class);
         $this->routeRuntime = $this->createMock(AdminRouteRuntime::class);
         $this->authChecker = $this->createMock(AuthorizationCheckerInterface::class);
-        $this->container = $this->createMock(ContainerInterface::class);
+        $this->conditionLocator = $this->createMock(ServiceLocator::class);
         $this->expressionLanguage = new RowActionExpressionLanguage();
     }
 
@@ -52,7 +53,7 @@ class RowActionRuntimeTest extends TestCase
             routeRuntime: $this->routeRuntime,
             expressionLanguage: $this->expressionLanguage,
             authChecker: $withAuthChecker ? $this->authChecker : null,
-            container: $withContainer ? $this->container : null,
+            conditionLocator: $withContainer ? $this->conditionLocator : null
         );
     }
 
@@ -298,7 +299,8 @@ class RowActionRuntimeTest extends TestCase
             public function canApprove(object $entity): bool { return false; }
         };
 
-        $this->container->method('get')->willReturn($conditionService);
+        $this->conditionLocator->method('has')->willReturn(true);
+        $this->conditionLocator->method('get')->willReturn($conditionService);
 
         /** @var class-string $serviceClass */
         $serviceClass = get_class($conditionService);
@@ -321,7 +323,8 @@ class RowActionRuntimeTest extends TestCase
             public function canApprove(object $entity): bool { return true; }
         };
 
-        $this->container->method('get')->willReturn($conditionService);
+        $this->conditionLocator->method('has')->willReturn(true);
+        $this->conditionLocator->method('get')->willReturn($conditionService);
         $this->routeRuntime->method('isActionAccessible')->willReturn(true);
 
         /** @var class-string $serviceClass */
@@ -350,7 +353,8 @@ class RowActionRuntimeTest extends TestCase
             }
         };
 
-        $this->container->method('get')->willReturn($conditionService);
+        $this->conditionLocator->method('has')->willReturn(true);
+        $this->conditionLocator->method('get')->willReturn($conditionService);
 
         /** @var class-string $serviceClass */
         $serviceClass = get_class($conditionService);
@@ -389,7 +393,7 @@ class RowActionRuntimeTest extends TestCase
     {
         $entity = $this->makeEntity();
 
-        $this->container->method('get')->willThrowException(new \RuntimeException('Service not found'));
+        $this->conditionLocator->method('has')->willReturn(false);
 
         /** @var array{class-string, string} $condition */
         $condition = ['App\\Service\\MissingService', 'canApprove']; // @phpstan-ignore varTag.nativeType
@@ -476,5 +480,190 @@ class RowActionRuntimeTest extends TestCase
 
         $runtime = $this->createRuntime();
         $this->assertSame($actions, $runtime->getRowActions('App\\Entity\\Product'));
+    }
+
+    /** @test */
+    public function diTupleThrowsInDebugModeWhenServiceNotFound(): void
+    {
+        $entity = $this->makeEntity();
+
+        $this->conditionLocator->method('has')->willReturn(false);
+
+        /** @var array{class-string, string} $condition */
+        $condition = ['App\\Service\\BrokenService', 'check']; // @phpstan-ignore varTag.nativeType
+        $action = new RowAction(name: 'broken', label: 'Broken', condition: $condition);
+
+        $runtime = new RowActionRuntime(
+            registry: $this->registry,
+            routeRuntime: $this->routeRuntime,
+            expressionLanguage: $this->expressionLanguage,
+            authChecker: $this->authChecker,
+            conditionLocator: $this->conditionLocator,
+            debug: true,
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/Row action DI condition \[App\\\\Service\\\\BrokenService::check\]/');
+
+        $runtime->isActionVisible($action, $entity, 'Product');
+    }
+
+    /** @test */
+    public function diTupleThrowsInDebugModeWhenServiceNotInLocator(): void
+    {
+        $entity = $this->makeEntity();
+
+        $this->conditionLocator->method('has')->willReturn(false);
+
+        /** @var array{class-string, string} $condition */
+        $condition = ['App\\Service\\BrokenService', 'check']; // @phpstan-ignore varTag.nativeType
+        $action = new RowAction(name: 'broken', label: 'Broken', condition: $condition);
+
+        $runtime = new RowActionRuntime(
+            registry: $this->registry,
+            routeRuntime: $this->routeRuntime,
+            expressionLanguage: $this->expressionLanguage,
+            authChecker: $this->authChecker,
+            conditionLocator: $this->conditionLocator,
+            debug: true,
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/App\\\\Service\\\\BrokenService/');
+
+        $runtime->isActionVisible($action, $entity, 'Product');
+    }
+
+    /** @test */
+    public function diTupleThrowsInDebugModeWhenMethodThrows(): void
+    {
+        $entity = $this->makeEntity();
+
+        $conditionService = new class () {
+            public function canDo(object $entity): bool
+            {
+                throw new \LogicException('Business rule violated');
+            }
+        };
+
+        $this->conditionLocator->method('has')->willReturn(true);
+        $this->conditionLocator->method('get')->willReturn($conditionService);
+
+        /** @var class-string $serviceClass */
+        $serviceClass = get_class($conditionService);
+        $action = new RowAction(name: 'do', label: 'Do', condition: [$serviceClass, 'canDo']);
+
+        $runtime = new RowActionRuntime(
+            registry: $this->registry,
+            routeRuntime: $this->routeRuntime,
+            expressionLanguage: $this->expressionLanguage,
+            conditionLocator: $this->conditionLocator,
+            debug: true,
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/Business rule violated/');
+
+        $runtime->isActionVisible($action, $entity, 'Product');
+    }
+
+    /** @test */
+    public function diTupleDebugExceptionWrapsOriginal(): void
+    {
+        $entity = $this->makeEntity();
+        $original = new \LogicException('root cause');
+
+        $this->conditionLocator->method('has')->willReturn(true);
+        $this->conditionLocator->method('get')->willThrowException($original);
+
+        /** @var array{class-string, string} $condition */
+        $condition = ['App\\Service\\BrokenService', 'check']; // @phpstan-ignore varTag.nativeType
+        $action = new RowAction(name: 'broken', label: 'Broken', condition: $condition);
+
+        $runtime = new RowActionRuntime(
+            registry: $this->registry,
+            routeRuntime: $this->routeRuntime,
+            expressionLanguage: $this->expressionLanguage,
+            conditionLocator: $this->conditionLocator,
+            debug: true,
+        );
+
+        try {
+            $runtime->isActionVisible($action, $entity, 'Product');
+            $this->fail('Expected RuntimeException was not thrown');
+        } catch (\RuntimeException $e) {
+            $this->assertSame($original, $e->getPrevious());
+        }
+    }
+
+    /** @test */
+    public function diTupleLogsWarningInProdModeAndHidesAction(): void
+    {
+        $entity = $this->makeEntity();
+
+        $this->conditionLocator->method('has')->willReturn(false); // not registered
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('warning')
+            ->with(
+                $this->stringContains('Row action DI condition failed'),
+                $this->logicalAnd(
+                    $this->arrayHasKey('service'),
+                    $this->arrayHasKey('method'),
+                    $this->arrayHasKey('entity'),
+                    $this->arrayHasKey('exception'),
+                ),
+            );
+
+        /** @var array{class-string, string} $condition */
+        $condition = ['App\\Service\\BrokenService', 'check']; // @phpstan-ignore varTag.nativeType
+        $action = new RowAction(name: 'broken', label: 'Broken', condition: $condition);
+
+        $runtime = new RowActionRuntime(
+            registry: $this->registry,
+            routeRuntime: $this->routeRuntime,
+            expressionLanguage: $this->expressionLanguage,
+            conditionLocator: $this->conditionLocator,
+            logger: $logger,
+            debug: false,
+        );
+
+        $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
+    }
+
+    /** @test */
+    public function noLogAndNoThrowWhenDiConditionSucceeds(): void
+    {
+        $entity = $this->makeEntity();
+
+        $conditionService = new class () {
+            public function canDo(object $entity): bool { return true; }
+        };
+
+        $this->conditionLocator->method('has')->willReturn(true);
+        $this->conditionLocator->method('get')->willReturn($conditionService);
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())->method('warning');
+
+        /** @var class-string $serviceClass */
+        $serviceClass = get_class($conditionService);
+        $action = new RowAction(name: 'do', label: 'Do', condition: [$serviceClass, 'canDo']);
+
+        foreach ([true, false] as $debug) {
+            $runtime = new RowActionRuntime(
+                registry: $this->registry,
+                routeRuntime: $this->routeRuntime,
+                expressionLanguage: $this->expressionLanguage,
+                conditionLocator: $this->conditionLocator,
+                logger: $logger,
+                debug: $debug,
+            );
+
+            $this->assertTrue($runtime->isActionVisible($action, $entity, 'Product'));
+        }
     }
 }
