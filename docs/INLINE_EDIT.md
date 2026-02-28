@@ -38,26 +38,99 @@ The field component is chosen automatically from the Doctrine column type:
 
 Association fields include a live search input to find and select related entities.
 
-## Column-Level Edit Permissions
+## Controlling Per-Property Editability
 
-Use `#[ColumnPermission]` to make specific fields read-only for certain users even when inline editing is active:
+Three mechanisms control whether a specific property's inline editor activates, checked in order:
+
+### 1. `#[AdminColumn(editable: ...)]` — static flag or expression
+
+Apply `#[AdminColumn]` to any entity property to override the default edit eligibility for that column.
+
+**Always read-only** (computed / derived fields):
+
+```php
+use Kachnitel\AdminBundle\Attribute\AdminColumn;
+
+class Invoice
+{
+    // Derived from line items — no setter, and explicitly marked non-editable
+    #[AdminColumn(editable: false)]
+    private float $totalAmount;
+}
+```
+
+The ✎ trigger is hidden entirely. The voter and setter-writable checks are skipped.
+
+**State-dependent editability** using an expression:
+
+```php
+use Kachnitel\AdminBundle\Attribute\AdminColumn;
+
+class Order
+{
+    // Only editable while the order hasn't been shipped
+    #[AdminColumn(editable: 'entity.status != "shipped"')]
+    private string $shippingAddress;
+
+    // Only HR staff can change salary, and only for active employees
+    #[AdminColumn(editable: 'entity.active && is_granted("ROLE_HR")')]
+    private float $salary;
+}
+```
+
+Expressions use the same Symfony ExpressionLanguage syntax as `#[AdminAction(condition: ...)]`:
+
+| Syntax | Description |
+|---|---|
+| `entity.status == "pending"` | Property comparison (calls `getStatus()`) |
+| `entity.active` | Boolean property (calls `isActive()`) |
+| `is_granted("ROLE_EDITOR")` | Role check for current user |
+| `is_granted("ADMIN_EDIT", entity)` | Voter check with entity subject |
+| `entity.isDraft() && is_granted("ROLE_EDITOR")` | Combined condition |
+
+If an expression fails to evaluate (syntax error, missing property), the field is treated as **not editable** — the safe default.
+
+### 2. ADMIN_EDIT voter
+
+Even when the `#[AdminColumn]` expression passes, the user must still be granted `ADMIN_EDIT` for the entity type. This is the same voter that gates the entire inline-edit row trigger.
+
+### 3. Setter writable
+
+If the property has no public setter (or is declared `readonly`), `PropertyAccessor::isWritable()` returns `false` and the field is silently read-only. This works without any attribute and is the zero-config option for truly immutable properties:
+
+```php
+class Product
+{
+    // No setCreatedAt() → automatically not editable
+    private \DateTimeImmutable $createdAt;
+
+    // PHP 8.1 readonly → also automatically not editable
+    public readonly string $sku;
+}
+```
+
+## Role-Based Column Permissions
+
+`#[ColumnPermission]` controls column *visibility* and can additionally restrict who can activate the inline editor for a column:
 
 ```php
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 
-class Product
+class Employee
 {
     #[ColumnPermission([
-        AdminEntityVoter::ADMIN_SHOW => 'ROLE_USER',
-        AdminEntityVoter::ADMIN_EDIT => 'ROLE_PRODUCT_PRICE_EDIT',
+        AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR',           // hidden in list for non-HR
+        AdminEntityVoter::ADMIN_EDIT => 'ROLE_HR_MANAGER',   // editable only by managers
     ])]
-    private float $price;
+    private float $salary;
 }
 ```
 
-- `ADMIN_SHOW` controls whether the column is visible in the list at all.
-- `ADMIN_EDIT` controls whether the inline field editor activates. Users without this role see the value but the ✎ trigger is hidden.
+- `ADMIN_SHOW` — column is hidden from the list entirely for users without this role.
+- `ADMIN_EDIT` — ✎ trigger is hidden for users without this role; they see the value but cannot edit it.
+
+Use `#[ColumnPermission]` when access is purely role-based. Use `#[AdminColumn(editable: '...')]` when the condition depends on the entity's own state (status, workflow step, flags), or combines both role and state.
 
 See [Column Visibility](COLUMN_VISIBILITY.md) for the full `#[ColumnPermission]` reference.
 
@@ -87,7 +160,13 @@ Tailwind's `group` / `group-hover` utilities handle hover-reveal without extra C
 
 ## Disabling Inline Edit
 
-Inline edit is enabled for all Doctrine entities that grant `ADMIN_EDIT`. To restore the page-navigation Edit link for a specific entity, register a custom `RowActionProviderInterface` or use the `#[AdminAction]` attribute with `override: true`:
+### Per property
+
+Mark any property as permanently non-editable with `#[AdminColumn(editable: false)]` — see [Controlling Per-Property Editability](#controlling-per-property-editability) above.
+
+### Per entity
+
+Inline edit is enabled for all Doctrine entities that grant `ADMIN_EDIT`. To restore the page-navigation Edit link for a specific entity entirely, use `#[AdminAction]` with `override: true`:
 
 ```php
 use Kachnitel\AdminBundle\Attribute\AdminAction;
@@ -135,9 +214,8 @@ class WysiwygField extends AbstractEditableField
     #[LiveAction]
     public function cancelEdit(): void
     {
+        $this->currentValue = null;
         parent::cancelEdit();
-        $raw = $this->readValue();
-        $this->currentValue = $raw !== null ? (string) $raw : null;
     }
 
     #[LiveAction]
@@ -159,4 +237,5 @@ Alternatively, for a single entity you can override the entire `EntityList.html.
 - Field components store entity identity as `$entityClass` (FQCN string) + `$entityId` (int) LiveProps — not the entity object — to survive LiveComponent JSON serialization.
 - Each field re-fetches the entity from Doctrine on every re-render via `PostHydrate`.
 - `cancelEdit()` calls `EntityManager::refresh()` to discard any pending changes before returning to display mode.
+- Edit eligibility (`canEdit()`) checks `#[AdminColumn]` first, then the `ADMIN_EDIT` voter, then `PropertyAccessor::isWritable()`. Failing any layer hides the ✎ trigger and blocks the `save()` action.
 - Association fields (Relationship, Collection) delegate label resolution to `AssociationFilterConfigTrait`, the same trait used by column filters.

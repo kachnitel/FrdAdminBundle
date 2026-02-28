@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components\Field;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Attribute\AdminColumn;
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -50,6 +53,22 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  *       $this->currentValue = null;   // dehydrates as null → hydrateCurrentValue re-reads entity
  *       parent::cancelEdit();
  *   }
+ *
+ * ## canEdit() — edit eligibility
+ *
+ * Three layers are checked in order, failing fast:
+ *
+ *   1. #[AdminColumn(editable: ...)] on the entity property:
+ *      - false  → never editable (short-circuits, no voter call)
+ *      - string → ExpressionLanguage expression evaluated against the entity row;
+ *                 supports the same syntax as #[AdminAction(condition: ...)] e.g.:
+ *                   'entity.status != "locked"'
+ *                   'entity.active && is_granted("ROLE_EDITOR")'
+ *      - true / absent → proceed to next check
+ *
+ *   2. ADMIN_EDIT voter for the entity short class.
+ *
+ *   3. PropertyAccessor::isWritable() — no setter ⟹ not editable.
  */
 abstract class AbstractEditableField
 {
@@ -77,6 +96,8 @@ abstract class AbstractEditableField
         protected readonly EntityManagerInterface $entityManager,
         protected readonly PropertyAccessorInterface $propertyAccessor,
         protected readonly AuthorizationCheckerInterface $authorizationChecker,
+        private readonly AttributeHelper $attributeHelper,
+        private readonly RowActionExpressionLanguage $expressionLanguage,
     ) {}
 
     /**
@@ -173,10 +194,54 @@ abstract class AbstractEditableField
             return false;
         }
 
-        $isGranted = $this->authorizationChecker->isGranted('ADMIN_EDIT', $this->getEntityShortClass());
-        $isWritable = $this->propertyAccessor->isWritable($this->getEntity(), $this->property);
+        $entity = $this->getEntity();
+
+        if (!$this->resolveEditable($entity)) {
+            return false;
+        }
+
+        $isGranted  = $this->authorizationChecker->isGranted('ADMIN_EDIT', $this->getEntityShortClass());
+        $isWritable = $this->propertyAccessor->isWritable($entity, $this->property);
 
         return $isGranted && $isWritable;
+    }
+
+    /**
+     * Resolve the #[AdminColumn(editable: ...)] attribute for the current property.
+     *
+     * Returns true when the attribute is absent, editable is true, or a string expression passes.
+     * Returns false when editable is false or the expression evaluates to false.
+     *
+     * The expression receives the current user's AuthorizationChecker so that
+     * is_granted() works exactly as it does in #[AdminAction(condition: ...)].
+     */
+    private function resolveEditable(object $entity): bool
+    {
+        /** @var AdminColumn|null $attr */
+        $attr = $this->attributeHelper->getPropertyAttribute(
+            $entity::class,
+            $this->property,
+            AdminColumn::class,
+        );
+
+        if ($attr === null) {
+            return true;
+        }
+
+        if ($attr->editable === false) {
+            return false;
+        }
+
+        if (is_string($attr->editable)) {
+            return $this->expressionLanguage->evaluate(
+                $attr->editable,
+                $entity,
+                $this->authorizationChecker,
+            );
+        }
+
+        // editable === true
+        return true;
     }
 
     #[ExposeInTemplate]
