@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components\Field;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Twig\Components\Field\Traits\AssociationFieldTrait;
 use Kachnitel\AdminBundle\Twig\Components\Field\Traits\PropertyInfoTrait;
-use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -36,14 +33,6 @@ final class RelationshipField extends AbstractEditableField
     /** ID of the currently selected related entity, or null for an empty relationship. */
     #[LiveProp(writable: true)]
     public ?int $selectedId = null;
-
-    public function __construct(
-        EntityManagerInterface $entityManager,
-        PropertyAccessorInterface $propertyAccessor,
-        AuthorizationCheckerInterface $authorizationChecker,
-    ) {
-        parent::__construct($entityManager, $propertyAccessor, $authorizationChecker);
-    }
 
     public function mount(object $entity, string $property): void
     {

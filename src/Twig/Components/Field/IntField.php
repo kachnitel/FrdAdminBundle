@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components\Field;
 
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
@@ -25,14 +22,6 @@ final class IntField extends AbstractEditableField
 
     #[LiveProp(writable: true, hydrateWith: 'hydrateCurrentValue', dehydrateWith: 'dehydrateCurrentValue')]
     public ?int $currentValue = null;
-
-    public function __construct(
-        EntityManagerInterface $entityManager,
-        PropertyAccessorInterface $propertyAccessor,
-        AuthorizationCheckerInterface $authorizationChecker,
-    ) {
-        parent::__construct($entityManager, $propertyAccessor, $authorizationChecker);
-    }
 
     public function mount(object $entity, string $property): void
     {
