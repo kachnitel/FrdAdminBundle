@@ -9,6 +9,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
+use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 
@@ -111,6 +112,18 @@ abstract class AbstractEditableField
         $this->resolvedEntity = $entity;
     }
 
+    /**
+     * Re-populate resolvedEntity after LiveProps are hydrated on re-renders.
+     * mount() is not called on subsequent LiveComponent requests — PostHydrate fills that gap.
+     */
+    #[PostHydrate]
+    public function initResolvedEntity(): void
+    {
+        if ($this->entityClass !== '' && $this->entityId !== 0) {
+            $this->getEntity(); // populates $this->resolvedEntity as a side effect
+        }
+    }
+
     /** @throws \RuntimeException */
     public function getEntity(): object
     {
@@ -156,7 +169,14 @@ abstract class AbstractEditableField
     #[ExposeInTemplate]
     public function canEdit(): bool
     {
-        return $this->authorizationChecker->isGranted('ADMIN_EDIT', $this->getEntityShortClass());
+        if ($this->entityClass === '' || $this->entityId === 0) {
+            return false;
+        }
+
+        $isGranted = $this->authorizationChecker->isGranted('ADMIN_EDIT', $this->getEntityShortClass());
+        $isWritable = $this->propertyAccessor->isWritable($this->getEntity(), $this->property);
+
+        return $isGranted && $isWritable;
     }
 
     #[ExposeInTemplate]
