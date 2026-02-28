@@ -108,7 +108,9 @@ class DoctrineDataSourceTest extends TestCase
         $this->assertCount(2, $columns);
         $this->assertArrayHasKey('id', $columns);
         $this->assertArrayHasKey('name', $columns);
+        // @phpstan-ignore-next-line method.alreadyNarrowedType
         $this->assertInstanceOf(ColumnMetadata::class, $columns['id']);
+        // @phpstan-ignore-next-line method.alreadyNarrowedType
         $this->assertInstanceOf(ColumnMetadata::class, $columns['name']);
     }
 
@@ -237,7 +239,9 @@ class DoctrineDataSourceTest extends TestCase
         $this->assertCount(2, $filters);
         $this->assertArrayHasKey('name', $filters);
         $this->assertArrayHasKey('status', $filters);
+        // @phpstan-ignore-next-line method.alreadyNarrowedType
         $this->assertInstanceOf(FilterMetadata::class, $filters['name']);
+        // @phpstan-ignore-next-line method.alreadyNarrowedType
         $this->assertInstanceOf(FilterMetadata::class, $filters['status']);
     }
 
@@ -400,7 +404,6 @@ class DoctrineDataSourceTest extends TestCase
             itemsPerPage: 20
         );
 
-        $this->assertInstanceOf(PaginatedResult::class, $result);
         $this->assertSame($entities, $result->items);
         $this->assertSame(100, $result->totalItems);
         $this->assertSame(2, $result->currentPage);

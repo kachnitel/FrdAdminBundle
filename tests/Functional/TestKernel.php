@@ -3,6 +3,7 @@
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface;
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestDataSourceProvider;
@@ -143,6 +144,7 @@ class TestKernel extends Kernel
 
         $container->loadFromExtension('kachnitel_admin', [
             'entity_namespace' => 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\',
+            'form_namespace'   => 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\',
         ]);
 
         // Register test data source provider for custom column template testing
@@ -157,6 +159,8 @@ class TestKernel extends Kernel
     {
         $routes->import(__DIR__ . '/../../vendor/symfony/ux-live-component/config/routes.php')
             ->prefix('/_components');
+
+        $routes->import(GenericAdminController::class, 'attribute');
     }
 
     public function getProjectDir(): string

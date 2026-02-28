@@ -52,6 +52,7 @@ class EntityDiscoveryServiceTest extends TestCase
 
         // TestEntity has #[Admin] attribute
         $this->assertArrayHasKey(TestEntity::class, $result);
+        // @phpstan-ignore-next-line method.alreadyNarrowedType
         $this->assertInstanceOf(Admin::class, $result[TestEntity::class]);
 
         // RelatedEntity does NOT have #[Admin] attribute

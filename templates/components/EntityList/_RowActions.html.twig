@@ -1,58 +1,41 @@
 {#
- # Row actions with inline edit support.
+ # Row action buttons for a Doctrine entity row.
  #
- # When canEditRow is true, shows ✏️ to enter row-edit mode (enabling per-field
- # edit overlays) and ✕ to exit it. Individual field components handle their
- # own save/cancel; there is no row-level flush.
+ # When isRowEditing is true, only the ✕ exit button is shown — RowActions are suppressed to
+ # prevent navigation away mid-edit. The exit button is NOT a RowAction; it belongs here
+ # because it directly manipulates EntityList LiveProp editingRowId.
  #
- # Variables (from include):
- # @var object entity
- # @var string entityShortClass
- # @var bool canEditRow
+ # When isRowEditing is false, the full RowAction loop runs. The default 'edit' action is
+ # replaced by the InlineEditButton component (registered by InlineEditRowActionProvider),
+ # which fires `editRow` on the parent EntityList LiveComponent.
+ #
+ # Variables:
+ # @var object      entity          - The entity object
+ # @var string      entityShortClass - Short class name for voter checks
+ # @var string      entityClass      - Full entity class for RowAction registry lookup
+ # @var bool        isRowEditing     - Whether this specific row is in inline-edit mode
  #}
 
 {% import kachnitel_admin_theme as css %}
 
 <td class="actions">
     {% if isRowEditing %}
-        {# ── Editing mode: exit button only ── #}
         <button
             type="button"
             class="{{ css.btn_sm() }} {{ css.btn_secondary() }}"
-            {# data-action="live#action"
-            data-live-action-param="exitRowEdit" #}
             data-action="live#update"
             data-model="editingRowId"
             data-value=""
             title="Exit edit mode"
-        >
-            ✕
-        </button>
+        >✕</button>
     {% else %}
-        {# ── View mode ── #}
-        {% if canEditRow %}
-            <button
-                type="button"
-                class="{{ css.btn_sm() }} {{ css.btn_outline_primary() }}"
-                data-action="live#action"
-                data-live-action-param="editRow"
-                data-live-id-param="{{ entity.id }}"
-                title="Edit row"
-            >
-                ✏️
-            </button>
-        {% endif %}
-
-        {% if admin_action_accessible(entityShortClass, 'show') %}
-            <a href="{{ admin_object_path(entity, 'show') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
-                👀
-            </a>
-        {% endif %}
-
-        {% if admin_action_accessible(entityShortClass, 'edit') %}
-            <a href="{{ admin_object_path(entity, 'edit') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
-                🖊
-            </a>
-        {% endif %}
+        {% set actions = admin_visible_row_actions(entityClass, entity, entityShortClass) %}
+        {% for action in actions %}
+            {% include '@KachnitelAdmin/components/EntityList/_RowActionButton.html.twig' with {
+                action: action,
+                entity: entity,
+                entityShortClass: entityShortClass
+            } only %}
+        {% endfor %}
     {% endif %}
 </td>

@@ -1,18 +1,41 @@
 {#
- # Partial template for entity row action buttons (test override).
- # Uses admin_has_route filter instead of admin_action_accessible for test compatibility.
+ # Row action buttons for a Doctrine entity row.
+ #
+ # When isRowEditing is true, only the ✕ exit button is shown — RowActions are suppressed to
+ # prevent navigation away mid-edit. The exit button is NOT a RowAction; it belongs here
+ # because it directly manipulates EntityList LiveProp editingRowId.
+ #
+ # When isRowEditing is false, the full RowAction loop runs. The default 'edit' action is
+ # replaced by the InlineEditButton component (registered by InlineEditRowActionProvider),
+ # which fires `editRow` on the parent EntityList LiveComponent.
+ #
+ # Variables:
+ # @var object      entity          - The entity object
+ # @var string      entityShortClass - Short class name for voter checks
+ # @var string      entityClass      - Full entity class for RowAction registry lookup
+ # @var bool        isRowEditing     - Whether this specific row is in inline-edit mode
  #}
 
-<td class="actions">
-    {% if entity|admin_has_route('show') and admin_route_accessible(entity|admin_get_route('show')) %}
-        <a href="{{ admin_object_path(entity, 'show') }}" class="btn btn-sm btn-outline-primary">
-            👀
-        </a>
-    {% endif %}
+{% import kachnitel_admin_theme as css %}
 
-    {% if entity|admin_has_route('edit') and admin_route_accessible(entity|admin_get_route('edit')) %}
-        <a href="{{ admin_object_path(entity, 'edit') }}" class="btn btn-sm btn-outline-primary">
-            🖊
-        </a>
+<td class="actions">
+    {% if isRowEditing %}
+        <button
+            type="button"
+            class="{{ css.btn_sm() }} {{ css.btn_secondary() }}"
+            data-action="live#update"
+            data-model="editingRowId"
+            data-value=""
+            title="Exit edit mode"
+        >✕</button>
+    {% else %}
+        {% set actions = admin_visible_row_actions(entityClass, entity, entityShortClass) %}
+        {% for action in actions %}
+            {% include '@KachnitelAdmin/components/EntityList/_RowActionButton.html.twig' with {
+                action: action,
+                entity: entity,
+                entityShortClass: entityShortClass
+            } only %}
+        {% endfor %}
     {% endif %}
 </td>

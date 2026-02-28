@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components\Field;
 
-use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Kachnitel\AdminBundle\Twig\Components\Field\Traits\PropertyInfoTrait;
@@ -17,13 +16,14 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
  *
  * Supports:
  * - DateTime and DateTimeImmutable
- * - Date only (type: 'date')
- * - DateTime with time (type: 'datetime')
- * - Time only (type: 'time')
+ * - Date only (Doctrine type: 'date' / 'date_immutable')
+ * - DateTime with time (Doctrine type: 'datetime' / 'datetime_immutable' / 'datetimetz' / 'datetimetz_immutable')
+ * - Time only (Doctrine type: 'time' / 'time_immutable')
  * - Null values
  *
- * Detects type based on property type (e.g., 'date', 'datetime', 'time') and formats accordingly.
- *
+ * Detects date/time variant and mutability from the Doctrine column metadata
+ * (ClassMetadata::getTypeOfField), which returns the Doctrine type name string
+ * ('date', 'datetime_immutable', 'time', …) — not the PHP class name.
  */
 #[AsLiveComponent('K:Admin:Field:Date', template: '@KachnitelAdmin/components/field/DateField.html.twig')]
 class DateField extends AbstractEditableField
@@ -105,7 +105,7 @@ class DateField extends AbstractEditableField
     }
 
     /**
-     * Parse date string to DateTime or DateTimeImmutable based on property type.
+     * Parse date string to DateTime or DateTimeImmutable based on Doctrine column type.
      */
     private function parseDateTime(string $dateString): DateTimeInterface
     {
@@ -118,20 +118,19 @@ class DateField extends AbstractEditableField
             default => 'Y-m-d\TH:i',
         };
 
-        // For time-only, add today's date
+        // For time-only, add today's date so createFromFormat has a full timestamp
         if ($type === 'time') {
             $dateString = date('Y-m-d') . 'T' . $dateString;
             $format = 'Y-m-d\TH:i';
         }
 
-        // Determine if we should create DateTime or DateTimeImmutable
         $useImmutable = $this->shouldUseImmutable();
 
         try {
             if ($useImmutable) {
                 $dateTime = DateTimeImmutable::createFromFormat($format, $dateString);
             } else {
-                $dateTime = DateTime::createFromFormat($format, $dateString);
+                $dateTime = \DateTime::createFromFormat($format, $dateString);
             }
 
             if ($dateTime === false) {
@@ -145,38 +144,41 @@ class DateField extends AbstractEditableField
     }
 
     /**
-     * Determine if property uses DateTimeImmutable or DateTime.
+     * Determine if the Doctrine column maps to an immutable PHP type.
+     *
+     * Uses ClassMetadata::getTypeOfField() which returns the Doctrine type string
+     * ('datetime_immutable', 'date_immutable', 'time_immutable', etc.).
+     * The PropertyInfo/TypeInfo API returns PHP class names instead and cannot
+     * be used here reliably across Symfony versions.
      */
     private function shouldUseImmutable(): bool
     {
-        $propertyType = $this->getPropertyType();
+        $doctrineType = $this->entityManager
+            ->getClassMetadata($this->entityClass)
+            ->getTypeOfField($this->property);
 
-        // consider date, date_immutable, time, time_immutable, datetime, datetime_immutable, datetimetz, datetimetz_immutable
-        return str_ends_with($propertyType ?? '', '_immutable');
+        return str_ends_with($doctrineType ?? '', '_immutable');
     }
 
     /**
-     * Get the date type from options.
+     * Get the date variant from the Doctrine column type.
+     *
+     * Uses ClassMetadata::getTypeOfField() for the same reason as shouldUseImmutable():
+     * DoctrineExtractor::getType().__toString() yields PHP class names, not Doctrine
+     * type strings, so the switch cases ('date', 'time', …) would never match.
      *
      * @return string One of: 'date', 'datetime', 'time'
      */
     private function getDateType(): string
     {
-        switch ($this->getPropertyType()) {
-            case 'date':
-            case 'date_immutable':
-                return 'date';
-            case 'time':
-            case 'time_immutable':
-                return 'time';
-            // case 'datetime':
-            // case 'datetime_immutable':
-            // case 'datetimetz':
-            // case 'datetimetz_immutable':
-            //     return 'datetime';
-            default:
-                // Default to datetime if type is not recognized or datetime variants
-                return 'datetime';
-        }
+        $doctrineType = $this->entityManager
+            ->getClassMetadata($this->entityClass)
+            ->getTypeOfField($this->property);
+
+        return match($doctrineType) {
+            'date', 'date_immutable'  => 'date',
+            'time', 'time_immutable'  => 'time',
+            default                   => 'datetime',
+        };
     }
 }

@@ -213,15 +213,6 @@ class AbstractAdminControllerTest extends TestCase
             $this->assertSame($expectedSlug, $slug, "Failed for class: $class");
         }
     }
-
-    /**
-     * @test
-     */
-    public function concreteControllerReturnsConfiguredEntities(): void
-    {
-        // Just verify the concrete implementation works
-        $this->assertInstanceOf(ConcreteAdminController::class, $this->controller);
-    }
 }
 
 /**

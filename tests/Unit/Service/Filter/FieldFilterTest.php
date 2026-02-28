@@ -148,6 +148,7 @@ class FieldFilterTest extends TestCase
             new FieldFilter('price', 'Price', 'price', '>'),
         ];
 
+        // @phpstan-ignore-next-line method.alreadyNarrowedType
         $this->assertCount(3, $filters);
         $this->assertEquals('name', $filters[0]->getName());
         $this->assertEquals('status', $filters[1]->getName());

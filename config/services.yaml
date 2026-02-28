@@ -102,3 +102,12 @@ services:
             $entityNamespace: '%kachnitel_admin.entity_namespace%'
             $roleHierarchy: '@?security.role_hierarchy'
         tags: ['security.voter']
+
+    # Row Action services
+    Kachnitel\AdminBundle\RowAction\:
+        resource: '../src/RowAction'
+
+    # RowActionRuntime needs the service container to resolve DI-tuple conditions
+    Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime:
+        arguments:
+            $debug: '%kernel.debug%'

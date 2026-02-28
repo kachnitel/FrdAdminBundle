@@ -27,7 +27,7 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
  * hydrateCurrentValue(null)  → re-reads from entity after cancelEdit.
  * hydrateCurrentValue($bool) → restores the typed value.
  */
-#[AsLiveComponent('K:Admin:Field:Bool', template: '@KachnitelAdmin/components/field/bool_field.html.twig')]
+#[AsLiveComponent('K:Admin:Field:Bool', template: '@KachnitelAdmin/components/field/BoolField.html.twig')]
 final class BoolField extends AbstractEditableField
 {
     use DefaultActionTrait;

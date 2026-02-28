@@ -4,7 +4,7 @@ parameters:
         - src
         - tests
     excludePaths:
-        - tests/Functional/TestKernel.php
+        # - tests/Functional/TestKernel.php
     tmpDir: .phpstan
     ignoreErrors:
         # PHPUnit mock method false positives

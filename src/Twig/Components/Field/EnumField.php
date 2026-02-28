@@ -47,7 +47,10 @@ class EnumField extends AbstractEditableField
             $currentValue = $this->readValue();
             $this->selectedValue = $currentValue instanceof \BackedEnum
                 ? (string) $currentValue->value
-                : ($currentValue !== null ? $currentValue->name : null);
+                // : ($currentValue !== null ? $currentValue->name : null);
+                : (is_string($currentValue)
+                    ? $currentValue
+                    : throw new \UnexpectedValueException('Unexpected current value for Enum. String or BackedEnum expected.'));
         }
     }
 
@@ -79,16 +82,26 @@ class EnumField extends AbstractEditableField
     /**
      * Get the enum class for this property.
      *
+     * Uses ClassMetadata::getFieldMapping()->enumType rather than
+     * PropertyInfoTrait::getPropertyType() because DoctrineExtractor::getType()
+     * returns the DBAL column type string (e.g. 'string') via __toString(),
+     * not the PHP enum FQCN. The enumType mapping key is the only reliable source.
+     *
      * @return class-string<\UnitEnum>|null
      */
     private function getEnumClass(): ?string
     {
-        $propertyType = $this->getPropertyType();
-        if ($propertyType === null || !enum_exists($propertyType)) {
+        $metadata = $this->entityManager->getClassMetadata($this->entityClass);
+        if (!$metadata->hasField($this->property)) {
+            return null;
+        }
+        /** @var string|null $enumType */
+        $enumType = $metadata->getFieldMapping($this->property)->enumType ?? null;
+        if ($enumType === null || !enum_exists($enumType)) {
             return null;
         }
 
-        return $propertyType;
+        return $enumType;
     }
 
     /**

@@ -35,13 +35,31 @@
     {% if showColumnVisibility %}
         {% set columnLabels = {} %}
         {% for column in this.columns %}
-            {% set columnLabels = columnLabels|merge({ (column): dataSource.columns[column] is defined ? dataSource.columns[column].label : null }) %}
+            {% set columnLabels = columnLabels|merge({ (column): dataSource.columns[column] is defined ?
+                dataSource.columns[column].label : column|humanize }) %}
         {% endfor %}
         {% include '@KachnitelAdmin/components/EntityList/_ColumnVisibilityToggle.html.twig' with {
-            columns: this.columns,
+            allColumns: this.columns,
             hiddenColumns: this.hiddenColumns,
-            columnLabels: columnLabels
+            columnLabels: columnLabels,
         } only %}
+    {% endif %}
+
+    {# Global Search #}
+    {% if block('search') is defined %}
+        <div class="admin-global-search {{ css.mb_3() }}">
+            {{ block('search') }}
+        </div>
+    {% else %}
+        <div class="admin-global-search {{ css.mb_3() }}">
+            <input
+                type="text"
+                class="{{ css.form_input() }}"
+                placeholder="Global search across all columns..."
+                data-model="search"
+                value="{{ this.search }}"
+            >
+        </div>
     {% endif %}
 
     <div class="{{ css.overflow_x_auto() }}">
@@ -53,8 +71,8 @@
                         <input
                             type="checkbox"
                             class="{{ css.form_checkbox() }}"
-                            data-batch-select-target="selectAll"
-                            data-action="click->batch-select#toggleAll"
+                            data-batch-select-target="master"
+                            data-action="change->batch-select#toggleAll"
                         >
                     </th>
                 {% endif %}
@@ -183,7 +201,8 @@
                             entity: entity,
                             entityShortClass: this.entityShortClass,
                             canEditRow: this.canEditRow(),
-                            isRowEditing: rowEditing
+                            isRowEditing: rowEditing,
+                            entityClass: this.entityClass
                         } only %}
                     {% endif %}
                 </tr>

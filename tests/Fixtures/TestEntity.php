@@ -8,12 +8,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 
-enum TestStatus: string
-{
-    case ACTIVE = 'active';
-    case INACTIVE = 'inactive';
-}
-
 #[ORM\Entity]
 #[Admin(
     label: 'Test Entities',
