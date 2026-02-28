@@ -24,6 +24,15 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
  * Detects date/time variant and mutability from the Doctrine column metadata
  * (ClassMetadata::getTypeOfField), which returns the Doctrine type name string
  * ('date', 'datetime_immutable', 'time', …) — not the PHP class name.
+ *
+ * ## cancelEdit() contract
+ *
+ * DateField uses a plain `#[LiveProp(writable: true)] public ?string $dateValue` (no hydrateWith)
+ * so it must re-derive the display string from the refreshed entity explicitly.
+ * cancelEdit() calls parent::cancelEdit() first (which calls EntityManager::refresh()),
+ * then re-formats the current entity value back into $dateValue.
+ *
+ * This mirrors the pattern used by StringField / IntField / FloatField.
  */
 #[AsLiveComponent('K:Admin:Field:Date', template: '@KachnitelAdmin/components/field/DateField.html.twig')]
 class DateField extends AbstractEditableField
@@ -52,24 +61,7 @@ class DateField extends AbstractEditableField
             return;
         }
 
-        $currentValue = $this->readValue();
-
-        if ($currentValue === null) {
-            $this->dateValue = null;
-            return;
-        }
-
-        if (!$currentValue instanceof DateTimeInterface) {
-            $this->dateValue = null;
-            return;
-        }
-
-        $type = $this->getDateType();
-        $this->dateValue = match($type) {
-            'date' => $currentValue->format('Y-m-d'),
-            'time' => $currentValue->format('H:i'),
-            default => $currentValue->format('Y-m-d\TH:i'),
-        };
+        $this->dateValue = $this->formatValueAsString($this->readValue());
     }
 
     /**
@@ -88,20 +80,54 @@ class DateField extends AbstractEditableField
     }
 
     /**
-     * {@inheritdoc}
+     * Persist the edited date value and exit edit mode.
      */
     #[LiveAction]
     public function save(): void
     {
-        // Convert string back to DateTime/DateTimeImmutable
         if ($this->dateValue === null || $this->dateValue === '') {
             $this->writeValue(null);
         } else {
-            $dateTime = $this->parseDateTime($this->dateValue);
-            $this->writeValue($dateTime);
+            $this->writeValue($this->parseDateTime($this->dateValue));
         }
 
         parent::save();
+    }
+
+    /**
+     * Discard changes and restore $dateValue from the freshly-refreshed entity.
+     *
+     * parent::cancelEdit() calls EntityManager::refresh(), discarding any
+     * pending ORM changes and making readValue() return the persisted state.
+     * We then re-format the value into the string format that the <input> expects.
+     */
+    #[LiveAction]
+    public function cancelEdit(): void
+    {
+        parent::cancelEdit();
+
+        $this->dateValue = $this->formatValueAsString($this->readValue());
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    /**
+     * Format a DateTimeInterface (or null) as the string expected by the HTML input.
+     *
+     * Returns null when the value is null or not a DateTimeInterface instance
+     * (e.g. when the property has never been set).
+     */
+    private function formatValueAsString(mixed $value): ?string
+    {
+        if (!$value instanceof DateTimeInterface) {
+            return null;
+        }
+
+        return match ($this->getDateType()) {
+            'date'  => $value->format('Y-m-d'),
+            'time'  => $value->format('H:i'),
+            default => $value->format('Y-m-d\TH:i'),
+        };
     }
 
     /**
@@ -111,27 +137,24 @@ class DateField extends AbstractEditableField
     {
         $type = $this->getDateType();
 
-        // Determine format based on type
-        $format = match($type) {
-            'date' => 'Y-m-d',
-            'time' => 'H:i',
+        $format = match ($type) {
+            'date'  => 'Y-m-d',
+            'time'  => 'H:i',
             default => 'Y-m-d\TH:i',
         };
 
         // For time-only, add today's date so createFromFormat has a full timestamp
         if ($type === 'time') {
             $dateString = date('Y-m-d') . 'T' . $dateString;
-            $format = 'Y-m-d\TH:i';
+            $format     = 'Y-m-d\TH:i';
         }
 
         $useImmutable = $this->shouldUseImmutable();
 
         try {
-            if ($useImmutable) {
-                $dateTime = DateTimeImmutable::createFromFormat($format, $dateString);
-            } else {
-                $dateTime = \DateTime::createFromFormat($format, $dateString);
-            }
+            $dateTime = $useImmutable
+                ? DateTimeImmutable::createFromFormat($format, $dateString)
+                : \DateTime::createFromFormat($format, $dateString);
 
             if ($dateTime === false) {
                 throw new \RuntimeException('Invalid date format: ' . $dateString);
@@ -148,8 +171,6 @@ class DateField extends AbstractEditableField
      *
      * Uses ClassMetadata::getTypeOfField() which returns the Doctrine type string
      * ('datetime_immutable', 'date_immutable', 'time_immutable', etc.).
-     * The PropertyInfo/TypeInfo API returns PHP class names instead and cannot
-     * be used here reliably across Symfony versions.
      */
     private function shouldUseImmutable(): bool
     {
@@ -163,10 +184,6 @@ class DateField extends AbstractEditableField
     /**
      * Get the date variant from the Doctrine column type.
      *
-     * Uses ClassMetadata::getTypeOfField() for the same reason as shouldUseImmutable():
-     * DoctrineExtractor::getType().__toString() yields PHP class names, not Doctrine
-     * type strings, so the switch cases ('date', 'time', …) would never match.
-     *
      * @return string One of: 'date', 'datetime', 'time'
      */
     private function getDateType(): string
@@ -175,7 +192,7 @@ class DateField extends AbstractEditableField
             ->getClassMetadata($this->entityClass)
             ->getTypeOfField($this->property);
 
-        return match($doctrineType) {
+        return match ($doctrineType) {
             'date', 'date_immutable'  => 'date',
             'time', 'time_immutable'  => 'time',
             default                   => 'datetime',

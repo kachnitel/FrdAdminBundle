@@ -108,9 +108,9 @@ trait AssociationFieldTrait
         /** @var object[] $results */
         $results = $qb->where($orX)->setMaxResults(20)->getQuery()->getResult();
 
-        return array_map(fn(object $e): array => [
-            'id'    => method_exists($e, 'getId') ? $e->getId() : 0,
-            'label' => $this->resolveLabel($e),
+        return array_map(fn(object $item): array => [
+            'id'    => method_exists($item, 'getId') ? $item->getId() : 0,
+            'label' => $this->resolveLabel($item),
         ], $results);
     }
 

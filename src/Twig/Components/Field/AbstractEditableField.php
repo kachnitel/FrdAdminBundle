@@ -262,24 +262,48 @@ abstract class AbstractEditableField
     }
 
     /**
-     * Exit edit mode and refresh the entity.
+     * Exit edit mode and discard unsaved input by refreshing the entity from the database.
      *
-     * Subclasses MUST override this to null $currentValue first:
+     * ## Subclass contract
      *
+     * Subclasses that hold an additional LiveProp representing the user's in-progress edit
+     * (e.g. $currentValue, $dateValue, $selectedId) MUST override this method and re-read
+     * the property value from the entity AFTER calling parent::cancelEdit():
+     *
+     *   ```php
+     *   #[LiveAction]
      *   public function cancelEdit(): void
      *   {
-     *       $this->currentValue = null;
-     *       parent::cancelEdit();
+     *       parent::cancelEdit();                     // refreshes entity; clears resolvedEntity cache
+     *       $raw = $this->readValue();                // reads from the now-refreshed entity
+     *       $this->currentValue = $raw !== null ? (string) $raw : null;
      *   }
+     *   ```
      *
-     * null is dehydrated to the client as null. On the next request hydrateCurrentValue(null)
-     * re-reads the entity value, replacing the stale pre-cancel typed value without needing
-     * an explicit sync method.
+     * Always call parent FIRST so that EntityManager::refresh() runs before you try to
+     * read the persisted value. Calling it last would mean the edit-prop still holds the
+     * user's unsaved input when the LiveComponent response is serialised.
+     *
+     * ## Why not "null the LiveProp first"?
+     *
+     * An earlier design proposed nulling $currentValue before calling parent so that
+     * hydrateCurrentValue(null) would re-read the entity on the next request. The concrete
+     * implementations do not use this pattern because it requires a round-trip: the client
+     * receives null, sends a new request, and only then sees the correct value. Re-reading
+     * directly after parent::cancelEdit() is simpler and correct in one step.
+     *
+     * ## Fields that use hydrateWith / dehydrateWith
+     *
+     * StringField, IntField, and FloatField declare their $currentValue LiveProp with
+     * hydrateWith/dehydrateWith. They still follow the same "parent first, re-read after"
+     * pattern in cancelEdit(). The hydrateWith pair handles re-renders triggered by other
+     * LiveActions, not the cancel flow.
      */
     #[LiveAction]
     public function cancelEdit(): void
     {
-        $this->editMode = false;
+        $this->editMode         = false;
+        $this->resolvedEntity   = null; // force re-fetch so readValue() sees refreshed state
         $this->entityManager->refresh($this->getEntity());
     }
 

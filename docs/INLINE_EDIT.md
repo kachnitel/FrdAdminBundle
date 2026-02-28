@@ -186,9 +186,64 @@ class Order { }
 
 Setting `override: true` replaces the `InlineEditRowActionProvider`'s component action with a plain link action for this entity.
 
-## Extending: Custom Field Components
+<!-- Replace the "Architecture Notes" section and the cancelEdit snippet in
+     "Extending: Custom Field Components" with the content below. -->
 
-Implement a custom field component for types not covered by the built-in set (e.g., a rich-text editor, a colour picker):
+## Architecture Notes
+
+- `EntityList::$editingRowId` (`#[LiveProp(writable: true)]`) is the single source of truth.
+- Field components store entity identity as `$entityClass` (FQCN string) + `$entityId` (int) LiveProps — not the entity object — to survive LiveComponent JSON serialization.
+- Each field re-fetches the entity from Doctrine on every re-render via `PostHydrate`.
+- `cancelEdit()` sets `editMode = false`, nulls `resolvedEntity`, then calls `EntityManager::refresh()` to discard any pending ORM changes. Subclasses **must** re-read the affected LiveProp from the refreshed entity immediately afterward (see below).
+- Edit eligibility (`canEdit()`) checks `#[AdminColumn]` first, then the `ADMIN_EDIT` voter, then `PropertyAccessor::isWritable()`. Failing any layer hides the ✎ trigger and blocks the `save()` action.
+- Association fields (Relationship, Collection) delegate label resolution to `AssociationFilterConfigTrait`, the same trait used by column filters.
+
+---
+
+## cancelEdit() contract for custom field components
+
+Every concrete field component holds one LiveProp that represents the user's in-progress edit
+(e.g. `$currentValue`, `$dateValue`, `$selectedId`). When the user cancels, that prop must be
+**reset to the persisted entity value** so the display cell shows the correct data.
+
+### Rule: call `parent::cancelEdit()` first, then re-read
+
+`parent::cancelEdit()` calls `EntityManager::refresh()`, which discards any pending changes
+and makes the entity reflect the database state. You must call it **before** you re-read the
+value, otherwise `readValue()` still returns the unsaved user input.
+
+```php
+// ✅ Correct — parent first, re-read after
+#[LiveAction]
+public function cancelEdit(): void
+{
+    parent::cancelEdit();                          // refreshes entity from DB
+    $raw = $this->readValue();                     // reads refreshed value
+    $this->currentValue = $raw !== null ? (string) $raw : null;
+}
+```
+
+```php
+// ❌ Wrong — parent last means the refreshed value is read too late
+#[LiveAction]
+public function cancelEdit(): void
+{
+    $raw = $this->readValue();                     // still the unsaved value!
+    $this->currentValue = $raw !== null ? (string) $raw : null;
+    parent::cancelEdit();
+}
+```
+
+### What about nulling $currentValue first?
+
+An earlier approach suggested setting `$this->currentValue = null` before calling parent, so
+that `hydrateCurrentValue(null)` would trigger a re-read on the *next* LiveComponent request.
+This requires an extra round-trip and is **not** used by any of the built-in field components.
+Stick with the "parent first, re-read after" pattern.
+
+---
+
+## Extending: Custom Field Components
 
 ```php
 use Kachnitel\AdminBundle\Twig\Components\Field\AbstractEditableField;
@@ -211,11 +266,15 @@ class WysiwygField extends AbstractEditableField
         $this->currentValue = $raw !== null ? (string) $raw : null;
     }
 
+    /**
+     * cancelEdit: parent first, re-read after — do NOT null first and rely on hydrateWith.
+     */
     #[LiveAction]
     public function cancelEdit(): void
     {
-        $this->currentValue = null;
-        parent::cancelEdit();
+        parent::cancelEdit();                      // EntityManager::refresh() runs here
+        $raw = $this->readValue();                 // now reads the persisted value
+        $this->currentValue = $raw !== null ? (string) $raw : null;
     }
 
     #[LiveAction]
@@ -226,16 +285,3 @@ class WysiwygField extends AbstractEditableField
     }
 }
 ```
-
-Then register a `RowActionProviderInterface` (or use `AdminEntityDataRuntime::getFieldComponentName` override) to return `'K:Admin:Field:Wysiwyg'` for the relevant column.
-
-Alternatively, for a single entity you can override the entire `EntityList.html.twig` template and call `{{ component('K:Admin:Field:Wysiwyg', { entity: entity, property: 'body' }) }}` directly in the editing row branch.
-
-## Architecture Notes
-
-- `EntityList::$editingRowId` (`#[LiveProp(writable: true)]`) is the single source of truth.
-- Field components store entity identity as `$entityClass` (FQCN string) + `$entityId` (int) LiveProps — not the entity object — to survive LiveComponent JSON serialization.
-- Each field re-fetches the entity from Doctrine on every re-render via `PostHydrate`.
-- `cancelEdit()` calls `EntityManager::refresh()` to discard any pending changes before returning to display mode.
-- Edit eligibility (`canEdit()`) checks `#[AdminColumn]` first, then the `ADMIN_EDIT` voter, then `PropertyAccessor::isWritable()`. Failing any layer hides the ✎ trigger and blocks the `save()` action.
-- Association fields (Relationship, Collection) delegate label resolution to `AssociationFilterConfigTrait`, the same trait used by column filters.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Attribute;
 
 use Attribute;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 
 /**
  * Defines column-level permissions for entity properties in admin interface.
@@ -13,7 +14,7 @@ use Attribute;
  * specific properties of an entity, complementing the entity-level permissions
  * defined in the #[Admin] attribute.
  *
- * @example
+ * @example New API (since 0.6.0):
  * ```php
  * use Kachnitel\AdminBundle\Attribute\ColumnPermission;
  * use Kachnitel\AdminBundle\Security\AdminEntityVoter;
@@ -27,18 +28,45 @@ use Attribute;
  *     private float $cost;
  * }
  * ```
+ *
+ * @example Deprecated single-role API (< 0.6.0, still accepted with E_USER_DEPRECATED):
+ * ```php
+ * #[ColumnPermission('ROLE_HR')]   // migrates to ADMIN_SHOW restriction
+ * private float $salary;
+ * ```
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final readonly class ColumnPermission
 {
     /**
-     * @param array<string, string|string[]> $permissions Map of operation to required roles
-     *                                                     Key: AdminEntityVoter constant (e.g., ADMIN_SHOW, ADMIN_EDIT)
-     *                                                     Value: Role string or array of role strings
+     * Normalised map: operation => required role(s).
+     *
+     * @var array<string, string|string[]>
      */
-    public function __construct(
-        private array $permissions = [],
-    ) {}
+    private array $permissions;
+
+    /**
+     * @param array<string, string|string[]>|string $permissions
+     *   New (≥ 0.6): associative array of AdminEntityVoter constant → role string or array of role strings.
+     *   Deprecated (< 0.6): plain role string — treated as an ADMIN_SHOW restriction and triggers E_USER_DEPRECATED.
+     */
+    public function __construct(array|string $permissions = [])
+    {
+        if (is_string($permissions)) {
+            trigger_error(
+                sprintf(
+                    '#[ColumnPermission(\'%1$s\')] is deprecated since 0.6.0. '
+                    . 'Replace with #[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => \'%1$s\'])].',
+                    $permissions,
+                ),
+                E_USER_DEPRECATED,
+            );
+
+            $this->permissions = [AdminEntityVoter::ADMIN_SHOW => $permissions];
+        } else {
+            $this->permissions = $permissions;
+        }
+    }
 
     /**
      * Get all configured permissions.

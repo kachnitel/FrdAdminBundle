@@ -47,7 +47,6 @@ class EnumField extends AbstractEditableField
             $currentValue = $this->readValue();
             $this->selectedValue = $currentValue instanceof \BackedEnum
                 ? (string) $currentValue->value
-                // : ($currentValue !== null ? $currentValue->name : null);
                 : (is_string($currentValue)
                     ? $currentValue
                     : throw new \UnexpectedValueException('Unexpected current value for Enum. String or BackedEnum expected.'));
@@ -109,7 +108,6 @@ class EnumField extends AbstractEditableField
      */
     private function formatEnumLabel(\UnitEnum $enum): string
     {
-        // Check if enum has a label() or getLabel() method
         if (method_exists($enum, 'label')) {
             return (string) $enum->label();
         }
@@ -130,17 +128,22 @@ class EnumField extends AbstractEditableField
      */
     public function getFormFieldConfig(): array
     {
-        $required = !$this->isNullable();
-
         return [
-            'type' => 'choice',
-            'choices' => $this->getEnumCases(),
-            'required' => $required,
+            'type'     => 'choice',
+            'choices'  => $this->getEnumCases(),
+            'required' => !$this->isNullable(),
         ];
     }
 
     /**
-     * {@inheritdoc}
+     * Persist the selected enum value and exit edit mode.
+     *
+     * Backed enums: delegates to BackedEnum::from(), which throws \ValueError on invalid values.
+     * Unit enums: iterates cases, throws \RuntimeException when no case name matches.
+     *             A silent no-op (write nothing, flush anyway) would corrupt data if the
+     *             client somehow sends a value that no longer matches any case.
+     *
+     * @throws \RuntimeException when no matching case is found for a unit enum
      */
     #[LiveAction]
     public function save(): void
@@ -148,24 +151,36 @@ class EnumField extends AbstractEditableField
         $enumClass = $this->getEnumClass();
 
         if ($enumClass === null) {
-            throw new \RuntimeException('Invalid enum type for property');
+            throw new \RuntimeException(
+                sprintf('Invalid enum type for property "%s::$%s".', $this->entityClass, $this->property)
+            );
         }
 
-        // Convert selected value back to enum instance
         if ($this->selectedValue === null) {
             $this->writeValue(null);
+        } elseif (is_subclass_of($enumClass, \BackedEnum::class)) {
+            // BackedEnum::from() already throws \ValueError on unknown values.
+            $this->writeValue($enumClass::from($this->selectedValue));
         } else {
-            // Try backed enum first
-            if (is_subclass_of($enumClass, \BackedEnum::class)) {
-                $this->writeValue($enumClass::from($this->selectedValue));
-            } else {
-                // Unit enum
-                foreach ($enumClass::cases() as $case) {
-                    if ($case->name === $this->selectedValue) {
-                        $this->writeValue($case);
-                        break;
-                    }
+            // Unit enum: find by name, throw clearly if not found.
+            $matched = false;
+            foreach ($enumClass::cases() as $case) {
+                if ($case->name === $this->selectedValue) {
+                    $this->writeValue($case);
+                    $matched = true;
+                    break;
                 }
+            }
+
+            if (!$matched) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'Unknown case "%s" for unit enum %s. Valid cases: %s.',
+                        $this->selectedValue,
+                        $enumClass,
+                        implode(', ', array_map(fn(\UnitEnum $case) => $case->name, $enumClass::cases())),
+                    )
+                );
             }
         }
 

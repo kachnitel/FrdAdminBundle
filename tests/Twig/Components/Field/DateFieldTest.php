@@ -409,4 +409,97 @@ class DateFieldTest extends ComponentTestCase
 
         $this->assertSame('time', $component->getFormFieldConfig()['type']);
     }
+
+        // ── cancelEdit(): dateValue must be reset from the refreshed entity ────────
+
+    public function testCancelEditResetsDateValueToPersistedDatetime(): void
+    {
+        $entity = $this->createEntity(); // createdAt = '2024-06-01 12:30:00'
+        $id = $entity->getId();
+
+        $component = $this->getComponent();
+        $component->editMode = true;
+        $component->mount($entity, 'createdAt');
+
+        // Simulate user typing a new value — do NOT save
+        $component->dateValue = '2099-12-31T23:59';
+
+        $component->cancelEdit();
+
+        // dateValue must revert to the original persisted value, not the typed one
+        $this->assertSame(
+            $entity->getCreatedAt()?->format('Y-m-d\TH:i'),
+            $component->dateValue,
+            'dateValue must be re-derived from the persisted entity after cancelEdit()',
+        );
+    }
+
+    public function testCancelEditResetsDateValueToPersistedDate(): void
+    {
+        $entity = $this->createEntity(); // birthDate = '2000-01-15'
+
+        $component = $this->getComponent();
+        $component->editMode = true;
+        $component->mount($entity, 'birthDate');
+
+        $component->dateValue = '2099-01-01';
+        $component->cancelEdit();
+
+        $this->assertSame(
+            $entity->getBirthDate()?->format('Y-m-d'),
+            $component->dateValue,
+        );
+    }
+
+    public function testCancelEditResetsDateValueToPersistedTime(): void
+    {
+        $entity = $this->createEntity(); // meetingTime = '14:30'
+
+        $component = $this->getComponent();
+        $component->editMode = true;
+        $component->mount($entity, 'meetingTime');
+
+        $component->dateValue = '09:00';
+        $component->cancelEdit();
+
+        $this->assertSame(
+            $entity->getMeetingTime()?->format('H:i'),
+            $component->dateValue,
+        );
+    }
+
+    public function testCancelEditSetsDateValueNullWhenPersistedValueIsNull(): void
+    {
+        // Entity with no initial dates
+        $entity = new InlineEditDateEntity();
+        $this->em->persist($entity);
+        $this->em->flush();
+
+        $component = $this->getComponent();
+        $component->editMode = true;
+        $component->mount($entity, 'createdAt');
+
+        $component->dateValue = '2025-01-01T00:00';
+        $component->cancelEdit();
+
+        $this->assertNull($component->dateValue);
+    }
+
+    public function testCancelEditDoesNotPersistUntypedInput(): void
+    {
+        $entity = $this->createEntity();
+        $id = $entity->getId();
+        $originalDate = $entity->getCreatedAt()?->format('Y-m-d');
+
+        $component = $this->getComponent();
+        $component->editMode = true;
+        $component->mount($entity, 'createdAt');
+
+        $component->dateValue = '2099-12-31T23:59';
+        $component->cancelEdit();
+
+        $this->em->clear();
+        $reloaded = $this->em->find(InlineEditDateEntity::class, $id);
+        $this->assertSame($originalDate, $reloaded?->getCreatedAt()?->format('Y-m-d'));
+    }
 }

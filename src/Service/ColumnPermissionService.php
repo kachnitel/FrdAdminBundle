@@ -176,7 +176,7 @@ class ColumnPermissionService
         $map = $this->getColumnPermissionMap($entityClass);
         $denied = [];
 
-        foreach ($map as $columnName => $permissions) {
+        foreach (array_keys($map) as $columnName) {
             if (!$this->canPerformAction($entityClass, $columnName, $action)) {
                 $denied[] = $columnName;
             }
