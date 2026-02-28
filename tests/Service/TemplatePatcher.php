@@ -10,9 +10,7 @@ use SebastianBergmann\Diff\Output\UnifiedDiffOutputBuilder;
 /**
  * Exception thrown when a template patch cannot be applied.
  */
-final class TemplatePatchException extends \RuntimeException
-{
-}
+final class TemplatePatchException extends \RuntimeException {}
 
 /**
  * Applies context-based patches to templates.

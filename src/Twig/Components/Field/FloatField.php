@@ -7,7 +7,6 @@ namespace Kachnitel\AdminBundle\Twig\Components\Field;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
-use Symfony\UX\LiveComponent\DefaultActionTrait;
 
 /**
  * Inline-editable field for float/decimal properties.
@@ -18,8 +17,6 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
 #[AsLiveComponent('K:Admin:Field:Float', template: '@KachnitelAdmin/components/field/FloatField.html.twig')]
 final class FloatField extends AbstractEditableField
 {
-    use DefaultActionTrait;
-
     #[LiveProp(writable: true, hydrateWith: 'hydrateCurrentValue', dehydrateWith: 'dehydrateCurrentValue')]
     public ?float $currentValue = null;
 

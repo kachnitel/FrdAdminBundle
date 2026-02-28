@@ -7,7 +7,6 @@ namespace Kachnitel\AdminBundle\Twig\Components\Field;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
-use Symfony\UX\LiveComponent\DefaultActionTrait;
 
 /**
  * Inline-editable field for integer properties.
@@ -18,8 +17,6 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
 #[AsLiveComponent('K:Admin:Field:Int', template: '@KachnitelAdmin/components/field/IntField.html.twig')]
 final class IntField extends AbstractEditableField
 {
-    use DefaultActionTrait;
-
     #[LiveProp(writable: true, hydrateWith: 'hydrateCurrentValue', dehydrateWith: 'dehydrateCurrentValue')]
     public ?int $currentValue = null;
 

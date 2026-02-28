@@ -11,7 +11,6 @@ use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
-use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 
 /**
@@ -28,7 +27,6 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 #[AsLiveComponent('K:Admin:Field:Collection', template: '@KachnitelAdmin/components/field/CollectionField.html.twig')]
 class CollectionField extends AbstractEditableField
 {
-    use DefaultActionTrait;
     use PropertyInfoTrait;
     use AssociationFieldTrait;
 

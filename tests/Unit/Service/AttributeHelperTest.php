@@ -118,19 +118,13 @@ class AttributeHelperTest extends TestCase
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_PROPERTY)]
 class TestAttribute
 {
-    public function __construct(public string $value = '')
-    {
-    }
+    public function __construct(public string $value = '') {}
 }
 
 #[TestAttribute(value: 'test_value')]
-class TestEntityWithAttribute
-{
-}
+class TestEntityWithAttribute {}
 
-class TestEntityWithoutAttribute
-{
-}
+class TestEntityWithoutAttribute {}
 
 class TestEntityWithPropertyAttribute
 {
