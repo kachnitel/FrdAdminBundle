@@ -2,7 +2,7 @@
 
 <!-- BADGES -->
 ![Tests](<https://img.shields.io/badge/tests-906%20passed-red>)
-![Coverage](<https://img.shields.io/badge/coverage-67%25-yellow>)
+![Coverage](<https://img.shields.io/badge/coverage-70%25-yellow>)
 ![Assertions](<https://img.shields.io/badge/assertions-1966-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)

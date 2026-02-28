@@ -234,7 +234,7 @@ class ColumnPermissionServiceTest extends TestCase
     public function testGetDeniedColumnsReturnsAllRestrictedColumnNames(): void
     {
         // getDeniedColumns returns all columns with ANY restriction, not user-filtered
-        $denied = $this->service->getDeniedColumns(TestEntityWithPermissions::class);
+        $denied = $this->service->getRestrictedColumns(TestEntityWithPermissions::class);
 
         $this->assertContains('salary', $denied);
         $this->assertContains('ssn', $denied);

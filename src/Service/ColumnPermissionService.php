@@ -191,7 +191,7 @@ class ColumnPermissionService
      * @param class-string $entityClass
      * @return array<string> List of restricted column names
      */
-    public function getDeniedColumns(string $entityClass): array
+    public function getRestrictedColumns(string $entityClass): array
     {
         $map = $this->getColumnPermissionMap($entityClass);
 
