@@ -13,6 +13,7 @@ use Kachnitel\AdminBundle\Attribute\ColumnFilter;
     label: 'Test Entities',
     icon: 'science',
     columns: ['id', 'name', 'active'],
+    enableInlineEdit: true,
     itemsPerPage: 15,
     enableBatchActions: true,
     permissions: ['index' => 'ROLE_TEST_VIEW', 'edit' => 'ROLE_TEST_EDIT']

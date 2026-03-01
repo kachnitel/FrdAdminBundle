@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components;
 
+use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
@@ -24,6 +26,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
+use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * LiveComponent for reactive entity lists with per-column search/filter, sorting, and pagination.
@@ -148,6 +151,16 @@ class EntityList
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
+    }
+
+    // ── Injected via #[Required] — avoids adding an 8th constructor arg ──────
+
+    private ?AttributeHelper $attributeHelper = null;
+
+    #[Required]
+    public function setAttributeHelper(AttributeHelper $attributeHelper): void
+    {
+        $this->attributeHelper = $attributeHelper;
     }
 
     // ── Security ───────────────────────────────────────────────────────────────
@@ -336,16 +349,30 @@ class EntityList
     // ── LiveActions: inline row editing ───────────────────────────────────────
 
     /**
-     * Check whether the current user may edit rows of this entity type.
+     * Check whether the current user may open rows of this entity type for inline editing.
      *
-     * IMPORTANT: Always pass $this->entityShortClass (string) as the voter subject,
-     * NOT the entity object. AdminEntityVoter::supports() accepts only string subjects;
-     * passing an object causes the voter to abstain → ACCESS_DENIED even for valid roles.
+     * Two conditions must both pass:
+     *   1. The entity has opted into inline editing via #[Admin(enableInlineEdit: true)].
+     *   2. The current user is granted ADMIN_EDIT for the entity type.
+     *
+     * Condition 1 is a UX feature flag that prevents the ✏️ button from appearing
+     * for entities that have not opted in. Condition 2 is the security gate.
+     *
+     * IMPORTANT: Always pass $this->entityShortClass (string) as voter subject.
      */
     public function canEditRow(): bool
     {
         if (!$this->isDoctrineEntity()) {
             return false;
+        }
+
+        // Check entity-level enableInlineEdit flag first (cheap, no voter call)
+        if ($this->attributeHelper !== null) {
+            /** @var Admin|null $admin */
+            $admin = $this->attributeHelper->getAttribute($this->entityClass, Admin::class);
+            if ($admin === null || !$admin->isEnableInlineEdit()) {
+                return false;
+            }
         }
 
         return $this->security->isGranted(AdminEntityVoter::ADMIN_EDIT, $this->entityShortClass);

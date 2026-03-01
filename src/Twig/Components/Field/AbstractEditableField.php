@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components\Field;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
@@ -209,11 +210,15 @@ abstract class AbstractEditableField
     /**
      * Resolve the #[AdminColumn(editable: ...)] attribute for the current property.
      *
-     * Returns true when the attribute is absent, editable is true, or a string expression passes.
-     * Returns false when editable is false or the expression evaluates to false.
+     * ## Decision tree (checked in order):
      *
-     * The expression receives the current user's AuthorizationChecker so that
-     * is_granted() works exactly as it does in #[AdminAction(condition: ...)].
+     *  1. editable === false  → false (explicit opt-out; short-circuits everything)
+     *  2. editable is string  → evaluate expression; entity default bypassed entirely
+     *  3. editable === true   → true  (explicit opt-in; entity default bypassed)
+     *  4. editable === null   → read entity-level #[Admin(enableInlineEdit: ...)]
+     *
+     * The expression (case 2) receives the current user's AuthorizationChecker so that
+     * is_granted() works exactly as in #[AdminAction(condition: ...)].
      */
     private function resolveEditable(object $entity): bool
     {
@@ -224,15 +229,13 @@ abstract class AbstractEditableField
             AdminColumn::class,
         );
 
-        if ($attr === null) {
-            return true;
-        }
-
-        if ($attr->editable === false) {
+        // 1. Explicit false — never editable regardless of entity flag or voter
+        if ($attr !== null && $attr->editable === false) {
             return false;
         }
 
-        if (is_string($attr->editable)) {
+        // 2. Expression string — evaluate; entity default bypassed entirely
+        if ($attr !== null && is_string($attr->editable)) {
             return $this->expressionLanguage->evaluate(
                 $attr->editable,
                 $entity,
@@ -240,8 +243,16 @@ abstract class AbstractEditableField
             );
         }
 
-        // editable === true
-        return true;
+        // 3. Explicit true — opt-in overrides entity default; proceed to voter + writable
+        if ($attr !== null && $attr->editable === true) {
+            return true;
+        }
+
+        // 4. null (no attribute, or explicit null) — defer to entity-level enableInlineEdit
+        /** @var Admin|null $adminAttr */
+        $adminAttr = $this->attributeHelper->getAttribute($entity::class, Admin::class);
+
+        return $adminAttr !== null && $adminAttr->isEnableInlineEdit();
     }
 
     #[ExposeInTemplate]

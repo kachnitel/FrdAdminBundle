@@ -14,11 +14,11 @@ use PHPUnit\Framework\TestCase;
 class AdminColumnTest extends TestCase
 {
     /** @test */
-    public function defaultEditableIsTrue(): void
+    public function defaultEditableIsNull(): void
     {
         $attr = new AdminColumn();
 
-        $this->assertTrue($attr->editable);
+        $this->assertNull($attr->editable);
     }
 
     /** @test */
@@ -27,6 +27,14 @@ class AdminColumnTest extends TestCase
         $attr = new AdminColumn(editable: false);
 
         $this->assertFalse($attr->editable);
+    }
+
+    /** @test */
+    public function editableCanBeSetToTrue(): void
+    {
+        $attr = new AdminColumn(editable: true);
+
+        $this->assertTrue($attr->editable);
     }
 
     /** @test */
@@ -55,7 +63,23 @@ class AdminColumnTest extends TestCase
     }
 
     /** @test */
-    public function canBeReadFromProperty(): void
+    public function canBeReadFromPropertyWithNull(): void
+    {
+        $entity = new class {
+            #[AdminColumn]
+            public string $inheritField = '';
+        };
+
+        $reflection = new \ReflectionProperty($entity, 'inheritField');
+        $attributes = $reflection->getAttributes(AdminColumn::class);
+
+        $this->assertCount(1, $attributes);
+        $attr = $attributes[0]->newInstance();
+        $this->assertNull($attr->editable, 'Default should be null (inherit entity setting)');
+    }
+
+    /** @test */
+    public function canBeReadFromPropertyWithFalse(): void
     {
         $entity = new class {
             #[AdminColumn(editable: false)]

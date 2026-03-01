@@ -18,7 +18,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
  * All properties are nullable to allow the "save null" tests.
  */
 #[ORM\Entity]
-#[Admin(label: 'Inline Edit Date Entities')]
+#[Admin(label: 'Inline Edit Date Entities', enableInlineEdit: true)]
 class InlineEditDateEntity
 {
     #[ORM\Id]

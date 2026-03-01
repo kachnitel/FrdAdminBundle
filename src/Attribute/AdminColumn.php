@@ -12,18 +12,38 @@ use Attribute;
  * The `editable` parameter controls whether this column can be edited
  * via inline editing. It accepts:
  *
- *   - `true`  (default) — column is editable (subject to voter + writable checks)
- *   - `false` — column is never editable, regardless of permissions
+ *   - `null`  (default) — inherit the entity-level setting from
+ *             `#[Admin(enableInlineEdit: ...)]`. If the entity has
+ *             `enableInlineEdit: true`, the column is editable (subject
+ *             to voter + writable checks). If `enableInlineEdit: false`,
+ *             the column is read-only.
+ *   - `true`  — column is always editable regardless of the entity default
+ *             (subject to voter + writable checks). Use to opt a single column
+ *             *in* when the entity default is disabled.
+ *   - `false` — column is never editable, regardless of entity default or
+ *             permissions. The ✎ trigger is hidden entirely.
  *   - An expression string evaluated against the entity row using Symfony's
- *     ExpressionLanguage. Supports the same syntax as #[AdminAction(condition: ...)]:
+ *     ExpressionLanguage. The result overrides the entity default entirely:
  *
  *       entity.status != "locked"
  *       entity.active && is_granted("ROLE_EDITOR")
  *       is_granted("ROLE_HR")
  *
- * When a string expression is provided, it is evaluated *before* the standard
- * ADMIN_EDIT voter and property-writable checks. All three must pass for the
- * field to be editable.
+ * When a string expression is provided, the entity-level `enableInlineEdit`
+ * setting is ignored — the expression takes full control. The standard
+ * ADMIN_EDIT voter and property-writable checks still apply when the
+ * expression returns true.
+ *
+ * ## Precedence (checked in order)
+ *
+ *   1. `editable: false`        → never editable (short-circuits everything)
+ *   2. `editable: 'expression'` → evaluate; if false, not editable (entity default bypassed)
+ *   3. `editable: true`         → editable (entity default bypassed; still needs voter + writable)
+ *   4. `editable: null`         → use entity's `#[Admin(enableInlineEdit: ...)]`
+ *
+ * @example Opt a column in when the entity default is disabled:
+ *   #[AdminColumn(editable: true)]
+ *   private string $description;
  *
  * @example Permanently read-only (computed / derived field):
  *   #[AdminColumn(editable: false)]
@@ -41,12 +61,13 @@ use Attribute;
 class AdminColumn
 {
     /**
-     * @param string|bool $editable
-     *   - true  = editable (default, subject to voter + writable checks)
-     *   - false = never editable
-     *   - string = ExpressionLanguage expression evaluated against the entity
+     * @param string|bool|null $editable
+     *   - null   = inherit from #[Admin(enableInlineEdit: ...)] (default)
+     *   - true   = always editable (overrides entity default; still needs voter + writable)
+     *   - false  = never editable (overrides entity default)
+     *   - string = ExpressionLanguage expression (overrides entity default; true still needs voter + writable)
      */
     public function __construct(
-        public readonly string|bool $editable = true,
+        public readonly string|bool|null $editable = null,
     ) {}
 }

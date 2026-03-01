@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Components\Field;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
@@ -15,10 +16,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
- * Tests for the editable expression / flag logic in AbstractEditableField.
- *
- * The canEdit() method resolves the #[AdminColumn(editable: ...)] attribute
- * before falling through to the voter + isWritable checks.
+ * Tests for the editable expression / flag / entity-default logic in AbstractEditableField.
  *
  * @group inline-edit
  */
@@ -48,17 +46,19 @@ class AbstractEditableFieldEditableTest extends TestCase
         $this->expressionLanguage = $this->createMock(RowActionExpressionLanguage::class);
     }
 
-    // -------------------------------------------------------------------------
-    // No #[AdminColumn] attribute — existing behaviour unchanged
-    // -------------------------------------------------------------------------
+    // ── No #[AdminColumn] — falls back to entity-level flag ───────────────────
 
     /** @test */
-    public function canEditReturnsTrueWhenNoAttributeAndVoterGrantedAndWritable(): void
+    public function canEditReturnsTrueWhenNoColumnAttrAndEntityEnablesInlineEdit(): void
     {
         $entity = new \stdClass();
         $field  = $this->makeField($entity, 'name');
 
         $this->attributeHelper->method('getPropertyAttribute')->willReturn(null);
+        $this->attributeHelper->method('getAttribute')
+            ->with($entity::class, Admin::class)
+            ->willReturn(new Admin(enableInlineEdit: true));
+
         $this->authChecker->method('isGranted')->willReturn(true);
         $this->propertyAccessor->method('isWritable')->willReturn(true);
 
@@ -66,64 +66,48 @@ class AbstractEditableFieldEditableTest extends TestCase
     }
 
     /** @test */
-    public function canEditReturnsFalseWhenNoAttributeAndVoterDenied(): void
+    public function canEditReturnsFalseWhenNoColumnAttrAndEntityDisablesInlineEdit(): void
     {
         $entity = new \stdClass();
         $field  = $this->makeField($entity, 'name');
 
         $this->attributeHelper->method('getPropertyAttribute')->willReturn(null);
-        $this->authChecker->method('isGranted')->willReturn(false);
+        $this->attributeHelper->method('getAttribute')
+            ->with($entity::class, Admin::class)
+            ->willReturn(new Admin(enableInlineEdit: false)); // default
 
-        $this->assertFalse($field->canEdit());
-    }
-
-    /** @test */
-    public function canEditReturnsFalseWhenNoAttributeAndPropertyNotWritable(): void
-    {
-        $entity = new \stdClass();
-        $field  = $this->makeField($entity, 'readonly');
-
-        $this->attributeHelper->method('getPropertyAttribute')->willReturn(null);
-        $this->authChecker->method('isGranted')->willReturn(true);
-        $this->propertyAccessor->method('isWritable')->willReturn(false);
-
-        $this->assertFalse($field->canEdit());
-    }
-
-    // -------------------------------------------------------------------------
-    // #[AdminColumn(editable: false)] — short-circuits everything
-    // -------------------------------------------------------------------------
-
-    /** @test */
-    public function canEditReturnsFalseWhenEditableFalseRegardlessOfVoter(): void
-    {
-        $entity = new \stdClass();
-        $field  = $this->makeField($entity, 'computed');
-
-        $this->attributeHelper
-            ->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: false));
-
-        // Voter and PropertyAccess must NOT be consulted
+        // Voter and PropertyAccess must NOT be consulted when entity flag is false
         $this->authChecker->expects($this->never())->method('isGranted');
         $this->propertyAccessor->expects($this->never())->method('isWritable');
 
         $this->assertFalse($field->canEdit());
     }
 
-    // -------------------------------------------------------------------------
-    // #[AdminColumn(editable: true)] — same as no attribute
-    // -------------------------------------------------------------------------
-
     /** @test */
-    public function canEditReturnsTrueWhenEditableTrueAndVoterGrantedAndWritable(): void
+    public function canEditReturnsFalseWhenNoAdminAttribute(): void
     {
         $entity = new \stdClass();
         $field  = $this->makeField($entity, 'name');
 
-        $this->attributeHelper
-            ->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: true));
+        $this->attributeHelper->method('getPropertyAttribute')->willReturn(null);
+        $this->attributeHelper->method('getAttribute')->willReturn(null);
+
+        $this->assertFalse($field->canEdit());
+    }
+
+    // ── #[AdminColumn(editable: null)] — same as no attribute ────────────────
+
+    /** @test */
+    public function canEditWithNullColumnAttrFallsBackToEntityFlag(): void
+    {
+        $entity = new \stdClass();
+        $field  = $this->makeField($entity, 'name');
+
+        $this->attributeHelper->method('getPropertyAttribute')
+            ->willReturn(new AdminColumn(editable: null));
+        $this->attributeHelper->method('getAttribute')
+            ->with($entity::class, Admin::class)
+            ->willReturn(new Admin(enableInlineEdit: true));
 
         $this->authChecker->method('isGranted')->willReturn(true);
         $this->propertyAccessor->method('isWritable')->willReturn(true);
@@ -131,9 +115,76 @@ class AbstractEditableFieldEditableTest extends TestCase
         $this->assertTrue($field->canEdit());
     }
 
-    // -------------------------------------------------------------------------
-    // #[AdminColumn(editable: 'expression')] — expression evaluated
-    // -------------------------------------------------------------------------
+    /** @test */
+    public function canEditWithNullColumnAttrReturnsFalseWhenEntityDisabled(): void
+    {
+        $entity = new \stdClass();
+        $field  = $this->makeField($entity, 'name');
+
+        $this->attributeHelper->method('getPropertyAttribute')
+            ->willReturn(new AdminColumn(editable: null));
+        $this->attributeHelper->method('getAttribute')
+            ->willReturn(new Admin(enableInlineEdit: false));
+
+        $this->assertFalse($field->canEdit());
+    }
+
+    // ── #[AdminColumn(editable: false)] — short-circuits everything ──────────
+
+    /** @test */
+    public function canEditReturnsFalseWhenEditableFalseRegardlessOfEntityFlag(): void
+    {
+        $entity = new \stdClass();
+        $field  = $this->makeField($entity, 'computed');
+
+        $this->attributeHelper->method('getPropertyAttribute')
+            ->willReturn(new AdminColumn(editable: false));
+
+        // Entity flag, voter, and PropertyAccess must NOT be consulted
+        $this->attributeHelper->expects($this->never())
+            ->method('getAttribute');
+        $this->authChecker->expects($this->never())->method('isGranted');
+        $this->propertyAccessor->expects($this->never())->method('isWritable');
+
+        $this->assertFalse($field->canEdit());
+    }
+
+    // ── #[AdminColumn(editable: true)] — opt-in overrides entity default ──────
+
+    /** @test */
+    public function canEditReturnsTrueWhenEditableTrueEvenIfEntityDisabled(): void
+    {
+        // Column explicitly opts in, bypassing entity's enableInlineEdit: false
+        $entity = new \stdClass();
+        $field  = $this->makeField($entity, 'name');
+
+        $this->attributeHelper->method('getPropertyAttribute')
+            ->willReturn(new AdminColumn(editable: true));
+
+        // Entity flag must NOT be consulted when column is explicitly true
+        $this->attributeHelper->expects($this->never())
+            ->method('getAttribute');
+
+        $this->authChecker->method('isGranted')->willReturn(true);
+        $this->propertyAccessor->method('isWritable')->willReturn(true);
+
+        $this->assertTrue($field->canEdit());
+    }
+
+    /** @test */
+    public function canEditReturnsFalseWhenEditableTrueButVoterDenied(): void
+    {
+        $entity = new \stdClass();
+        $field  = $this->makeField($entity, 'name');
+
+        $this->attributeHelper->method('getPropertyAttribute')
+            ->willReturn(new AdminColumn(editable: true));
+        $this->authChecker->method('isGranted')->willReturn(false);
+
+        $this->assertFalse($field->canEdit());
+    }
+
+    // ── #[AdminColumn(editable: 'expression')] ────────────────────────────────
 
     /** @test */
     public function canEditEvaluatesExpressionWhenEditableIsString(): void
@@ -141,8 +192,7 @@ class AbstractEditableFieldEditableTest extends TestCase
         $entity = new \stdClass();
         $field  = $this->makeField($entity, 'status');
 
-        $this->attributeHelper
-            ->method('getPropertyAttribute')
+        $this->attributeHelper->method('getPropertyAttribute')
             ->willReturn(new AdminColumn(editable: 'entity.status != "locked"'));
 
         $this->expressionLanguage
@@ -151,7 +201,10 @@ class AbstractEditableFieldEditableTest extends TestCase
             ->with('entity.status != "locked"', $entity, $this->authChecker)
             ->willReturn(true);
 
-        // Voter and PropertyAccess are still consulted after expression passes
+        // Entity flag must NOT be consulted when expression is provided
+        $this->attributeHelper->expects($this->never())
+            ->method('getAttribute');
+
         $this->authChecker->method('isGranted')->willReturn(true);
         $this->propertyAccessor->method('isWritable')->willReturn(true);
 
@@ -164,13 +217,11 @@ class AbstractEditableFieldEditableTest extends TestCase
         $entity = new \stdClass();
         $field  = $this->makeField($entity, 'status');
 
-        $this->attributeHelper
-            ->method('getPropertyAttribute')
+        $this->attributeHelper->method('getPropertyAttribute')
             ->willReturn(new AdminColumn(editable: 'entity.status != "locked"'));
 
         $this->expressionLanguage->method('evaluate')->willReturn(false);
 
-        // Voter and PropertyAccess must NOT be consulted when expression returns false
         $this->authChecker->expects($this->never())->method('isGranted');
         $this->propertyAccessor->expects($this->never())->method('isWritable');
 
@@ -183,8 +234,7 @@ class AbstractEditableFieldEditableTest extends TestCase
         $entity = new \stdClass();
         $field  = $this->makeField($entity, 'status');
 
-        $this->attributeHelper
-            ->method('getPropertyAttribute')
+        $this->attributeHelper->method('getPropertyAttribute')
             ->willReturn(new AdminColumn(editable: 'entity.active'));
 
         $this->expressionLanguage->method('evaluate')->willReturn(true);
@@ -193,31 +243,7 @@ class AbstractEditableFieldEditableTest extends TestCase
         $this->assertFalse($field->canEdit());
     }
 
-    /** @test */
-    public function canEditPassesAuthCheckerToExpression(): void
-    {
-        $entity = new \stdClass();
-        $field  = $this->makeField($entity, 'name');
-
-        $this->attributeHelper
-            ->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: 'is_granted("ROLE_EDITOR")'));
-
-        $this->expressionLanguage
-            ->expects($this->once())
-            ->method('evaluate')
-            ->with('is_granted("ROLE_EDITOR")', $entity, $this->authChecker)
-            ->willReturn(true);
-
-        $this->authChecker->method('isGranted')->willReturn(true);
-        $this->propertyAccessor->method('isWritable')->willReturn(true);
-
-        $field->canEdit();
-    }
-
-    // -------------------------------------------------------------------------
-    // Helper: build a concrete anonymous subclass with the entity pre-resolved
-    // -------------------------------------------------------------------------
+    // ── Helper ────────────────────────────────────────────────────────────────
 
     private function makeField(object $entity, string $property): AbstractEditableField
     {
@@ -229,7 +255,6 @@ class AbstractEditableFieldEditableTest extends TestCase
             $this->expressionLanguage,
         ) extends AbstractEditableField {};
 
-        // Pre-populate LiveProps and resolved entity so canEdit() doesn't call the EntityManager
         $field->entityClass    = $entity::class;
         $field->entityId       = 1;
         $field->property       = $property;

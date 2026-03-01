@@ -198,6 +198,29 @@ Enable/disable batch actions for selecting and performing operations on multiple
 
 **Note:** Batch actions are disabled by default for safety. The batch delete UI includes a confirmation dialog before deletion to prevent accidental data loss.
 
+#### enableInlineEdit
+**Type:** `bool` **Default:** `false`
+
+Enable per-field inline editing directly in the list view. When enabled, an ✏️
+button appears on each row, and writable columns show a ✎ trigger on hover.
+
+**Disabled by default** to prevent accidental data modification. You must
+explicitly opt each entity in.
+
+```php
+// Disabled (the default — no attribute needed)
+#[Admin(label: 'Audit Logs')]
+class AuditLog { }
+
+// Enabled
+#[Admin(label: 'Products', enableInlineEdit: true)]
+class Product { }
+```
+
+Individual columns can override this setting via `#[AdminColumn(editable: ...)]`.
+See the full [Inline Editing Guide](INLINE_EDIT.md) for details, including
+per-column opt-in/opt-out, expression-based editability, and supported field types.
+
 ### Column Configuration
 
 #### columns
@@ -708,6 +731,7 @@ class Admin
         ?string $formType = null,
         bool $enableFilters = true,
         bool $enableBatchActions = true,
+        bool $enableInlineEdit = false,      // NEW — opt-in for inline editing
         ?array $columns = null,
         ?array $excludeColumns = null,
         ?array $filterableColumns = null,
@@ -752,6 +776,28 @@ class ColumnFilter
     ) {}
 }
 ```
+
+### AdminColumn Attribute
+
+```php
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class AdminColumn
+{
+    public function __construct(
+        /**
+         * Controls inline editability for this column.
+         *
+         * - null   = inherit from #[Admin(enableInlineEdit: ...)] (default)
+         * - true   = always editable (overrides entity default)
+         * - false  = never editable (overrides entity default)
+         * - string = ExpressionLanguage expression (overrides entity default)
+         */
+        string|bool|null $editable = null,
+    ) {}
+}
+```
+
+See [Inline Editing Guide](INLINE_EDIT.md) for the full precedence rules and examples.
 
 </details>
 

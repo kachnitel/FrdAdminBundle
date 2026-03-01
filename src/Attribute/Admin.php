@@ -9,45 +9,28 @@ use Attribute;
 /**
  * Marks an entity as manageable by the admin bundle.
  *
- * This attribute enables auto-discovery of entities for the admin interface.
- * Any entity with this attribute will automatically be available in the admin,
- * replacing the need for YAML configuration.
- *
- * Usage:
- * #[Admin(
- *     label: 'Products',
- *     icon: 'inventory',
- *     columns: ['name', 'price', 'stock'],
- *     permissions: ['index' => 'ROLE_PRODUCT_VIEW'],
- *     itemsPerPage: 25
- * )]
- * class Product { }
- *
  * For per-column role-based visibility, @see ColumnPermission
  * For user-toggleable column visibility, use enableColumnVisibility: true
+ * For inline editing in list views, use enableInlineEdit: true
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 class Admin
 {
     /**
-     * Configuration attribute constructor.
-     *
-     * Note: This attribute has 13 parameters because it serves as a comprehensive
-     * configuration object for entity admin panels. Each parameter controls a specific
-     * aspect of the admin interface behavior. Grouping these into sub-objects would
-     * make the attribute API more complex without meaningful benefits.
-     *
      * @param string|null $label Display label for this entity (defaults to class name)
      * @param string|null $icon Material icon name for this entity
      * @param string|null $formType Custom form type class for create/edit forms
      * @param bool $enableFilters Enable column filtering in list view
      * @param bool $enableBatchActions Enable batch actions (e.g., bulk delete)
      * @param bool $enableColumnVisibility Enable column show/hide toggle in list view
-     * @param array<string>|null $columns Explicit list of columns to display (null = auto-detect from entity)
+     * @param bool $enableInlineEdit Enable per-field inline editing in the list view.
+     *   Defaults to false — opt in per entity. Individual columns can be further
+     *   controlled with #[AdminColumn(editable: true|false|'expr')].
+     * @param array<string>|null $columns Explicit list of columns to display (null = auto-detect)
      * @param array<string>|null $excludeColumns Columns to exclude from display
-     * @param array<string>|null $filterableColumns Columns that can be filtered (null = all visible columns)
-     * @param array<string, string>|null $permissions Per-action permission requirements (e.g., ['index' => 'ROLE_PRODUCT_VIEW'])
-     * @param int|null $itemsPerPage Default items per page for this entity (null = use global default)
+     * @param array<string>|null $filterableColumns Columns that can be filtered (null = all visible)
+     * @param array<string, string>|null $permissions Per-action permission requirements
+     * @param int|null $itemsPerPage Default items per page (null = use global default)
      * @param string|null $sortBy Default sort column (null = 'id')
      * @param string|null $sortDirection Default sort direction 'ASC' or 'DESC' (null = 'DESC')
      *
@@ -60,6 +43,7 @@ class Admin
         private bool $enableFilters = true,
         private bool $enableBatchActions = false,
         private bool $enableColumnVisibility = false,
+        private bool $enableInlineEdit = false,
         private ?array $columns = null,
         private ?array $excludeColumns = null,
         private ?array $filterableColumns = null,
@@ -99,6 +83,11 @@ class Admin
         return $this->enableColumnVisibility;
     }
 
+    public function isEnableInlineEdit(): bool
+    {
+        return $this->enableInlineEdit;
+    }
+
     /**
      * Get explicit column list, or null to auto-detect.
      *
@@ -110,8 +99,6 @@ class Admin
     }
 
     /**
-     * Get columns to exclude from display.
-     *
      * @return array<string>|null
      */
     public function getExcludeColumns(): ?array
@@ -120,8 +107,6 @@ class Admin
     }
 
     /**
-     * Get columns that can be filtered, or null to allow all.
-     *
      * @return array<string>|null
      */
     public function getFilterableColumns(): ?array
@@ -130,46 +115,33 @@ class Admin
     }
 
     /**
-     * Get per-action permission requirements.
-     *
-     * @return array<string, string>|null Map of action => role
+     * @return array<string, string>|null
      */
     public function getPermissions(): ?array
     {
         return $this->permissions;
     }
 
-    /**
-     * Get the permission required for a specific action.
-     *
-     * Returns null if no specific permission is set for this action.
-     */
-    public function getPermissionForAction(string $action): ?string
-    {
-        return $this->permissions[$action] ?? null;
-    }
-
-    /**
-     * Get items per page for this entity, or null for global default.
-     */
     public function getItemsPerPage(): ?int
     {
         return $this->itemsPerPage;
     }
 
-    /**
-     * Get default sort column.
-     */
     public function getSortBy(): ?string
     {
         return $this->sortBy;
     }
 
-    /**
-     * Get default sort direction ('ASC' or 'DESC').
-     */
     public function getSortDirection(): ?string
     {
         return $this->sortDirection;
+    }
+
+    /**
+     * Get the required role for a specific action, or null for no restriction.
+     */
+    public function getPermissionForAction(string $action): ?string
+    {
+        return $this->permissions[$action] ?? null;
     }
 }
