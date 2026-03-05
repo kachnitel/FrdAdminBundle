@@ -7,7 +7,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.6.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.5.2...v0.6.0) (2026-02-27)
+## [0.7.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.6.0...v0.7.0) (2026-03-05)
+
+### Features
+
+* Add custom columns to tables using #[AdminCustomColumn] ([b0150e](https://github.com/kachnitel/FrdAdminBundle/commit/b0150eb5c022ffc618b82a68af91d9a312eef3eb))
+* Added support for more complex "condition" in AdminAction using [class, method] ([f154b0](https://github.com/kachnitel/FrdAdminBundle/commit/f154b08fa2899a4c13d3d412b5ae3af9f963afdb))
+* Enhance admin routing with automatic collection and entity URL generation ([db86a1](https://github.com/kachnitel/FrdAdminBundle/commit/db86a1ae31341063ed463509cf44ef312ac7aed8))
+* Implement row action system with Twig extension and runtime ([c2e029](https://github.com/kachnitel/FrdAdminBundle/commit/c2e029062b3534f76e633c7697a0c24a72b44e3f))
+* New AdminColumn property attribute to toggle visibility using expression ([bdd4aa](https://github.com/kachnitel/FrdAdminBundle/commit/bdd4aa1514047a40bf51592a97804e755615da05))
+* Use #[AutoconfigureTag] to wire RowAction conditions ([5455e5](https://github.com/kachnitel/FrdAdminBundle/commit/5455e5566aa5fdf848911ea16220f16637a75ba8))
+* Use symfony/expression-language for condition checks in RowAction ([0ca6a7](https://github.com/kachnitel/FrdAdminBundle/commit/0ca6a7b24bcdd07af14ce14b956da361a491a897))
+
+### Bug Fixes
+
+* Allow using getters in expressions for rowactions ([62784e](https://github.com/kachnitel/FrdAdminBundle/commit/62784eddf918536bdd0bfdd11215a3cfd409cbe5))
+* Disable sorting for unsupported columns in Doctrine entities ([44e93f](https://github.com/kachnitel/FrdAdminBundle/commit/44e93f15cb7d13943477614ded05610f623ff3ad))
+* EnumField.php — unit enum silent no-op fixed; DateField.php — cancelEdit() override added ([3e4a29](https://github.com/kachnitel/FrdAdminBundle/commit/3e4a294801f46c8fb545f80a4bd767f82d6ef563))
+* Repopulate entity in Field components on postHydrate ([8ed427](https://github.com/kachnitel/FrdAdminBundle/commit/8ed427ad949ea167d79f8a83ea2b461532849729))
+
+##### Tests
+
+* Use #[UsesClass] attribute for strict coverage ([b076d2](https://github.com/kachnitel/FrdAdminBundle/commit/b076d2ca68ac3a80e77a0c93b0f9ffb5f8805c73))
+
+### Code Refactoring
+
+* Rename ColumPermissionService::getDeniedColumns to getRestrictedColumns ([8b54a6](https://github.com/kachnitel/FrdAdminBundle/commit/8b54a6f5d457908ac478f5382cdc8073f9cc5f12))
+
+### Tests
+
+* Clean up tests and phpstan ([c071b9](https://github.com/kachnitel/FrdAdminBundle/commit/c071b93e209ce7f01d2e3fd344fab500ce4dcf0a))
+* Passing tests with RowActions implemented ([27224e](https://github.com/kachnitel/FrdAdminBundle/commit/27224e68bc554019bc20e77f4737bb4f3151ad05))
+
+### Documentation
+
+* Add docs/INLINE_EDIT.md ([7a246f](https://github.com/kachnitel/FrdAdminBundle/commit/7a246f74d6051fa0dda47ed881a6a1db31e858fa))
+* Document new Row Actions feature ([082a19](https://github.com/kachnitel/FrdAdminBundle/commit/082a19db245c24997e9ab1d29bb3437c8f501d53))
+* Remove a misplaced AI note ([89d021](https://github.com/kachnitel/FrdAdminBundle/commit/89d02190e24299038432a145dd7e5b107acd60a0))
+
+
+---
+
+## [0.6.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.5.2...v0.6.0) (2026-02-26)
 
 ### Features
 
