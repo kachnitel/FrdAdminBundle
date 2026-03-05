@@ -1,0 +1,8 @@
+{#
+ # Custom column template: fullName
+ # Variables: entity, value (always null), property, cell
+ #
+ # Uses the entity directly since custom columns have no Doctrine-backed value.
+ #}
+<!-- TEST_CUSTOM_COLUMN:FULL_NAME -->
+<span class="full-name">{{ entity.firstName }} {{ entity.lastName }}</span>

@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
+use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\FilterMetadata;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
@@ -31,12 +32,18 @@ class DoctrineDataSourceTest extends TestCase
     /** @var ClassMetadata<object>&MockObject */
     private ClassMetadata $metadata;
 
+    /** @var DoctrineCustomColumnProvider&MockObject */
+    private DoctrineCustomColumnProvider $customColumnProvider;
+
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->queryService = $this->createMock(EntityListQueryService::class);
         $this->filterMetadataProvider = $this->createMock(FilterMetadataProvider::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
+
+        $this->customColumnProvider = $this->createMock(DoctrineCustomColumnProvider::class);
+        $this->customColumnProvider->method('getCustomColumns')->willReturn([]);
 
         $this->em->method('getClassMetadata')
             ->with(TestEntity::class)
@@ -46,11 +53,12 @@ class DoctrineDataSourceTest extends TestCase
     private function createDataSource(?Admin $admin = null): DoctrineDataSource
     {
         return new DoctrineDataSource(
-            TestEntity::class,
-            $admin ?? new Admin(),
-            $this->em,
-            $this->queryService,
-            $this->filterMetadataProvider
+            entityClass: TestEntity::class,
+            adminAttribute: $admin ?? new Admin(),
+            em: $this->em,
+            queryService: $this->queryService,
+            filterMetadataProvider: $this->filterMetadataProvider,
+            customColumnProvider: $this->customColumnProvider,
         );
     }
 

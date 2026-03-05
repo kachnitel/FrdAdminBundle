@@ -10,7 +10,7 @@
         data-live-action-param="sort"
         data-live-column-param="{{ column }}"
     >
-        {{ column|humanize }}
+        {{ columnLabel ?? column|humanize }}
         {% if sortBy == column %}
             <span class="sort-indicator">{{ sortDirection == constant('SORT_ASC', component) ? '▲' : '▼' }}</span>
         {% endif %}

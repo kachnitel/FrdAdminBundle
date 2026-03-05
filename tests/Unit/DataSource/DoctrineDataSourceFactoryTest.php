@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
@@ -30,6 +31,9 @@ class DoctrineDataSourceFactoryTest extends TestCase
     /** @var FilterMetadataProvider&MockObject */
     private FilterMetadataProvider $filterMetadataProvider;
 
+    /** @var DoctrineCustomColumnProvider&MockObject */
+    private DoctrineCustomColumnProvider $customColumnProvider;
+
     private DoctrineDataSourceFactory $factory;
 
     protected function setUp(): void
@@ -39,11 +43,15 @@ class DoctrineDataSourceFactoryTest extends TestCase
         $this->queryService = $this->createMock(EntityListQueryService::class);
         $this->filterMetadataProvider = $this->createMock(FilterMetadataProvider::class);
 
+        $this->customColumnProvider = $this->createMock(DoctrineCustomColumnProvider::class);
+        $this->customColumnProvider->method('getCustomColumns')->willReturn([]);
+
         $this->factory = new DoctrineDataSourceFactory(
             $this->em,
             $this->entityDiscovery,
             $this->queryService,
-            $this->filterMetadataProvider
+            $this->filterMetadataProvider,
+            $this->customColumnProvider,
         );
     }
 

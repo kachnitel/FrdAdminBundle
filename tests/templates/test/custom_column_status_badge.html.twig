@@ -1,0 +1,6 @@
+{#
+ # Custom column template: statusBadge
+ # Variables: entity, value (always null), property, cell
+ #}
+<!-- TEST_CUSTOM_COLUMN:STATUS_BADGE -->
+<span class="badge status-badge-{{ entity.status }}">{{ entity.status|upper }}</span>

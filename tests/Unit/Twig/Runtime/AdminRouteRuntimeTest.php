@@ -2,10 +2,6 @@
 
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
-use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Kachnitel\AdminBundle\Attribute\AdminRoutes;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;

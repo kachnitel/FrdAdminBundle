@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\DataSource;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
@@ -24,6 +25,7 @@ class DoctrineDataSourceFactory
         private readonly EntityDiscoveryService $entityDiscovery,
         private readonly EntityListQueryService $queryService,
         private readonly FilterMetadataProvider $filterMetadataProvider,
+        private readonly DoctrineCustomColumnProvider $customColumnProvider,
     ) {}
 
     /**
@@ -46,6 +48,7 @@ class DoctrineDataSourceFactory
                 em: $this->em,
                 queryService: $this->queryService,
                 filterMetadataProvider: $this->filterMetadataProvider,
+                customColumnProvider: $this->customColumnProvider,
             );
 
             $this->dataSourcesCache[$dataSource->getIdentifier()] = $dataSource;
@@ -74,6 +77,7 @@ class DoctrineDataSourceFactory
             em: $this->em,
             queryService: $this->queryService,
             filterMetadataProvider: $this->filterMetadataProvider,
+            customColumnProvider: $this->customColumnProvider,
         );
     }
 
@@ -88,7 +92,7 @@ class DoctrineDataSourceFactory
     public function createForClass(string $entityClass): DoctrineDataSource
     {
         $adminAttribute = $this->entityDiscovery->getAdminAttribute($entityClass)
-            ?? new \Kachnitel\AdminBundle\Attribute\Admin();
+            ?? new Admin();
 
         return new DoctrineDataSource(
             entityClass: $entityClass,
@@ -96,6 +100,7 @@ class DoctrineDataSourceFactory
             em: $this->em,
             queryService: $this->queryService,
             filterMetadataProvider: $this->filterMetadataProvider,
+            customColumnProvider: $this->customColumnProvider,
         );
     }
 

@@ -356,8 +356,27 @@ Custom DataSources use the `data/{dataSourceId}/` path instead of entity class:
 
 **Note:** Find your datasource ID using `bin/console debug:datasource` or by checking the `getIdentifier()` method of your `DataSourceInterface` implementation.
 
+### 5. Custom Column Templates (via `#[AdminCustomColumn]`)
+
+Custom columns declared with `#[AdminCustomColumn]` use a **developer-specified template path** that bypasses the entire type hierarchy. The template is rendered with the same variables as any other cell template, but `value` is always `null` — use `entity` instead.
+
+```twig
+{# templates/admin/columns/full_name.html.twig #}
+{# Available variables #}
+{# entity   — the entity object                     #}
+{# value    — always null for custom columns        #}
+{# property — column name string, e.g. 'fullName'  #}
+{# cell     — true (table cell context)             #}
+
+{{ entity.firstName }} {{ entity.lastName }}
+```
+
+**Template priority for custom columns:** The specified `template` is used directly — no fallback hierarchy is applied.
+
+See [CUSTOM_COLUMNS.md](./CUSTOM_COLUMNS.md) for the full feature guide.
+
 <details>
-<summary><strong>5. Override the Entity List Page</strong></summary>
+<summary><strong>6. Override the Entity List Page</strong></summary>
 
 Customize the page that wraps the LiveComponent:
 

@@ -15,6 +15,10 @@ use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
  *
  * Wraps a Doctrine entity class and provides data access through the DataSourceInterface.
  * Uses the existing EntityListQueryService and FilterMetadataProvider for querying and filtering.
+ *
+ * Custom (virtual) columns can be declared via #[AdminCustomColumn] on the entity class.
+ * These columns are appended after Doctrine-backed columns when no explicit `columns:`
+ * list is set, or they are placed wherever the developer puts their name in `columns:`.
  */
 class DoctrineDataSource implements DataSourceInterface
 {
@@ -35,6 +39,7 @@ class DoctrineDataSource implements DataSourceInterface
         private readonly EntityManagerInterface $em,
         private readonly EntityListQueryService $queryService,
         private readonly FilterMetadataProvider $filterMetadataProvider,
+        private readonly DoctrineCustomColumnProvider $customColumnProvider,
     ) {}
 
     public function getIdentifier(): string
@@ -44,7 +49,8 @@ class DoctrineDataSource implements DataSourceInterface
 
     public function getLabel(): string
     {
-        return $this->adminAttribute->getLabel() ?? $this->getShortName();
+        return $this->adminAttribute->getLabel()
+            ?? $this->getShortName();
     }
 
     public function getIcon(): ?string
@@ -59,12 +65,20 @@ class DoctrineDataSource implements DataSourceInterface
         }
 
         $metadata = $this->em->getClassMetadata($this->entityClass);
+        $customColumns = $this->customColumnProvider->getCustomColumns($this->entityClass);
+
         $this->columnsCache = [];
 
-        // Get column names based on Admin attribute configuration
-        $columnNames = $this->getColumnNames($metadata);
+        // Get the ordered list of column names to include
+        $columnNames = $this->getColumnNames($metadata, $customColumns);
 
         foreach ($columnNames as $columnName) {
+            // Custom columns take priority — they carry their own ColumnMetadata
+            if (isset($customColumns[$columnName])) {
+                $this->columnsCache[$columnName] = $customColumns[$columnName];
+                continue;
+            }
+
             $type = $this->getColumnType($metadata, $columnName);
             $sortable = $this->isColumnSortable($metadata, $columnName);
 
@@ -102,10 +116,10 @@ class DoctrineDataSource implements DataSourceInterface
                 'options',
                 'enumClass',
                 'showAllOption',
-                'multiple'
+                'multiple',
             ];
 
-            if (array_any($keysToCheck, fn($key) => isset($config[$key]))) {
+            if (array_any($keysToCheck, fn ($key) => isset($config[$key]))) {
                 $enumOptions = new FilterEnumOptions(
                     values: $config['options'] ?? null,
                     enumClass: $config['enumClass'] ?? null,
@@ -153,7 +167,7 @@ class DoctrineDataSource implements DataSourceInterface
         string $sortBy,
         string $sortDirection,
         int $page,
-        int $itemsPerPage
+        int $itemsPerPage,
     ): PaginatedResult {
         // Convert FilterMetadata array to legacy format for EntityListQueryService
         $filterMetadata = [];
@@ -163,14 +177,14 @@ class DoctrineDataSource implements DataSourceInterface
 
         $result = $this->queryService->getEntities(
             entityClass: $this->entityClass,
-            repositoryMethod: null, // Repository method can be set via component prop
+            repositoryMethod: null,
             search: $search,
             columnFilters: $filters,
             filterMetadata: $filterMetadata,
             sortBy: $sortBy,
             sortDirection: $sortDirection,
             page: $page,
-            itemsPerPage: $itemsPerPage
+            itemsPerPage: $itemsPerPage,
         );
 
         return PaginatedResult::fromQueryResult($result, $itemsPerPage);
@@ -183,8 +197,6 @@ class DoctrineDataSource implements DataSourceInterface
 
     public function supportsAction(string $action): bool
     {
-        // The actual permission check happens in the controller/voter
-        // This method indicates whether the action is structurally supported
         return match ($action) {
             'index', 'show', 'new', 'edit', 'delete' => true,
             'batch_delete' => $this->adminAttribute->isEnableBatchActions(),
@@ -196,6 +208,7 @@ class DoctrineDataSource implements DataSourceInterface
     public function getIdField(): string
     {
         $metadata = $this->em->getClassMetadata($this->entityClass);
+
         return $metadata->getSingleIdentifierFieldName();
     }
 
@@ -203,11 +216,18 @@ class DoctrineDataSource implements DataSourceInterface
     {
         $metadata = $this->em->getClassMetadata($this->entityClass);
         $idField = $metadata->getSingleIdentifierFieldName();
+
         return $metadata->getFieldValue($item, $idField);
     }
 
     public function getItemValue(object $item, string $field): mixed
     {
+        // Custom columns have no Doctrine field — templates read `entity` directly
+        $customColumns = $this->customColumnProvider->getCustomColumns($this->entityClass);
+        if (isset($customColumns[$field])) {
+            return null;
+        }
+
         $metadata = $this->em->getClassMetadata($this->entityClass);
 
         // For regular fields, use field value
@@ -267,28 +287,43 @@ class DoctrineDataSource implements DataSourceInterface
     }
 
     /**
-     * Get column names based on Admin attribute configuration.
+     * Get column names in display order.
      *
-     * @param ClassMetadata<object> $metadata
+     * Rules:
+     *  1. If Admin::columns is set explicitly, use exactly that list (which may include
+     *     custom column names at any position).
+     *  2. Otherwise, use all auto-detected Doctrine columns, then append custom columns
+     *     that are not already in the list.
+     *
+     * @param ClassMetadata<object>      $metadata
+     * @param array<string, ColumnMetadata> $customColumns
      * @return array<string>
      */
-    private function getColumnNames(ClassMetadata $metadata): array
+    private function getColumnNames(ClassMetadata $metadata, array $customColumns): array
     {
-        // If columns are explicitly configured, use only those
+        // Explicit list: developer controls order entirely
         if ($this->adminAttribute->getColumns() !== null) {
             return $this->adminAttribute->getColumns();
         }
 
-        // Get all available columns
-        $allColumns = array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
+        // Auto-detect Doctrine columns
+        $allDoctrineColumns = array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
 
-        // If excludeColumns is configured, filter them out
+        // Apply excludeColumns filter
         if ($this->adminAttribute->getExcludeColumns() !== null) {
             $excludeColumns = $this->adminAttribute->getExcludeColumns();
-            return array_values(array_filter($allColumns, fn($col) => !in_array($col, $excludeColumns)));
+            $allDoctrineColumns = array_values(
+                array_filter($allDoctrineColumns, fn ($col) => !in_array($col, $excludeColumns))
+            );
         }
 
-        return $allColumns;
+        // Append custom columns that are not already listed
+        $customNames = array_keys($customColumns);
+        $extraCustom = array_values(
+            array_filter($customNames, fn ($name) => !in_array($name, $allDoctrineColumns))
+        );
+
+        return array_merge($allDoctrineColumns, $extraCustom);
     }
 
     /**
@@ -335,11 +370,10 @@ class DoctrineDataSource implements DataSourceInterface
         }
 
         // Collection associations are not sortable
-        if ($metadata->hasAssociation($column) && $metadata->isCollectionValuedAssociation($column)) {
-            return false;
+        if ($metadata->hasAssociation($column)) {
+            return !$metadata->isCollectionValuedAssociation($column);
         }
 
-        // Single associations can be sortable (sorts by related entity's ID)
-        return $metadata->hasAssociation($column);
+        return false;
     }
 }
