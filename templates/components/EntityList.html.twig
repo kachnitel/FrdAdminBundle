@@ -79,7 +79,10 @@
                 {% for column in visibleColumns %}
                     {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
                         column: column,
-                        columnLabel: dataSource.columns[column] is defined ? dataSource.columns[column].label : null,
+                        columnLabel: dataSource.columns[column] is defined ?
+                            dataSource.columns[column].label : null,
+                        sortable: dataSource.columns[column] is defined ?
+                            dataSource.columns[column].sortable : true,
                         sortBy: sortBy,
                         sortDirection: sortDirection,
                         component: this

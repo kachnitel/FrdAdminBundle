@@ -63,6 +63,7 @@ class EntityList
 
     /**
      * Column-specific filter values.
+     *
      * Format: ['columnName' => 'filterValue', ...]
      *
      * @var array<string, mixed>
@@ -228,7 +229,7 @@ class EntityList
             return $this->cache['queryResult']->items;
         }
 
-        if (!in_array($this->sortBy, $this->getColumns(), true)) {
+        if (!$this->isSortableColumn($this->sortBy)) {
             $this->sortBy = $this->getDataSource()->getDefaultSortBy();
             $this->sortDirection = $this->getDataSource()->getDefaultSortDirection();
         }
@@ -261,6 +262,10 @@ class EntityList
     #[LiveAction]
     public function sort(#[LiveArg] string $column): void
     {
+        if (!$this->isSortableColumn($column)) {
+            return;
+        }
+
         if ($column === $this->sortBy) {
             $this->sortDirection = match ($this->sortDirection) {
                 self::SORT_ASC => self::SORT_DESC,
@@ -392,16 +397,6 @@ class EntityList
     }
 
     /**
-     * Exit row edit mode. Any field component currently open will silently
-     * discard its unsaved input (LiveComponents are isolated per-request).
-     */
-    // #[LiveAction]
-    // public function exitRowEdit(): void
-    // {
-    //     $this->editingRowId = null;
-    // }
-
-    /**
      * Whether a specific entity row is currently open for editing.
      */
     public function isRowEditing(object $entity): bool
@@ -513,5 +508,20 @@ class EntityList
     public function getEntityId(object $entity): string|int
     {
         return $this->getDataSource()->getItemId($entity);
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    /**
+     * Return true only if the given column is known to the data source AND marked sortable.
+     *
+     * Used as a guard in sort() and getEntities() to prevent DQL errors when a caller
+     * (URL parameter, UI button) requests sorting by an association or custom column.
+     */
+    private function isSortableColumn(string $column): bool
+    {
+        $columns = $this->getDataSource()->getColumns();
+
+        return isset($columns[$column]) && $columns[$column]->sortable;
     }
 }

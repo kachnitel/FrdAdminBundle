@@ -1,7 +1,15 @@
 {#
- # Partial template for sortable table header cell (test override).
+ # Table header cell — sortable or plain (test override, no CSS macros).
+ #
+ # @var string      column
+ # @var string|null columnLabel
+ # @var bool        sortable
+ # @var string      sortBy
+ # @var string      sortDirection
+ # @var object      component
  #}
 
+{% if sortable ?? true %}
 <th>
     <button
         type="button"
@@ -16,3 +24,6 @@
         {% endif %}
     </button>
 </th>
+{% else %}
+<th>{{ columnLabel ?? column|humanize }}</th>
+{% endif %}

@@ -295,7 +295,7 @@ class DoctrineDataSource implements DataSourceInterface
      *  2. Otherwise, use all auto-detected Doctrine columns, then append custom columns
      *     that are not already in the list.
      *
-     * @param ClassMetadata<object>      $metadata
+     * @param ClassMetadata<object>         $metadata
      * @param array<string, ColumnMetadata> $customColumns
      * @return array<string>
      */
@@ -360,20 +360,15 @@ class DoctrineDataSource implements DataSourceInterface
     /**
      * Check if a column is sortable.
      *
+     * Only regular Doctrine fields support direct ORDER BY in DQL.
+     * Associations — whether single-valued (ManyToOne/OneToOne) or collection-valued
+     * (OneToMany/ManyToMany) — cannot be sorted without an explicit JOIN, which this
+     * data source does not perform. Custom columns have no backing Doctrine field at all.
+     *
      * @param ClassMetadata<object> $metadata
      */
     private function isColumnSortable(ClassMetadata $metadata, string $column): bool
     {
-        // Regular fields are sortable
-        if ($metadata->hasField($column)) {
-            return true;
-        }
-
-        // Collection associations are not sortable
-        if ($metadata->hasAssociation($column)) {
-            return !$metadata->isCollectionValuedAssociation($column);
-        }
-
-        return false;
+        return $metadata->hasField($column);
     }
 }

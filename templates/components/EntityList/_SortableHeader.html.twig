@@ -1,16 +1,18 @@
 {#
- # Partial template for sortable table header cell.
+ # Table header cell — sortable or plain depending on column metadata.
  #
  # Variables:
- # @var string column - Column name
- # @var string|null columnLabel - Optional label override from DataSource column metadata
- # @var string sortBy - Currently sorted column
- # @var string sortDirection - Current sort direction (ASC/DESC)
- # @var object component - Reference to parent component for constant access
+ # @var string      column        - Column name
+ # @var string|null columnLabel   - Optional label override from DataSource column metadata
+ # @var bool        sortable      - Whether this column supports sorting (default: true)
+ # @var string      sortBy        - Currently sorted column
+ # @var string      sortDirection - Current sort direction (ASC/DESC)
+ # @var object      component     - Reference to parent component for constant access
  #}
 
 {% import kachnitel_admin_theme as css %}
 
+{% if sortable ?? true %}
 <th>
     <button
         type="button"
@@ -25,3 +27,6 @@
         {% endif %}
     </button>
 </th>
+{% else %}
+<th>{{ columnLabel ?? column|humanize }}</th>
+{% endif %}
