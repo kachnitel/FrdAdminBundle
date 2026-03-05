@@ -125,7 +125,30 @@ class CollectionField extends AbstractEditableField
             throw new \RuntimeException('Access denied for editing this field.');
         }
 
+        $targetClass = $this->requireTargetEntityClass();
+        $collection  = $this->requireCollection();
+        $mutators    = $this->getCollectionMutators(); // throws clearly if not found
+        $entity      = $this->getEntity();
+        $existingIds = $this->idsFromCollection($collection);
+
+        $this->applyAdditions($entity, $targetClass, array_diff($this->selectedIds, $existingIds), $mutators['adder']);
+        $this->applyRemovals($entity, $collection, array_diff($existingIds, $this->selectedIds), $mutators['remover']);
+
+        parent::save();
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+
+    /**
+     * Return the target entity class for the current association property.
+     *
+     * @return class-string
+     * @throws \RuntimeException when the property is not a recognised Doctrine association
+     */
+    private function requireTargetEntityClass(): string
+    {
         $targetClass = $this->getTargetEntityClass();
+
         if ($targetClass === null) {
             throw new \RuntimeException(sprintf(
                 '"%s::$%s" is not a recognised Doctrine association.',
@@ -134,7 +157,19 @@ class CollectionField extends AbstractEditableField
             ));
         }
 
+        return $targetClass;
+    }
+
+    /**
+     * Return the current property value asserted to be a Doctrine Collection.
+     *
+     * @return Collection<int, object>
+     * @throws \RuntimeException when the property value is not a Collection
+     */
+    private function requireCollection(): Collection
+    {
         $collection = $this->readValue();
+
         if (!$collection instanceof Collection) {
             throw new \RuntimeException(sprintf(
                 '"%s::$%s" did not return a Doctrine Collection.',
@@ -143,39 +178,60 @@ class CollectionField extends AbstractEditableField
             ));
         }
 
-        $mutators   = $this->getCollectionMutators(); // throws clearly if not found
-        $entity     = $this->getEntity();
-        $existingIds = $this->idsFromCollection($collection);
+        return $collection;
+    }
 
-        $idsToAdd    = array_diff($this->selectedIds, $existingIds);
-        $idsToRemove = array_diff($existingIds, $this->selectedIds);
-
+    /**
+     * Resolve and add each entity for the given IDs to the owning entity.
+     *
+     * @param class-string   $targetClass
+     * @param array<int>     $idsToAdd
+     * @throws \RuntimeException when a related entity cannot be found
+     */
+    private function applyAdditions(object $entity, string $targetClass, array $idsToAdd, string $adder): void
+    {
         foreach ($idsToAdd as $id) {
             $related = $this->entityManager->find($targetClass, $id);
             if ($related === null) {
                 throw new \RuntimeException("Entity {$targetClass} with id {$id} not found.");
             }
-            $entity->{$mutators['adder']}($related);
+            $entity->{$adder}($related);
         }
-
-        foreach ($idsToRemove as $id) {
-            // Locate the entity object within the already-loaded collection
-            $toRemove = null;
-            foreach ($collection as $item) {
-                if (method_exists($item, 'getId') && $item->getId() === $id) {
-                    $toRemove = $item;
-                    break;
-                }
-            }
-            if ($toRemove !== null) {
-                $entity->{$mutators['remover']}($toRemove);
-            }
-        }
-
-        parent::save();
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    /**
+     * Locate each entity for the given IDs in the loaded collection and remove it.
+     * IDs that are not found in the collection are silently skipped.
+     *
+     * @param Collection<int, object> $collection
+     * @param array<int>              $idsToRemove
+     */
+    private function applyRemovals(object $entity, Collection $collection, array $idsToRemove, string $remover): void
+    {
+        foreach ($idsToRemove as $id) {
+            $toRemove = $this->findInCollection($collection, $id);
+            if ($toRemove !== null) {
+                $entity->{$remover}($toRemove);
+            }
+        }
+    }
+
+    /**
+     * Find an entity by integer ID within an already-loaded Doctrine Collection.
+     * Returns null when no matching item is found.
+     *
+     * @param Collection<int, object> $collection
+     */
+    private function findInCollection(Collection $collection, int $id): ?object
+    {
+        foreach ($collection as $item) {
+            if (method_exists($item, 'getId') && $item->getId() === $id) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
 
     /**
      * Extract integer IDs from a Doctrine Collection (or any iterable).
