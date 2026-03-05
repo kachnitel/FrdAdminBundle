@@ -8,6 +8,9 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
 use Kachnitel\AdminBundle\Twig\Components\Field\CollectionField;
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Twig\Components\Field\AbstractEditableField;
+use PHPUnit\Framework\Attributes\UsesClass;
 
 /**
  * Uses TestEntity (OneToMany → TagEntity) as the owning fixture.
@@ -20,6 +23,8 @@ use Kachnitel\AdminBundle\Twig\Components\Field\CollectionField;
  * @group field
  * @group inline-edit
  */
+#[UsesClass(RowActionExpressionLanguage::class)]
+#[UsesClass(AbstractEditableField::class)]
 class CollectionFieldTest extends ComponentTestCase
 {
     // ── Helpers ───────────────────────────────────────────────────────────────

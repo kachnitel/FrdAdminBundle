@@ -8,6 +8,9 @@ use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
 use Kachnitel\AdminBundle\Twig\Components\Field\RelationshipField;
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Twig\Components\Field\AbstractEditableField;
+use PHPUnit\Framework\Attributes\UsesClass;
 
 /**
  * Uses TestEntity (ManyToOne → RelatedEntity via $relatedEntity property) as the owning
@@ -19,6 +22,8 @@ use Kachnitel\AdminBundle\Twig\Components\Field\RelationshipField;
  * @group field
  * @group inline-edit
  */
+#[UsesClass(RowActionExpressionLanguage::class)]
+#[UsesClass(AbstractEditableField::class)]
 class RelationshipFieldTest extends ComponentTestCase
 {
     // ── Helpers ───────────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -23,6 +24,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *
  * @covers \Kachnitel\AdminBundle\Service\ColumnPermissionService
  */
+#[UsesClass(ColumnPermission::class)]
 class ColumnPermissionServiceTest extends TestCase
 {
     /** @var AuthorizationCheckerInterface&MockObject */

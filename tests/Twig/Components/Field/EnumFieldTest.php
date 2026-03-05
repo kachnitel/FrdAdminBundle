@@ -8,12 +8,21 @@ use Kachnitel\AdminBundle\Tests\Fixtures\InlineEditEnumEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestStatus;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
 use Kachnitel\AdminBundle\Twig\Components\Field\EnumField;
+use Kachnitel\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Twig\Components\Field\AbstractEditableField;
+use PHPUnit\Framework\Attributes\UsesClass;
 
 /**
  * @covers \Kachnitel\AdminBundle\Twig\Components\Field\EnumField
  * @group field
  * @group inline-edit
  */
+#[UsesClass(Admin::class)]
+#[UsesClass(RowActionExpressionLanguage::class)]
+#[UsesClass(AttributeHelper::class)]
+#[UsesClass(AbstractEditableField::class)]
 class EnumFieldTest extends ComponentTestCase
 {
     private function createEntity(): InlineEditEnumEntity

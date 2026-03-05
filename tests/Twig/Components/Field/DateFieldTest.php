@@ -10,6 +10,11 @@ use DateTimeInterface;
 use Kachnitel\AdminBundle\Tests\Fixtures\InlineEditDateEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
 use Kachnitel\AdminBundle\Twig\Components\Field\DateField;
+use Kachnitel\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Twig\Components\Field\AbstractEditableField;
+use PHPUnit\Framework\Attributes\UsesClass;
 
 /**
  * @covers \Kachnitel\AdminBundle\Twig\Components\Field\DateField
@@ -32,6 +37,10 @@ use Kachnitel\AdminBundle\Twig\Components\Field\DateField;
  * InlineEditDateEntity provides one nullable property per Doctrine date column type
  * variant with setters, enabling every branch of getDateType() and shouldUseImmutable().
  */
+#[UsesClass(Admin::class)]
+#[UsesClass(RowActionExpressionLanguage::class)]
+#[UsesClass(AttributeHelper::class)]
+#[UsesClass(AbstractEditableField::class)]
 class DateFieldTest extends ComponentTestCase
 {
     // ── Helpers ───────────────────────────────────────────────────────────────
