@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Fixtures;
 use Doctrine\ORM\Mapping as ORM;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 
 /**
  * Test entity for testing per-column permission feature.
@@ -27,11 +28,11 @@ class PermissionTestEntity
     private string $name = '';
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    #[ColumnPermission('ROLE_HR')]
+    #[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR'])]
     private string $salary = '0.00';
 
     #[ORM\Column(type: 'text', nullable: true)]
-    #[ColumnPermission('ROLE_MANAGER')]
+    #[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_MANAGER'])]
     private ?string $internalNotes = null;
 
     #[ORM\Column(type: 'string', length: 255)]

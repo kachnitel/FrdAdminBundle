@@ -1,0 +1,36 @@
+{#
+ # DateField - inline date/datetime/time editor.
+ #   this.editMode        - bool
+ #   this.canEdit         - bool   (#[ExposeInTemplate] on canEdit())
+ #   this.dateValue       - ?string
+ #   this.formFieldConfig - array  ({type, required})
+ #   this.label           - string
+ #}
+{% import kachnitel_admin_theme as css %}
+
+<div {{ attributes }}>
+    {% if this.editMode and this.canEdit %}
+        <input
+            type="{{ this.formFieldConfig.type }}"
+            class="{{ css.form_input() }}"
+            data-model="dateValue"
+            value="{{ this.dateValue }}"
+            aria-label="{{ this.label }}"
+            autofocus
+            {% if this.formFieldConfig.required %}required{% endif %}
+        />
+        <button type="button" data-action="live#action" data-live-action-param="save"
+            class="{{ css.btn_sm() }} {{ css.btn_primary() }}">Save</button>
+        <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
+            class="{{ css.btn_sm() }} {{ css.btn_secondary() }}">Cancel</button>
+    {% else %}
+        <span class="field-editable-cell">
+            {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+            {% if this.canEdit %}
+                <button type="button" class="field-edit-trigger"
+                    data-action="live#action" data-live-action-param="activateEditing"
+                    title="Edit">✎</button>
+            {% endif %}
+        </span>
+    {% endif %}
+</div>

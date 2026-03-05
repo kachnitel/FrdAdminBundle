@@ -7,7 +7,6 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithoutBatchActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class EntityListBatchActionsTest extends ComponentTestCase
 {

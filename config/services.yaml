@@ -82,7 +82,7 @@ services:
     # EntityList component with pagination config
     Kachnitel\AdminBundle\Twig\Components\EntityList:
         arguments:
-            $config: '@Kachnitel\AdminBundle\Config\EntityListConfig'
+            # $config: '@Kachnitel\AdminBundle\Config\EntityListConfig'
 
     # Generic Admin Controller (auto-discovers entities via #[Admin] attribute)
     Kachnitel\AdminBundle\Controller\GenericAdminController:

@@ -1,0 +1,24 @@
+{#
+ # Inline edit entry button for a list row.
+ #
+ # Fires the `editRow` LiveAction on the parent EntityList LiveComponent via Stimulus.
+ # No own live state — the parent tracks which row is being edited.
+ #
+ # Variables:
+ # @var object entity - The entity row (provides entity.id for the LiveArg)
+ #}
+
+{% import kachnitel_admin_theme as css %}
+
+{% set entityId = entity.id is defined and entity.id is not null ? entity.id : null %}
+
+{% if entityId is not null %}
+    <button
+        type="button"
+        class="{{ css.btn_sm() }} {{ css.btn_outline_primary() }}"
+        data-action="live#action"
+        data-live-action-param="editRow"
+        data-live-id-param="{{ entityId }}"
+        title="Edit inline"
+    >✏️</button>
+{% endif %}

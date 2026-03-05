@@ -21,8 +21,14 @@ use Twig\Extension\RuntimeExtensionInterface;
  * DI-tuple conditions ([ServiceClass::class, 'method']) are resolved from a scoped ServiceLocator
  * containing only services that implement RowActionConditionInterface.
  *
+ * Visibility check for voterAttribute differs by action type:
+ *   - Link/form actions: delegated to AdminRouteRuntime::isActionAccessible(), which verifies
+ *     both route existence and voter permission.
+ *   - Component actions (liveComponent set): voter checked directly via AuthorizationChecker.
+ *     Route/form existence is irrelevant — the component handles its own rendering.
+ *
  * Error behaviour (DI tuple failures only — string expression errors always fail-safe):
- *  - conditionLocator === null:  fail-open (should not occur in normal wiring, no log)
+ *  - conditionLocator === null:  fail-open (no condition services registered)
  *  - service not in locator / method throws + debug=true:  throws \RuntimeException immediately
  *  - service not in locator / method throws + debug=false: logs warning, hides action (fail-safe)
  */
@@ -77,14 +83,26 @@ class RowActionRuntime implements RuntimeExtensionInterface
 
     /**
      * Check if a single action should be visible for a specific entity.
+     *
+     * For component actions (liveComponent set), voterAttribute is checked directly via
+     * AuthorizationChecker — route/form existence is not required.
+     * For all other actions, isActionAccessible() validates route + voter together.
      */
     public function isActionVisible(RowAction $action, object $entity, string $entityShortClass): bool
     {
-        // 1. Voter attribute — delegates to AdminEntityVoter via AdminRouteRuntime
+        // 1. Voter / route check
         if ($action->voterAttribute !== null) {
-            $actionName = $this->mapVoterAttributeToActionName($action->voterAttribute);
-            if (!$this->routeRuntime->isActionAccessible($entityShortClass, $actionName)) {
-                return false;
+            if ($action->isComponentAction()) {
+                // Component actions have no route or form — check the voter directly
+                if ($this->authChecker !== null
+                    && !$this->authChecker->isGranted($action->voterAttribute, $entityShortClass)) {
+                    return false;
+                }
+            } else {
+                $actionName = $this->mapVoterAttributeToActionName($action->voterAttribute);
+                if (!$this->routeRuntime->isActionAccessible($entityShortClass, $actionName)) {
+                    return false;
+                }
             }
         }
 
@@ -129,8 +147,6 @@ class RowActionRuntime implements RuntimeExtensionInterface
      */
     private function evaluateDiCondition(array $condition, object $entity): bool
     {
-        // Locator not configured at all — no RowActionConditionInterface services exist.
-        // Fail open: don't hide actions just because the feature isn't in use.
         if ($this->conditionLocator === null) {
             return true;
         }

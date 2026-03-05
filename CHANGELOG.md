@@ -7,7 +7,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.5.2](https://github.com/kachnitel/FrdAdminBundle/compare/v0.5.1...v0.5.2) (2026-02-08)
+## [0.6.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.5.2...v0.6.0) (2026-02-27)
+
+### Features
+
+* Add field type components for inline editing ([706d19](https://github.com/kachnitel/FrdAdminBundle/commit/706d19c439781b9f4768434d417fa92a5e13f455))
+* Clean up save/cancel interface ([b1ec22](https://github.com/kachnitel/FrdAdminBundle/commit/b1ec22e9230e19fcb06519757aa94dd541a1100b))
+* Sort entities in dashboard alphabetically ([d9d42b](https://github.com/kachnitel/FrdAdminBundle/commit/d9d42b0b465e41345a5c69384acd060e03bb9fb1))
+* Use existing preview templates for non-editable fields ([cfc2ea](https://github.com/kachnitel/FrdAdminBundle/commit/cfc2eac4f8bf479d3002da8c2665392f7bca8452))
+
+### Bug Fixes
+
+
+##### Tests
+
+* Improve some AI generated tests ([569e64](https://github.com/kachnitel/FrdAdminBundle/commit/569e64981e637a17f65a3ce7a80a49abd3a7788b))
+
+### Tests
+
+* Improve tests for enum filter rendering and query building ([d76d9d](https://github.com/kachnitel/FrdAdminBundle/commit/d76d9dfc619a5c48341da42d5701a289c42c9bcd))
+
+
+---
+
+## [0.5.2](https://github.com/kachnitel/FrdAdminBundle/compare/v0.5.1...v0.5.2) (2026-02-07)
 
 ### Features
 

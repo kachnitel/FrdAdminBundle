@@ -137,7 +137,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
 
         $component = $testComponent->component();
         $choices = $component->getChoices();
-        $this->assertSame(['active' => 'ACTIVE', 'inactive' => 'INACTIVE'], $choices);
+        $this->assertSame(['active' => 'ACTIVE', 'inactive' => 'INACTIVE', 'archived' => 'ARCHIVED'], $choices);
     }
 
     /**

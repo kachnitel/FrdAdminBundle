@@ -18,6 +18,12 @@ namespace Kachnitel\AdminBundle\ValueObject;
  *      condition: [ApprovalService::class, 'canApprove']
  *      The service method receives the entity object and must return bool.
  *      The service must implement RowActionConditionInterface.
+ *
+ * Action rendering modes (mutually exclusive, checked in order):
+ *   1. template       — custom Twig template
+ *   2. liveComponent  — Twig/Live Component rendered via {{ component() }}
+ *   3. method         — form-based POST/DELETE
+ *   4. route/url      — plain link (default)
  */
 final class RowAction
 {
@@ -26,30 +32,30 @@ final class RowAction
      *
      * Used in merge() to decide whether to inherit the original action's priority.
      * If both actions have DEFAULT_PRIORITY, the original is kept.
-     *
-     * To force a specific priority of 100, set it on the lower-priority provider
-     * (e.g., DefaultRowActionProvider) rather than relying on the merge default.
      */
     public const DEFAULT_PRIORITY = 100;
 
     /**
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      *
-     * @param string                                        $name           Unique action identifier (e.g., 'show', 'edit', 'duplicate')
-     * @param string                                        $label          Display label for the action button
-     * @param string|null                                   $icon           Emoji or icon identifier (e.g., '👀', 'edit')
-     * @param string|null                                   $route          Named route (null = uses admin_object_path automatic resolution)
+     * @param string                                        $name           Unique action identifier
+     * @param string                                        $label          Display label
+     * @param string|null                                   $icon           Emoji or icon identifier
+     * @param string|null                                   $route          Named route (null = admin_object_path auto-resolution)
      * @param array<string, mixed>                          $routeParams    Additional route parameters
      * @param string|null                                   $url            Static URL (alternative to route)
-     * @param string|null                                   $permission     Required role (e.g., 'ROLE_ADMIN')
-     * @param string|null                                   $voterAttribute Admin voter attribute (e.g., 'ADMIN_EDIT')
+     * @param string|null                                   $permission     Required role (e.g. 'ROLE_ADMIN')
+     * @param string|null                                   $voterAttribute Admin voter attribute (e.g. 'ADMIN_EDIT')
      * @param string|array{class-string, string}|null $condition      Expression string OR [ServiceClass::class, 'method'] DI tuple
      * @param string|null                                   $cssClass       Additional CSS classes for the button
-     * @param string|null                                   $confirmMessage Confirmation message (if set, shows confirm dialog before action)
+     * @param string|null                                   $confirmMessage Confirmation message (shows confirm dialog before action)
      * @param bool                                          $openInNewTab   Whether to open link in new tab
      * @param int                                           $priority       Sort priority (lower = earlier). Use DEFAULT_PRIORITY (100) for "unset".
      * @param string|null                                   $method         HTTP method for form-based actions ('POST', 'DELETE')
      * @param string|null                                   $template       Custom Twig template for rendering the action button
+     * @param string|null                                   $liveComponent  TwigComponent/LiveComponent name rendered instead of a link.
+     *                                                                      Must implement RowActionComponentInterface.
+     *                                                                      Always receives {entity} as prop.
      */
     public function __construct(
         public readonly string $name,
@@ -67,6 +73,7 @@ final class RowAction
         public readonly int $priority = self::DEFAULT_PRIORITY,
         public readonly ?string $method = null,
         public readonly ?string $template = null,
+        public readonly ?string $liveComponent = null,
     ) {}
 
     /**
@@ -93,6 +100,7 @@ final class RowAction
             priority:      $overrides['priority']      ?? $this->priority,
             method:        $this->pick($overrides, 'method',        $this->method),
             template:      $this->pick($overrides, 'template',      $this->template),
+            liveComponent: $this->pick($overrides, 'liveComponent', $this->liveComponent),
         );
     }
 
@@ -103,10 +111,6 @@ final class RowAction
      *
      * Priority merge rule: if the incoming action uses DEFAULT_PRIORITY (meaning the
      * developer did not explicitly set a priority), the original priority is kept.
-     * This prevents accidental priority resets when adding a condition to a default action.
-     *
-     * Limitation: a developer cannot use merge() to explicitly set priority to DEFAULT_PRIORITY
-     * (100) from a lower value — use override: true for that case.
      */
     public function merge(self $other): self
     {
@@ -126,36 +130,36 @@ final class RowAction
             priority:      $other->priority !== self::DEFAULT_PRIORITY ? $other->priority : $this->priority,
             method:        $other->method         ?? $this->method,
             template:      $other->template       ?? $this->template,
+            liveComponent: $other->liveComponent  ?? $this->liveComponent,
         );
     }
 
-    /**
-     * Whether this action resolves its URL via a named Symfony route.
-     */
     public function hasRoute(): bool
     {
         return $this->route !== null;
     }
 
-    /**
-     * Whether clicking this action should show a browser confirm dialog first.
-     */
     public function requiresConfirmation(): bool
     {
         return $this->confirmMessage !== null;
     }
 
-    /**
-     * Whether this action renders as a form (POST/DELETE) rather than a plain link.
-     */
     public function isFormAction(): bool
     {
         return $this->method !== null;
     }
 
     /**
+     * Whether this action renders as a Twig/Live Component rather than a link or form.
+     * Component must implement RowActionComponentInterface and accept {entity} as a prop.
+     */
+    public function isComponentAction(): bool
+    {
+        return $this->liveComponent !== null;
+    }
+
+    /**
      * Whether the condition is a DI service tuple ([ServiceClass::class, 'method']).
-     * Returns false for string expressions and when no condition is set.
      */
     public function hasDiCondition(): bool
     {
@@ -163,11 +167,7 @@ final class RowAction
     }
 
     /**
-     * Return $overrides[$key] when the key is explicitly present (allows null),
-     * or fall back to $default when the key is absent entirely.
-     *
-     * This is the single branching point replacing the repeated array_key_exists
-     * ternaries that previously inflated with()'s cyclomatic complexity.
+     * Pick a value from overrides array, supporting explicit null overrides.
      *
      * @param array<string, mixed> $overrides
      */

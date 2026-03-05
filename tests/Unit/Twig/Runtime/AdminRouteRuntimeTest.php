@@ -9,7 +9,6 @@ use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Kachnitel\AdminBundle\Attribute\AdminRoutes;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
-use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -536,7 +535,7 @@ class AdminRouteRuntimeTest extends TestCase
     public function isActionAccessibleReturnsTrueForNewWithFormAndPermission(): void
     {
         $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
-        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
 
         $runtime = new AdminRouteRuntime(
             $this->router,
@@ -576,7 +575,7 @@ class AdminRouteRuntimeTest extends TestCase
     public function isActionAccessibleReturnsFalseForNewWithoutForm(): void
     {
         $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
-        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
 
         $runtime = new AdminRouteRuntime(
             $this->router,
@@ -616,7 +615,7 @@ class AdminRouteRuntimeTest extends TestCase
     public function isActionAccessibleReturnsTrueForEditWithFormAndPermission(): void
     {
         $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
-        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
 
         $runtime = new AdminRouteRuntime(
             $this->router,
@@ -656,7 +655,7 @@ class AdminRouteRuntimeTest extends TestCase
     public function isActionAccessibleReturnsFalseForEditWithoutForm(): void
     {
         $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
-        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
 
         $runtime = new AdminRouteRuntime(
             $this->router,
@@ -737,7 +736,7 @@ class AdminRouteRuntimeTest extends TestCase
     public function hasFormReturnsTrueWhenEntityDiscoveryThrowsException(): void
     {
         $formRegistry = $this->createMock(\Symfony\Component\Form\FormRegistryInterface::class);
-        $entityDiscovery = $this->createMock(\Kachnitel\AdminBundle\Service\EntityDiscoveryService::class);
+        $entityDiscovery = $this->createMock(EntityDiscoveryService::class);
 
         $runtime = new AdminRouteRuntime(
             $this->router,

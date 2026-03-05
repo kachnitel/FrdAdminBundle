@@ -62,6 +62,7 @@ class AttributeRowActionProvider implements RowActionProviderInterface
                     priority: $adminAction->priority,
                     method: $adminAction->method,
                     template: $adminAction->template,
+                    liveComponent: $adminAction->liveComponent,
                 );
 
                 $actions[] = $rowAction;
@@ -82,6 +83,8 @@ class AttributeRowActionProvider implements RowActionProviderInterface
 
     /**
      * Get the #[AdminActionsConfig] attribute for an entity class, or null if absent.
+     *
+     * @param class-string $entityClass
      */
     public function getActionsConfig(string $entityClass): ?AdminActionsConfig
     {
@@ -108,7 +111,9 @@ class AttributeRowActionProvider implements RowActionProviderInterface
     }
 
     /**
-     * Get the raw #[AdminAction] attribute for a specific action name.
+     * Get the raw #[AdminAction] attribute instance for a specific action name, or null if absent.
+     *
+     * @param class-string $entityClass
      */
     public function getAdminActionAttribute(string $entityClass, string $actionName): ?AdminAction
     {
@@ -117,7 +122,9 @@ class AttributeRowActionProvider implements RowActionProviderInterface
     }
 
     /**
-     * Whether the given action has the override flag set (fully replaces vs merges).
+     * Whether the #[AdminAction] for the given entity+action name has override: true.
+     *
+     * @param class-string $entityClass
      */
     public function isOverride(string $entityClass, string $actionName): bool
     {

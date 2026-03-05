@@ -1,15 +1,20 @@
 {#
  # Renders a single row action button.
  #
+ # Rendering modes (checked in order):
+ #   1. template       — custom Twig include
+ #   2. liveComponent  — {{ component() }} with {entity} prop
+ #   3. method         — form-based POST/DELETE
+ #   4. default        — plain link
+ #
  # Variables:
- # @var RowAction action - The action configuration
- # @var object entity - The entity object
- # @var string entityShortClass - Entity short class name
+ # @var RowAction action        - The action configuration
+ # @var object    entity        - The entity object
+ # @var string    entityShortClass - Entity short class name
  #}
 
 {% import kachnitel_admin_theme as css %}
 
-{# Resolve entity id once, safely — avoids broken URLs when id is null or missing #}
 {% set entityId = entity.id is defined and entity.id is not null ? entity.id : null %}
 
 {% if action.template %}
@@ -18,6 +23,10 @@
         entity: entity,
         entityShortClass: entityShortClass
     }) }}
+{% elseif action.liveComponent %}
+    {# Component actions receive {entity} as the standard prop contract.
+       The component (RowActionComponentInterface) is responsible for its own rendering. #}
+    {{ component(action.liveComponent, { entity: entity }) }}
 {% elseif action.method %}
     {# Form-based action (POST/DELETE) #}
     <form method="post"

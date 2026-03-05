@@ -1,9 +1,6 @@
 {#
  # LiveComponent template for reactive entity lists with per-column filters.
  #
- # Uses DataSourceInterface for all data sources. Doctrine entities use DoctrineDataSource
- # while custom data sources (e.g., audit logs) implement DataSourceInterface directly.
- #
  # Props:
  # @var string entityClass - Entity class name (for Doctrine entities)
  # @var string dataSourceId - Data source identifier (for custom data sources)
@@ -38,7 +35,8 @@
     {% if showColumnVisibility %}
         {% set columnLabels = {} %}
         {% for column in this.columns %}
-            {% set columnLabels = columnLabels|merge({ (column): dataSource.columns[column] is defined ? dataSource.columns[column].label : column|humanize }) %}
+            {% set columnLabels = columnLabels|merge({ (column): dataSource.columns[column] is defined ?
+                dataSource.columns[column].label : column|humanize }) %}
         {% endfor %}
         {% include '@KachnitelAdmin/components/EntityList/_ColumnVisibilityToggle.html.twig' with {
             allColumns: this.columns,
@@ -64,16 +62,15 @@
         </div>
     {% endif %}
 
-    {# Entity List Table #}
+    <div class="{{ css.overflow_x_auto() }}">
     <table class="{{ css.table() }}">
-        <thead>
+        <thead class="{{ css.table_header() }}">
             <tr>
                 {% if showBatchColumn %}
-                    <th style="width: 40px;">
+                    <th>
                         <input
                             type="checkbox"
                             class="{{ css.form_checkbox() }}"
-                            title="Select/Deselect All"
                             data-batch-select-target="master"
                             data-action="change->batch-select#toggleAll"
                         >
@@ -112,6 +109,7 @@
         <tbody>
             {% for entity in this.entities %}
                 {% set entityId = this.getEntityId(entity) %}
+                {% set rowEditing = isDoctrineEntity and this.isRowEditing(entity) %}
                 <tr>
                     {% if showBatchColumn %}
                         <td>
@@ -130,8 +128,9 @@
                         <td>
                             {% set value = this.getEntityValue(entity, column) %}
                             {% set columnMeta = dataSource.columns[column] ?? null %}
+
                             {% if columnMeta and columnMeta.template %}
-                                {# Custom template specified in column metadata - highest priority #}
+                                {# Custom template specified in ColumnMetadata — highest priority #}
                                 {{ include(columnMeta.template, {
                                     entity: entity,
                                     item: entity,
@@ -139,8 +138,9 @@
                                     property: column,
                                     cell: true
                                 }) }}
+
                             {% elseif not isDoctrineEntity %}
-                                {# Custom DataSource: use datasource-specific template hierarchy #}
+                                {# Custom DataSource: template hierarchy for datasource columns #}
                                 {% set columnType = columnMeta ? columnMeta.type : 'string' %}
                                 {% set isCollection = columnType == 'collection' %}
                                 {{ include(admin_column_templates(this.dataSourceId, null, column, columnType, isCollection), {
@@ -149,8 +149,35 @@
                                     property: column,
                                     cell: true
                                 }, ignore_missing = true) }}
+
+                            {% elseif rowEditing %}
+                                {# Inline edit mode for Doctrine entities.
+                                   The Field LiveComponent renders both the display value and its own
+                                   activateEditing trigger button internally — the trigger must live
+                                   inside the component's root element so that live#action targets the
+                                   correct component rather than EntityList.
+                                   The wrapper span is provided solely for the Bootstrap optional
+                                   hover-CSS upgrade path (see theme/bootstrap.html.twig). #}
+                                {% set fieldComponent = admin_field_component_name(entity, column) %}
+                                {% if fieldComponent %}
+                                    <span class="{{ css.field_editable_cell() }}">
+                                        {{ component(fieldComponent, {
+                                            entity: entity,
+                                            property: column,
+                                            editMode: false
+                                        }) }}
+                                    </span>
+                                {% else %}
+                                    {{ include(admin_entity_column_templates(entity, column), {
+                                        value: value,
+                                        entity: entity,
+                                        property: column,
+                                        cell: false
+                                    }, ignore_missing = true) }}
+                                {% endif %}
+
                             {% else %}
-                                {# Doctrine entity: use entity-specific template hierarchy #}
+                                {# Read-only Doctrine entity cell #}
                                 {% set isCollection = admin_is_collection(entity, column) %}
                                 {% set propertyType = admin_get_property_type(entity, column) %}
                                 {{ include(admin_column_templates(null, this.entityClass, column, propertyType, isCollection), {
@@ -173,6 +200,8 @@
                         {% include '@KachnitelAdmin/components/EntityList/_RowActions.html.twig' with {
                             entity: entity,
                             entityShortClass: this.entityShortClass,
+                            canEditRow: this.canEditRow(),
+                            isRowEditing: rowEditing,
                             entityClass: this.entityClass
                         } only %}
                     {% endif %}
@@ -186,8 +215,8 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 
-    {# Pagination Controls #}
     {% set paginationInfo = this.paginationInfo %}
     {% include '@KachnitelAdmin/components/EntityList/_Pagination.html.twig' with {
         paginationInfo: paginationInfo,

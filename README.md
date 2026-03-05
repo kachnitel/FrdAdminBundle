@@ -1,9 +1,9 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-786%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-77%25-yellow>)
-![Assertions](<https://img.shields.io/badge/assertions-1778-blue>)
+![Tests](<https://img.shields.io/badge/tests-961%20passed-red>)
+![Coverage](<https://img.shields.io/badge/coverage-69%25-yellow>)
+![Assertions](<https://img.shields.io/badge/assertions-2029-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0|^8.0-000000?logo=symfony&logoColor=white>)
@@ -165,10 +165,11 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 - **Multi-Layer Permissions** - Entity, action, and column-level control
 - **Easy start** - Add `#[Admin]` to entity, auto-detects columns
 - **Highly Customizable** - From [cell level templates](docs/TEMPLATE_OVERRIDES.md#common-override-scenarios) to entire layout overrides using [Symfony's Twig inheritance](https://symfony.com/doc/current/bundles/override.html#templates)
-- **LiveComponent-Powered** - Real-time search, filters, and updates without page reloads
+- **Inline Editing** - Edit any field in-place, with type-aware inputs and per-column permission guards
 - **Column Visibility** - Show/hide columns with session or database-backed preferences
 - **Row Actions** — Per-row buttons with conditions, permissions, and priority ordering; extend defaults or replace them
 - **DataSource Abstraction** - Display data from external APIs, audit logs, or any source
+- **LiveComponent-Powered** - Real-time search, filters, and updates without full page reloads
 
 ## Documentation
 
@@ -178,6 +179,7 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 | [Column Visibility](docs/COLUMN_VISIBILITY.md) | Permissions and user preferences |
 | [Filters](docs/FILTERS.md) | Automatic filtering and customization |
 | [Row Actions](docs/ROW_ACTIONS.md) | Custom action buttons per row — conditions, ordering, providers |
+| [Inline Editing](docs/INLINE_EDIT.md) | Per-field in-place editing in list views |
 | [Template Overrides](docs/TEMPLATE_OVERRIDES.md) | Customize the admin appearance |
 | [Batch Actions](docs/BATCH_ACTIONS.md) | Multi-select and bulk operations |
 | [DataSource](docs/DATASOURCE.md) | Non-Doctrine data sources |

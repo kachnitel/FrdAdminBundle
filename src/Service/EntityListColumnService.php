@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Service;
 
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 
 /**
  * Handles column permission filtering for entity lists.
  *
  * Combines data source column/filter metadata with per-column permission
  * checks to produce the set of columns and filters a user is allowed to see.
+ * Uses the ADMIN_SHOW action to determine column visibility in list views.
  */
 class EntityListColumnService
 {
@@ -22,7 +24,7 @@ class EntityListColumnService
      * Get columns filtered by user permissions.
      *
      * For non-Doctrine data sources (entityClass = ''), all columns are returned.
-     * For Doctrine entities, columns denied by #[ColumnPermission] are excluded.
+     * For Doctrine entities, columns the user cannot ADMIN_SHOW are excluded.
      *
      * @return array<int|string, string>
      */
@@ -34,7 +36,10 @@ class EntityListColumnService
             return $allColumns;
         }
 
-        $denied = $this->columnPermissionService->getDeniedColumns($entityClass);
+        $denied = $this->columnPermissionService->getDeniedColumnsForAction(
+            $entityClass,
+            AdminEntityVoter::ADMIN_SHOW
+        );
 
         return array_values(array_filter(
             $allColumns,

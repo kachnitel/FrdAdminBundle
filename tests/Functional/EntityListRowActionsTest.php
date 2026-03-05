@@ -41,7 +41,7 @@ class EntityListRowActionsTest extends ComponentTestCase
 
         // Both default buttons should appear (ComponentTestKernel grants all access)
         $this->assertStringContainsString('👀', $rendered);
-        $this->assertStringContainsString('🖊', $rendered);
+        $this->assertStringContainsString('✏️', $rendered);
     }
 
     // -------------------------------------------------------------------------
@@ -161,7 +161,7 @@ class EntityListRowActionsTest extends ComponentTestCase
 
         $rendered = (string) $component->render();
 
-        $this->assertStringNotContainsString('🖊', $rendered);
+        $this->assertStringNotContainsString('✏️', $rendered);
     }
 
     public function testShowButtonIsStillPresentDespiteExcludingEdit(): void

@@ -6,7 +6,6 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Controller;
 
 use Kachnitel\AdminBundle\Controller\AbstractAdminController;
 use PHPUnit\Framework\TestCase;
-use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Unit tests for AbstractAdminController configuration and utility methods.

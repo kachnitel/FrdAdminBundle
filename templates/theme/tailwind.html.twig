@@ -29,6 +29,7 @@
 {# Tables #}
 {% macro table() %}min-w-full divide-y divide-gray-200{% endmacro %}
 {% macro table_simple() %}min-w-full{% endmacro %}
+{% macro table_header() %}bg-gray-50{% endmacro %}
 
 {# Pagination #}
 {% macro pagination() %}inline-flex -space-x-px rounded-md shadow-sm{% endmacro %}
@@ -47,6 +48,7 @@
 {% macro inline_block() %}inline-block{% endmacro %}
 {% macro d_inline() %}inline{% endmacro %}
 {% macro float_end() %}float-right{% endmacro %}
+{% macro overflow_x_auto() %}overflow-x-auto{% endmacro %}
 
 {# Cards #}
 {% macro card() %}bg-white rounded-lg shadow{% endmacro %}
@@ -80,3 +82,13 @@
 
 {# Heading #}
 {% macro h4() %}text-xl font-semibold mb-3{% endmacro %}
+
+{# Inline Edit
+   field_editable_cell — wrapper around a cell's display value.
+     The `group` class enables group-hover targeting for the child trigger.
+   field_edit_trigger  — the ✏️ button revealed on hover.
+     Stays invisible until the parent cell is hovered or focused-within.
+     No extra CSS required — all behaviour is expressed via Tailwind utilities.
+#}
+{% macro field_editable_cell() %}group relative inline-flex items-center gap-1{% endmacro %}
+{% macro field_edit_trigger() %}opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 text-gray-400 hover:text-gray-600 p-0.5 rounded leading-none{% endmacro %}

@@ -2,28 +2,36 @@
 
 ## Per-Column Permissions
 
-Restrict column visibility based on user roles using the `#[ColumnPermission]` attribute:
+Restrict column visibility and editability using the `#[ColumnPermission]` attribute. The attribute accepts a map of admin actions to required roles:
 
 ```php
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 
 #[Admin(label: 'Employees')]
 class Employee
 {
     private string $name;
 
-    #[ColumnPermission('ROLE_HR')]
+    #[ColumnPermission([
+        AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR',
+        AdminEntityVoter::ADMIN_EDIT => 'ROLE_HR_EDIT',
+    ])]
     private float $salary;
 
-    #[ColumnPermission('ROLE_MANAGER')]
+    #[ColumnPermission([
+        AdminEntityVoter::ADMIN_SHOW => ['ROLE_HR', 'ROLE_MANAGER'],
+    ])]
     private string $internalNotes;
 }
 ```
 
-Users without the required role will not see the column, its filter, or be able to sort by it. Permission-denied columns are also excluded from the column visibility toggle picker (see below).
+**Available actions:** `ADMIN_SHOW`, `ADMIN_EDIT`, `ADMIN_DELETE` (use `AdminEntityVoter` constants).
 
-Uses Symfony's built-in role voter via `isGranted()` — role hierarchy is supported automatically.
+**Role arrays:** Pass an array of roles for OR logic — user needs at least one.
+
+Columns restricted for `ADMIN_SHOW` are excluded from list views, filters, and the column visibility toggle picker. Uses Symfony's `AuthorizationCheckerInterface`, so role hierarchy is supported automatically.
 
 ## User Column Visibility Toggle
 

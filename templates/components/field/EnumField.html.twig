@@ -1,0 +1,39 @@
+{#
+ # EnumField - inline enum dropdown editor.
+ #   this.editMode      - bool
+ #   this.canEdit       - bool   (#[ExposeInTemplate] on canEdit())
+ #   this.selectedValue - ?string
+ #   this.enumCases     - array  (value => label)
+ #   this.label         - string
+ #}
+{% import kachnitel_admin_theme as css %}
+
+<div {{ attributes }}>
+    {% if this.editMode and this.canEdit %}
+        <select
+            class="{{ css.form_select() }} {{ css.form_input() }}"
+            data-model="selectedValue"
+            aria-label="{{ this.label }}"
+        >
+            <option value="">— Select {{ this.label }} —</option>
+            {% for val, label in this.enumCases %}
+                <option value="{{ val }}" {% if this.selectedValue == val %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="button" data-action="live#action" data-live-action-param="save"
+            class="{{ css.btn_sm() }} {{ css.btn_primary() }}">Save</button>
+        <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
+            class="{{ css.btn_sm() }} {{ css.btn_secondary() }}">Cancel</button>
+    {% else %}
+        <span class="field-editable-cell">
+            {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+            {% if this.canEdit %}
+                <button type="button" class="field-edit-trigger"
+                    data-action="live#action" data-live-action-param="activateEditing"
+                    title="Edit">✎</button>
+            {% endif %}
+        </span>
+    {% endif %}
+</div>

@@ -1,17 +1,34 @@
 {#
- # Partial template for entity row action buttons.
+ # Row action buttons for a Doctrine entity row.
+ #
+ # When isRowEditing is true, only the ✕ exit button is shown — RowActions are suppressed to
+ # prevent navigation away mid-edit. The exit button is NOT a RowAction; it belongs here
+ # because it directly manipulates EntityList LiveProp editingRowId.
+ #
+ # When isRowEditing is false, the full RowAction loop runs. The default 'edit' action is
+ # replaced by the InlineEditButton component (registered by InlineEditRowActionProvider),
+ # which fires `editRow` on the parent EntityList LiveComponent.
  #
  # Variables:
- # @var object entity - The entity object
- # @var string entityShortClass - Short class name for permission checks
- # @var string|null entityClass - Full entity class (optional, for custom row actions)
+ # @var object      entity          - The entity object
+ # @var string      entityShortClass - Short class name for voter checks
+ # @var string      entityClass      - Full entity class for RowAction registry lookup
+ # @var bool        isRowEditing     - Whether this specific row is in inline-edit mode
  #}
 
 {% import kachnitel_admin_theme as css %}
 
 <td class="actions">
-    {# Use new row actions system if entityClass is provided #}
-    {% if entityClass is defined and entityClass %}
+    {% if isRowEditing %}
+        <button
+            type="button"
+            class="{{ css.btn_sm() }} {{ css.btn_secondary() }}"
+            data-action="live#update"
+            data-model="editingRowId"
+            data-value=""
+            title="Exit edit mode"
+        >✕</button>
+    {% else %}
         {% set actions = admin_visible_row_actions(entityClass, entity, entityShortClass) %}
         {% for action in actions %}
             {% include '@KachnitelAdmin/components/EntityList/_RowActionButton.html.twig' with {
@@ -20,18 +37,5 @@
                 entityShortClass: entityShortClass
             } only %}
         {% endfor %}
-    {% else %}
-        {# Fallback to legacy hardcoded actions for backwards compatibility #}
-        {% if admin_action_accessible(entityShortClass, 'show') %}
-            <a href="{{ admin_object_path(entity, 'show') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
-                👀
-            </a>
-        {% endif %}
-
-        {% if admin_action_accessible(entityShortClass, 'edit') %}
-            <a href="{{ admin_object_path(entity, 'edit') }}" class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}">
-                🖊
-            </a>
-        {% endif %}
     {% endif %}
 </td>

@@ -3,6 +3,7 @@
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface;
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestDataSourceProvider;
@@ -53,6 +54,7 @@ class TestKernel extends Kernel
             'session' => [
                 'storage_factory_id' => 'session.storage.factory.mock_file',
             ],
+            'validation' => ['enabled' => true]
         ]);
 
         $container->loadFromExtension('twig', [
@@ -158,7 +160,7 @@ class TestKernel extends Kernel
         $routes->import(__DIR__ . '/../../vendor/symfony/ux-live-component/config/routes.php')
             ->prefix('/_components');
 
-        $routes->import(\Kachnitel\AdminBundle\Controller\GenericAdminController::class, 'attribute');
+        $routes->import(GenericAdminController::class, 'attribute');
     }
 
     public function getProjectDir(): string

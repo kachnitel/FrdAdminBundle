@@ -8,17 +8,12 @@ use Doctrine\ORM\Mapping as ORM;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 
-enum TestStatus: string
-{
-    case ACTIVE = 'active';
-    case INACTIVE = 'inactive';
-}
-
 #[ORM\Entity]
 #[Admin(
     label: 'Test Entities',
     icon: 'science',
     columns: ['id', 'name', 'active'],
+    enableInlineEdit: true,
     itemsPerPage: 15,
     enableBatchActions: true,
     permissions: ['index' => 'ROLE_TEST_VIEW', 'edit' => 'ROLE_TEST_EDIT']
@@ -146,6 +141,13 @@ class TestEntity
     public function isActive(): bool
     {
         return $this->active;
+    }
+
+    // public function setStatus(?TestEnum $status): self
+    public function setStatus(?TestStatus $status): self
+    {
+        $this->status = $status;
+        return $this;
     }
 
     public function getStatus(): TestStatus
