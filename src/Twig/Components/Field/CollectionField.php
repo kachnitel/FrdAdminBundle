@@ -51,6 +51,9 @@ class CollectionField extends AbstractEditableField
     /**
      * Resolve labels for all currently selected IDs for display in the edit UI.
      *
+     * Loads all selected entities in a single IN query rather than one find() per ID,
+     * avoiding an N+1 query on every re-render when the selection is large.
+     *
      * @return array<array{id: int, label: string}>
      */
     #[ExposeInTemplate]
@@ -65,12 +68,30 @@ class CollectionField extends AbstractEditableField
             return [];
         }
 
-        return array_map(function (int $id) use ($targetClass): array {
-            $entity = $this->entityManager->find($targetClass, $id);
+        /** @var object[] $entities */
+        $entities = $this->entityManager
+            ->getRepository($targetClass)
+            ->createQueryBuilder('e')
+            ->where('e.id IN (:ids)')
+            ->setParameter('ids', $this->selectedIds)
+            ->getQuery()
+            ->getResult();
 
+        // Index by ID for O(1) lookup when building the ordered result
+        $entityMap = [];
+        foreach ($entities as $entity) {
+            if (method_exists($entity, 'getId')) {
+                $id = $entity->getId();
+                if (is_int($id)) {
+                    $entityMap[$id] = $entity;
+                }
+            }
+        }
+
+        return array_map(function (int $id) use ($entityMap): array {
             return [
                 'id'    => $id,
-                'label' => $entity !== null ? $this->resolveLabel($entity) : "#{$id}",
+                'label' => isset($entityMap[$id]) ? $this->resolveLabel($entityMap[$id]) : "#{$id}",
             ];
         }, $this->selectedIds);
     }
@@ -107,24 +128,23 @@ class CollectionField extends AbstractEditableField
         parent::cancelEdit(); // refreshes entity, clears resolvedEntity cache
 
         // Re-read collection state from the refreshed entity
-        $this->selectedIds  = $this->idsFromCollection($this->readValue());
-        $this->searchQuery  = '';
+        $this->selectedIds = $this->idsFromCollection($this->readValue());
+        $this->searchQuery = '';
     }
+
+    // ── Template method ────────────────────────────────────────────────────────
 
     /**
      * Diff selectedIds against the persisted collection and call the entity's
      * adder/remover pair for each change. Uses ReflectionExtractor to resolve
      * the correct singularised method names (e.g. $categories → addCategory).
      *
+     * Called only after canEdit() passes in the base save() method.
+     *
      * @throws \RuntimeException when adder/remover cannot be resolved, or a related entity is missing
      */
-    #[LiveAction]
-    public function save(): void
+    protected function persistEdit(): void
     {
-        if (!$this->canEdit()) {
-            throw new \RuntimeException('Access denied for editing this field.');
-        }
-
         $targetClass = $this->requireTargetEntityClass();
         $collection  = $this->requireCollection();
         $mutators    = $this->getCollectionMutators(); // throws clearly if not found
@@ -133,8 +153,6 @@ class CollectionField extends AbstractEditableField
 
         $this->applyAdditions($entity, $targetClass, array_diff($this->selectedIds, $existingIds), $mutators['adder']);
         $this->applyRemovals($entity, $collection, array_diff($existingIds, $this->selectedIds), $mutators['remover']);
-
-        parent::save();
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────

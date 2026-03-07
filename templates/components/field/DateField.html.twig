@@ -5,6 +5,8 @@
  #   this.dateValue       - ?string
  #   this.formFieldConfig - array  ({type, required})
  #   this.label           - string
+ #   errorMessage         - string  (LiveProp — non-empty when last save failed validation)
+ #   saveSuccess          - bool    (LiveProp — true after a successful flush)
  #}
 {% import kachnitel_admin_theme as css %}
 
@@ -12,13 +14,16 @@
     {% if this.editMode and this.canEdit %}
         <input
             type="{{ this.formFieldConfig.type }}"
-            class="{{ css.form_input() }}"
+            class="{{ css.form_input() }}{% if errorMessage %} is-invalid{% endif %}"
             data-model="dateValue"
             value="{{ this.dateValue }}"
             aria-label="{{ this.label }}"
             autofocus
             {% if this.formFieldConfig.required %}required{% endif %}
         />
+        {% if errorMessage %}
+            <div class="invalid-feedback d-block">{{ errorMessage }}</div>
+        {% endif %}
         <button type="button" data-action="live#action" data-live-action-param="save"
             class="{{ css.btn_sm() }} {{ css.btn_primary() }}">Save</button>
         <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
@@ -26,6 +31,9 @@
     {% else %}
         <span class="field-editable-cell">
             {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+            {% if saveSuccess %}
+                <span class="inline-edit-saved text-success small" aria-label="Saved">✓</span>
+            {% endif %}
             {% if this.canEdit %}
                 <button type="button" class="field-edit-trigger"
                     data-action="live#action" data-live-action-param="activateEditing"

@@ -14,6 +14,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Tests for the editable expression / flag / entity-default logic in AbstractEditableField.
@@ -37,6 +38,9 @@ class AbstractEditableFieldEditableTest extends TestCase
     /** @var RowActionExpressionLanguage&MockObject */
     private RowActionExpressionLanguage $expressionLanguage;
 
+    /** @var ValidatorInterface&MockObject */
+    private ValidatorInterface $validator;
+
     protected function setUp(): void
     {
         $this->entityManager      = $this->createMock(EntityManagerInterface::class);
@@ -44,6 +48,7 @@ class AbstractEditableFieldEditableTest extends TestCase
         $this->propertyAccessor   = $this->createMock(PropertyAccessorInterface::class);
         $this->attributeHelper    = $this->createMock(AttributeHelper::class);
         $this->expressionLanguage = $this->createMock(RowActionExpressionLanguage::class);
+        $this->validator          = $this->createMock(ValidatorInterface::class);
     }
 
     // ── No #[AdminColumn] — falls back to entity-level flag ───────────────────
@@ -253,6 +258,7 @@ class AbstractEditableFieldEditableTest extends TestCase
             $this->authChecker,
             $this->attributeHelper,
             $this->expressionLanguage,
+            $this->validator,
         ) extends AbstractEditableField {};
 
         $field->entityClass    = $entity::class;

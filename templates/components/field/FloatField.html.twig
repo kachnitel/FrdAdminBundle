@@ -3,17 +3,22 @@
  #   this.currentValue - ?float
  #   this.editMode     - bool
  #   this.canEdit()    - bool
+ #   errorMessage      - string  (LiveProp — non-empty when last save failed validation)
+ #   saveSuccess       - bool    (LiveProp — true after a successful flush)
  #}
 <span {{ attributes }}>
     {% if editMode and this.canEdit() %}
         <input
             type="number"
             step="any"
-            class="form-control form-control-sm"
+            class="form-control form-control-sm{% if errorMessage %} is-invalid{% endif %}"
             data-model="currentValue"
             value="{{ this.currentValue }}"
             autofocus
         />
+        {% if errorMessage %}
+            <div class="invalid-feedback d-block">{{ errorMessage }}</div>
+        {% endif %}
         <button type="button" data-action="live#action" data-live-action-param="save"
             class="btn btn-sm btn-success">✓</button>
         <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
@@ -21,6 +26,9 @@
     {% else %}
         <span class="field-editable-cell">
             {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+            {% if saveSuccess %}
+                <span class="inline-edit-saved text-success small" aria-label="Saved">✓</span>
+            {% endif %}
             {% if this.canEdit() %}
                 <button type="button" class="field-edit-trigger"
                     data-action="live#action" data-live-action-param="activateEditing"

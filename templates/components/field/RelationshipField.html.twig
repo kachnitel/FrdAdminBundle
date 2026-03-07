@@ -5,6 +5,8 @@
  #   this.selectedLabel - ?string
  #   this.searchResults - array ({id, label})
  #   searchQuery        - string (LiveProp)
+ #   errorMessage       - string  (LiveProp — non-empty when last save failed validation)
+ #   saveSuccess        - bool    (LiveProp — true after a successful flush)
  #}
 {% import kachnitel_admin_theme as css %}
 
@@ -20,8 +22,13 @@
             <span class="{{ css.text_muted() }} {{ css.mb_1() }}">None selected</span>
         {% endif %}
 
-        <input type="search" class="{{ css.form_input_sm() }}" placeholder="Search…"
-            data-model="debounce(300)|searchQuery" value="{{ searchQuery }}" autocomplete="off">
+        <input type="search" class="{{ css.form_input_sm() }}{% if errorMessage %} is-invalid{% endif %}"
+            placeholder="Search…" data-model="debounce(300)|searchQuery" value="{{ searchQuery }}"
+            autocomplete="off">
+
+        {% if errorMessage %}
+            <div class="invalid-feedback d-block">{{ errorMessage }}</div>
+        {% endif %}
 
         {% set results = this.searchResults %}
         {% if results is not empty %}
@@ -49,6 +56,9 @@
     {% else %}
         <div class="{{ css.flex_row() }} {{ css.gap_sm() }}">
             {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+            {% if saveSuccess %}
+                <span class="inline-edit-saved text-success small" aria-label="Saved">✓</span>
+            {% endif %}
             {% if this.canEdit() %}
                 <button type="button" class="{{ css.btn_link() }} {{ css.btn_sm() }}"
                     data-action="live#action" data-live-action-param="activateEditing"

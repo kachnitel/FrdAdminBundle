@@ -5,13 +5,15 @@
  #   this.selectedValue - ?string
  #   this.enumCases     - array  (value => label)
  #   this.label         - string
+ #   errorMessage       - string  (LiveProp — non-empty when last save failed validation)
+ #   saveSuccess        - bool    (LiveProp — true after a successful flush)
  #}
 {% import kachnitel_admin_theme as css %}
 
 <div {{ attributes }}>
     {% if this.editMode and this.canEdit %}
         <select
-            class="{{ css.form_select() }} {{ css.form_input() }}"
+            class="{{ css.form_select() }} {{ css.form_input() }}{% if errorMessage %} is-invalid{% endif %}"
             data-model="selectedValue"
             aria-label="{{ this.label }}"
         >
@@ -22,6 +24,9 @@
                 </option>
             {% endfor %}
         </select>
+        {% if errorMessage %}
+            <div class="invalid-feedback d-block">{{ errorMessage }}</div>
+        {% endif %}
         <button type="button" data-action="live#action" data-live-action-param="save"
             class="{{ css.btn_sm() }} {{ css.btn_primary() }}">Save</button>
         <button type="button" data-action="live#action" data-live-action-param="cancelEdit"
@@ -29,6 +34,9 @@
     {% else %}
         <span class="field-editable-cell">
             {% include '@KachnitelAdmin/components/field/_display.html.twig' %}
+            {% if saveSuccess %}
+                <span class="inline-edit-saved text-success small" aria-label="Saved">✓</span>
+            {% endif %}
             {% if this.canEdit %}
                 <button type="button" class="field-edit-trigger"
                     data-action="live#action" data-live-action-param="activateEditing"

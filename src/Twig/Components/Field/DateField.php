@@ -32,7 +32,11 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
  * cancelEdit() calls parent::cancelEdit() first (which calls EntityManager::refresh()),
  * then re-formats the current entity value back into $dateValue.
  *
- * This mirrors the pattern used by StringField / IntField / FloatField.
+ * ## persistEdit() contract
+ *
+ * Parses $dateValue string into a DateTimeInterface and writes it via writeValue().
+ * Null / empty string → writes null (nullable date column).
+ * Called only after canEdit() passes in the base save() method.
  */
 #[AsLiveComponent('K:Admin:Field:Date', template: '@KachnitelAdmin/components/field/DateField.html.twig')]
 class DateField extends AbstractEditableField
@@ -80,21 +84,6 @@ class DateField extends AbstractEditableField
     }
 
     /**
-     * Persist the edited date value and exit edit mode.
-     */
-    #[LiveAction]
-    public function save(): void
-    {
-        if ($this->dateValue === null || $this->dateValue === '') {
-            $this->writeValue(null);
-        } else {
-            $this->writeValue($this->parseDateTime($this->dateValue));
-        }
-
-        parent::save();
-    }
-
-    /**
      * Discard changes and restore $dateValue from the freshly-refreshed entity.
      *
      * parent::cancelEdit() calls EntityManager::refresh(), discarding any
@@ -107,6 +96,21 @@ class DateField extends AbstractEditableField
         parent::cancelEdit();
 
         $this->dateValue = $this->formatValueAsString($this->readValue());
+    }
+
+    // ── Template method ────────────────────────────────────────────────────────
+
+    /**
+     * Parse $dateValue and write it to the entity property.
+     * Called only after canEdit() passes in the base save() method.
+     */
+    protected function persistEdit(): void
+    {
+        if ($this->dateValue === null || $this->dateValue === '') {
+            $this->writeValue(null);
+        } else {
+            $this->writeValue($this->parseDateTime($this->dateValue));
+        }
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────

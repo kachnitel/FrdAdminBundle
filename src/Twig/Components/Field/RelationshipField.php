@@ -101,13 +101,17 @@ final class RelationshipField extends AbstractEditableField
         $this->searchQuery = '';
     }
 
-    #[LiveAction]
-    public function save(): void
-    {
-        if (!$this->canEdit()) {
-            throw new \RuntimeException('Access denied for editing this field.');
-        }
+    // ── Template method ────────────────────────────────────────────────────────
 
+    /**
+     * Resolve the target entity from $selectedId and write it to the property.
+     * Called only after canEdit() passes in the base save() method.
+     *
+     * @throws \RuntimeException when the property is not a recognised Doctrine association
+     *                           or when the selected entity cannot be found
+     */
+    protected function persistEdit(): void
+    {
         $newValue = null;
 
         if ($this->selectedId !== null) {
@@ -131,6 +135,5 @@ final class RelationshipField extends AbstractEditableField
         }
 
         $this->writeValue($newValue);
-        parent::save();
     }
 }

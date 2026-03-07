@@ -36,9 +36,10 @@ final class BoolField extends AbstractEditableField
     }
 
     // ── Hydration ──────────────────────────────────────────────────────────────
+
     public function hydrateCurrentValue(mixed $data): bool
     {
-        return (bool) $data;                                    // null → false, which is correct for bool
+        return (bool) $data; // null → false, which is correct for bool
     }
 
     public function dehydrateCurrentValue(?bool $value): ?bool
@@ -47,6 +48,7 @@ final class BoolField extends AbstractEditableField
     }
 
     // ── LiveActions ────────────────────────────────────────────────────────────
+
     #[LiveAction]
     public function cancelEdit(): void
     {
@@ -54,10 +56,10 @@ final class BoolField extends AbstractEditableField
         $this->currentValue = (bool) $this->readValue();
     }
 
-    #[LiveAction]
-    public function save(): void
+    // ── Template method ────────────────────────────────────────────────────────
+
+    protected function persistEdit(): void
     {
         $this->writeValue($this->currentValue ?? false);
-        parent::save();
     }
 }

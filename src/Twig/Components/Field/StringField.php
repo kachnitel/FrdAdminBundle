@@ -17,9 +17,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
  * hydrateCurrentValue(null)    → re-reads from entity (triggered after cancelEdit sets null).
  * hydrateCurrentValue($string) → restores the typed value.
  *
- * cancelEdit() nulls $currentValue before delegating to parent, which refreshes the entity.
- * On the next hydration cycle hydrateCurrentValue(null) picks up the fresh entity value.
- * No explicit syncCurrentValueFromEntity method is needed.
+ * cancelEdit() refreshes entity via parent, then re-reads the current property value.
  */
 #[AsLiveComponent('K:Admin:Field:String', template: '@KachnitelAdmin/components/field/StringField.html.twig')]
 final class StringField extends AbstractEditableField
@@ -59,10 +57,10 @@ final class StringField extends AbstractEditableField
         $this->currentValue = $raw !== null ? (string) $raw : null;
     }
 
-    #[LiveAction]
-    public function save(): void
+    // ── Template method ────────────────────────────────────────────────────────
+
+    protected function persistEdit(): void
     {
         $this->writeValue($this->currentValue);
-        parent::save();
     }
 }

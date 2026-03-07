@@ -28,6 +28,7 @@ final class FloatField extends AbstractEditableField
     }
 
     // ── Hydration ──────────────────────────────────────────────────────────────
+
     public function hydrateCurrentValue(mixed $data): ?float
     {
         return $data !== null ? (float) $data : null;
@@ -39,6 +40,7 @@ final class FloatField extends AbstractEditableField
     }
 
     // ── LiveActions ────────────────────────────────────────────────────────────
+
     #[LiveAction]
     public function cancelEdit(): void
     {
@@ -47,10 +49,10 @@ final class FloatField extends AbstractEditableField
         $this->currentValue = $raw !== null ? (float) $raw : null;
     }
 
-    #[LiveAction]
-    public function save(): void
+    // ── Template method ────────────────────────────────────────────────────────
+
+    protected function persistEdit(): void
     {
         $this->writeValue($this->currentValue);
-        parent::save();
     }
 }

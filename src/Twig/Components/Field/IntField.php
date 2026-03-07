@@ -40,6 +40,7 @@ final class IntField extends AbstractEditableField
     }
 
     // ── LiveActions ────────────────────────────────────────────────────────────
+
     #[LiveAction]
     public function cancelEdit(): void
     {
@@ -48,10 +49,10 @@ final class IntField extends AbstractEditableField
         $this->currentValue = $raw !== null ? (int) $raw : null;
     }
 
-    #[LiveAction]
-    public function save(): void
+    // ── Template method ────────────────────────────────────────────────────────
+
+    protected function persistEdit(): void
     {
         $this->writeValue($this->currentValue);
-        parent::save();
     }
 }

@@ -11,6 +11,7 @@ use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
@@ -45,15 +46,37 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  * hydrated before $currentValue (PHP reflection returns parent properties first). It is safe
  * to call readValue() / getEntity() inside hydrateCurrentValue().
  *
+ * ## save() / persistEdit() — template method pattern
+ *
+ * The base save() method owns the full lifecycle in this order:
+ *
+ *   1. canEdit() guard    — throws RuntimeException on access denied (BEFORE any mutation)
+ *   2. persistEdit()      — subclass writes the new value to the entity
+ *   3. validation         — ValidatorInterface::validateProperty() runs on the modified entity
+ *                           If violations exist, $errorMessage is set and the entity is refreshed
+ *                           (discarding the in-memory write). Returns early — no flush.
+ *   4. flush()            — persist to DB only when validation passes
+ *   5. editMode = false   — exit edit mode
+ *   6. saveSuccess = true — signal a successful save for template display
+ *
+ * Subclasses MUST override persistEdit() instead of save() to write their value.
+ * This guarantees the canEdit() guard always runs before any entity mutation.
+ *
  * ## cancelEdit pattern
  *
- * Subclasses override cancelEdit() to null $currentValue before calling parent::cancelEdit():
+ * Subclasses override cancelEdit() and re-read the property value from the
+ * entity AFTER calling parent::cancelEdit():
  *
  *   public function cancelEdit(): void
  *   {
- *       $this->currentValue = null;   // dehydrates as null → hydrateCurrentValue re-reads entity
- *       parent::cancelEdit();
+ *       parent::cancelEdit();                     // refreshes entity; clears resolvedEntity cache
+ *       $raw = $this->readValue();                // reads from the now-refreshed entity
+ *       $this->currentValue = $raw !== null ? (string) $raw : null;
  *   }
+ *
+ * Always call parent FIRST so that EntityManager::refresh() runs before you try to
+ * read the persisted value. Calling it last would mean the edit-prop still holds the
+ * user's unsaved input when the LiveComponent response is serialised.
  *
  * ## canEdit() — edit eligibility
  *
@@ -90,6 +113,20 @@ abstract class AbstractEditableField
     #[LiveProp]
     public string $property = '';
 
+    /**
+     * Validation error from the most recent failed save.
+     * Cleared on activateEditing() and cancelEdit().
+     */
+    #[LiveProp]
+    public string $errorMessage = '';
+
+    /**
+     * Set to true after a successful flush, reset on the next activateEditing().
+     * Templates use this to show a brief "✓ Saved" indicator in display mode.
+     */
+    #[LiveProp]
+    public bool $saveSuccess = false;
+
     #[ExposeInTemplate('entity')]
     public ?object $resolvedEntity = null;
 
@@ -99,6 +136,7 @@ abstract class AbstractEditableField
         protected readonly AuthorizationCheckerInterface $authorizationChecker,
         private readonly AttributeHelper $attributeHelper,
         private readonly RowActionExpressionLanguage $expressionLanguage,
+        private readonly ValidatorInterface $validator,
     ) {}
 
     /**
@@ -207,6 +245,110 @@ abstract class AbstractEditableField
         return $isGranted && $isWritable;
     }
 
+    // ── LiveActions ────────────────────────────────────────────────────────────
+
+    #[LiveAction]
+    public function activateEditing(): void
+    {
+        if ($this->canEdit()) {
+            $this->editMode     = true;
+            $this->errorMessage = '';
+            $this->saveSuccess  = false;
+        }
+    }
+
+    /**
+     * Exit edit mode and discard unsaved input by refreshing the entity from the database.
+     *
+     * ## Subclass contract
+     *
+     * Subclasses that hold an additional LiveProp representing the user's in-progress edit
+     * (e.g. $currentValue, $dateValue, $selectedId) MUST override this method and re-read
+     * the property value from the entity AFTER calling parent::cancelEdit():
+     *
+     *   ```php
+     *   #[LiveAction]
+     *   public function cancelEdit(): void
+     *   {
+     *       parent::cancelEdit();                     // refreshes entity; clears resolvedEntity cache
+     *       $raw = $this->readValue();                // reads from the now-refreshed entity
+     *       $this->currentValue = $raw !== null ? (string) $raw : null;
+     *   }
+     *   ```
+     *
+     * Always call parent FIRST so that EntityManager::refresh() runs before you try to
+     * read the persisted value. Calling it last would mean the edit-prop still holds the
+     * user's unsaved input when the LiveComponent response is serialised.
+     */
+    #[LiveAction]
+    public function cancelEdit(): void
+    {
+        $this->editMode       = false;
+        $this->errorMessage   = '';
+
+        $this->entityManager->refresh($this->getEntity());
+    }
+
+    /**
+     * Persist the edited value to the database.
+     *
+     * ## Lifecycle (called by save())
+     *
+     *   canEdit() guard → persistEdit() → validate → flush → editMode=false, saveSuccess=true
+     *
+     * save() is declared final on the lifecycle: the canEdit() guard always runs before
+     * this method is called. Subclasses MUST NOT override save() — override persistEdit()
+     * to write their value to the entity via writeValue() or direct adder/remover calls.
+     *
+     * ## Validation
+     *
+     * After persistEdit() runs, save() calls ValidatorInterface::validateProperty() against
+     * the modified entity property. If violations exist, errorMessage is populated,
+     * the entity is refreshed from the database (discarding the in-memory write), and save()
+     * returns early without flushing. The component stays in edit mode so the user can
+     * correct the input.
+     *
+     * @throws \RuntimeException from subclass implementations when the entity state is invalid
+     *                           (e.g. target entity not found for relationships)
+     */
+    protected function persistEdit(): void {}
+
+    /**
+     * Guard → write → validate → flush.
+     *
+     * This is the #[LiveAction] entry point. It calls persistEdit() — which subclasses
+     * override — only after verifying canEdit(). This ensures the permission check always
+     * runs before any entity mutation, regardless of the subclass implementation.
+     */
+    #[LiveAction]
+    public function save(): void
+    {
+        if (!$this->canEdit()) {
+            throw new \RuntimeException('Access denied for editing this field.');
+        }
+
+        $this->errorMessage = '';
+        $this->persistEdit();
+
+        $errors = $this->validator->validateProperty($this->getEntity(), $this->property);
+        if (count($errors) > 0) {
+            $this->errorMessage = (string) $errors->get(0)->getMessage();
+            // Discard the in-memory write by refreshing from DB.
+            // refresh() updates the entity object in-place; resolvedEntity already points to it.
+            // resolvedEntity is not a LiveProp so it is always re-populated via PostHydrate
+            // on the next request regardless.
+            $this->entityManager->refresh($this->getEntity());
+
+            return;
+        }
+
+        $this->entityManager->flush();
+        $this->editMode    = false;
+        $this->saveSuccess = true;
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
     /**
      * Resolve the #[AdminColumn(editable: ...)] attribute for the current property.
      *
@@ -260,76 +402,5 @@ abstract class AbstractEditableField
     {
         // e.g. "publishedAt" → "Published At"
         return ucwords(preg_replace('/(?<!^)[A-Z]/', ' $0', $this->property));
-    }
-
-    // ── LiveActions ────────────────────────────────────────────────────────────
-
-    #[LiveAction]
-    public function activateEditing(): void
-    {
-        if ($this->canEdit()) {
-            $this->editMode = true;
-        }
-    }
-
-    /**
-     * Exit edit mode and discard unsaved input by refreshing the entity from the database.
-     *
-     * ## Subclass contract
-     *
-     * Subclasses that hold an additional LiveProp representing the user's in-progress edit
-     * (e.g. $currentValue, $dateValue, $selectedId) MUST override this method and re-read
-     * the property value from the entity AFTER calling parent::cancelEdit():
-     *
-     *   ```php
-     *   #[LiveAction]
-     *   public function cancelEdit(): void
-     *   {
-     *       parent::cancelEdit();                     // refreshes entity; clears resolvedEntity cache
-     *       $raw = $this->readValue();                // reads from the now-refreshed entity
-     *       $this->currentValue = $raw !== null ? (string) $raw : null;
-     *   }
-     *   ```
-     *
-     * Always call parent FIRST so that EntityManager::refresh() runs before you try to
-     * read the persisted value. Calling it last would mean the edit-prop still holds the
-     * user's unsaved input when the LiveComponent response is serialised.
-     *
-     * ## Why not "null the LiveProp first"?
-     *
-     * An earlier design proposed nulling $currentValue before calling parent so that
-     * hydrateCurrentValue(null) would re-read the entity on the next request. The concrete
-     * implementations do not use this pattern because it requires a round-trip: the client
-     * receives null, sends a new request, and only then sees the correct value. Re-reading
-     * directly after parent::cancelEdit() is simpler and correct in one step.
-     *
-     * ## Fields that use hydrateWith / dehydrateWith
-     *
-     * StringField, IntField, and FloatField declare their $currentValue LiveProp with
-     * hydrateWith/dehydrateWith. They still follow the same "parent first, re-read after"
-     * pattern in cancelEdit(). The hydrateWith pair handles re-renders triggered by other
-     * LiveActions, not the cancel flow.
-     */
-    #[LiveAction]
-    public function cancelEdit(): void
-    {
-        $this->editMode         = false;
-        $this->resolvedEntity   = null; // force re-fetch so readValue() sees refreshed state
-        $this->entityManager->refresh($this->getEntity());
-    }
-
-    /**
-     * Flush to DB and exit edit mode.
-     * Subclasses call parent::save() after writing $currentValue to the entity.
-     */
-    #[LiveAction]
-    public function save(): void
-    {
-        if (!$this->canEdit()) {
-            throw new \RuntimeException('Access denied for editing this field.');
-        }
-
-        $this->entityManager->flush();
-        $this->editMode = false;
     }
 }
