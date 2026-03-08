@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.7.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.7.0...v0.7.1) (2026-03-08)
+
+### Features
+
+* Add validation to inline edit, improve docs ([4813ae](https://github.com/kachnitel/FrdAdminBundle/commit/4813aec7ec66d1719eaa8bf9dd2cb104f8f2c239))
+
+### Code Refactoring
+
+* Clean up EntityList and move all permission checks to service ([0e0f92](https://github.com/kachnitel/FrdAdminBundle/commit/0e0f92e3da2423edca10e62d4fa0960402684d22))
+
+
+---
+
 ## [0.7.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.6.0...v0.7.0) (2026-03-05)
 
 ### Features
