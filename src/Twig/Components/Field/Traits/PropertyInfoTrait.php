@@ -14,6 +14,13 @@ use Symfony\Contracts\Service\Attribute\Required;
  *
  * Requires the using class to have $entityManager (EntityManagerInterface) and
  * $property (string) available — both provided by AbstractEditableField.
+ *
+ * ## Symfony version compatibility
+ *
+ * `DoctrineExtractor::getType()` (returning a TypeInfo `Type` object) was added in
+ * Symfony 7.1. In Symfony 6.4, only `getTypes()` (returning `array<PropertyInfo\Type>`)
+ * is available. The private `resolveIsNullable()` and `resolveTypeString()` helpers
+ * use `method_exists()` to pick the right path at runtime, keeping both branches in sync.
  */
 trait PropertyInfoTrait
 {
@@ -40,25 +47,23 @@ trait PropertyInfoTrait
 
     protected function getPropertyType(): ?string
     {
-        $type = $this->doctrineExtractor->getType($this->entityClass, $this->property);
-
-        return $type?->__toString();
+        return $this->resolveDoctrineType()['typeString'];
     }
 
     protected function isRequired(): bool
     {
-        $type = $this->doctrineExtractor->getType($this->entityClass, $this->property);
+        $info = $this->resolveDoctrineType();
 
-        return $type !== null
-            && !$type->isNullable()
+        return $info !== null
+            && !$info['nullable']
             && $this->propertyAccessor->isWritable($this->getEntity(), $this->property);
     }
 
     protected function isNullable(): bool
     {
-        $type = $this->doctrineExtractor->getType($this->entityClass, $this->property);
+        $info = $this->resolveDoctrineType();
 
-        return $type !== null && $type->isNullable();
+        return $info !== null && $info['nullable'];
     }
 
     /**
@@ -114,5 +119,56 @@ trait PropertyInfoTrait
             'adder'   => $writeInfo->getAdderInfo()->getName(),
             'remover' => $writeInfo->getRemoverInfo()->getName(),
         ];
+    }
+
+    // ── Symfony version compatibility helper ──────────────────────────────────
+
+    /**
+     * Normalize Doctrine property type info across Symfony versions.
+     *
+     * Returns null when no type information is available (unknown property).
+     *
+     * - Symfony 7.1+: `DoctrineExtractor::getType()` returns a TypeInfo `Type` object
+     *   with `isNullable()` and `__toString()`.
+     * - Symfony 6.4: only `getTypes()` exists, returning `array<PropertyInfo\Type>`.
+     *   Nullable is true if any element reports `isNullable()`.
+     *   The type string is the builtin type, or the FQCN for object types.
+     *
+     * @return array{nullable: bool, typeString: ?string}|null
+     */
+    private function resolveDoctrineType(): ?array
+    {
+        /** @phpstan-ignore function.alreadyNarrowedType */
+        if (method_exists($this->doctrineExtractor, 'getType')) {
+            // Symfony 7.1+
+            $type = $this->doctrineExtractor->getType($this->entityClass, $this->property);
+            if ($type === null) {
+                return null;
+            }
+
+            return ['nullable' => $type->isNullable(), 'typeString' => $type->__toString()];
+        }
+
+        // Symfony 6.4
+        /** @phpstan-ignore method.notFound */
+        $types = $this->doctrineExtractor->getTypes($this->entityClass, $this->property);
+        if ($types === null || $types === []) {
+            return null;
+        }
+
+        $first    = $types[0];
+        $nullable = false;
+        foreach ($types as $t) {
+            if ($t->isNullable()) {
+                $nullable = true;
+                break;
+            }
+        }
+
+        $typeString = $first->getBuiltinType() === 'object'
+            ? $first->getClassName()
+            : $first->getBuiltinType();
+
+        return ['nullable' => $nullable, 'typeString' => $typeString];
     }
 }
