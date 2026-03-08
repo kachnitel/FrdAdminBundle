@@ -4,20 +4,16 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components;
 
-use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
-use Kachnitel\AdminBundle\Security\AdminEntityVoter;
-use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\Preferences\ColumnVisibilityPreferenceTrait;
 use Kachnitel\AdminBundle\ValueObject\PaginationInfo;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -26,7 +22,6 @@ use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
-use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * LiveComponent for reactive entity lists with per-column search/filter, sorting, and pagination.
@@ -42,6 +37,11 @@ use Symfony\Contracts\Service\Attribute\Required;
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) LiveComponent requires public methods for LiveActions
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Component bridges UI, data sources, and services
+ * @SuppressWarnings(PHPMD.TooManyFields) Each LiveProp is a URL-synchronised state variable; the
+ *     count is an architectural consequence of LiveComponent, not avoidable design debt.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) WMC is inflated by many small public
+ *     LiveAction methods that the framework requires to be public. Core logic is already
+ *     decomposed into EntityListQueryService, EntityListBatchService, EntityListPermissionService, etc.
  */
 #[AsLiveComponent('K:Admin:EntityList', template: '@KachnitelAdmin/components/EntityList.html.twig')]
 class EntityList
@@ -143,7 +143,6 @@ class EntityList
 
     public function __construct(
         public readonly EntityListPermissionService $permissionService,
-        private Security $security,
         private EntityListConfig $config,
         private DataSourceRegistry $dataSourceRegistry,
         private EntityListBatchService $batchService,
@@ -152,16 +151,6 @@ class EntityList
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
-    }
-
-    // ── Injected via #[Required] — avoids adding an 8th constructor arg ──────
-
-    private ?AttributeHelper $attributeHelper = null;
-
-    #[Required]
-    public function setAttributeHelper(AttributeHelper $attributeHelper): void
-    {
-        $this->attributeHelper = $attributeHelper;
     }
 
     // ── Security ───────────────────────────────────────────────────────────────
@@ -174,7 +163,7 @@ class EntityList
     {
         $identifier = $this->dataSourceId ?? $this->entityShortClass;
 
-        if (!$this->security->isGranted(AdminEntityVoter::ADMIN_INDEX, $identifier)) {
+        if (!$this->permissionService->canViewList($identifier)) {
             throw new AccessDeniedException(sprintf(
                 'Access denied to view %s.',
                 $identifier
@@ -354,33 +343,19 @@ class EntityList
     // ── LiveActions: inline row editing ───────────────────────────────────────
 
     /**
-     * Check whether the current user may open rows of this entity type for inline editing.
+     * Whether the current user may open rows of this entity type for inline editing.
      *
-     * Two conditions must both pass:
-     *   1. The entity has opted into inline editing via #[Admin(enableInlineEdit: true)].
-     *   2. The current user is granted ADMIN_EDIT for the entity type.
+     * Delegated entirely to EntityListPermissionService, which checks both the
+     * #[Admin(enableInlineEdit: true)] flag and the ADMIN_EDIT voter.
      *
-     * Condition 1 is a UX feature flag that prevents the ✏️ button from appearing
-     * for entities that have not opted in. Condition 2 is the security gate.
-     *
-     * IMPORTANT: Always pass $this->entityShortClass (string) as voter subject.
+     * Always returns false for non-Doctrine data sources.
      */
     public function canEditRow(): bool
     {
-        if (!$this->isDoctrineEntity()) {
-            return false;
-        }
-
-        // Check entity-level enableInlineEdit flag first (cheap, no voter call)
-        if ($this->attributeHelper !== null) {
-            /** @var Admin|null $admin */
-            $admin = $this->attributeHelper->getAttribute($this->entityClass, Admin::class);
-            if ($admin === null || !$admin->isEnableInlineEdit()) {
-                return false;
-            }
-        }
-
-        return $this->security->isGranted(AdminEntityVoter::ADMIN_EDIT, $this->entityShortClass);
+        return $this->permissionService->canInlineEdit(
+            $this->entityClass,
+            $this->entityShortClass,
+        );
     }
 
     /**
@@ -522,6 +497,10 @@ class EntityList
     {
         $columns = $this->getDataSource()->getColumns();
 
-        return isset($columns[$column]) && $columns[$column]->sortable;
+        if (!isset($columns[$column])) {
+            return false;
+        }
+
+        return $columns[$column]->sortable;
     }
 }

@@ -91,19 +91,8 @@ class RowActionRuntime implements RuntimeExtensionInterface
     public function isActionVisible(RowAction $action, object $entity, string $entityShortClass): bool
     {
         // 1. Voter / route check
-        if ($action->voterAttribute !== null) {
-            if ($action->isComponentAction()) {
-                // Component actions have no route or form — check the voter directly
-                if ($this->authChecker !== null
-                    && !$this->authChecker->isGranted($action->voterAttribute, $entityShortClass)) {
-                    return false;
-                }
-            } else {
-                $actionName = $this->mapVoterAttributeToActionName($action->voterAttribute);
-                if (!$this->routeRuntime->isActionAccessible($entityShortClass, $actionName)) {
-                    return false;
-                }
-            }
+        if (!$this->checkVoterAccess($action, $entityShortClass)) {
+            return false;
         }
 
         // 2. Direct permission/role check
@@ -121,6 +110,31 @@ class RowActionRuntime implements RuntimeExtensionInterface
         }
 
         return true;
+    }
+
+    /**
+     * Check voter / route access for the given action.
+     *
+     * Returns true when no voterAttribute is set (no restriction).
+     * For component actions, delegates to AuthorizationChecker directly.
+     * For link/form actions, delegates to AdminRouteRuntime::isActionAccessible().
+     */
+    private function checkVoterAccess(RowAction $action, string $entityShortClass): bool
+    {
+        if ($action->voterAttribute === null) {
+            return true;
+        }
+
+        if ($action->isComponentAction()) {
+            // Component actions have no route or form — check the voter directly.
+            // Fail-open when no auth checker is available (e.g. in CLI context).
+            return $this->authChecker === null
+                || $this->authChecker->isGranted($action->voterAttribute, $entityShortClass);
+        }
+
+        $actionName = $this->mapVoterAttributeToActionName($action->voterAttribute);
+
+        return $this->routeRuntime->isActionAccessible($entityShortClass, $actionName);
     }
 
     /**
@@ -181,9 +195,9 @@ class RowActionRuntime implements RuntimeExtensionInterface
             $this->logger->warning(
                 'Row action DI condition failed — action will be hidden.',
                 [
-                    'service'   => $serviceClass,
-                    'method'    => $method,
-                    'entity'    => $entity::class,
+                    'service' => $serviceClass,
+                    'method'  => $method,
+                    'entity'  => $entity::class,
                     'exception' => $e->getMessage(),
                 ],
             );
@@ -192,15 +206,17 @@ class RowActionRuntime implements RuntimeExtensionInterface
         }
     }
 
+    /**
+     * Map a voter attribute constant to the action name used by AdminRouteRuntime.
+     */
     private function mapVoterAttributeToActionName(string $voterAttribute): string
     {
         return match ($voterAttribute) {
-            'ADMIN_INDEX'  => 'index',
-            'ADMIN_SHOW'   => 'show',
-            'ADMIN_NEW'    => 'new',
             'ADMIN_EDIT'   => 'edit',
+            'ADMIN_SHOW'   => 'show',
             'ADMIN_DELETE' => 'delete',
-            default        => 'show',
+            'ADMIN_NEW'    => 'new',
+            default        => strtolower($voterAttribute),
         };
     }
 }

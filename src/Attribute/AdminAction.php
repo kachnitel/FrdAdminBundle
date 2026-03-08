@@ -16,6 +16,10 @@ use Attribute;
  *   3. method         — form-based POST/DELETE button
  *   4. route/url      — plain link (default)
  *
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList) PHP Attribute classes cannot group constructor
+ * parameters via helper objects without changing the user-facing attribute syntax. All parameters
+ * are part of the public attribute API and cannot be reorganised without a breaking change.
+ *
  * @see \Kachnitel\AdminBundle\RowAction\RowActionComponentInterface for liveComponent prop contract
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]

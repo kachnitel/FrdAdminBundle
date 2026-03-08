@@ -125,7 +125,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->entityDiscovery->method('getAdminAttribute')
             ->willReturn($admin);
 
-        // Security check should not even be called if batch actions are disabled
+        // Security check must not be called when batch actions are disabled
         $this->security->expects($this->never())->method('isGranted');
 
         $result = $this->service->canBatchDelete('App\\Entity\\TestEntity', 'TestEntity');
@@ -251,5 +251,136 @@ class EntityListPermissionServiceTest extends TestCase
         $this->security->method('isGranted')->willReturn(true);
 
         $this->service->canBatchDelete('', '', 'custom-source');
+    }
+
+    // --- canInlineEdit tests ---
+
+    /**
+     * @test
+     */
+    public function canInlineEditReturnsTrueWhenEnabledAndGranted(): void
+    {
+        $admin = new Admin(enableInlineEdit: true);
+
+        $this->entityDiscovery->method('getAdminAttribute')
+            ->with('App\\Entity\\Product')
+            ->willReturn($admin);
+
+        $this->security->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_EDIT, 'Product')
+            ->willReturn(true);
+
+        $this->assertTrue($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
+    }
+
+    /**
+     * @test
+     */
+    public function canInlineEditReturnsFalseWhenFlagDisabled(): void
+    {
+        $admin = new Admin(enableInlineEdit: false);
+
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn($admin);
+
+        // Voter must not be called — the flag check is the cheap early exit
+        $this->security->expects($this->never())->method('isGranted');
+
+        $this->assertFalse($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
+    }
+
+    /**
+     * @test
+     */
+    public function canInlineEditReturnsFalseWhenNoAttribute(): void
+    {
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
+
+        $this->security->expects($this->never())->method('isGranted');
+
+        $this->assertFalse($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
+    }
+
+    /**
+     * @test
+     */
+    public function canInlineEditReturnsFalseWhenVoterDenies(): void
+    {
+        $admin = new Admin(enableInlineEdit: true);
+
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn($admin);
+
+        $this->security->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_EDIT, 'Product')
+            ->willReturn(false);
+
+        $this->assertFalse($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
+    }
+
+    /**
+     * @test
+     */
+    public function canInlineEditReturnsFalseForEmptyEntityClass(): void
+    {
+        // Non-Doctrine data sources have no entityClass
+        $this->entityDiscovery->expects($this->never())->method('getAdminAttribute');
+        $this->security->expects($this->never())->method('isGranted');
+
+        $this->assertFalse($this->service->canInlineEdit('', 'SomeDataSource'));
+    }
+
+    /**
+     * @test
+     */
+    public function canInlineEditChecksAdminEditVoterAttribute(): void
+    {
+        $admin = new Admin(enableInlineEdit: true);
+
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn($admin);
+
+        $this->security->expects($this->once())
+            ->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_EDIT, 'Order')
+            ->willReturn(true);
+
+        $this->service->canInlineEdit('App\\Entity\\Order', 'Order');
+    }
+
+    // --- canViewList tests ---
+
+    /**
+     * @test
+     */
+    public function canViewListReturnsTrueWhenGranted(): void
+    {
+        $this->security->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_INDEX, 'Product')
+            ->willReturn(true);
+
+        $this->assertTrue($this->service->canViewList('Product'));
+    }
+
+    /**
+     * @test
+     */
+    public function canViewListReturnsFalseWhenDenied(): void
+    {
+        $this->security->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_INDEX, 'Product')
+            ->willReturn(false);
+
+        $this->assertFalse($this->service->canViewList('Product'));
+    }
+
+    /**
+     * @test
+     */
+    public function canViewListUsesAdminIndexVoterAttribute(): void
+    {
+        $this->security->expects($this->once())
+            ->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_INDEX, 'custom-data-source')
+            ->willReturn(true);
+
+        $this->service->canViewList('custom-data-source');
     }
 }

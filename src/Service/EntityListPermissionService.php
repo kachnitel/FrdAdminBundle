@@ -46,4 +46,38 @@ class EntityListPermissionService
 
         return $this->security->isGranted(AdminEntityVoter::ADMIN_DELETE, $identifier);
     }
+
+    /**
+     * Whether the current user may open rows of this entity type for inline editing.
+     *
+     * Both conditions must pass:
+     *   1. The entity has opted in via #[Admin(enableInlineEdit: true)] — cheap flag check first.
+     *   2. The current user is granted ADMIN_EDIT — security gate.
+     *
+     * Always returns false for non-Doctrine data sources (empty entityClass).
+     */
+    public function canInlineEdit(string $entityClass, string $entityShortClass): bool
+    {
+        if ($entityClass === '') {
+            return false;
+        }
+
+        $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
+
+        if ($adminAttr === null || !$adminAttr->isEnableInlineEdit()) {
+            return false;
+        }
+
+        return $this->security->isGranted(AdminEntityVoter::ADMIN_EDIT, $entityShortClass);
+    }
+
+    /**
+     * Whether the current user may view the list for the given identifier.
+     *
+     * The identifier is the dataSourceId when present, otherwise the entityShortClass.
+     */
+    public function canViewList(string $identifier): bool
+    {
+        return $this->security->isGranted(AdminEntityVoter::ADMIN_INDEX, $identifier);
+    }
 }
