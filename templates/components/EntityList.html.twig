@@ -51,14 +51,25 @@
             {{ block('search') }}
         </div>
     {% else %}
-        <div class="admin-global-search {{ css.mb_3() }}">
+        {% set searchColumnLabels = this.globalSearchColumnLabels %}
+        <div class="admin-global-search {{ css.mb_3() }}" style="display:flex;align-items:center;gap:0.5rem;">
             <input
                 type="text"
                 class="{{ css.form_input() }}"
-                placeholder="Global search across all columns..."
+                placeholder="Search…"
                 data-model="search"
                 value="{{ this.search }}"
+                style="flex:1;"
             >
+            {% if searchColumnLabels is not empty %}
+                <span
+                    class="admin-search-help"
+                    title="Searches in: {{ searchColumnLabels|join(', ') }}"
+                    aria-label="Searches in: {{ searchColumnLabels|join(', ') }}"
+                    style="cursor:help;opacity:0.5;font-size:0.9em;flex-shrink:0;user-select:none;"
+                    role="img"
+                >&#9432;</span>
+            {% endif %}
         </div>
     {% endif %}
 

@@ -32,7 +32,7 @@ class TemplateOverrideTest extends ComponentTestCase
         $rendered = (string) $testComponent->render();
 
         $this->assertStringContainsString('<table', $rendered);
-        $this->assertStringContainsString('Global search across all columns', $rendered);
+        $this->assertStringContainsString('Search…', $rendered);
         // Uses dataSource.label for the empty message
         $this->assertStringContainsString('No Test Entities found.', $rendered);
     }

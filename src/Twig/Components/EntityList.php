@@ -10,6 +10,7 @@ use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
+use Kachnitel\AdminBundle\DataSource\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
@@ -206,6 +207,26 @@ class EntityList
             $this->entityShortClass,
             $this->dataSourceId,
         );
+    }
+
+    /**
+     * Returns human-readable labels for columns included in global search.
+     *
+     * Delegates to the resolved DataSource when it implements
+     * SearchAwareDataSourceInterface. Returns an empty array for custom
+     * DataSources that do not implement the interface, so no tooltip is rendered.
+     *
+     * @return array<string>
+     */
+    public function getGlobalSearchColumnLabels(): array
+    {
+        $dataSource = $this->getDataSource();
+
+        if (!$dataSource instanceof SearchAwareDataSourceInterface) {
+            return [];
+        }
+
+        return $dataSource->getGlobalSearchColumnLabels();
     }
 
     // ── Queries ────────────────────────────────────────────────────────────────

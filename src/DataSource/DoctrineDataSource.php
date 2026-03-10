@@ -25,7 +25,7 @@ use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class DoctrineDataSource implements DataSourceInterface
+class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceInterface
 {
     private ?string $shortName = null;
 
@@ -154,6 +154,37 @@ class DoctrineDataSource implements DataSourceInterface
         $this->columnGroupsCache = array_values($slots);
 
         return $this->columnGroupsCache;
+    }
+
+    /**
+     * Returns human-readable labels for the entity fields that are included
+     * in global search (all string/text Doctrine fields that are also visible
+     * as columns in this data source).
+     *
+     * Fields that exist at DB level but are not part of the configured column
+     * list are excluded — showing them in the tooltip would be confusing because
+     * users cannot see those values in the list.
+     *
+     * @return array<string>
+     */
+    public function getGlobalSearchColumnLabels(): array
+    {
+        $searchableFields = $this->queryService->getSearchableFieldNames($this->entityClass);
+
+        if ($searchableFields === []) {
+            return [];
+        }
+
+        $columns = $this->getColumns();
+        $labels = [];
+
+        foreach ($searchableFields as $field) {
+            if (isset($columns[$field])) {
+                $labels[] = $columns[$field]->label;
+            }
+        }
+
+        return $labels;
     }
 
     public function getFilters(): array

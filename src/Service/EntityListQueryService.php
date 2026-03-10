@@ -128,6 +128,30 @@ class EntityListQueryService
     }
 
     /**
+     * Return the names of entity fields that are included in global search.
+     *
+     * These are exactly the fields queried by applyGlobalSearch() — all Doctrine
+     * mapped fields of type 'string' or 'text'. Exposed as a public method so that
+     * the data-source layer can advertise searchable column labels to the UI.
+     *
+     * @return array<string>
+     */
+    public function getSearchableFieldNames(string $entityClass): array
+    {
+        $metadata = $this->em->getClassMetadata($entityClass);
+        $fields = [];
+
+        foreach ($metadata->getFieldNames() as $field) {
+            $type = $metadata->getTypeOfField($field);
+            if (in_array($type, ['string', 'text'], true)) {
+                $fields[] = $field;
+            }
+        }
+
+        return $fields;
+    }
+
+    /**
      * Apply global search across all text fields.
      */
     private function applyGlobalSearch(QueryBuilder $qb, string $entityClass, string $search): void
