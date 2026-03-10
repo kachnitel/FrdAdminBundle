@@ -1,19 +1,30 @@
 {#
- # Table header cell — sortable or plain (test override, no CSS macros).
+ # Table header cell — sortable or plain depending on column metadata.
  #
- # @var string      column
- # @var string|null columnLabel
- # @var bool        sortable
- # @var string      sortBy
- # @var string      sortDirection
- # @var object      component
+ # When `inline` is true the <th> wrapper is omitted and only the inner
+ # button/label is rendered. Use this when the caller already owns a <th>
+ # (e.g. inside _CompositeHeader.html.twig).
+ #
+ # Variables:
+ # @var string      column        - Column name
+ # @var string|null columnLabel   - Optional label override from DataSource column metadata
+ # @var bool        sortable      - Whether this column supports sorting (default: true)
+ # @var string      sortBy        - Currently sorted column
+ # @var string      sortDirection - Current sort direction (ASC/DESC)
+ # @var object      component     - Reference to parent component for constant access
+ # @var bool        inline        - When true, skip the <th> wrapper (default: false)
  #}
 
+{% import kachnitel_admin_theme as css %}
+
+{% set isInline = inline ?? false %}
+
+{% if not isInline %}<th>{% endif %}
+
 {% if sortable ?? true %}
-<th>
     <button
         type="button"
-        class="btn btn-link p-0 text-decoration-none"
+        class="{{ css.btn_link() }}"
         data-action="live#action"
         data-live-action-param="sort"
         data-live-column-param="{{ column }}"
@@ -23,7 +34,8 @@
             <span class="sort-indicator">{{ sortDirection == constant('SORT_ASC', component) ? '▲' : '▼' }}</span>
         {% endif %}
     </button>
-</th>
 {% else %}
-<th>{{ columnLabel ?? column|humanize }}</th>
+    {{ columnLabel ?? column|humanize }}
 {% endif %}
+
+{% if not isInline %}</th>{% endif %}

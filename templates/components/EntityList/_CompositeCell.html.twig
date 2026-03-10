@@ -6,8 +6,13 @@
  # regular single-column cell: custom template, datasource template,
  # inline-edit field component, or read-only Doctrine type template.
  #
+ # The `slot.subLabels` property controls how sub-column labels are displayed:
+ #   - 'show'   (default) — text label before each value
+ #   - 'icon'             — small ℹ icon with the label as a tooltip title attribute
+ #   - 'hidden'           — no label rendered (values only)
+ #
  # Variables:
- #   slot          - ColumnGroup value object (id, label, columns)
+ #   slot          - ColumnGroup value object (id, label, columns, subLabels, header)
  #   entity        - the current entity/item
  #   entityId      - entity ID value
  #   rowEditing    - bool — is this row currently in inline edit mode
@@ -22,7 +27,15 @@
     <div class="admin-composite-cell">
         {% for columnName, columnMeta in slot.columns %}
             <div class="admin-composite-cell-row">
-                <span class="admin-composite-cell-label">{{ columnMeta.label }}</span>
+                {# Sub-column label rendering based on slot.subLabels mode #}
+                {% if slot.subLabels == 'icon' %}
+                    <span class="admin-composite-cell-label admin-composite-cell-label--icon"
+                          title="{{ columnMeta.label }}">&#9432;</span>
+                {% elseif slot.subLabels != 'hidden' %}
+                    {# Default: 'show' #}
+                    <span class="admin-composite-cell-label">{{ columnMeta.label }}</span>
+                {% endif %}
+
                 <span class="admin-composite-cell-value">
                     {% set value = component.getEntityValue(entity, columnName) %}
 

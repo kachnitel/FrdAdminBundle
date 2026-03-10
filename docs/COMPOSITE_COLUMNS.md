@@ -32,21 +32,96 @@ stacked vertically, followed by a regular **Email** column.
 
 ---
 
+## Display Options — `#[AdminColumnGroup]`
+
+Fine-tune how a group looks using the `#[AdminColumnGroup]` attribute on the
+**entity class**. The `id` must match the group identifier used in
+`#[AdminColumn(group:)]`.
+
+```php
+use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
+use Kachnitel\AdminBundle\DataSource\ColumnGroup;
+
+#[Admin(label: 'Orders')]
+#[AdminColumnGroup(
+    id: 'delivery',
+    subLabels: ColumnGroup::SUB_LABELS_ICON,
+    header: ColumnGroup::HEADER_COLLAPSIBLE,
+)]
+class Order { ... }
+```
+
+### `header` — Composite column `<th>` style
+
+Three practical modes control what the group header cell renders:
+
+| Constant                        | Behaviour                                                                            | Default |
+|---------------------------------|--------------------------------------------------------------------------------------|---------|
+| `ColumnGroup::HEADER_TEXT`      | Renders only the humanized group label as plain text — like a regular column header  | ✔       |
+| `ColumnGroup::HEADER_COLLAPSIBLE` | Group label inside a native `<details>`/`<summary>` toggle; per-sub-column sort and filter rows are hidden by default and revealed on click. No JavaScript required. | |
+| `ColumnGroup::HEADER_FULL`      | Group label strip always visible plus all per-sub-column sort and filter rows always expanded | |
+
+**Choosing a mode:**
+
+- `HEADER_TEXT` is the least cluttered option and the sensible default for most tables. Sort and filter access is still available per-column through the global filter panel.
+- `HEADER_COLLAPSIBLE` is the sweet spot for tables where the group's filters are used occasionally — users can open them on demand without permanently widening the header.
+- `HEADER_FULL` suits power-user interfaces where column-level sorting and filtering within the group needs to be immediately accessible.
+
+### `subLabels` — Sub-column labels in body cells
+
+Controls how each sub-column's label is displayed next to its value inside the
+composite `<td>`.
+
+| Constant                         | Behaviour                                         | Default |
+|----------------------------------|---------------------------------------------------|---------|
+| `ColumnGroup::SUB_LABELS_SHOW`   | Text label before each value                      | ✔       |
+| `ColumnGroup::SUB_LABELS_ICON`   | Small ℹ icon with the label in a `title` tooltip  |         |
+| `ColumnGroup::SUB_LABELS_HIDDEN` | No label rendered — values only                   |         |
+
+### Full example
+
+```php
+#[Admin(label: 'Orders')]
+#[AdminColumnGroup(
+    id: 'delivery',
+    subLabels: ColumnGroup::SUB_LABELS_ICON,   // compact labels in cells
+    header: ColumnGroup::HEADER_COLLAPSIBLE,    // filters on demand
+)]
+#[AdminColumnGroup(
+    id: 'dates',
+    header: ColumnGroup::HEADER_FULL,           // date filters always visible
+)]
+class Order
+{
+    #[AdminColumn(group: 'delivery')]
+    private ?FulfillmentMethod $fulfillmentMethod = null;
+
+    #[AdminColumn(group: 'delivery')]
+    private ?Region $region = null;
+
+    #[AdminColumn(group: 'dates')]
+    private ?\DateTimeImmutable $shipmentDate = null;
+
+    #[AdminColumn(group: 'dates')]
+    private ?\DateTimeImmutable $targetDate = null;
+}
+```
+
+---
+
 ## How It Works
 
-1. `#[AdminColumn(group: 'identifier')]` is placed on each property to include
-   in the group.
-2. The `DoctrineColumnAttributeProvider` service reads these attributes on the
-   entity class and populates the `group` field of each `ColumnMetadata`.
-3. `DoctrineDataSource::getColumnGroups()` returns an ordered list of
-   `string|ColumnGroup` *slots*:
-   - **`string`** — a plain column name; rendered as a normal `<th>`/`<td>`.
-   - **`ColumnGroup`** — a value object carrying `id`, `label`, and an ordered
-     `ColumnMetadata[]` array; rendered as a composite stacked cell.
-4. The `EntityList` component exposes `getColumnSlots()`, which applies column
-   visibility filtering to the raw slot list.
-5. `EntityList.html.twig` iterates slots via `this.columnSlots` and dispatches
-   to `_CompositeHeader.html.twig` / `_CompositeCell.html.twig` for group slots.
+1. `#[AdminColumn(group: 'identifier')]` is placed on each property to include in the group.
+2. Optional `#[AdminColumnGroup]` on the entity class configures per-group display options.
+3. `DoctrineColumnAttributeProvider` reads both attribute types.
+4. `DoctrineDataSource::getColumnGroups()` returns an ordered list of `string|ColumnGroup` slots.
+5. `EntityList.html.twig` dispatches to `_CompositeHeader.html.twig` / `_CompositeCell.html.twig` for group slots.
+
+### Header row alignment
+
+The composite `<th>` is rendered with `rowspan="2"` so it spans both the label row and the
+filter row in `<thead>`. The filter row correctly skips composite slots — column counts stay
+aligned regardless of `header` mode.
 
 ---
 
@@ -61,46 +136,21 @@ The group label is derived by humanising the identifier string:
 | `contactInfo` | `Contact info` |
 | `addr`        | `Addr`         |
 
-There is currently no `label:` override on `#[AdminColumn(group:)]` — use a
-descriptive identifier if the humanised form is not suitable.
-
 ---
 
 ## Column Order
 
-Members of a group appear in the composite cell in the **same order they appear
-in the entity class** (or in `#[Admin(columns: [...])]` if an explicit list is set).
+Members of a group appear in the composite cell in the **same order they appear in the entity
+class** (or in `#[Admin(columns: [...])]` if an explicit list is set).
 
-Groups appear in the overall table at the position of their **first member**.
-Non-contiguous group members (with ungrouped columns in between) are merged into
-the group at the first-member position:
-
-```php
-// firstName → name group starts here
-// email     → ungrouped → stays between groups
-// lastName  → appended to name group (NOT at its position)
-
-// Rendered slot order:  [ColumnGroup{firstName, lastName}]  [email]
-```
+Groups appear in the overall table at the position of their **first member**. Non-contiguous
+group members are merged into the group at the first-member position.
 
 ---
 
-## Column Visibility Compatibility
+## Column Visibility, Inline Editing
 
-Individual group members participate in column visibility just like regular
-columns. If all members of a group are hidden, the group slot itself disappears
-from the table. If only some members are hidden, the group cell renders with the
-remaining visible sub-columns.
-
----
-
-## Inline Editing Compatibility
-
-Composite cells fully support inline editing. When a row is in edit mode, each
-sub-column in the group renders its `Field` LiveComponent (or the read-only
-fallback) independently, using the same logic as a normal single-column cell.
-
----
+See earlier in this file — these sections are unaffected by header/subLabels configuration.
 
 ## Custom Data Sources
 
@@ -119,7 +169,8 @@ class MyDataSource implements DataSourceInterface
 }
 ```
 
-Custom data sources can also return `ColumnGroup` instances manually:
+Custom data sources can also return `ColumnGroup` instances manually, including
+display options:
 
 ```php
 use Kachnitel\AdminBundle\DataSource\ColumnGroup;
@@ -136,6 +187,8 @@ public function getColumnGroups(): array
                 'firstName' => ColumnMetadata::create('firstName', 'First Name'),
                 'lastName'  => ColumnMetadata::create('lastName', 'Last Name'),
             ],
+            subLabels: ColumnGroup::SUB_LABELS_ICON,
+            header: ColumnGroup::HEADER_FULL,
         ),
         'email',
     ];
@@ -146,15 +199,16 @@ public function getColumnGroups(): array
 
 ## API Reference
 
-### `#[AdminColumn(group: '...')]`
+### `#[AdminColumnGroup]`
 
 ```php
-#[Attribute(Attribute::TARGET_PROPERTY)]
-class AdminColumn
+#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
+class AdminColumnGroup
 {
     public function __construct(
-        string|bool|null $editable = null,
-        ?string $group = null,            // composite group identifier
+        public readonly string $id,
+        public readonly string $subLabels = ColumnGroup::SUB_LABELS_SHOW,
+        public readonly string $header    = ColumnGroup::HEADER_TEXT,
     ) {}
 }
 ```
@@ -164,30 +218,22 @@ class AdminColumn
 ```php
 readonly class ColumnGroup
 {
+    // subLabels
+    public const SUB_LABELS_SHOW   = 'show';
+    public const SUB_LABELS_ICON   = 'icon';
+    public const SUB_LABELS_HIDDEN = 'hidden';
+
+    // header
+    public const HEADER_TEXT        = 'text';        // default
+    public const HEADER_COLLAPSIBLE = 'collapsible';
+    public const HEADER_FULL        = 'full';
+
     public function __construct(
-        public string $id,                            // e.g. 'name_block'
-        public string $label,                         // e.g. 'Name block'
-        public array $columns,                        // array<string, ColumnMetadata>
+        public string $id,
+        public string $label,
+        public array  $columns,    // array<string, ColumnMetadata>
+        public string $subLabels = self::SUB_LABELS_SHOW,
+        public string $header    = self::HEADER_TEXT,
     ) {}
 }
 ```
-
-### `DataSourceInterface::getColumnGroups()`
-
-```php
-/** @return list<string|ColumnGroup> */
-public function getColumnGroups(): array;
-```
-
-### `EntityList::getColumnSlots()`
-
-```php
-/** @return list<string|ColumnGroup> */
-public function getColumnSlots(): array;
-```
-
-Returns the visibility-filtered slot list used by the template.
-
-### `EntityList::isColumnGroup(string|ColumnGroup $slot): bool`
-
-Helper used in Twig to distinguish group slots from plain column names.

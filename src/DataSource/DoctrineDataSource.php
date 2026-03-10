@@ -111,6 +111,8 @@ class DoctrineDataSource implements DataSourceInterface
         }
 
         $columns = $this->getColumns();
+        $groupAttrs = $this->columnAttributeProvider->getGroupAttributes($this->entityClass);
+
         /** @var list<string|ColumnGroup> $slots */
         $slots = [];
         /** @var array<string, int> $groupSlotIndex group id => index in $slots */
@@ -119,6 +121,7 @@ class DoctrineDataSource implements DataSourceInterface
         foreach ($columns as $name => $metadata) {
             if ($metadata->group !== null) {
                 $groupId = $metadata->group;
+                $groupAttr = $groupAttrs[$groupId] ?? null;
 
                 if (!isset($groupSlotIndex[$groupId])) {
                     // First member of this group — create a new ColumnGroup slot
@@ -127,6 +130,8 @@ class DoctrineDataSource implements DataSourceInterface
                         id: $groupId,
                         label: $this->humanize($groupId),
                         columns: [$name => $metadata],
+                        subLabels: $groupAttr->subLabels ?? ColumnGroup::SUB_LABELS_SHOW,
+                        header: $groupAttr->header ?? ColumnGroup::HEADER_TEXT,
                     );
                 } else {
                     // Subsequent member — append to the existing slot
@@ -137,6 +142,8 @@ class DoctrineDataSource implements DataSourceInterface
                         id: $existing->id,
                         label: $existing->label,
                         columns: array_merge($existing->columns, [$name => $metadata]),
+                        subLabels: $existing->subLabels,
+                        header: $existing->header,
                     );
                 }
             } else {

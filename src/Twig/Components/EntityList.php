@@ -485,6 +485,8 @@ class EntityList
                         id: $slot->id,
                         label: $slot->label,
                         columns: $visibleSubColumns,
+                        subLabels: $slot->subLabels,
+                        header: $slot->header,
                     );
                 }
             }

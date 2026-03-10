@@ -1,48 +1,106 @@
 {#
  # Composite (grouped) column header cell.
  #
- # Renders a single <th> that stacks multiple sub-column sort headers
- # and filter inputs vertically using Flexbox.
+ # Spans both the label row and the filter row via rowspan="2", keeping
+ # the thead column count consistent regardless of header mode.
  #
- # A thin group label strip sits at the top of the cell to label the group.
+ # The `slot.header` property controls rendering style:
+ #
+ #   'text'        (default) — just the humanized group label, like a plain <th>.
+ #                             No per-sub-column sort or filter rows.
+ #
+ #   'collapsible' — group label in a native <details>/<summary> toggle.
+ #                   Per-sub-column sort and filter rows are hidden by default
+ #                   and revealed when the user opens the disclosure. No JS needed.
+ #
+ #   'full'        — group label strip always visible, plus all per-sub-column
+ #                   sort links and filter inputs expanded at all times.
  #
  # Variables:
- #   slot          - ColumnGroup value object (id, label, columns)
- #   sortBy        - current sort field string
- #   sortDirection - 'ASC' or 'DESC'
- #   component     - EntityList component (for sort() action)
+ #   slot           - ColumnGroup value object (id, label, columns, subLabels, header)
+ #   sortBy         - current sort field string
+ #   sortDirection  - 'ASC' or 'DESC'
+ #   component      - EntityList component (for sort() action)
  #   filterMetadata - array<string, FilterMetadata>
  #   columnFilters  - array<string, mixed>
  #}
 {% import kachnitel_admin_theme as css %}
 
-<th class="admin-composite-th">
-    <div class="admin-composite-header">
-        <div class="admin-composite-group-label">{{ slot.label }}</div>
-        {% for columnName, columnMeta in slot.columns %}
-            <div class="admin-composite-header-row">
-                <div class="admin-composite-sort">
-                    {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
-                        column: columnName,
-                        columnLabel: columnMeta.label,
-                        sortable: columnMeta.sortable,
-                        sortBy: sortBy,
-                        sortDirection: sortDirection,
-                        component: component,
-                        inline: true
-                    } only %}
+{# rowspan="2" spans both the label row and the filter row so no placeholder
+   <th> is needed in the <tr class="filters"> for this group. #}
+<th class="admin-composite-th" rowspan="2">
+
+    {% if slot.header == 'full' %}
+
+        {# Always-expanded: group label + per-sub-column sort and filter rows #}
+        <div class="admin-composite-header">
+            <div class="admin-composite-group-label">{{ slot.label }}</div>
+            {% for columnName, columnMeta in slot.columns %}
+                <div class="admin-composite-header-row">
+                    <div class="admin-composite-sort">
+                        {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
+                            column: columnName,
+                            columnLabel: columnMeta.label,
+                            sortable: columnMeta.sortable,
+                            sortBy: sortBy,
+                            sortDirection: sortDirection,
+                            component: component,
+                            inline: true
+                        } only %}
+                    </div>
+                    <div class="admin-composite-filter">
+                        {% if filterMetadata[columnName] is defined %}
+                            <twig:K:Admin:ColumnFilter
+                                key="{{ columnName }}"
+                                column="{{ columnName }}"
+                                value="{{ columnFilters[columnName]|default('') }}"
+                                :filterMetadata="filterMetadata[columnName]"
+                            />
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="admin-composite-filter">
-                    {% if filterMetadata[columnName] is defined %}
-                        <twig:K:Admin:ColumnFilter
-                            key="{{ columnName }}"
-                            column="{{ columnName }}"
-                            value="{{ columnFilters[columnName]|default('') }}"
-                            :filterMetadata="filterMetadata[columnName]"
-                        />
-                    {% endif %}
-                </div>
+            {% endfor %}
+        </div>
+
+    {% elseif slot.header == 'collapsible' %}
+
+        {# Collapsible: group label as <summary>, sub-column rows inside <details> #}
+        <details class="admin-composite-header-collapsible">
+            <summary class="admin-composite-group-label">{{ slot.label }}</summary>
+            <div class="admin-composite-header">
+                {% for columnName, columnMeta in slot.columns %}
+                    <div class="admin-composite-header-row">
+                        <div class="admin-composite-sort">
+                            {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
+                                column: columnName,
+                                columnLabel: columnMeta.label,
+                                sortable: columnMeta.sortable,
+                                sortBy: sortBy,
+                                sortDirection: sortDirection,
+                                component: component,
+                                inline: true
+                            } only %}
+                        </div>
+                        <div class="admin-composite-filter">
+                            {% if filterMetadata[columnName] is defined %}
+                                <twig:K:Admin:ColumnFilter
+                                    key="{{ columnName }}"
+                                    column="{{ columnName }}"
+                                    value="{{ columnFilters[columnName]|default('') }}"
+                                    :filterMetadata="filterMetadata[columnName]"
+                                />
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
-    </div>
+        </details>
+
+    {% else %}
+
+        {# Default: 'text' — plain label only, like a regular column header #}
+        {{ slot.label }}
+
+    {% endif %}
+
 </th>
