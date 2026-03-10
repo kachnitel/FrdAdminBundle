@@ -19,6 +19,11 @@ use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
  * Custom (virtual) columns can be declared via #[AdminCustomColumn] on the entity class.
  * These columns are appended after Doctrine-backed columns when no explicit `columns:`
  * list is set, or they are placed wherever the developer puts their name in `columns:`.
+ *
+ * Composite columns can be declared via #[AdminColumn(group: 'identifier')] on entity properties.
+ * Properties sharing the same group identifier are rendered in a single stacked table cell.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class DoctrineDataSource implements DataSourceInterface
 {
@@ -30,6 +35,9 @@ class DoctrineDataSource implements DataSourceInterface
     /** @var array<string, FilterMetadata>|null */
     private ?array $filtersCache = null;
 
+    /** @var list<string|ColumnGroup>|null */
+    private ?array $columnGroupsCache = null;
+
     /**
      * @param class-string $entityClass Fully-qualified entity class name
      */
@@ -40,6 +48,7 @@ class DoctrineDataSource implements DataSourceInterface
         private readonly EntityListQueryService $queryService,
         private readonly FilterMetadataProvider $filterMetadataProvider,
         private readonly DoctrineCustomColumnProvider $customColumnProvider,
+        private readonly DoctrineColumnAttributeProvider $columnAttributeProvider,
     ) {}
 
     public function getIdentifier(): string
@@ -66,6 +75,7 @@ class DoctrineDataSource implements DataSourceInterface
 
         $metadata = $this->em->getClassMetadata($this->entityClass);
         $customColumns = $this->customColumnProvider->getCustomColumns($this->entityClass);
+        $columnAttrs = $this->columnAttributeProvider->getColumnAttributes($this->entityClass);
 
         $this->columnsCache = [];
 
@@ -81,15 +91,62 @@ class DoctrineDataSource implements DataSourceInterface
 
             $type = $this->getColumnType($metadata, $columnName);
             $sortable = $this->isColumnSortable($metadata, $columnName);
+            $group = isset($columnAttrs[$columnName]) ? $columnAttrs[$columnName]->group : null;
 
             $this->columnsCache[$columnName] = ColumnMetadata::create(
                 name: $columnName,
                 type: $type,
                 sortable: $sortable,
+                group: $group,
             );
         }
 
         return $this->columnsCache;
+    }
+
+    public function getColumnGroups(): array
+    {
+        if ($this->columnGroupsCache !== null) {
+            return $this->columnGroupsCache;
+        }
+
+        $columns = $this->getColumns();
+        /** @var list<string|ColumnGroup> $slots */
+        $slots = [];
+        /** @var array<string, int> $groupSlotIndex group id => index in $slots */
+        $groupSlotIndex = [];
+
+        foreach ($columns as $name => $metadata) {
+            if ($metadata->group !== null) {
+                $groupId = $metadata->group;
+
+                if (!isset($groupSlotIndex[$groupId])) {
+                    // First member of this group — create a new ColumnGroup slot
+                    $groupSlotIndex[$groupId] = count($slots);
+                    $slots[] = new ColumnGroup(
+                        id: $groupId,
+                        label: $this->humanize($groupId),
+                        columns: [$name => $metadata],
+                    );
+                } else {
+                    // Subsequent member — append to the existing slot
+                    $idx = $groupSlotIndex[$groupId];
+                    /** @var ColumnGroup $existing */
+                    $existing = $slots[$idx];
+                    $slots[$idx] = new ColumnGroup(
+                        id: $existing->id,
+                        label: $existing->label,
+                        columns: array_merge($existing->columns, [$name => $metadata]),
+                    );
+                }
+            } else {
+                $slots[] = $name;
+            }
+        }
+
+        $this->columnGroupsCache = array_values($slots);
+
+        return $this->columnGroupsCache;
     }
 
     public function getFilters(): array
@@ -370,5 +427,16 @@ class DoctrineDataSource implements DataSourceInterface
     private function isColumnSortable(ClassMetadata $metadata, string $column): bool
     {
         return $metadata->hasField($column);
+    }
+
+    /**
+     * Humanise a snake_case or camelCase identifier into a readable label.
+     */
+    private function humanize(string $text): string
+    {
+        // Handle snake_case: replace underscores with spaces
+        $text = str_replace('_', ' ', $text);
+
+        return ucfirst(trim(strtolower((string) preg_replace('/(?<!^)[A-Z]/', ' $0', $text))));
     }
 }

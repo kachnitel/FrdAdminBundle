@@ -1,0 +1,48 @@
+{#
+ # Composite (grouped) column header cell.
+ #
+ # Renders a single <th> that stacks multiple sub-column sort headers
+ # and filter inputs vertically using Flexbox.
+ #
+ # A thin group label strip sits at the top of the cell to label the group.
+ #
+ # Variables:
+ #   slot          - ColumnGroup value object (id, label, columns)
+ #   sortBy        - current sort field string
+ #   sortDirection - 'ASC' or 'DESC'
+ #   component     - EntityList component (for sort() action)
+ #   filterMetadata - array<string, FilterMetadata>
+ #   columnFilters  - array<string, mixed>
+ #}
+{% import kachnitel_admin_theme as css %}
+
+<th class="admin-composite-th">
+    <div class="admin-composite-header">
+        <div class="admin-composite-group-label">{{ slot.label }}</div>
+        {% for columnName, columnMeta in slot.columns %}
+            <div class="admin-composite-header-row">
+                <div class="admin-composite-sort">
+                    {% include '@KachnitelAdmin/components/EntityList/_SortableHeader.html.twig' with {
+                        column: columnName,
+                        columnLabel: columnMeta.label,
+                        sortable: columnMeta.sortable,
+                        sortBy: sortBy,
+                        sortDirection: sortDirection,
+                        component: component,
+                        inline: true
+                    } only %}
+                </div>
+                <div class="admin-composite-filter">
+                    {% if filterMetadata[columnName] is defined %}
+                        <twig:K:Admin:ColumnFilter
+                            key="{{ columnName }}"
+                            column="{{ columnName }}"
+                            value="{{ columnFilters[columnName]|default('') }}"
+                            :filterMetadata="filterMetadata[columnName]"
+                        />
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</th>

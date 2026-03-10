@@ -1,0 +1,36 @@
+{#
+ # Composite (grouped) column body cell.
+ #
+ # Renders a single <td> that stacks multiple sub-column values vertically.
+ # Each sub-column row uses the same conditional rendering logic as a
+ # regular single-column cell: custom template, datasource template,
+ # inline-edit field component, or read-only Doctrine type template.
+ #
+ # Variables:
+ #   slot          - ColumnGroup value object (id, label, columns)
+ #   entity        - the current entity/item
+ #   entityId      - entity ID value
+ #   rowEditing    - bool — is this row currently in inline edit mode
+ #   isDoctrineEntity - bool
+ #   component     - EntityList component (for getEntityValue, etc.)
+ #   dataSource    - DataSourceInterface
+ #   entityClass   - FQCN string (may be empty for custom data sources)
+ #}
+{% import kachnitel_admin_theme as css %}
+
+<td class="admin-composite-td">
+    <div class="admin-composite-cell">
+        {% for columnName, columnMeta in slot.columns %}
+            <div class="admin-composite-cell-row">
+                <span class="admin-composite-cell-label">{{ columnMeta.label }}</span>
+                <span class="admin-composite-cell-value">
+                    {% set value = component.getEntityValue(entity, columnName) %}
+
+                    {{ include('@KachnitelAdmin/components/EntityList/_Cell.html.twig', {
+                        slot: columnName
+                    }) }}
+                </span>
+            </div>
+        {% endfor %}
+    </div>
+</td>

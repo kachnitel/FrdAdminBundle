@@ -26,6 +26,7 @@ class DoctrineDataSourceFactory
         private readonly EntityListQueryService $queryService,
         private readonly FilterMetadataProvider $filterMetadataProvider,
         private readonly DoctrineCustomColumnProvider $customColumnProvider,
+        private readonly DoctrineColumnAttributeProvider $columnAttributeProvider,
     ) {}
 
     /**
@@ -42,15 +43,7 @@ class DoctrineDataSourceFactory
         $this->dataSourcesCache = [];
 
         foreach ($this->entityDiscovery->getAdminEntities() as $entityClass => $adminAttribute) {
-            $dataSource = new DoctrineDataSource(
-                entityClass: $entityClass,
-                adminAttribute: $adminAttribute,
-                em: $this->em,
-                queryService: $this->queryService,
-                filterMetadataProvider: $this->filterMetadataProvider,
-                customColumnProvider: $this->customColumnProvider,
-            );
-
+            $dataSource = $this->buildDataSource($entityClass, $adminAttribute);
             $this->dataSourcesCache[$dataSource->getIdentifier()] = $dataSource;
         }
 
@@ -71,14 +64,7 @@ class DoctrineDataSourceFactory
             return null;
         }
 
-        return new DoctrineDataSource(
-            entityClass: $entityClass,
-            adminAttribute: $adminAttribute,
-            em: $this->em,
-            queryService: $this->queryService,
-            filterMetadataProvider: $this->filterMetadataProvider,
-            customColumnProvider: $this->customColumnProvider,
-        );
+        return $this->buildDataSource($entityClass, $adminAttribute);
     }
 
     /**
@@ -94,14 +80,7 @@ class DoctrineDataSourceFactory
         $adminAttribute = $this->entityDiscovery->getAdminAttribute($entityClass)
             ?? new Admin();
 
-        return new DoctrineDataSource(
-            entityClass: $entityClass,
-            adminAttribute: $adminAttribute,
-            em: $this->em,
-            queryService: $this->queryService,
-            filterMetadataProvider: $this->filterMetadataProvider,
-            customColumnProvider: $this->customColumnProvider,
-        );
+        return $this->buildDataSource($entityClass, $adminAttribute);
     }
 
     /**
@@ -121,5 +100,21 @@ class DoctrineDataSourceFactory
     public function clearCache(): void
     {
         $this->dataSourcesCache = null;
+    }
+
+    /**
+     * @param class-string $entityClass
+     */
+    private function buildDataSource(string $entityClass, Admin $adminAttribute): DoctrineDataSource
+    {
+        return new DoctrineDataSource(
+            entityClass: $entityClass,
+            adminAttribute: $adminAttribute,
+            em: $this->em,
+            queryService: $this->queryService,
+            filterMetadataProvider: $this->filterMetadataProvider,
+            customColumnProvider: $this->customColumnProvider,
+            columnAttributeProvider: $this->columnAttributeProvider,
+        );
     }
 }

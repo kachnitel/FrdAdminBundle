@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Kachnitel\AdminBundle\Config\EntityListConfig;
+use Kachnitel\AdminBundle\DataSource\ColumnGroup;
+use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
@@ -134,6 +136,7 @@ class EntityList
      *     queryResult?: PaginatedResult,
      *     filterMetadata?: array<string, array<string, mixed>>,
      *     columns?: array<int|string, string>,
+     *     columnSlots?: list<string|ColumnGroup>,
      *     dataSource?: DataSourceInterface,
      *     dataSourceResolved?: bool,
      *     visibilityLoaded?: bool
@@ -443,6 +446,66 @@ class EntityList
         ));
     }
 
+    /**
+     * Return the ordered list of display slots for the list table header and body.
+     *
+     * Each slot is either:
+     * - A plain column name (string) — renders as a regular <th>/<td>.
+     * - A ColumnGroup — renders as a composite stacked <th>/<td>.
+     *
+     * Hidden columns are removed. For groups, only visible sub-columns are included.
+     * A group with ALL sub-columns hidden is removed from the result entirely.
+     *
+     * @return list<string|ColumnGroup>
+     */
+    public function getColumnSlots(): array
+    {
+        if (isset($this->cache['columnSlots'])) {
+            return $this->cache['columnSlots'];
+        }
+
+        $visibleColumns = $this->getVisibleColumns();
+        $allSlots = $this->getDataSource()->getColumnGroups();
+
+        $result = [];
+        foreach ($allSlots as $slot) {
+            if (is_string($slot)) {
+                if (in_array($slot, $visibleColumns, true)) {
+                    $result[] = $slot;
+                }
+            } else {
+                // Filter sub-columns to those that are visible
+                $visibleSubColumns = array_filter(
+                    $slot->columns,
+                    fn (ColumnMetadata $col) => in_array($col->name, $visibleColumns, true)
+                );
+
+                if (count($visibleSubColumns) > 0) {
+                    $result[] = new ColumnGroup(
+                        id: $slot->id,
+                        label: $slot->label,
+                        columns: $visibleSubColumns,
+                    );
+                }
+            }
+        }
+
+        return $this->cache['columnSlots'] = $result;
+    }
+
+    /**
+     * Returns true when the given slot is a ColumnGroup (composite), false for a plain column name.
+     *
+     * Used in Twig as `this.isColumnGroup(slot)` to branch between composite
+     * and regular cell rendering.
+     *
+     * @param string|ColumnGroup $slot
+     */
+    public function isColumnGroup(string|ColumnGroup $slot): bool
+    {
+        return $slot instanceof ColumnGroup;
+    }
+
     #[LiveAction]
     public function toggleColumnVisibility(#[LiveArg] string $column): void
     {
@@ -454,6 +517,7 @@ class EntityList
 
         $this->saveHiddenColumns($this->hiddenColumns);
         unset($this->cache['queryResult']);
+        unset($this->cache['columnSlots']);
     }
 
     #[PostHydrate]

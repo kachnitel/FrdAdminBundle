@@ -42,6 +42,23 @@ interface DataSourceInterface
     public function getColumns(): array;
 
     /**
+     * Get column slots for list rendering.
+     *
+     * Returns an ordered list of display slots. Each slot is either:
+     * - A plain column name (`string`) — renders as a regular `<th>`/`<td>`.
+     * - A `ColumnGroup` — renders as a composite `<th>`/`<td>` with stacked rows,
+     *   one per sub-column in the group.
+     *
+     * Data sources that do not use composite columns should return all column
+     * names as a flat list of strings. The `FlatColumnGroupsTrait` provides
+     * this default behaviour and can be included to satisfy the contract
+     * without writing any additional code.
+     *
+     * @return list<string|ColumnGroup>
+     */
+    public function getColumnGroups(): array;
+
+    /**
      * Get filter definitions for this data source.
      *
      * @return array<string, FilterMetadata> Map of filter name => metadata
@@ -66,12 +83,12 @@ interface DataSourceInterface
     /**
      * Query the data source with filters, sorting, and pagination.
      *
-     * @param string $search Global search term
-     * @param array<string, mixed> $filters Column-specific filter values
-     * @param string $sortBy Column to sort by
-     * @param string $sortDirection 'ASC' or 'DESC'
-     * @param int $page Current page (1-indexed)
-     * @param int $itemsPerPage Items per page
+     * @param string               $search        Global search term
+     * @param array<string, mixed> $filters       Column-specific filter values
+     * @param string               $sortBy        Column to sort by
+     * @param string               $sortDirection 'ASC' or 'DESC'
+     * @param int                  $page          Current page (1-indexed)
+     * @param int                  $itemsPerPage  Items per page
      */
     public function query(
         string $search,

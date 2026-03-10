@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\AdminBundle\DataSource\FlatColumnGroupsTrait;
 use Kachnitel\AdminBundle\DataSource\FilterMetadata;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 
@@ -16,6 +17,8 @@ use Kachnitel\AdminBundle\DataSource\PaginatedResult;
  */
 class CustomTemplateDataSource implements DataSourceInterface
 {
+    use FlatColumnGroupsTrait;
+
     /** @var list<object> */
     private array $items = [];
 

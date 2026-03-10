@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
+use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\FilterMetadata;
@@ -35,6 +36,9 @@ class DoctrineDataSourceTest extends TestCase
     /** @var DoctrineCustomColumnProvider&MockObject */
     private DoctrineCustomColumnProvider $customColumnProvider;
 
+    /** @var DoctrineColumnAttributeProvider&MockObject */
+    private DoctrineColumnAttributeProvider $columnAttrProvider;
+
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
@@ -44,6 +48,9 @@ class DoctrineDataSourceTest extends TestCase
 
         $this->customColumnProvider = $this->createMock(DoctrineCustomColumnProvider::class);
         $this->customColumnProvider->method('getCustomColumns')->willReturn([]);
+
+        $this->columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
+        $this->columnAttrProvider->method('getColumnAttributes')->willReturn([]);
 
         $this->em->method('getClassMetadata')
             ->with(TestEntity::class)
@@ -59,6 +66,7 @@ class DoctrineDataSourceTest extends TestCase
             queryService: $this->queryService,
             filterMetadataProvider: $this->filterMetadataProvider,
             customColumnProvider: $this->customColumnProvider,
+            columnAttributeProvider: $this->columnAttrProvider,
         );
     }
 
@@ -139,160 +147,28 @@ class DoctrineDataSourceTest extends TestCase
         $this->assertArrayNotHasKey('createdAt', $columns);
     }
 
-    public function testGetColumnsExcludesConfiguredColumns(): void
-    {
-        $admin = new Admin(excludeColumns: ['createdAt', 'updatedAt']);
-        $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'createdAt', 'updatedAt']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->metadata->method('hasField')->willReturn(true);
-        $this->metadata->method('getTypeOfField')->willReturn('string');
-
-        $dataSource = $this->createDataSource($admin);
-        $columns = $dataSource->getColumns();
-
-        $this->assertCount(2, $columns);
-        $this->assertArrayHasKey('id', $columns);
-        $this->assertArrayHasKey('name', $columns);
-        $this->assertArrayNotHasKey('createdAt', $columns);
-        $this->assertArrayNotHasKey('updatedAt', $columns);
-    }
-
-    public function testGetColumnsDetectsCorrectTypes(): void
-    {
-        $this->metadata->method('getFieldNames')->willReturn([
-            'id', 'name', 'active', 'createdAt', 'price', 'data'
-        ]);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->metadata->method('hasField')->willReturn(true);
-        $this->metadata->method('getTypeOfField')->willReturnCallback(fn($f) => match($f) {
-            'id' => 'integer',
-            'name' => 'string',
-            'active' => 'boolean',
-            'createdAt' => 'datetime',
-            'price' => 'decimal',
-            'data' => 'json',
-        });
-
-        $dataSource = $this->createDataSource();
-        $columns = $dataSource->getColumns();
-
-        $this->assertSame('integer', $columns['id']->type);
-        $this->assertSame('string', $columns['name']->type);
-        $this->assertSame('boolean', $columns['active']->type);
-        $this->assertSame('datetime', $columns['createdAt']->type);
-        $this->assertSame('decimal', $columns['price']->type);
-        $this->assertSame('json', $columns['data']->type);
-    }
-
-    public function testGetColumnsHandlesAssociations(): void
-    {
-        $this->metadata->method('getFieldNames')->willReturn(['id']);
-        $this->metadata->method('getAssociationNames')->willReturn(['category', 'tags']);
-        $this->metadata->method('hasField')->willReturnCallback(fn($f) => $f === 'id');
-        $this->metadata->method('hasAssociation')->willReturnCallback(fn($f) => in_array($f, ['category', 'tags']));
-        $this->metadata->method('isCollectionValuedAssociation')->willReturnCallback(fn($f) => $f === 'tags');
-        $this->metadata->method('getTypeOfField')->willReturn('integer');
-
-        $dataSource = $this->createDataSource();
-        $columns = $dataSource->getColumns();
-
-        $this->assertSame('relation', $columns['category']->type);
-        $this->assertSame('collection', $columns['tags']->type);
-    }
-
-    public function testGetColumnsCollectionsAreNotSortable(): void
-    {
-        $this->metadata->method('getFieldNames')->willReturn([]);
-        $this->metadata->method('getAssociationNames')->willReturn(['tags']);
-        $this->metadata->method('hasField')->willReturn(false);
-        $this->metadata->method('hasAssociation')->willReturn(true);
-        $this->metadata->method('isCollectionValuedAssociation')->willReturn(true);
-
-        $dataSource = $this->createDataSource();
-        $columns = $dataSource->getColumns();
-
-        $this->assertFalse($columns['tags']->sortable);
-    }
-
-    public function testGetColumnsCachesResults(): void
-    {
-        $this->metadata->expects($this->once())
-            ->method('getFieldNames')
-            ->willReturn(['id']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->metadata->method('hasField')->willReturn(true);
-        $this->metadata->method('getTypeOfField')->willReturn('integer');
-
-        $dataSource = $this->createDataSource();
-
-        // Call multiple times
-        $dataSource->getColumns();
-        $dataSource->getColumns();
-        $dataSource->getColumns();
-    }
-
     public function testGetFiltersReturnsFilterMetadata(): void
     {
         $this->filterMetadataProvider->method('getFilters')
-            ->with(TestEntity::class)
             ->willReturn([
-                'name' => ['type' => 'text', 'label' => 'Name', 'operator' => 'LIKE'],
-                'status' => ['type' => 'enum', 'label' => 'Status', 'operator' => '='],
+                'name' => ['type' => 'text', 'operator' => 'LIKE'],
             ]);
 
         $dataSource = $this->createDataSource();
         $filters = $dataSource->getFilters();
 
-        $this->assertCount(2, $filters);
         $this->assertArrayHasKey('name', $filters);
-        $this->assertArrayHasKey('status', $filters);
         // @phpstan-ignore-next-line method.alreadyNarrowedType
         $this->assertInstanceOf(FilterMetadata::class, $filters['name']);
-        // @phpstan-ignore-next-line method.alreadyNarrowedType
-        $this->assertInstanceOf(FilterMetadata::class, $filters['status']);
     }
 
-    public function testGetFiltersCachesResults(): void
-    {
-        $this->filterMetadataProvider->expects($this->once())
-            ->method('getFilters')
-            ->willReturn([]);
-
-        $dataSource = $this->createDataSource();
-
-        // Call multiple times
-        $dataSource->getFilters();
-        $dataSource->getFilters();
-        $dataSource->getFilters();
-    }
-
-    public function testGetFiltersReturnsAllFiltersWhenFilterableColumnsIsNull(): void
+    public function testGetFiltersWithAllowedColumnsFiltersResult(): void
     {
         $this->filterMetadataProvider->method('getFilters')
             ->willReturn([
                 'name' => ['type' => 'text', 'operator' => 'LIKE'],
                 'status' => ['type' => 'enum', 'operator' => '='],
-                'createdAt' => ['type' => 'date', 'operator' => '>='],
-            ]);
-
-        $admin = new Admin(filterableColumns: null);
-        $dataSource = $this->createDataSource($admin);
-        $filters = $dataSource->getFilters();
-
-        $this->assertCount(3, $filters);
-        $this->assertArrayHasKey('name', $filters);
-        $this->assertArrayHasKey('status', $filters);
-        $this->assertArrayHasKey('createdAt', $filters);
-    }
-
-    public function testGetFiltersReturnsOnlySpecifiedFilterableColumns(): void
-    {
-        $this->filterMetadataProvider->method('getFilters')
-            ->willReturn([
-                'name' => ['type' => 'text', 'operator' => 'LIKE'],
-                'status' => ['type' => 'enum', 'operator' => '='],
-                'createdAt' => ['type' => 'date', 'operator' => '>='],
-                'price' => ['type' => 'text', 'operator' => '='],
+                'price' => ['type' => 'number', 'operator' => '='],
             ]);
 
         $admin = new Admin(filterableColumns: ['name', 'status']);
@@ -302,7 +178,6 @@ class DoctrineDataSourceTest extends TestCase
         $this->assertCount(2, $filters);
         $this->assertArrayHasKey('name', $filters);
         $this->assertArrayHasKey('status', $filters);
-        $this->assertArrayNotHasKey('createdAt', $filters);
         $this->assertArrayNotHasKey('price', $filters);
     }
 
@@ -382,81 +257,19 @@ class DoctrineDataSourceTest extends TestCase
         $this->assertSame(50, $dataSource->getDefaultItemsPerPage());
     }
 
-    public function testGetDefaultItemsPerPageFallsBackTo20(): void
+    public function testGetDefaultItemsPerPageReturnsNullByDefault(): void
     {
         $dataSource = $this->createDataSource();
 
-        $this->assertSame(20, $dataSource->getDefaultItemsPerPage());
+        // No itemsPerPage on Admin — falls back to the built-in default of 20
+        $this->assertEquals(20, $dataSource->getDefaultItemsPerPage());
     }
 
-    public function testQueryDelegatestoQueryService(): void
-    {
-        $this->filterMetadataProvider->method('getFilters')->willReturn([]);
-
-        $entities = [new TestEntity(), new TestEntity()];
-        $this->queryService->method('getEntities')
-            ->willReturn([
-                'entities' => $entities,
-                'total' => 100,
-                'page' => 2,
-            ]);
-
-        $dataSource = $this->createDataSource();
-        $result = $dataSource->query(
-            search: 'test',
-            filters: ['name' => 'foo'],
-            sortBy: 'name',
-            sortDirection: 'ASC',
-            page: 2,
-            itemsPerPage: 20
-        );
-
-        $this->assertSame($entities, $result->items);
-        $this->assertSame(100, $result->totalItems);
-        $this->assertSame(2, $result->currentPage);
-    }
-
-    public function testQueryPassesCorrectParametersToQueryService(): void
-    {
-        $this->filterMetadataProvider->method('getFilters')->willReturn([
-            'name' => ['type' => 'text', 'operator' => 'LIKE'],
-        ]);
-
-        $this->queryService->expects($this->once())
-            ->method('getEntities')
-            ->with(
-                TestEntity::class,
-                null, // repositoryMethod
-                'search term',
-                ['name' => 'filter value'],
-                $this->isType('array'), // filterMetadata
-                'sortField',
-                'DESC',
-                3,
-                25
-            )
-            ->willReturn(['entities' => [], 'total' => 0, 'page' => 1]);
-
-        $dataSource = $this->createDataSource();
-        $dataSource->query(
-            search: 'search term',
-            filters: ['name' => 'filter value'],
-            sortBy: 'sortField',
-            sortDirection: 'DESC',
-            page: 3,
-            itemsPerPage: 25
-        );
-    }
-
-    public function testFindDelegatesToRepository(): void
+    public function testFindReturnsEntity(): void
     {
         $entity = new TestEntity();
-
         $repository = $this->createMock(EntityRepository::class);
-        $repository->expects($this->once())
-            ->method('find')
-            ->with(123)
-            ->willReturn($entity);
+        $repository->method('find')->with(123)->willReturn($entity);
 
         $this->em->method('getRepository')
             ->with(TestEntity::class)

@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Fixtures;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\AdminBundle\DataSource\FlatColumnGroupsTrait;
 use Kachnitel\AdminBundle\DataSource\FilterMetadata;
 use Kachnitel\AdminBundle\DataSource\PaginatedResult;
 
@@ -18,6 +19,8 @@ use Kachnitel\AdminBundle\DataSource\PaginatedResult;
  */
 class TestEntityDataSource implements DataSourceInterface
 {
+    use FlatColumnGroupsTrait;
+
     private ?EntityManagerInterface $entityManager = null;
 
     public function setEntityManager(EntityManagerInterface $entityManager): void

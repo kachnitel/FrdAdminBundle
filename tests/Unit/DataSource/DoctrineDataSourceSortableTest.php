@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
+use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
@@ -49,17 +50,22 @@ class DoctrineDataSourceSortableTest extends TestCase
     }
 
     /**
-     * Build a fresh DoctrineDataSource with no custom columns (empty provider stub).
+     * Build a fresh DoctrineDataSource with no custom columns (empty provider stubs).
      *
-     * Using a local mock each time avoids stub-conflict issues when a test needs
+     * Using local mocks each time avoids stub-conflict issues when a test needs
      * a different return value for getCustomColumns.
      */
-    private function createDataSource(?Admin $admin = null, ?DoctrineCustomColumnProvider $customColumnProvider = null): DoctrineDataSource
-    {
+    private function createDataSource(
+        ?Admin $admin = null,
+        ?DoctrineCustomColumnProvider $customColumnProvider = null,
+    ): DoctrineDataSource {
         if ($customColumnProvider === null) {
             $customColumnProvider = $this->createMock(DoctrineCustomColumnProvider::class);
             $customColumnProvider->method('getCustomColumns')->willReturn([]);
         }
+
+        $columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
+        $columnAttrProvider->method('getColumnAttributes')->willReturn([]);
 
         return new DoctrineDataSource(
             entityClass: 'App\\Entity\\Dummy', // @phpstan-ignore argument.type
@@ -68,6 +74,7 @@ class DoctrineDataSourceSortableTest extends TestCase
             queryService: $this->queryService,
             filterMetadataProvider: $this->filterProvider,
             customColumnProvider: $customColumnProvider,
+            columnAttributeProvider: $columnAttrProvider,
         );
     }
 
