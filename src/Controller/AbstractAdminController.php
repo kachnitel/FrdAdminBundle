@@ -47,32 +47,19 @@ abstract class AbstractAdminController extends AbstractController
 
     /**
      * Create a new entity.
+     *
+     * Form handling (submission, validation, persistence) is delegated to the
+     * AdminEntityForm LiveComponent. This method only prepares the template variables.
      */
-    protected function doNew(string $class, Request $request): Response
+    protected function doNew(string $class): Response
     {
         $this->validateSupportedEntity($class);
-        $className = $this->getEntityNamespace() . $class;
-        $entity = new $className();
-
-        $formType = $this->getFormType($class);
-        $form = $this->createForm($formType, $entity);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->em->persist($entity);
-            $this->em->flush();
-
-            // Convert class name to entitySlug format (PascalCase -> kebab-case)
-            $entitySlug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
-
-            return $this->redirectToRoute($this->getRoutePrefix() . '_index', [
-                'entitySlug' => $entitySlug
-            ], Response::HTTP_SEE_OTHER);
-        }
 
         return $this->render($this->getNewTemplate($class), [
-            'form' => $form,
-            'breadcrumbs' => $this->getBreadcrumbs($class)
+            'entityClass'       => $this->getEntityNamespace() . $class,
+            'formTypeClass'     => $this->getFormType($class),
+            'formComponentName' => $this->getFormComponentName($class),
+            'breadcrumbs'       => $this->getBreadcrumbs($class),
         ]);
     }
 
@@ -98,36 +85,25 @@ abstract class AbstractAdminController extends AbstractController
 
     /**
      * Edit an existing entity.
+     *
+     * Form handling (submission, validation, persistence) is delegated to the
+     * AdminEntityForm LiveComponent. This method only prepares the template variables.
      */
-    protected function doEdit(string $class, int $id, Request $request): Response
+    protected function doEdit(string $class, int $id): Response
     {
         $this->validateSupportedEntity($class);
-        $repository = $this->getRepository($class);
-        $entity = $repository->find($id);
 
+        $entity = $this->getRepository($class)->find($id);
         if (!$entity) {
             throw $this->createNotFoundException('No ' . $class . ' found for id ' . $id);
         }
 
-        $formType = $this->getFormType($class);
-        $form = $this->createForm($formType, $entity);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->em->flush();
-
-            // Convert class name to entitySlug format (PascalCase -> kebab-case)
-            $entitySlug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
-
-            return $this->redirectToRoute($this->getRoutePrefix() . '_index', [
-                'entitySlug' => $entitySlug
-            ], Response::HTTP_SEE_OTHER);
-        }
-
         return $this->render($this->getEditTemplate($class), [
-            'entity' => $entity,
-            'form' => $form,
-            'breadcrumbs' => $this->getBreadcrumbs($class, $entity)
+            'entity'            => $entity,
+            'entityClass'       => $this->getEntityNamespace() . $class,
+            'formTypeClass'     => $this->getFormType($class),
+            'formComponentName' => $this->getFormComponentName($class),
+            'breadcrumbs'       => $this->getBreadcrumbs($class, $entity),
         ]);
     }
 
@@ -176,6 +152,16 @@ abstract class AbstractAdminController extends AbstractController
     protected function getFormType(string $class): string
     {
         return $this->getFormNamespace() . $class . $this->getFormSuffix();
+    }
+
+    /**
+     * Get the LiveComponent name for the form.
+     * Override to use a custom form component for all entities in this controller.
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) Class is used in inherited controllers
+     */
+    protected function getFormComponentName(string $class): string
+    {
+        return 'K:Admin:EntityForm';
     }
 
     /**

@@ -134,12 +134,12 @@ class GenericAdminController extends AbstractAdminController
     }
 
     #[Route('/admin/{entitySlug}/new', name: 'app_admin_entity_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, string $entitySlug): Response
+    public function new(string $entitySlug): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
         $this->checkEntityPermission(AdminEntityVoter::ADMIN_NEW, $entityName);
 
-        return $this->doNew($entityName, $request);
+        return $this->doNew($entityName);
     }
 
     #[Route('/admin/{entitySlug}/{id}', name: 'app_admin_entity_show', requirements: ['id' => '\d+'], methods: ['GET'])]
@@ -152,12 +152,12 @@ class GenericAdminController extends AbstractAdminController
     }
 
     #[Route('/admin/{entitySlug}/{id}/edit', name: 'app_admin_entity_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function edit(Request $request, string $entitySlug, int $id): Response
+    public function edit(string $entitySlug, int $id): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
         $this->checkEntityPermission(AdminEntityVoter::ADMIN_EDIT, $entityName);
 
-        return $this->doEdit($entityName, $id, $request);
+        return $this->doEdit($entityName, $id);
     }
 
     #[Route('/admin/{entitySlug}/{id}', name: 'app_admin_entity_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -256,5 +256,12 @@ class GenericAdminController extends AbstractAdminController
         }
 
         return $entityName;
+    }
+
+    protected function getFormComponentName(string $class): string
+    {
+        $entityClass = $this->entityNamespace . $class;
+        $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
+        return $adminAttr?->getFormComponent() ?? 'K:Admin:EntityForm';
     }
 }

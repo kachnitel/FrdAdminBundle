@@ -2,9 +2,11 @@
  # Generic entity edit template.
  #
  # Variables:
- # @var object entity - The entity being edited
- # @var FormView form - The form view
- # @var array breadcrumbs - Breadcrumb navigation array
+ # @var object entity              - The entity being edited
+ # @var string entityClass         - FQCN of the entity (e.g. App\Entity\Product)
+ # @var string formTypeClass       - FQCN of the form type (e.g. App\Form\ProductFormType)
+ # @var string formComponentName   - LiveComponent name to render (default: K:Admin:EntityForm)
+ # @var array  breadcrumbs         - Breadcrumb navigation array
  #}
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
@@ -16,5 +18,9 @@
 {% endblock %}
 
 {% block content %}
-  {{ include('@KachnitelAdmin/admin/_form.html.twig') }}
+  {{ component(formComponentName, {
+      entityClass: entityClass,
+      entityId: entity.id,
+      formTypeClass: formTypeClass
+  }) }}
 {% endblock %}

@@ -1,0 +1,22 @@
+{#
+ # Live form component for admin edit and new pages.
+ #
+ # Renders the Symfony form using standard form helpers. Validation errors appear
+ # inline on re-render without a full-page reload.
+ #
+ # The `data-admin-form` attribute is a stable selector used by `_save_button.html.twig`
+ # to dispatch the `admin:save` event directly on this element, which is required for
+ # LiveComponent's #[LiveListener] to receive it. Custom form components that extend
+ # AdminEntityForm must include this attribute on their root element too.
+ #
+ # Variables (injected by ComponentWithFormTrait):
+ # @var \Symfony\Component\Form\FormView form - The current form view
+ #}
+
+{% import kachnitel_admin_theme as css %}
+
+<div data-admin-form {{ attributes }}>
+  {{ form_start(form, { attr: { class: 'admin-form', id: 'admin_entity_form' } }) }}
+    {{ form_widget(form) }}
+  {{ form_end(form) }}
+</div>

@@ -40,6 +40,7 @@ class Admin
         private ?string $label = null,
         private ?string $icon = null,
         private ?string $formType = null,
+        private ?string $formComponent = null,
         private bool $enableFilters = true,
         private bool $enableBatchActions = false,
         private bool $enableColumnVisibility = false,
@@ -143,5 +144,10 @@ class Admin
     public function getPermissionForAction(string $action): ?string
     {
         return $this->permissions[$action] ?? null;
+    }
+
+    public function getFormComponent(): ?string
+    {
+        return $this->formComponent;
     }
 }
