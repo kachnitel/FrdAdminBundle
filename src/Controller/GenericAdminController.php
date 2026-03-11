@@ -80,6 +80,9 @@ class GenericAdminController extends AbstractAdminController
             return strcasecmp($labelA, $labelB);
         });
 
+        // Filter to entities the current user can index
+        $supportedEntities = $this->filterAccessibleEntities($supportedEntities);
+
         // Convert entities to view data with label and icon from #[Admin] attribute
         $entities = array_map(function($entityName) {
             // Resolve full class name
@@ -217,6 +220,25 @@ class GenericAdminController extends AbstractAdminController
             'dataSource' => $dataSource,
             'item' => $item,
         ]);
+    }
+
+    /**
+     * Filter entity names to only those the current user is granted ADMIN_INDEX on.
+     * When authentication is disabled (requiredRole === null), all entities pass through.
+     *
+     * @param array<string> $entityNames
+     * @return array<string>
+     */
+    private function filterAccessibleEntities(array $entityNames): array
+    {
+        if ($this->requiredRole === null) {
+            return $entityNames;
+        }
+
+        return array_values(array_filter(
+            $entityNames,
+            fn(string $name) => $this->isGranted(AdminEntityVoter::ADMIN_INDEX, $name)
+        ));
     }
 
     /**
