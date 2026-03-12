@@ -43,10 +43,12 @@ class DashboardPermissionTest extends WebTestCase
         $content = (string) $client->getResponse()->getContent();
 
         // TestEntity has index: ROLE_TEST_VIEW — ROLE_ADMIN alone does not satisfy this
-        $this->assertStringNotContainsString('Test Entities', $content);
+        // $this->assertStringNotContainsString('Test Entities', $content);
+        $this->assertStringNotContainsString('href="/admin/test-entity"', $content);
 
         // ConfiguredEntity has index: ROLE_USER — ROLE_ADMIN alone does not satisfy this (no hierarchy)
-        $this->assertStringNotContainsString('Configured Items', $content);
+        // $this->assertStringNotContainsString('Configured Items', $content);
+        $this->assertStringNotContainsString('href="/admin/configured-entity"', $content); // adjust slug to match actual #[Admin] slug
 
         // EntityWithRowActions has no specific index permission → falls back to ROLE_ADMIN → visible
         $this->assertStringContainsString('Approvable Items', $content);

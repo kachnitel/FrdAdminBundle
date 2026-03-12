@@ -35,9 +35,11 @@ class GenericAdminController extends AbstractAdminController
 
     public function __construct(
         private readonly EntityDiscoveryService $entityDiscovery,
+        private readonly string $entityNamespace,
+        private readonly string $formNamespace,
+        private readonly string $formSuffix,
         private readonly string $routePrefix = 'app_admin_entity',
         private readonly string $dashboardRoute = 'app_admin_dashboard',
-        private readonly string $entityNamespace = 'App\\Entity\\',
         private readonly ?string $requiredRole = 'ROLE_ADMIN',
     ) {}
 
@@ -60,6 +62,21 @@ class GenericAdminController extends AbstractAdminController
     protected function getRoutePrefix(): string
     {
         return $this->routePrefix;
+    }
+
+    protected function getEntityNamespace(): string
+    {
+        return $this->entityNamespace;
+    }
+
+    protected function getFormNamespace(): string
+    {
+        return $this->formNamespace;
+    }
+
+    protected function getFormSuffix(): string
+    {
+        return $this->formSuffix;
     }
 
     /**

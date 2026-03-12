@@ -26,7 +26,8 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         private ?EntityDiscoveryService $entityDiscovery = null,
         private ?FormRegistryInterface $formRegistry = null,
         private string $formNamespace = 'App\\Form\\',
-        private string $formSuffix = 'FormType'
+        private string $formSuffix = 'FormType',
+        private string $entityNamespace = 'App\\Entity\\',
     ) {}
 
     /**
@@ -168,11 +169,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             return $routes;
         }
 
-        // Fallback to app's Routes attribute if it exists
-        // if (class_exists('App\Attributes\Entity\Routes')) {
-        //     return $this->attributeHelper->getAttribute($object, 'App\Attributes\Entity\Routes');
-        // }
-
         return null;
     }
 
@@ -258,9 +254,9 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             return true;
         }
 
-        // Try to get form type from Admin attribute first
+        // Try to get form type from Admin attribute first, using the configured entity namespace
         try {
-            $entityClass = $this->entityDiscovery->resolveEntityClass($entityShortName, 'App\\Entity\\');
+            $entityClass = $this->entityDiscovery->resolveEntityClass($entityShortName, $this->entityNamespace);
             if ($entityClass) {
                 $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
                 $formType = $adminAttr?->getFormType()

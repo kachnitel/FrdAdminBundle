@@ -17,11 +17,20 @@
 {% block headerButtons %}
   {{ include('@KachnitelAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
 
-  {% if entity|admin_has_route('edit') and admin_can_perform_action(entity, 'edit') %}
-    <a href="{{ admin_object_path(entity, 'edit') }}" class="{{ css.btn_primary() }}">
-      Edit
-    </a>
-  {% endif %}
+  {# Render all entity actions except 'show' (the current page).
+     ignoreComponent: true forces liveComponent actions (e.g. inline-edit button) to
+     render as plain navigation links — there is no parent EntityList on this page. #}
+  {% set entityShortClass = entityClass|split('\\')|last %}
+  {% for action in admin_visible_row_actions(entityClass, entity, entityShortClass) %}
+    {% if action.name != 'show' %}
+      {{ include('@KachnitelAdmin/components/EntityList/_RowActionButton.html.twig', {
+        action: action,
+        entity: entity,
+        entityShortClass: entityShortClass,
+        ignoreComponent: true
+      }) }}
+    {% endif %}
+  {% endfor %}
 {% endblock %}
 
 {% block content %}

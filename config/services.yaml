@@ -64,6 +64,7 @@ services:
             $formRegistry: '@form.registry'
             $formNamespace: '%kachnitel_admin.form_namespace%'
             $formSuffix: '%kachnitel_admin.form_suffix%'
+            $entityNamespace: '%kachnitel_admin.entity_namespace%'
         tags: ['twig.runtime']
 
     # LiveComponents
@@ -92,6 +93,8 @@ services:
             $dashboardRoute: '%kachnitel_admin.dashboard_route%'
             $entityNamespace: '%kachnitel_admin.entity_namespace%'
             $requiredRole: '%kachnitel_admin.required_role%'
+            $formNamespace: '%kachnitel_admin.form_namespace%'
+            $formSuffix: '%kachnitel_admin.form_suffix%'
         tags: ['controller.service_arguments']
 
     # Security Voter for entity admin access control
