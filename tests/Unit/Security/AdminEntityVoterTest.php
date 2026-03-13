@@ -10,8 +10,8 @@ use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
-use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 class AdminEntityVoterTest extends TestCase
@@ -25,49 +25,42 @@ class AdminEntityVoterTest extends TestCase
     /** @var UserInterface&MockObject */
     private UserInterface $user;
 
+    /** @var AccessDecisionManagerInterface&MockObject */
+    private AccessDecisionManagerInterface $decisionManager;
+
     protected function setUp(): void
     {
         $this->entityDiscovery = $this->createMock(EntityDiscoveryService::class);
         $this->token           = $this->createMock(TokenInterface::class);
         $this->user            = $this->createMock(UserInterface::class);
+        $this->decisionManager = $this->createMock(AccessDecisionManagerInterface::class);
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    private function makeVoter(
-        ?string $defaultRole = 'ROLE_ADMIN',
-        ?RoleHierarchyInterface $hierarchy = null,
-    ): AdminEntityVoter {
+    private function makeVoter(?string $defaultRole = 'ROLE_ADMIN'): AdminEntityVoter {
         return new AdminEntityVoter(
             $this->entityDiscovery,
             $defaultRole,
             'App\\Entity\\',
-            $hierarchy,
+            $this->decisionManager
         );
     }
 
-    /**
-     * Configure entityDiscovery to resolve 'Product' → 'App\Entity\Product'
-     * and return the given Admin attribute (or null).
-     */
     private function stubDiscovery(?Admin $attr = null): void
     {
-        $this->entityDiscovery->method('resolveEntityClass')
-            ->with('Product', 'App\\Entity\\')
-            ->willReturn('App\\Entity\\Product');
-
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->with('App\\Entity\\Product')
-            ->willReturn($attr);
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn('App\\Entity\\Product');
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn($attr);
     }
 
-    /** Configure the token to return an authenticated user with the given roles. */
+    /** * Configure the token AND the decision manager to recognize these roles.
+     */
     private function stubAuthenticatedUser(string ...$roles): void
     {
         $this->token->method('getUser')->willReturn($this->user);
         $this->token->method('getRoleNames')->willReturn($roles);
+
+        // Tell the decision manager to return true if it's asked for any of these roles
+        $this->decisionManager->method('decide')
+            ->willReturnCallback(fn($token, $attributes) => count(array_intersect($attributes, $roles)) > 0);
     }
 
     // -------------------------------------------------------------------------
@@ -103,7 +96,6 @@ class AdminEntityVoterTest extends TestCase
         $this->stubAuthenticatedUser('ROLE_ADMIN');
 
         $result = $this->makeVoter()->vote($this->token, 'Product', [$attribute]);
-
         $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
@@ -202,63 +194,48 @@ class AdminEntityVoterTest extends TestCase
         $this->stubDiscovery();
         $this->stubAuthenticatedUser('ROLE_SUPER_ADMIN');
 
-        $result = $this->makeVoter(hierarchy: null)->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_INDEX]);
+        $result = $this->makeVoter()->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_INDEX]);
 
         $this->assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
 
     // -------------------------------------------------------------------------
-    // Role hierarchy
+    // Role matching & Delegation
     // -------------------------------------------------------------------------
 
-    public function testGrantsAccessViaRoleHierarchy(): void
+    public function testGrantsAccessWhenDecisionManagerAllows(): void
     {
-        // ROLE_SUPER_ADMIN inherits ROLE_ADMIN via hierarchy.
-        // User only has ROLE_SUPER_ADMIN but the required role is ROLE_ADMIN.
-        /** @var RoleHierarchyInterface&MockObject $hierarchy */
-        $hierarchy = $this->createMock(RoleHierarchyInterface::class);
-        $hierarchy->method('getReachableRoleNames')
-            ->with(['ROLE_SUPER_ADMIN'])
-            ->willReturn(['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_USER']);
-
         $this->stubDiscovery();
-        $this->stubAuthenticatedUser('ROLE_SUPER_ADMIN');
+        $this->stubAuthenticatedUser('ROLE_ADMIN');
 
-        $result = $this->makeVoter(hierarchy: $hierarchy)->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_INDEX]);
+        $result = $this->makeVoter()->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_INDEX]);
 
         $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
-    public function testDeniesAccessWhenHierarchyDoesNotReachRequiredRole(): void
+    public function testDeniesAccessWhenDecisionManagerDenies(): void
     {
-        /** @var RoleHierarchyInterface&MockObject $hierarchy */
-        $hierarchy = $this->createMock(RoleHierarchyInterface::class);
-        $hierarchy->method('getReachableRoleNames')
-            ->with(['ROLE_EDITOR'])
-            ->willReturn(['ROLE_EDITOR', 'ROLE_USER']);
-
         $this->stubDiscovery();
-        $this->stubAuthenticatedUser('ROLE_EDITOR');
+        $this->stubAuthenticatedUser('ROLE_USER');
 
-        $result = $this->makeVoter(hierarchy: $hierarchy)->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_INDEX]);
+        $result = $this->makeVoter()->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_INDEX]);
 
         $this->assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
 
-    public function testHierarchyReceivesRolesFromToken(): void
+    public function testDelegatesCorrectRoleToDecisionManager(): void
     {
-        // Verify the voter passes token->getRoleNames() to the hierarchy, not a hardcoded list.
-        /** @var RoleHierarchyInterface&MockObject $hierarchy */
-        $hierarchy = $this->createMock(RoleHierarchyInterface::class);
-        $hierarchy->expects($this->once())
-            ->method('getReachableRoleNames')
-            ->with(['ROLE_MANAGER', 'ROLE_EDITOR'])
-            ->willReturn(['ROLE_MANAGER', 'ROLE_EDITOR', 'ROLE_ADMIN']);
+        // Entity requires ROLE_EDITOR
+        $this->stubDiscovery(new Admin(permissions: ['edit' => 'ROLE_EDITOR']));
+        $this->token->method('getUser')->willReturn($this->user);
 
-        $this->stubDiscovery();
-        $this->stubAuthenticatedUser('ROLE_MANAGER', 'ROLE_EDITOR');
+        // Verify that decisionManager is called with specifically 'ROLE_EDITOR'
+        $this->decisionManager->expects($this->once())
+            ->method('decide')
+            ->with($this->token, ['ROLE_EDITOR'])
+            ->willReturn(true);
 
-        $this->makeVoter(hierarchy: $hierarchy)->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_INDEX]);
+        $this->makeVoter()->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_EDIT]);
     }
 
     // -------------------------------------------------------------------------
@@ -289,18 +266,16 @@ class AdminEntityVoterTest extends TestCase
 
     public function testEntitySpecificPermissionWorksWithHierarchy(): void
     {
-        // Entity requires ROLE_EDITOR for edit; user has ROLE_SUPER_EDITOR which inherits it.
-        /** @var RoleHierarchyInterface&MockObject $hierarchy */
-        $hierarchy = $this->createMock(RoleHierarchyInterface::class);
-        $hierarchy->method('getReachableRoleNames')
-            ->with(['ROLE_SUPER_EDITOR'])
-            ->willReturn(['ROLE_SUPER_EDITOR', 'ROLE_EDITOR']);
-
+        // Instead of mocking the hierarchy, we simply tell the DecisionManager
+        // that SUPER_EDITOR is allowed to perform roles that standard users aren't.
         $this->stubDiscovery(new Admin(permissions: ['edit' => 'ROLE_EDITOR']));
-        $this->stubAuthenticatedUser('ROLE_SUPER_EDITOR');
+        $this->token->method('getUser')->willReturn($this->user);
 
-        $result = $this->makeVoter(hierarchy: $hierarchy)->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_EDIT]);
+        $this->decisionManager->method('decide')
+            ->with($this->token, ['ROLE_EDITOR'])
+            ->willReturn(true);
 
+        $result = $this->makeVoter()->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_EDIT]);
         $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 

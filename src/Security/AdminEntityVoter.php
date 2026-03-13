@@ -6,9 +6,9 @@ namespace Kachnitel\AdminBundle\Security;
 
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
-use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -51,7 +51,7 @@ class AdminEntityVoter extends Voter
         private readonly EntityDiscoveryService $entityDiscovery,
         private readonly ?string $defaultRequiredRole,
         private readonly string $entityNamespace = 'App\\Entity\\',
-        private readonly ?RoleHierarchyInterface $roleHierarchy = null,
+        private readonly ?AccessDecisionManagerInterface $decisionManager = null
     ) {}
 
     protected function supports(string $attribute, mixed $subject): bool
@@ -136,14 +136,12 @@ class AdminEntityVoter extends Voter
 
     /**
      * Check if user has the specified role.
-     * Uses RoleHierarchy if available to support role inheritance (e.g., ROLE_ADMIN includes ROLE_USER).
+     * Delegates to the AccessDecisionManager to handle hierarchy and special roles.
      */
     private function hasRole(TokenInterface $token, string $role): bool
     {
-        // If role hierarchy is available, use it to get all reachable roles
-        if ($this->roleHierarchy !== null) {
-            $reachableRoles = $this->roleHierarchy->getReachableRoleNames($token->getRoleNames());
-            return in_array($role, $reachableRoles, true);
+        if (null !== $this->decisionManager) {
+            return $this->decisionManager->decide($token, [$role]);
         }
 
         // Fall back to simple string comparison (no hierarchy support)

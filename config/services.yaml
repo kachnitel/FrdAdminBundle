@@ -103,7 +103,7 @@ services:
             $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
             $defaultRequiredRole: '%kachnitel_admin.required_role%'
             $entityNamespace: '%kachnitel_admin.entity_namespace%'
-            $roleHierarchy: '@?security.role_hierarchy'
+            $decisionManager: '@?security.access.decision_manager'
         tags: ['security.voter']
 
     # Row Action services
