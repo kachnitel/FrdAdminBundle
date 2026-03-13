@@ -5,46 +5,49 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Attribute;
 
 use Attribute;
+use Kachnitel\AdminBundle\ValueObject\RowAction;
 
 /**
- * Defines a custom row action for an entity in the admin list view.
- * Repeatable — add one per action on the entity class.
+ * Declares a custom entity action button.
  *
- * Action rendering modes (mutually exclusive, checked in order):
- *   1. template       — custom Twig template
- *   2. liveComponent  — Twig/Live Component (must implement RowActionComponentInterface)
- *   3. method         — form-based POST/DELETE button
- *   4. route/url      — plain link (default)
+ * Actions appear in entity list rows, show page headers, and edit page headers by default.
+ * Use the `contexts` parameter to restrict an action to specific rendering contexts.
  *
- * @SuppressWarnings(PHPMD.ExcessiveParameterList) PHP Attribute classes cannot group constructor
- * parameters via helper objects without changing the user-facing attribute syntax. All parameters
- * are part of the public attribute API and cannot be reorganised without a breaking change.
+ * Can be repeated on the same entity class for multiple actions:
  *
- * @see \Kachnitel\AdminBundle\RowAction\RowActionComponentInterface for liveComponent prop contract
+ *   #[AdminAction(name: 'approve', label: 'Approve', icon: '✅', route: 'app_approve',
+ *                 condition: 'entity.status == "pending"')]
+ *   #[AdminAction(name: 'archive', label: 'Archive', icon: '📦', route: 'app_archive',
+ *                 method: 'POST', confirmMessage: 'Archive this item?')]
+ *   class Order { }
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 class AdminAction
 {
     /**
-     * @param string                                        $name           Unique action identifier (e.g., 'approve', 'duplicate')
+     * @param string                                        $name           Unique action identifier
      * @param string                                        $label          Button label text
      * @param string|null                                   $icon           Emoji or icon identifier
-     * @param string|null                                   $route          Named Symfony route; entity id is appended automatically
-     * @param array<string, mixed>                          $routeParams    Additional route parameters merged alongside id
-     * @param string|null                                   $url            Static URL — use route for dynamic entity-based links
+     * @param string|null                                   $route          Named Symfony route
+     * @param array<string, mixed>                          $routeParams    Additional route parameters
+     * @param string|null                                   $url            Static URL (alternative to route)
      * @param string|null                                   $permission     Required role, e.g. 'ROLE_EDITOR'
-     * @param string|null                                   $voterAttribute Admin voter constant, e.g. AdminEntityVoter::ADMIN_EDIT
-     * @param string|array{class-string, string}|null $condition      Expression string or [Service::class, 'method'] DI tuple.
-     *                                                                      The service must implement RowActionConditionInterface.
+     * @param string|null                                   $voterAttribute Admin voter constant, e.g. 'ADMIN_EDIT'
+     * @param string|array{0:class-string,1:string}|null   $condition      Visibility condition: string expression
+     *                                                                      or [ServiceClass::class, 'method'] tuple.
      * @param string|null                                   $cssClass       Override button CSS classes
      * @param string|null                                   $confirmMessage Confirmation dialog message before action
      * @param bool                                          $openInNewTab   Open link in new tab
-     * @param int                                           $priority       Sort order (lower = earlier). Default Show=10, Edit=20.
+     * @param int                                           $priority       Sort order (lower = earlier)
      * @param string|null                                   $method         HTTP method for form-based actions ('POST', 'DELETE')
      * @param string|null                                   $template       Custom Twig template for rendering this button
      * @param string|null                                   $liveComponent  TwigComponent/LiveComponent name rendered instead of link.
-     *                                                                      Component must implement RowActionComponentInterface.
      *                                                                      Always receives {entity} as prop.
+     * @param array<string>                                 $contexts       Contexts in which this action appears.
+     *                                                                      Empty = all contexts (index, show, edit).
+     *                                                                      Use [RowAction::CONTEXT_INDEX] for liveComponent
+     *                                                                      actions that fire events on the parent EntityList
+     *                                                                      LiveComponent and must not appear on show/edit pages.
      * @param bool                                          $override       If true, fully replaces an existing action with same name (vs merge)
      */
     public function __construct(
@@ -60,10 +63,11 @@ class AdminAction
         public readonly ?string $cssClass = null,
         public readonly ?string $confirmMessage = null,
         public readonly bool $openInNewTab = false,
-        public readonly int $priority = 100,
+        public readonly int $priority = RowAction::DEFAULT_PRIORITY,
         public readonly ?string $method = null,
         public readonly ?string $template = null,
         public readonly ?string $liveComponent = null,
+        public readonly array $contexts = [],
         public readonly bool $override = false,
     ) {}
 }

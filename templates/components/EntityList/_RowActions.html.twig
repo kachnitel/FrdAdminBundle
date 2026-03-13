@@ -29,7 +29,7 @@
             title="Exit edit mode"
         >✕</button>
     {% else %}
-        {% set actions = admin_visible_row_actions(entityClass, entity, entityShortClass) %}
+        {% set actions = admin_visible_row_actions(entityClass, entity, entityShortClass, 'index') %}
         {% for action in actions %}
             {% include '@KachnitelAdmin/components/EntityList/_RowActionButton.html.twig' with {
                 action: action,

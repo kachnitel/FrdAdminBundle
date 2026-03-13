@@ -15,6 +15,11 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
  *  - Without override flag: non-null properties from higher-priority providers merge into existing actions
  *  - With override flag (#[AdminAction(override: true)]): completely replaces the existing action
  *
+ * Context filtering is applied *before* merging: actions whose `contexts` array does not include
+ * the requested context are skipped entirely by each provider. This ensures that a context-restricted
+ * action (e.g. InlineEditButton with contexts: ['index']) never overwrites or merges into the
+ * default action registered for other contexts.
+ *
  * Final filtering is applied via #[AdminActionsConfig] (disableDefaults, exclude, include).
  */
 class RowActionRegistry
@@ -22,7 +27,7 @@ class RowActionRegistry
     /** @var array<RowActionProviderInterface>|null */
     private ?array $sortedProviders = null;
 
-    /** @var array<string, array<RowAction>> */
+    /** @var array<string, array<RowAction>> Cache keyed by "entityClass:context" */
     private array $cache = [];
 
     /**
@@ -35,15 +40,18 @@ class RowActionRegistry
     ) {}
 
     /**
-     * Get the final resolved action list for an entity class.
+     * Get the final resolved action list for an entity class in the given context.
      *
      * @param class-string $entityClass
+     * @param string       $context One of RowAction::CONTEXT_* constants, or empty string for all contexts
      * @return array<RowAction>
      */
-    public function getActions(string $entityClass): array
+    public function getActions(string $entityClass, string $context = ''): array
     {
-        if (isset($this->cache[$entityClass])) {
-            return $this->cache[$entityClass];
+        $cacheKey = $entityClass . ':' . $context;
+
+        if (isset($this->cache[$cacheKey])) {
+            return $this->cache[$cacheKey];
         }
 
         $this->ensureProvidersSorted();
@@ -63,6 +71,11 @@ class RowActionRegistry
             }
 
             foreach ($provider->getActions($entityClass) as $action) {
+                // Skip actions not applicable to the requested context
+                if ($context !== '' && !$action->supportsContext($context)) {
+                    continue;
+                }
+
                 // Full override: collect separately, applied after merging
                 if ($provider instanceof AttributeRowActionProvider
                     && $this->attributeProvider->isOverride($entityClass, $action->name)) {
@@ -87,7 +100,7 @@ class RowActionRegistry
 
         usort($actions, fn (RowAction $a, RowAction $b) => $a->priority <=> $b->priority);
 
-        $this->cache[$entityClass] = $actions;
+        $this->cache[$cacheKey] = $actions;
         return $actions;
     }
 

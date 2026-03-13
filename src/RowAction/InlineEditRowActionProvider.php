@@ -10,20 +10,20 @@ use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 
 /**
- * Replaces the default page-navigation edit action with an inline-edit component.
+ * Replaces the default page-navigation edit action with an inline-edit component,
+ * but only in the index (list) context.
  *
- * This provider only supports entities that have `#[Admin(enableInlineEdit: true)]`.
- * For all other entities, `supports()` returns false and the default row action
- * provider's page-navigation Edit link is preserved.
+ * This provider only activates for entities with #[Admin(enableInlineEdit: true)].
+ * For all other entities, supports() returns false and the Default edit link is preserved.
  *
- * Priority 15 sits between DefaultRowActionProvider (0) and AttributeRowActionProvider (50),
- * so the merge order is: Default → InlineEdit (adds liveComponent) → Attribute (user overrides).
+ * contexts: [RowAction::CONTEXT_INDEX] — InlineEditButton fires `editRow` on the parent
+ * EntityList LiveComponent via a Stimulus data-action attribute. That parent does not exist
+ * on show/edit page headers. By restricting to CONTEXT_INDEX, RowActionRegistry skips this
+ * action entirely when resolving for show/edit, leaving the DefaultRowActionProvider's
+ * plain-link edit action untouched and visible there.
  *
- * The RowAction produced here intentionally omits priority (DEFAULT_PRIORITY = "unset")
- * so that RowAction::merge() preserves DefaultRowActionProvider's explicit priority of 20.
- *
- * voterAttribute: ADMIN_EDIT is set so RowActionRuntime hides the button for users
- * without edit permission via a direct voter check.
+ * Priority 15 sits between DefaultRowActionProvider (0) and AttributeRowActionProvider (50).
+ * priority is omitted (DEFAULT_PRIORITY) so merge() preserves DefaultRowActionProvider's explicit 20.
  */
 class InlineEditRowActionProvider implements RowActionProviderInterface
 {
@@ -32,8 +32,6 @@ class InlineEditRowActionProvider implements RowActionProviderInterface
     ) {}
 
     /**
-     * Only support entities that have explicitly opted into inline editing.
-     *
      * @param class-string $entityClass
      */
     public function supports(string $entityClass): bool
@@ -60,6 +58,7 @@ class InlineEditRowActionProvider implements RowActionProviderInterface
                 icon: '✏️',
                 voterAttribute: AdminEntityVoter::ADMIN_EDIT,
                 liveComponent: 'K:Admin:RowAction:InlineEdit',
+                contexts: [RowAction::CONTEXT_INDEX],
                 // priority intentionally omitted — merge() keeps DefaultRowActionProvider's 20
             ),
         ];

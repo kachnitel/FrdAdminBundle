@@ -90,7 +90,6 @@ class AttributeRowActionProviderTest extends TestCase
             $byName[$action->name] = $action;
         }
 
-        // Uses PropertyAccess syntax (entity.status) consistent with docs
         $this->assertSame('entity.status == "pending"', $byName['approve']->condition);
         $this->assertSame('entity.status != "archived"', $byName['archive']->condition);
     }
@@ -124,6 +123,33 @@ class AttributeRowActionProviderTest extends TestCase
         $this->assertNotNull($archive);
         $this->assertSame('POST', $archive->method);
         $this->assertSame('Archive this item?', $archive->confirmMessage);
+    }
+
+    /** @test */
+    public function contextsDefaultToEmptyArrayWhenNotSetOnAttribute(): void
+    {
+        $actions = $this->provider->getActions(EntityWithRowActions::class);
+
+        foreach ($actions as $action) {
+            $this->assertSame(
+                [],
+                $action->contexts,
+                sprintf('Action "%s" should have contexts: [] (all contexts) by default', $action->name),
+            );
+        }
+    }
+
+    /** @test */
+    public function contextsArePropagatedFromAdminActionAttribute(): void
+    {
+        // EntityWithRowActions actions use default empty contexts — confirming pass-through
+        // of non-empty contexts is covered by InlineEditRowActionProviderTest
+        $actions = $this->provider->getActions(EntityWithRowActions::class);
+
+        $this->assertNotEmpty($actions);
+        foreach ($actions as $action) {
+            $this->assertSame([], $action->contexts);
+        }
     }
 
     /** @test */
@@ -208,9 +234,6 @@ class AttributeRowActionProviderTest extends TestCase
     /** @test */
     public function isOverrideReturnsTrueForActionWithOverrideFlag(): void
     {
-        // The EntityWithRowActions fixture has no override actions; the override path
-        // is covered in RowActionRegistryTest which exercises the full merge pipeline.
-        // Confirm the inverse: non-override is false.
         $provider = new AttributeRowActionProvider();
         $this->assertFalse($provider->isOverride(EntityWithRowActions::class, 'approve'));
     }

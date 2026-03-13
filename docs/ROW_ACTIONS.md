@@ -1,6 +1,16 @@
-# Row Actions
+# Entity Actions
 
-Row actions add custom buttons to each row in the entity list view. The bundle ships with default **Show** and **Edit** actions; this guide explains how to add, modify, and remove them.
+Entity actions add buttons that operate on a single entity instance. They appear in three places:
+
+1. **Entity list rows** — the rightmost column of the `EntityList` component
+2. **Show page header** — alongside the Delete button on the entity detail page
+3. **Edit page header** — alongside Save and Delete on the entity edit page
+
+The bundle ships with default **Show** and **Edit** actions; this guide explains how to add, modify, and remove them.
+
+> **Terminology note:** Actions are called "row actions" in the code for historical reasons.
+> They are not limited to list rows — the `#[AdminAction]` attribute and `RowActionProviderInterface`
+> apply equally to all three contexts above.
 
 ## Table of Contents
 
@@ -10,6 +20,7 @@ Row actions add custom buttons to each row in the entity list view. The bundle s
 - [Conditions (Visibility)](#conditions-visibility)
 - [Controlling Default Actions](#controlling-default-actions)
 - [Programmatic Providers](#programmatic-providers)
+- [List-Only Actions](#list-only-actions)
 - [Twig Functions](#twig-functions)
 - [Examples](#examples)
 
@@ -35,7 +46,7 @@ class Order
 }
 ```
 
-That's it. The bundle auto-discovers the attribute, evaluates the condition for each row, and renders the button alongside the default Show/Edit actions.
+That's it. The bundle auto-discovers the attribute, evaluates the condition for each row, and renders the button in the list, on the show page, and on the edit page — alongside the default Show/Edit actions.
 
 ## The `#[AdminAction]` Attribute
 
@@ -70,158 +81,70 @@ class Product
 | `permission`     | `?string`                                | `null`       | Required role, e.g. `'ROLE_EDITOR'` |
 | `voterAttribute` | `?string`                                | `null`       | Admin voter constant, e.g. `'ADMIN_EDIT'` |
 | `condition`      | `string\|array\|null`                    | `null`       | Visibility condition — see [Conditions](#conditions-visibility) |
-| `cssClass`       | `?string`                                | `null`       | CSS classes for the button (overrides theme default) |
-| `confirmMessage` | `?string`                                | `null`       | If set, a browser confirm dialog is shown before the action |
-| `openInNewTab`   | `bool`                                   | `false`      | Open link in a new tab |
-| `priority`       | `int`                                    | `100`        | Sort order — lower renders first (default Show=10, Edit=20) |
-| `method`         | `?string`                                | `null`       | HTTP method (`'POST'`, `'DELETE'`) — renders a `<form>` with CSRF instead of a link |
-| `template`       | `?string`                                | `null`       | Custom Twig template to render this button — receives `action`, `entity`, `entityShortClass` |
-| `override`       | `bool`                                   | `false`      | Completely replace an existing action with the same name (see [Overriding Defaults](#overriding-defaults)) |
-
-### URL Resolution Order
-
-For link-based actions, the URL is resolved in this order:
-
-1. `route` — `path(route, routeParams + ['id' => entity.id])`
-2. `url` — used verbatim
-3. Auto-resolution — `admin_object_path(entity, name)` (matches built-in admin routes by action name)
+| `cssClass`       | `?string`                                | `null`       | Override default button CSS classes |
+| `confirmMessage` | `?string`                                | `null`       | Show a JS `confirm()` dialog before the action fires |
+| `openInNewTab`   | `bool`                                   | `false`      | Open link in a new browser tab |
+| `priority`       | `int`                                    | `100`        | Sort order — lower appears first. Default: Show=10, Edit=20 |
+| `method`         | `?string`                                | `null`       | HTTP method for form-based actions (`'POST'`, `'DELETE'`) |
+| `template`       | `?string`                                | `null`       | Custom Twig template to render this button |
+| `liveComponent`  | `?string`                                | `null`       | TwigComponent/LiveComponent name; receives `{entity}` as prop |
+| `listOnly`       | `bool`                                   | `false`      | If `true`, suppress this action on show/edit pages — see [List-Only Actions](#list-only-actions) |
+| `override`       | `bool`                                   | `false`      | If `true`, fully replaces an existing action with the same name instead of merging |
 
 ## Conditions (Visibility)
 
-The `condition` parameter controls whether the button is shown for a specific row. A button is **hidden** when the condition evaluates to `false`; it is not disabled.
+An action can be shown or hidden per-entity-instance using the `condition` parameter.
 
-Two styles are supported — string expressions and DI tuples (service class and method name)
+### String Expressions (Simple)
 
-### String Expressions
-
-String expressions use [Symfony's ExpressionLanguage](https://symfony.com/doc/current/components/expression_language.html) syntax. The entity is available as `entity` (or `item` as an alias).
-
-The expression uses Symfony's `PropertyAccess` component, so `entity.status` calls `getStatus()`, `isStatus()`, or reads the public property. Both `entity.` and `item.` prefixes work.
-
-#### Property comparisons
+Uses Symfony's ExpressionLanguage with `entity` as the root variable:
 
 ```php
-// Equality
-#[AdminAction(name: 'approve', label: 'Approve', condition: 'entity.status == "pending"')]
+// Show only when status is pending
+#[AdminAction(name: 'approve', condition: 'entity.status == "pending"')]
 
-// Inequality
-#[AdminAction(name: 'reactivate', label: 'Reactivate', condition: 'entity.status != "active"')]
+// Show only for active items
+#[AdminAction(name: 'deactivate', condition: 'entity.active == true')]
 
-// Boolean property (calls isActive() / getActive() via PropertyAccess)
-#[AdminAction(name: 'publish', label: 'Publish', condition: 'entity.active')]
-
-// Negation
-#[AdminAction(name: 'edit', label: 'Edit', condition: '!entity.locked')]
-// or: condition: 'not entity.locked'
-
-// Numeric comparison
-#[AdminAction(name: 'discount', label: 'Discount', condition: 'entity.stock > 0')]
-
-// Strict null check
-#[AdminAction(name: 'verify', label: 'Verify', condition: 'entity.verifiedAt === null')]
+// Role-based condition
+#[AdminAction(name: 'impersonate', condition: 'is_granted("ROLE_SUPER_ADMIN")')]
 ```
 
-#### Combining conditions
-
-Use `&&` / `||` (or `and` / `or`) to combine multiple checks:
+PropertyAccess syntax works for nested properties:
 
 ```php
-// Both must be true
-#[AdminAction(
-    name: 'approve',
-    label: 'Approve',
-    condition: 'entity.status == "pending" && entity.stock > 0',
-)]
-
-// Either is enough
-#[AdminAction(
-    name: 'view',
-    label: 'View',
-    condition: 'entity.active || entity.status == "draft"',
-)]
-
-// Mix of comparisons and negations
-#[AdminAction(
-    name: 'submit',
-    label: 'Submit',
-    condition: '!entity.locked && entity.status != "submitted"',
-)]
+#[AdminAction(name: 'contact', condition: 'entity.owner.isActive')]
 ```
-
-#### Security checks with `is_granted()`
-
-Use `is_granted()` inside an expression to check roles — useful when the visibility of an action depends on **both** a role **and** an entity property:
-
-```php
-// Show only to editors
-#[AdminAction(
-    name: 'approve',
-    label: 'Approve',
-    condition: 'is_granted("ROLE_EDITOR")',
-)]
-
-// Pending + must be an editor
-#[AdminAction(
-    name: 'approve',
-    label: 'Approve',
-    condition: 'entity.status == "pending" && is_granted("ROLE_EDITOR")',
-)]
-
-// Super-admin can see the impersonate button, or the user is inactive
-#[AdminAction(
-    name: 'impersonate',
-    label: 'Login as',
-    condition: 'is_granted("ROLE_SUPER_ADMIN") || !entity.active',
-)]
-```
-
-> **Note:** For a simple role gate with no entity property involved, prefer the dedicated `permission` parameter — it's cleaner and doesn't require an expression:
-> ```php
-> #[AdminAction(name: 'impersonate', label: 'Login as', permission: 'ROLE_SUPER_ADMIN')]
-> ```
-> Use `is_granted()` in an expression when you need to combine a role check with an entity condition.
-
-If the expression fails to evaluate (e.g., property doesn't exist, syntax error), the action is **hidden** as a safe default.
 
 ### DI Tuple Conditions (Complex)
 
-Use when the condition requires injected services, database queries, or multi-entity logic.
+For conditions that require injected services, use a `[ServiceClass::class, 'method']` tuple:
 
-#### Step 1 — Implement `RowActionConditionInterface`
+```php
+#[AdminAction(
+    name: 'approve',
+    label: 'Approve',
+    condition: [WorkflowConditionService::class, 'canApprove'],
+)]
+```
 
-Your service **must implement `RowActionConditionInterface`**. This is a marker interface that registers the service in the row action condition locator, making it available at render time. Without it, the action will be silently hidden (production) or throw a `RuntimeException` (debug mode).
+The referenced service must implement `RowActionConditionInterface`:
 
 ```php
 use Kachnitel\AdminBundle\RowAction\RowActionConditionInterface;
 
-class ApprovalService implements RowActionConditionInterface
+class WorkflowConditionService implements RowActionConditionInterface
 {
-    public function __construct(
-        private readonly WorkflowInterface $workflow,
-    ) {}
+    public function __construct(private readonly WorkflowRegistry $workflows) {}
 
     public function canApprove(object $entity): bool
     {
-        return $this->workflow->can($entity, 'approve');
+        return $this->workflows->get($entity)->can($entity, 'approve');
     }
 }
 ```
 
-The method receives the **entity object** and must return `bool`. The method name is specified in the condition tuple.
-
-#### Step 2 — Reference the service in the attribute
-
-```php
-#[AdminAction(
-    name: 'approve',
-    label: 'Approve',
-    condition: [ApprovalService::class, 'canApprove'],
-)]
-```
-
-Services implementing `RowActionConditionInterface` are auto-discovered via `#[AutoconfigureTag]` — no manual registration needed as long as your services use `autoconfigure: true` (the Symfony default).
-
-If the service is not found or the method throws, the action is **hidden** as a safe default in production. In `debug` mode, a `RuntimeException` is thrown immediately to surface misconfiguration early.
+In `debug` mode, a `RuntimeException` is thrown immediately to surface misconfiguration early.
 
 ### Choosing Between Expression and DI Tuple
 
@@ -279,12 +202,7 @@ To completely replace a default action (e.g., change the Show button), use `over
 #[AdminAction(name: 'show', label: 'Preview', icon: '🔍', route: 'app_preview', override: true)]
 ```
 
-Without `override: true`, properties from your attribute are **merged** into the default action — only non-null values replace existing ones. This lets you, for example, add a condition to the default Edit button without losing its permission check:
-
-```php
-// Adds condition while keeping ADMIN_EDIT voter check
-#[AdminAction(name: 'edit', label: 'Edit', condition: '!entity.isLocked')]
-```
+Without `override: true`, properties from your attribute are **merged** into the default action — only non-null values replace existing ones.
 
 ## Programmatic Providers
 
@@ -340,8 +258,54 @@ Providers are **auto-discovered** — implement the interface and they're regist
 | Provider | Priority | Notes |
 |----------|----------|-------|
 | `DefaultRowActionProvider` | 0 | Ships with the bundle — Show and Edit |
+| `InlineEditRowActionProvider` | 15 | Adds inline-edit component to the Edit action (list-only) |
 | `AttributeRowActionProvider` | 50 | Reads `#[AdminAction]` attributes |
 | Your provider | Your choice | Higher wins on merge conflicts |
+
+## List-Only Actions
+
+Some actions only make sense inside an `EntityList` — specifically, liveComponent actions that
+interact with the list's own LiveComponent state (e.g. the inline-edit entry button, which fires
+`editRow` on the parent `EntityList` via a Stimulus data-action attribute).
+
+Set `listOnly: true` to restrict an action to list rows. It will be **automatically suppressed**
+on show and edit page headers.
+
+```php
+// Via attribute — custom liveComponent that fires actions on parent EntityList
+#[AdminAction(
+    name: 'quick_edit',
+    label: 'Quick Edit',
+    liveComponent: 'App:Admin:RowAction:QuickEdit',
+    listOnly: true,
+)]
+class Product { }
+
+// Via programmatic provider
+new RowAction(
+    name: 'quick_edit',
+    label: 'Quick Edit',
+    liveComponent: 'App:Admin:RowAction:QuickEdit',
+    listOnly: true,
+)
+```
+
+Actions **without** `listOnly` — including liveComponent actions — render in all three contexts:
+list rows, show page header, and edit page header. This allows components like status-change
+modals or confirmation dialogs to appear wherever the entity is displayed.
+
+### How the Bundle Uses `listOnly`
+
+The `InlineEditButton` component is registered with `listOnly: true` by `InlineEditRowActionProvider`
+because it fires `editRow` on the parent `EntityList` LiveComponent via Stimulus — a parent that
+does not exist on show/edit pages. The plain-link Edit action from `DefaultRowActionProvider`
+(with `listOnly: false`) is preserved and continues to appear on show/edit page headers.
+
+### merge() semantics
+
+When two providers register actions with the same name, they are merged (unless `override: true`).
+`listOnly` uses OR semantics: if either action in the merge marks it as `listOnly: true`, the result
+is list-only. Use `override: true` to fully replace an action and reset `listOnly` to `false`.
 
 ## Twig Functions
 
@@ -360,136 +324,78 @@ Three functions are available in templates:
 {% endif %}
 ```
 
-`admin_visible_row_actions` is what the default `_RowActions.html.twig` partial uses.
+`admin_visible_row_actions` is what the default `_RowActions.html.twig` partial and the
+show/edit page header loops use. The show/edit templates additionally filter `action.listOnly`.
 
 ## Examples
 
-### POST Action with Confirmation
-
-```php
-#[AdminAction(
-    name: 'archive',
-    label: 'Archive',
-    icon: '📦',
-    route: 'app_product_archive',
-    method: 'POST',                           // renders a <form> with CSRF token
-    confirmMessage: 'Archive this product?',  // browser confirm() before submit
-    condition: 'entity.status != "archived"',
-    priority: 50,
-)]
-```
-
-### Role-Gated Action
-
-```php
-#[AdminAction(
-    name: 'impersonate',
-    label: 'Login as',
-    icon: '👤',
-    route: 'app_impersonate',
-    permission: 'ROLE_SUPER_ADMIN',
-)]
-```
-
-### External Link
-
-```php
-#[AdminAction(
-    name: 'stripe',
-    label: 'Stripe',
-    icon: '💳',
-    url: 'https://dashboard.stripe.com/customers',  // static URL
-    openInNewTab: true,
-    condition: [StripeService::class, 'hasCustomer'],
-)]
-```
-
-The `StripeService` must implement `RowActionConditionInterface`:
-
-```php
-use Kachnitel\AdminBundle\RowAction\RowActionConditionInterface;
-
-class StripeService implements RowActionConditionInterface
-{
-    public function hasCustomer(object $entity): bool
-    {
-        return $entity->getStripeCustomerId() !== null;
-    }
-}
-```
-
-### Custom Button Template
-
-```php
-#[AdminAction(
-    name: 'status_badge',
-    label: 'Status',
-    template: 'admin/row_actions/status_badge.html.twig',
-    priority: 5,
-)]
-```
-
-```twig
-{# admin/row_actions/status_badge.html.twig #}
-{# Variables: action, entity, entityShortClass #}
-<span class="badge bg-{{ entity.status == 'active' ? 'success' : 'secondary' }}">
-    {{ entity.status }}
-</span>
-```
-
-### Combining Multiple Actions
+### Status workflow with condition
 
 ```php
 #[ORM\Entity]
-#[Admin(label: 'Orders')]
-#[AdminActionsConfig(exclude: ['edit'])]   // No edit — orders are immutable
-#[AdminAction(
-    name: 'approve',
-    label: 'Approve',
-    icon: '✅',
-    route: 'app_order_approve',
-    method: 'POST',
-    confirmMessage: 'Approve this order?',
-    condition: 'entity.status == "pending"',
-    priority: 30,
-)]
-#[AdminAction(
-    name: 'reject',
-    label: 'Reject',
-    icon: '❌',
-    route: 'app_order_reject',
-    method: 'POST',
-    confirmMessage: 'Reject this order?',
-    condition: 'entity.status == "pending"',
-    cssClass: 'btn btn-sm btn-outline-danger',
-    priority: 31,
-)]
-#[AdminAction(
-    name: 'refund',
-    label: 'Refund',
-    icon: '↩️',
-    route: 'app_order_refund',
-    method: 'POST',
-    condition: [OrderRefundService::class, 'canRefund'],  // DI tuple for complex check
-    priority: 40,
-)]
-class Order { }
+#[Admin(label: 'Support Tickets')]
+#[AdminAction(name: 'close',    label: 'Close',    icon: '🔒', route: 'app_ticket_close',
+    condition: 'entity.status != "closed"')]
+#[AdminAction(name: 'escalate', label: 'Escalate', icon: '🔺', route: 'app_ticket_escalate',
+    condition: 'entity.priority < 3')]
+class Ticket { }
 ```
 
-`OrderRefundService` must implement `RowActionConditionInterface`:
+### POST action with confirmation
 
 ```php
-use Kachnitel\AdminBundle\RowAction\RowActionConditionInterface;
+#[AdminAction(
+    name: 'publish',
+    label: 'Publish',
+    icon: '🌐',
+    route: 'app_post_publish',
+    method: 'POST',
+    confirmMessage: 'Publish this post? It will be visible to all users.',
+    condition: 'entity.status == "draft"',
+)]
+```
 
-class OrderRefundService implements RowActionConditionInterface
-{
-    public function __construct(
-        private readonly OrderRepository $orders,
-    ) {}
+### Custom liveComponent action (renders everywhere)
 
-    public function canRefund(object $entity): bool
-    {
-        return $this->orders->isEligibleForRefund($entity);
-    }
-}
+A liveComponent action without `listOnly` renders in list rows **and** on show/edit page headers.
+Use this for self-contained components like modal dialogs that don't interact with the list state:
+
+```php
+#[AdminAction(
+    name: 'reassign',
+    label: 'Reassign',
+    icon: '👤',
+    liveComponent: 'App:Admin:RowAction:ReassignModal',
+    // listOnly not set (defaults to false) — modal appears on show/edit pages too
+)]
+class Task { }
+```
+
+### List-only liveComponent action
+
+Set `listOnly: true` when the component depends on the parent `EntityList` LiveComponent:
+
+```php
+#[AdminAction(
+    name: 'quick_preview',
+    label: 'Preview',
+    icon: '👁',
+    liveComponent: 'App:Admin:RowAction:QuickPreview',
+    listOnly: true,  // fires live actions on parent EntityList — suppress on show/edit
+)]
+class Product { }
+```
+
+### Override the default Edit to add a condition without losing the voter check
+
+```php
+// Adds condition while keeping ADMIN_EDIT voter check
+#[AdminAction(name: 'edit', label: 'Edit', condition: '!entity.isLocked')]
+```
+
+### Level 4: Remove or replace default Show/Edit
+
+```php
+#[AdminActionsConfig(exclude: ['edit'])]
+#[AdminAction(name: 'show', label: 'Preview', icon: '🔍', route: 'app_preview', override: true)]
 ```

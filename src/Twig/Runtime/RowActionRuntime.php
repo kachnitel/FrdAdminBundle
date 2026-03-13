@@ -68,11 +68,11 @@ class RowActionRuntime implements RuntimeExtensionInterface
      *
      * @return array<RowAction>
      */
-    public function getVisibleRowActions(string $entityClass, object $entity, string $entityShortClass): array
+    public function getVisibleRowActions(string $entityClass, object $entity, string $entityShortClass, string $context = ''): array
     {
         $visible = [];
 
-        foreach ($this->registry->getActions($entityClass) as $action) {
+        foreach ($this->registry->getActions($entityClass, $context) as $action) {
             if ($this->isActionVisible($action, $entity, $entityShortClass)) {
                 $visible[] = $action;
             }

@@ -2,11 +2,11 @@
  # Generic entity edit template.
  #
  # Variables:
- # @var object entity              - The entity being edited
- # @var string entityClass         - FQCN of the entity (e.g. App\Entity\Product)
- # @var string formTypeClass       - FQCN of the form type (e.g. App\Form\ProductFormType)
- # @var string formComponentName   - LiveComponent name to render (default: K:Admin:EntityForm)
- # @var array  breadcrumbs         - Breadcrumb navigation array
+ # @var object entity            - The entity being edited
+ # @var string entityClass       - FQCN of the entity (e.g. App\Entity\Product)
+ # @var string formTypeClass     - FQCN of the form type (e.g. App\Form\ProductFormType)
+ # @var string formComponentName - LiveComponent name to render (default: K:Admin:EntityForm)
+ # @var array  breadcrumbs       - Breadcrumb navigation array
  #}
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
@@ -16,17 +16,16 @@
   {{ include('@KachnitelAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
   {{ include('@KachnitelAdmin/admin/_save_button.html.twig', {}, ignore_missing = true) }}
 
-  {# Render all entity actions except 'edit' (the current page).
-     ignoreComponent: true forces liveComponent actions (e.g. inline-edit button) to
-     render as plain navigation links — there is no parent EntityList on this page. #}
+  {# Render entity actions for the 'edit' context.
+     Context filtering in RowActionRegistry ensures list-only actions (e.g. InlineEditButton)
+     are never included here; no additional filtering needed in the template. #}
   {% set entityShortClass = entityClass|split('\\')|last %}
-  {% for action in admin_visible_row_actions(entityClass, entity, entityShortClass) %}
+  {% for action in admin_visible_row_actions(entityClass, entity, entityShortClass, 'edit') %}
     {% if action.name != 'edit' %}
       {{ include('@KachnitelAdmin/components/EntityList/_RowActionButton.html.twig', {
         action: action,
         entity: entity,
-        entityShortClass: entityShortClass,
-        ignoreComponent: true
+        entityShortClass: entityShortClass
       }) }}
     {% endif %}
   {% endfor %}

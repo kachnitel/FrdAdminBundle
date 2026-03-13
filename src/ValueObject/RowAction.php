@@ -24,9 +24,25 @@ namespace Kachnitel\AdminBundle\ValueObject;
  *   2. liveComponent  — Twig/Live Component rendered via {{ component() }}
  *   3. method         — form-based POST/DELETE
  *   4. route/url      — plain link (default)
+ *
+ * Actions appear in three contexts: CONTEXT_INDEX (entity list rows), CONTEXT_SHOW (show page
+ * header), and CONTEXT_EDIT (edit page header). The `contexts` parameter restricts an action
+ * to specific contexts; an empty array means "all contexts".
+ *
+ * Context filtering is applied by RowActionRegistry *before* merging, so a context-restricted
+ * action from a higher-priority provider never overwrites a default action in other contexts.
  */
 final class RowAction
 {
+    /** Entity list — the _RowActions partial inside EntityList. */
+    public const CONTEXT_INDEX = 'index';
+
+    /** Show page header. */
+    public const CONTEXT_SHOW = 'show';
+
+    /** Edit page header. */
+    public const CONTEXT_EDIT = 'edit';
+
     /**
      * Sentinel value meaning "priority not explicitly set".
      *
@@ -56,6 +72,11 @@ final class RowAction
      * @param string|null                                   $liveComponent  TwigComponent/LiveComponent name rendered instead of a link.
      *                                                                      Must implement RowActionComponentInterface.
      *                                                                      Always receives {entity} as prop.
+     * @param array<string>                                 $contexts       Contexts in which this action is visible.
+     *                                                                      Empty = all contexts (CONTEXT_INDEX, CONTEXT_SHOW, CONTEXT_EDIT).
+     *                                                                      E.g. [RowAction::CONTEXT_INDEX] for list-only actions
+     *                                                                      such as liveComponent buttons that fire events on the
+     *                                                                      parent EntityList LiveComponent via Stimulus.
      */
     public function __construct(
         public readonly string $name,
@@ -74,7 +95,17 @@ final class RowAction
         public readonly ?string $method = null,
         public readonly ?string $template = null,
         public readonly ?string $liveComponent = null,
+        public readonly array $contexts = [],
     ) {}
+
+    /**
+     * Whether this action is available in the given context.
+     * An empty contexts array means the action is available everywhere.
+     */
+    public function supportsContext(string $context): bool
+    {
+        return empty($this->contexts) || in_array($context, $this->contexts, true);
+    }
 
     /**
      * Create a modified copy with overridden properties.
@@ -101,6 +132,7 @@ final class RowAction
             method:        $this->pick($overrides, 'method',        $this->method),
             template:      $this->pick($overrides, 'template',      $this->template),
             liveComponent: $this->pick($overrides, 'liveComponent', $this->liveComponent),
+            contexts:      $overrides['contexts']      ?? $this->contexts,
         );
     }
 
@@ -111,6 +143,11 @@ final class RowAction
      *
      * Priority merge rule: if the incoming action uses DEFAULT_PRIORITY (meaning the
      * developer did not explicitly set a priority), the original priority is kept.
+     *
+     * contexts merge rule: prefer $other->contexts when non-empty, otherwise keep $this->contexts.
+     * Context filtering is already applied by RowActionRegistry before merge, so by the time
+     * merge() is called both actions are valid for the current context; this just preserves
+     * the most-specific context declaration from the higher-priority provider.
      */
     public function merge(self $other): self
     {
@@ -131,6 +168,7 @@ final class RowAction
             method:        $other->method         ?? $this->method,
             template:      $other->template       ?? $this->template,
             liveComponent: $other->liveComponent  ?? $this->liveComponent,
+            contexts:      !empty($other->contexts) ? $other->contexts : $this->contexts,
         );
     }
 

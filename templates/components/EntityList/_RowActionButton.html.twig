@@ -3,7 +3,7 @@
  #
  # Rendering modes (checked in order):
  #   1. template       — custom Twig include
- #   2. liveComponent  — {{ component() }} with {entity} prop (skipped when ignoreComponent is true)
+ #   2. liveComponent  — {{ component() }} with {entity} prop
  #   3. method         — form-based POST/DELETE
  #   4. default        — plain link
  #
@@ -11,8 +11,9 @@
  # @var RowAction action          - The action configuration
  # @var object    entity          - The entity object
  # @var string    entityShortClass - Entity short class name
- # @var bool      ignoreComponent - When true, skip liveComponent and render as a plain link instead.
- #                                  Use on show/edit page headers where no parent EntityList exists.
+ #
+ # Note: actions with listOnly=true are filtered by the caller (show/edit page templates),
+ # not here. This partial renders whatever it receives.
  #}
 
 {% import kachnitel_admin_theme as css %}
@@ -25,7 +26,7 @@
         entity: entity,
         entityShortClass: entityShortClass
     }) }}
-{% elseif action.liveComponent and not ignoreComponent|default(false) %}
+{% elseif action.liveComponent %}
     {# Component actions receive {entity} as the standard prop contract.
        The component (RowActionComponentInterface) is responsible for its own rendering. #}
     {{ component(action.liveComponent, { entity: entity }) }}
@@ -43,7 +44,7 @@
         </button>
     </form>
 {% else %}
-    {# Link-based action (also used as fallback when ignoreComponent is true) #}
+    {# Link-based action #}
     <a href="{% if action.route %}{{ path(action.route, action.routeParams|merge(entityId is not null ? {id: entityId} : {})) }}{% elseif action.url %}{{ action.url }}{% else %}{{ admin_object_path(entity, action.name) }}{% endif %}"
        class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
        title="{{ action.label }}"

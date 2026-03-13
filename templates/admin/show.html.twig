@@ -2,9 +2,9 @@
  # Generic entity detail/show template.
  #
  # Variables:
- # @var object entity - The entity to display
+ # @var object entity      - The entity to display
  # @var string entityClass - Full class name of the entity
- # @var array breadcrumbs - Breadcrumb navigation array
+ # @var array  breadcrumbs - Breadcrumb navigation array
  #}
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
@@ -17,17 +17,16 @@
 {% block headerButtons %}
   {{ include('@KachnitelAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
 
-  {# Render all entity actions except 'show' (the current page).
-     ignoreComponent: true forces liveComponent actions (e.g. inline-edit button) to
-     render as plain navigation links — there is no parent EntityList on this page. #}
+  {# Render entity actions for the 'show' context.
+     Context filtering in RowActionRegistry ensures list-only actions (e.g. InlineEditButton)
+     are never included here; no additional filtering needed in the template. #}
   {% set entityShortClass = entityClass|split('\\')|last %}
-  {% for action in admin_visible_row_actions(entityClass, entity, entityShortClass) %}
+  {% for action in admin_visible_row_actions(entityClass, entity, entityShortClass, 'show') %}
     {% if action.name != 'show' %}
       {{ include('@KachnitelAdmin/components/EntityList/_RowActionButton.html.twig', {
         action: action,
         entity: entity,
-        entityShortClass: entityShortClass,
-        ignoreComponent: true
+        entityShortClass: entityShortClass
       }) }}
     {% endif %}
   {% endfor %}
