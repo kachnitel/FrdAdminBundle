@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
+use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\SearchAwareDataSourceInterface;
@@ -40,6 +41,9 @@ class DoctrineDataSourceSearchAwareTest extends TestCase
     /** @var DoctrineColumnAttributeProvider&MockObject */
     private DoctrineColumnAttributeProvider $columnAttrProvider;
 
+    /** @var DoctrineColumnTypeMapper&MockObject */
+    private DoctrineColumnTypeMapper $columnTypeMapper;
+
     /** @var ClassMetadata<object>&MockObject */
     private ClassMetadata $classMetadata;
 
@@ -56,6 +60,9 @@ class DoctrineDataSourceSearchAwareTest extends TestCase
         $this->columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $this->columnAttrProvider->method('getColumnAttributes')->willReturn([]);
         $this->columnAttrProvider->method('getGroupAttributes')->willReturn([]);
+
+        $this->columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
+        $this->columnTypeMapper->method('getColumnType')->willReturn('string');
 
         /** @var ClassMetadata<object>&MockObject $classMetadata */
         $classMetadata = $this->createMock(ClassMetadata::class);
@@ -79,6 +86,7 @@ class DoctrineDataSourceSearchAwareTest extends TestCase
             filterMetadataProvider: $this->filterMetadataProvider,
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $this->columnAttrProvider,
+            columnTypeMapper: $this->columnTypeMapper,
         );
     }
 
@@ -103,10 +111,46 @@ class DoctrineDataSourceSearchAwareTest extends TestCase
         $interfaces = class_implements(DoctrineDataSource::class);
         $this->assertContains(
             SearchAwareDataSourceInterface::class,
-            $interfaces !== false ? $interfaces : [],
-            'DoctrineDataSource must implement SearchAwareDataSourceInterface',
+            $interfaces !== false ? $interfaces : []
         );
     }
+
+    /** @test */
+    public function returnsEmptyArrayWhenNoSearchableFields(): void
+    {
+        $this->queryService->method('getSearchableFieldNames')->willReturn([]);
+
+        $labels = $this->makeDataSource()->getGlobalSearchColumnLabels();
+
+        $this->assertSame([], $labels);
+    }
+
+    /** @test */
+    public function returnsLabelsForSearchableColumnsVisibleInList(): void
+    {
+        $this->stubDoctrineFields(['id' => 'integer', 'name' => 'string', 'email' => 'string']);
+        $this->queryService->method('getSearchableFieldNames')->willReturn(['name', 'email']);
+
+        $labels = $this->makeDataSource()->getGlobalSearchColumnLabels();
+
+        $this->assertContains('Name', $labels);
+        $this->assertContains('Email', $labels);
+    }
+
+    /** @test */
+    public function excludesSearchableFieldsNotPresentAsColumns(): void
+    {
+        // 'hiddenField' is searchable but not in the configured columns list
+        $this->stubDoctrineFields(['id' => 'integer', 'name' => 'string']);
+        $this->queryService->method('getSearchableFieldNames')->willReturn(['name', 'hiddenField']);
+
+        $admin = new Admin(columns: ['id', 'name']); // hiddenField not listed
+        $labels = $this->makeDataSource(admin: $admin)->getGlobalSearchColumnLabels();
+
+        $this->assertContains('Name', $labels);
+        $this->assertNotContains('Hidden field', $labels);
+    }
+
 
     /** @test */
     public function returnsLabelsForStringAndTextFieldsInColumns(): void
@@ -128,15 +172,6 @@ class DoctrineDataSourceSearchAwareTest extends TestCase
         $this->assertNotContains('Id', $labels);
         $this->assertNotContains('Price', $labels);
         $this->assertCount(2, $labels);
-    }
-
-    /** @test */
-    public function returnsEmptyArrayWhenNoSearchableFields(): void
-    {
-        $this->stubDoctrineFields(['id' => 'integer', 'price' => 'decimal']);
-        $this->queryService->method('getSearchableFieldNames')->willReturn([]);
-
-        $this->assertSame([], $this->makeDataSource()->getGlobalSearchColumnLabels());
     }
 
     /** @test */

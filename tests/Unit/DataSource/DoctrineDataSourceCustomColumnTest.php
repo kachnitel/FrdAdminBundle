@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
+use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
@@ -45,6 +46,9 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
     /** @var DoctrineColumnAttributeProvider&MockObject */
     private DoctrineColumnAttributeProvider $columnAttrProvider;
 
+    /** @var DoctrineColumnTypeMapper&MockObject */
+    private DoctrineColumnTypeMapper $columnTypeMapper;
+
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
@@ -55,6 +59,9 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
 
         $this->columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $this->columnAttrProvider->method('getColumnAttributes')->willReturn([]);
+
+        $this->columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
+        $this->columnTypeMapper->method('getColumnType')->willReturn('string');
 
         $this->em->method('getClassMetadata')
             ->with(TestEntity::class)
@@ -73,6 +80,7 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
             filterMetadataProvider: $this->filterMetadataProvider,
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $this->columnAttrProvider,
+            columnTypeMapper: $this->columnTypeMapper,
         );
     }
 

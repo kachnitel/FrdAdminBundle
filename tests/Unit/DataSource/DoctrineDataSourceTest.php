@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
+use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\FilterMetadata;
@@ -39,6 +40,9 @@ class DoctrineDataSourceTest extends TestCase
     /** @var DoctrineColumnAttributeProvider&MockObject */
     private DoctrineColumnAttributeProvider $columnAttrProvider;
 
+    /** @var DoctrineColumnTypeMapper&MockObject */
+    private DoctrineColumnTypeMapper $columnTypeMapper;
+
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
@@ -51,6 +55,9 @@ class DoctrineDataSourceTest extends TestCase
 
         $this->columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $this->columnAttrProvider->method('getColumnAttributes')->willReturn([]);
+
+        $this->columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
+        $this->columnTypeMapper->method('getColumnType')->willReturn('string');
 
         $this->em->method('getClassMetadata')
             ->with(TestEntity::class)
@@ -67,6 +74,7 @@ class DoctrineDataSourceTest extends TestCase
             filterMetadataProvider: $this->filterMetadataProvider,
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $this->columnAttrProvider,
+            columnTypeMapper: $this->columnTypeMapper,
         );
     }
 
@@ -112,8 +120,8 @@ class DoctrineDataSourceTest extends TestCase
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
         $this->metadata->method('hasField')->willReturn(true);
-        $this->metadata->method('getTypeOfField')->willReturnCallback(fn($f) => match($f) {
-            'id' => 'integer',
+        $this->metadata->method('getTypeOfField')->willReturnCallback(fn ($f) => match ($f) {
+            'id'   => 'integer',
             'name' => 'string',
         });
 
@@ -166,9 +174,9 @@ class DoctrineDataSourceTest extends TestCase
     {
         $this->filterMetadataProvider->method('getFilters')
             ->willReturn([
-                'name' => ['type' => 'text', 'operator' => 'LIKE'],
+                'name'   => ['type' => 'text', 'operator' => 'LIKE'],
                 'status' => ['type' => 'enum', 'operator' => '='],
-                'price' => ['type' => 'number', 'operator' => '='],
+                'price'  => ['type' => 'number', 'operator' => '='],
             ]);
 
         $admin = new Admin(filterableColumns: ['name', 'status']);
@@ -185,7 +193,7 @@ class DoctrineDataSourceTest extends TestCase
     {
         $this->filterMetadataProvider->method('getFilters')
             ->willReturn([
-                'name' => ['type' => 'text', 'operator' => 'LIKE'],
+                'name'   => ['type' => 'text', 'operator' => 'LIKE'],
                 'status' => ['type' => 'enum', 'operator' => '='],
             ]);
 
@@ -201,10 +209,10 @@ class DoctrineDataSourceTest extends TestCase
         $this->filterMetadataProvider->method('getFilters')
             ->willReturn([
                 'status' => [
-                    'type' => 'enum',
+                    'type'      => 'enum',
                     'enumClass' => 'App\\Enum\\Status',
-                    'operator' => 'IN',
-                    'multiple' => true,
+                    'operator'  => 'IN',
+                    'multiple'  => true,
                 ],
             ]);
 
@@ -305,7 +313,6 @@ class DoctrineDataSourceTest extends TestCase
         $this->assertTrue($dataSource->supportsAction('new'));
         $this->assertTrue($dataSource->supportsAction('edit'));
         $this->assertTrue($dataSource->supportsAction('delete'));
-        $this->assertFalse($dataSource->supportsAction('unknown'));
     }
 
     public function testSupportsActionBatchDeleteWhenEnabled(): void
@@ -324,6 +331,20 @@ class DoctrineDataSourceTest extends TestCase
         $this->assertFalse($dataSource->supportsAction('batch_delete'));
     }
 
+    public function testSupportsActionColumnVisibilityWhenEnabled(): void
+    {
+        $admin = new Admin(enableColumnVisibility: true);
+        $dataSource = $this->createDataSource($admin);
+
+        $this->assertTrue($dataSource->supportsAction('column_visibility'));
+    }
+
+    public function testSupportsActionUnknownReturnsFalse(): void
+    {
+        $dataSource = $this->createDataSource();
+
+        $this->assertFalse($dataSource->supportsAction('unknown_action'));
+    }
     public function testGetIdFieldReturnsIdentifierFieldName(): void
     {
         $this->metadata->method('getSingleIdentifierFieldName')->willReturn('id');

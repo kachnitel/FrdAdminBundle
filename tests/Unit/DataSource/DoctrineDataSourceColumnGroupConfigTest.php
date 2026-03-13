@@ -11,6 +11,7 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
 use Kachnitel\AdminBundle\DataSource\ColumnGroup;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
+use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
@@ -61,6 +62,9 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $columnAttrProvider->method('getColumnAttributes')->willReturn($columnAttributes);
         $columnAttrProvider->method('getGroupAttributes')->willReturn($groupAttributes);
 
+        $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
+        $columnTypeMapper->method('getColumnType')->willReturn('string');
+
         return new DoctrineDataSource(
             entityClass: 'App\\Entity\\Dummy', // @phpstan-ignore argument.type
             adminAttribute: new Admin(),
@@ -69,6 +73,7 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
             filterMetadataProvider: $this->filterProvider,
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $columnAttrProvider,
+            columnTypeMapper: $columnTypeMapper,
         );
     }
 

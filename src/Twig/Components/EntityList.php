@@ -39,6 +39,10 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
  * Security: Requires ADMIN_INDEX permission for the entity/data source being displayed.
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) LiveComponent requires public methods for LiveActions
+ * @SuppressWarnings(PHPMD.ExcessivePublicCount) LiveComponent requires public LiveProps and LiveActions;
+ *     each #[LiveProp] is a URL-synchronised state variable and must be public for the framework to
+ *     hydrate it. Core logic is already decomposed into EntityListQueryService,
+ *     EntityListBatchService, EntityListPermissionService, etc.
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Component bridges UI, data sources, and services
  * @SuppressWarnings(PHPMD.TooManyFields) Each LiveProp is a URL-synchronised state variable; the
  *     count is an architectural consequence of LiveComponent, not avoidable design debt.
@@ -463,7 +467,7 @@ class EntityList
 
         return array_values(array_filter(
             $allColumns,
-            fn(string $col) => !in_array($col, $this->hiddenColumns, true)
+            fn (string $col) => !in_array($col, $this->hiddenColumns, true)
         ));
     }
 

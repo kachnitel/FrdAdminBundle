@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
+use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
@@ -67,6 +68,11 @@ class DoctrineDataSourceSortableTest extends TestCase
         $columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $columnAttrProvider->method('getColumnAttributes')->willReturn([]);
 
+        // The real mapper is used here: sortable logic lives in isColumnSortable(),
+        // but the type is still resolved through the mapper for ColumnMetadata.create().
+        $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
+        $columnTypeMapper->method('getColumnType')->willReturn('string');
+
         return new DoctrineDataSource(
             entityClass: 'App\\Entity\\Dummy', // @phpstan-ignore argument.type
             adminAttribute: $admin ?? new Admin(),
@@ -75,6 +81,7 @@ class DoctrineDataSourceSortableTest extends TestCase
             filterMetadataProvider: $this->filterProvider,
             customColumnProvider: $customColumnProvider,
             columnAttributeProvider: $columnAttrProvider,
+            columnTypeMapper: $columnTypeMapper,
         );
     }
 
@@ -134,8 +141,6 @@ class DoctrineDataSourceSortableTest extends TestCase
         $this->metadata->method('hasField')->willReturn(true);
         $this->metadata->method('getTypeOfField')->willReturn('integer');
 
-        // Use a dedicated local mock to avoid any conflict with stubs configured
-        // in other tests or setUp — this is the only test that needs a non-empty result.
         $customMeta = new ColumnMetadata(
             name: 'fullName',
             label: 'Full Name',

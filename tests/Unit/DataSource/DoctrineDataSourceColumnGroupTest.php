@@ -10,6 +10,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\DataSource\ColumnGroup;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
+use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
@@ -61,6 +62,9 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
         $columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $columnAttrProvider->method('getColumnAttributes')->willReturn($columnAttributes);
 
+        $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
+        $columnTypeMapper->method('getColumnType')->willReturn('string');
+
         return new DoctrineDataSource(
             entityClass: 'App\\Entity\\Dummy', // @phpstan-ignore argument.type
             adminAttribute: $admin ?? new Admin(),
@@ -69,6 +73,7 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
             filterMetadataProvider: $this->filterProvider,
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $columnAttrProvider,
+            columnTypeMapper: $columnTypeMapper,
         );
     }
 
@@ -173,3 +178,4 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertSame('name_block', $columns['firstName']->group);
     }
 }
+

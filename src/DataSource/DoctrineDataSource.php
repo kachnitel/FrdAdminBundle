@@ -49,6 +49,7 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         private readonly FilterMetadataProvider $filterMetadataProvider,
         private readonly DoctrineCustomColumnProvider $customColumnProvider,
         private readonly DoctrineColumnAttributeProvider $columnAttributeProvider,
+        private readonly DoctrineColumnTypeMapper $columnTypeMapper,
     ) {}
 
     public function getIdentifier(): string
@@ -89,7 +90,7 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
                 continue;
             }
 
-            $type = $this->getColumnType($metadata, $columnName);
+            $type = $this->columnTypeMapper->getColumnType($metadata, $columnName);
             $sortable = $this->isColumnSortable($metadata, $columnName);
             $group = isset($columnAttrs[$columnName]) ? $columnAttrs[$columnName]->group : null;
 
@@ -206,36 +207,7 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
                 continue;
             }
 
-            $enumOptions = null;
-            $keysToCheck = [
-                'options',
-                'enumClass',
-                'showAllOption',
-                'multiple',
-            ];
-
-            if (array_any($keysToCheck, fn ($key) => isset($config[$key]))) {
-                $enumOptions = new FilterEnumOptions(
-                    values: $config['options'] ?? null,
-                    enumClass: $config['enumClass'] ?? null,
-                    showAllOption: $config['showAllOption'] ?? true,
-                    multiple: $config['multiple'] ?? false,
-                );
-            }
-
-            $this->filtersCache[$name] = new FilterMetadata(
-                name: $name,
-                type: $config['type'] ?? 'text',
-                label: $config['label'] ?? null,
-                placeholder: $config['placeholder'] ?? null,
-                operator: $config['operator'] ?? '=',
-                enumOptions: $enumOptions,
-                searchFields: $config['searchFields'] ?? null,
-                priority: $config['priority'] ?? 999,
-                enabled: $config['enabled'] ?? true,
-                excludeFromGlobalSearch: $config['excludeFromGlobalSearch'] ?? false,
-                targetClass: $config['targetClass'] ?? null,
-            );
+            $this->filtersCache[$name] = $this->buildFilter($name, $config);
         }
 
         return $this->filtersCache;
@@ -294,9 +266,9 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     {
         return match ($action) {
             'index', 'show', 'new', 'edit', 'delete' => true,
-            'batch_delete' => $this->adminAttribute->isEnableBatchActions(),
-            'column_visibility' => $this->adminAttribute->isEnableColumnVisibility(),
-            default => false,
+            'batch_delete'        => $this->adminAttribute->isEnableBatchActions(),
+            'column_visibility'   => $this->adminAttribute->isEnableColumnVisibility(),
+            default               => false,
         };
     }
 
@@ -381,6 +353,8 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         return $this->shortName;
     }
 
+    // ── Private helpers ────────────────────────────────────────────────────────
+
     /**
      * Get column names in display order.
      *
@@ -422,37 +396,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     }
 
     /**
-     * Get column type for rendering.
-     *
-     * @param ClassMetadata<object> $metadata
-     */
-    private function getColumnType(ClassMetadata $metadata, string $column): string
-    {
-        if ($metadata->hasField($column)) {
-            $type = $metadata->getTypeOfField($column);
-
-            return match ($type) {
-                'integer', 'smallint', 'bigint' => 'integer',
-                'decimal', 'float' => 'decimal',
-                'boolean' => 'boolean',
-                'date', 'date_immutable' => 'date',
-                'datetime', 'datetime_immutable', 'datetimetz', 'datetimetz_immutable' => 'datetime',
-                'time', 'time_immutable' => 'time',
-                'text' => 'text',
-                'json', 'json_array' => 'json',
-                'array', 'simple_array' => 'array',
-                default => 'string',
-            };
-        }
-
-        if ($metadata->hasAssociation($column)) {
-            return $metadata->isCollectionValuedAssociation($column) ? 'collection' : 'relation';
-        }
-
-        return 'string';
-    }
-
-    /**
      * Check if a column is sortable.
      *
      * Only regular Doctrine fields support direct ORDER BY in DQL.
@@ -465,6 +408,53 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     private function isColumnSortable(ClassMetadata $metadata, string $column): bool
     {
         return $metadata->hasField($column);
+    }
+
+    /**
+     * Build a FilterMetadata from a legacy config array entry.
+     *
+     * Extracted to reduce cyclomatic complexity of getFilters().
+     *
+     * @param array<string, mixed> $config
+     */
+    private function buildFilter(string $name, array $config): FilterMetadata
+    {
+        $enumOptions = $this->buildEnumOptions($config);
+
+        return new FilterMetadata(
+            name: $name,
+            type: $config['type'] ?? 'text',
+            label: $config['label'] ?? null,
+            placeholder: $config['placeholder'] ?? null,
+            operator: $config['operator'] ?? '=',
+            enumOptions: $enumOptions,
+            searchFields: $config['searchFields'] ?? null,
+            priority: $config['priority'] ?? 999,
+            enabled: $config['enabled'] ?? true,
+            excludeFromGlobalSearch: $config['excludeFromGlobalSearch'] ?? false,
+            targetClass: $config['targetClass'] ?? null,
+        );
+    }
+
+    /**
+     * Build FilterEnumOptions from a legacy config array, or return null when no enum keys present.
+     *
+     * @param array<string, mixed> $config
+     */
+    private function buildEnumOptions(array $config): ?FilterEnumOptions
+    {
+        $keysToCheck = ['options', 'enumClass', 'showAllOption', 'multiple'];
+
+        if (!array_any($keysToCheck, fn ($key) => isset($config[$key]))) {
+            return null;
+        }
+
+        return new FilterEnumOptions(
+            values: $config['options'] ?? null,
+            enumClass: $config['enumClass'] ?? null,
+            showAllOption: $config['showAllOption'] ?? true,
+            multiple: $config['multiple'] ?? false,
+        );
     }
 
     /**

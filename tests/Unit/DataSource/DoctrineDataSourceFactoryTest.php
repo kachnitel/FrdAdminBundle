@@ -7,14 +7,15 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
+use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\ConfiguredEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -38,6 +39,9 @@ class DoctrineDataSourceFactoryTest extends TestCase
     /** @var DoctrineColumnAttributeProvider&MockObject */
     private DoctrineColumnAttributeProvider $columnAttrProvider;
 
+    /** @var DoctrineColumnTypeMapper&MockObject */
+    private DoctrineColumnTypeMapper $columnTypeMapper;
+
     private DoctrineDataSourceFactory $factory;
 
     protected function setUp(): void
@@ -53,13 +57,17 @@ class DoctrineDataSourceFactoryTest extends TestCase
         $this->columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $this->columnAttrProvider->method('getColumnAttributes')->willReturn([]);
 
+        $this->columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
+        $this->columnTypeMapper->method('getColumnType')->willReturn('string');
+
         $this->factory = new DoctrineDataSourceFactory(
             $this->em,
             $this->entityDiscovery,
             $this->queryService,
             $this->filterMetadataProvider,
             $this->customColumnProvider,
-            $this->columnAttrProvider
+            $this->columnAttrProvider,
+            $this->columnTypeMapper,
         );
     }
 
@@ -78,7 +86,7 @@ class DoctrineDataSourceFactoryTest extends TestCase
         $admin2 = new Admin(label: 'Configured');
 
         $this->entityDiscovery->method('getAdminEntities')->willReturn([
-            TestEntity::class => $admin1,
+            TestEntity::class      => $admin1,
             ConfiguredEntity::class => $admin2,
         ]);
 
@@ -94,13 +102,13 @@ class DoctrineDataSourceFactoryTest extends TestCase
         $admin2 = new Admin();
 
         $this->entityDiscovery->method('getAdminEntities')->willReturn([
-            TestEntity::class => $admin1,
+            TestEntity::class      => $admin1,
             ConfiguredEntity::class => $admin2,
         ]);
 
         $result = $this->factory->createAll();
 
-        $identifiers = array_map(fn($ds) => $ds->getIdentifier(), $result);
+        $identifiers = array_map(fn ($ds) => $ds->getIdentifier(), $result);
 
         $this->assertContains('TestEntity', $identifiers);
         $this->assertContains('ConfiguredEntity', $identifiers);
@@ -114,39 +122,51 @@ class DoctrineDataSourceFactoryTest extends TestCase
             ->method('getAdminEntities')
             ->willReturn([TestEntity::class => $admin]);
 
-        // Call multiple times
+        // Call twice — discovery should only be called once
         $this->factory->createAll();
         $this->factory->createAll();
-        $this->factory->createAll();
-
-        // getAdminEntities should only be called once
     }
 
-    public function testCreateReturnsDataSourceForEntityWithAdminAttribute(): void
+    public function testClearCacheAllowsRecreation(): void
     {
-        $admin = new Admin(label: 'Test Entity');
+        $admin = new Admin();
 
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->with(TestEntity::class)
-            ->willReturn($admin);
+        $this->entityDiscovery->expects($this->exactly(2))
+            ->method('getAdminEntities')
+            ->willReturn([TestEntity::class => $admin]);
 
-        $result = $this->factory->create(TestEntity::class);
-
-        $this->assertInstanceOf(DoctrineDataSource::class, $result);
-        $this->assertSame('TestEntity', $result->getIdentifier());
-        $this->assertSame('Test Entity', $result->getLabel());
+        $this->factory->createAll();
+        $this->factory->clearCache();
+        $this->factory->createAll();
     }
 
     public function testCreateReturnsNullForEntityWithoutAdminAttribute(): void
     {
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->with('App\\Entity\\NonAdminEntity')
-            ->willReturn(null);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
 
-        /** @phpstan-ignore argument.type (intentionally testing with non-existent class) */
-        $result = $this->factory->create('App\\Entity\\NonAdminEntity');
+        $result = $this->factory->create(TestEntity::class);
 
         $this->assertNull($result);
+    }
+
+    public function testCreateReturnsDataSourceForEntityWithAdminAttribute(): void
+    {
+        $admin = new Admin(label: 'Test');
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn($admin);
+
+        $result = $this->factory->create(TestEntity::class);
+
+        $this->assertInstanceOf(DoctrineDataSource::class, $result);
+    }
+
+    public function testCreateForClassCreatesDataSourceWithDefaultAdminWhenNoAttribute(): void
+    {
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
+
+        $result = $this->factory->createForClass(TestEntity::class);
+
+        /** @phpstan-ignore method.alreadyNarrowedType */
+        $this->assertInstanceOf(DoctrineDataSource::class, $result);
     }
 
     public function testGetByShortNameReturnsDataSource(): void

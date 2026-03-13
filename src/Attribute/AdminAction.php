@@ -20,6 +20,10 @@ use Kachnitel\AdminBundle\ValueObject\RowAction;
  *   #[AdminAction(name: 'archive', label: 'Archive', icon: '📦', route: 'app_archive',
  *                 method: 'POST', confirmMessage: 'Archive this item?')]
  *   class Order { }
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList) PHP attributes must declare all configuration
+ *     in the constructor; value-object grouping is not possible because attribute arguments must
+ *     be compile-time constant expressions. Each parameter is part of the public API surface.
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 class AdminAction

@@ -27,6 +27,7 @@ class DoctrineDataSourceFactory
         private readonly FilterMetadataProvider $filterMetadataProvider,
         private readonly DoctrineCustomColumnProvider $customColumnProvider,
         private readonly DoctrineColumnAttributeProvider $columnAttributeProvider,
+        private readonly DoctrineColumnTypeMapper $columnTypeMapper,
     ) {}
 
     /**
@@ -115,6 +116,7 @@ class DoctrineDataSourceFactory
             filterMetadataProvider: $this->filterMetadataProvider,
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $this->columnAttributeProvider,
+            columnTypeMapper: $this->columnTypeMapper,
         );
     }
 }

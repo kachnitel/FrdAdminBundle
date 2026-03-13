@@ -71,23 +71,7 @@ class RowActionRegistry
             }
 
             foreach ($provider->getActions($entityClass) as $action) {
-                // Skip actions not applicable to the requested context
-                if ($context !== '' && !$action->supportsContext($context)) {
-                    continue;
-                }
-
-                // Full override: collect separately, applied after merging
-                if ($provider instanceof AttributeRowActionProvider
-                    && $this->attributeProvider->isOverride($entityClass, $action->name)) {
-                    $overrides[$action->name] = $action;
-                    continue;
-                }
-
-                if (isset($actionsByName[$action->name])) {
-                    $actionsByName[$action->name] = $actionsByName[$action->name]->merge($action);
-                } else {
-                    $actionsByName[$action->name] = $action;
-                }
+                $this->collectAction($action, $provider, $entityClass, $context, $actionsByName, $overrides);
             }
         }
 
@@ -111,6 +95,45 @@ class RowActionRegistry
     {
         $this->cache = [];
         $this->sortedProviders = null;
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    /**
+     * Process a single action from a provider into the accumulator maps.
+     *
+     * Extracted from the inner loop of getActions() to reduce its cyclomatic complexity.
+     *
+     * @param class-string                   $entityClass
+     * @param array<string, RowAction>       $actionsByName  Accumulator — passed by reference
+     * @param array<string, RowAction>       $overrides      Accumulator — passed by reference
+     */
+    private function collectAction(
+        RowAction $action,
+        RowActionProviderInterface $provider,
+        string $entityClass,
+        string $context,
+        array &$actionsByName,
+        array &$overrides,
+    ): void {
+        // Skip actions not applicable to the requested context
+        if ($context !== '' && !$action->supportsContext($context)) {
+            return;
+        }
+
+        // Full override: collect separately, applied after merging
+        if ($provider instanceof AttributeRowActionProvider
+            && $this->attributeProvider->isOverride($entityClass, $action->name)
+        ) {
+            $overrides[$action->name] = $action;
+            return;
+        }
+
+        if (isset($actionsByName[$action->name])) {
+            $actionsByName[$action->name] = $actionsByName[$action->name]->merge($action);
+        } else {
+            $actionsByName[$action->name] = $action;
+        }
     }
 
     private function ensureProvidersSorted(): void
