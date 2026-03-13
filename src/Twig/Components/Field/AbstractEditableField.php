@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Utils\Text;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -93,6 +94,8 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  *   2. ADMIN_EDIT voter for the entity short class.
  *
  *   3. PropertyAccessor::isWritable() — no setter ⟹ not editable.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Component bridges UI, data sources, and services
  */
 abstract class AbstractEditableField
 {
@@ -400,7 +403,6 @@ abstract class AbstractEditableField
     #[ExposeInTemplate]
     public function getLabel(): string
     {
-        // e.g. "publishedAt" → "Published At"
-        return ucwords(preg_replace('/(?<!^)[A-Z]/', ' $0', $this->property));
+        return Text::humanize($this->property);
     }
 }

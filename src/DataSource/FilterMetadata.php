@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Utils\Text;
 
 /**
  * Metadata for a filter in a data source.
@@ -54,7 +55,7 @@ readonly class FilterMetadata
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_TEXT,
-            label: $label ?? self::humanize($name),
+            label: $label ?? Text::humanize($name),
             placeholder: $placeholder,
             operator: 'LIKE',
             priority: $priority,
@@ -73,7 +74,7 @@ readonly class FilterMetadata
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_NUMBER,
-            label: $label ?? self::humanize($name),
+            label: $label ?? Text::humanize($name),
             operator: $operator,
             priority: $priority,
         );
@@ -91,7 +92,7 @@ readonly class FilterMetadata
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_DATE,
-            label: $label ?? self::humanize($name),
+            label: $label ?? Text::humanize($name),
             operator: $operator,
             priority: $priority,
         );
@@ -108,7 +109,7 @@ readonly class FilterMetadata
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_DATERANGE,
-            label: $label ?? self::humanize($name),
+            label: $label ?? Text::humanize($name),
             operator: 'BETWEEN',
             priority: $priority,
         );
@@ -130,7 +131,7 @@ readonly class FilterMetadata
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_ENUM,
-            label: $label ?? self::humanize($name),
+            label: $label ?? Text::humanize($name),
             operator: $multiple ? 'IN' : '=',
             enumOptions: FilterEnumOptions::fromValues($options, $showAllOption, $multiple),
             priority: $priority,
@@ -153,7 +154,7 @@ readonly class FilterMetadata
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_ENUM,
-            label: $label ?? self::humanize($name),
+            label: $label ?? Text::humanize($name),
             operator: $multiple ? 'IN' : '=',
             enumOptions: FilterEnumOptions::fromEnumClass($enumClass, $showAllOption, $multiple),
             priority: $priority,
@@ -172,7 +173,7 @@ readonly class FilterMetadata
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_BOOLEAN,
-            label: $label ?? self::humanize($name),
+            label: $label ?? Text::humanize($name),
             operator: '=',
             enumOptions: new FilterEnumOptions(showAllOption: $showAllOption),
             priority: $priority,
@@ -196,7 +197,7 @@ readonly class FilterMetadata
         return new self(
             name: $name,
             type: ColumnFilter::TYPE_COLLECTION,
-            label: $label ?? self::humanize($name),
+            label: $label ?? Text::humanize($name),
             operator: 'LIKE',
             searchFields: $searchFields,
             priority: $priority,
@@ -252,7 +253,7 @@ readonly class FilterMetadata
     {
         $result = [
             'property' => $this->name,
-            'label' => $this->label ?? self::humanize($this->name),
+            'label' => $this->label ?? Text::humanize($this->name),
             'type' => $this->type,
             'operator' => $this->operator,
             'enabled' => $this->enabled,
@@ -324,13 +325,5 @@ readonly class FilterMetadata
         if ($this->targetClass !== null) {
             $result['targetClass'] = $this->targetClass;
         }
-    }
-
-    /**
-     * Convert property name to human-readable label.
-     */
-    private static function humanize(string $text): string
-    {
-        return ucfirst(trim(strtolower((string) preg_replace('/(?<!^)[A-Z]/', ' $0', $text))));
     }
 }

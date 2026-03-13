@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\Traits\AssociationFilterConfigTrait;
 use Kachnitel\AdminBundle\Service\Traits\FieldFilterConfigTrait;
+use Kachnitel\AdminBundle\Utils\Text;
 use ReflectionClass;
 use ReflectionProperty;
 
@@ -104,7 +105,7 @@ class FilterMetadataProvider
 
         $config = [
             'property' => $propertyName,
-            'label' => ($attribute !== null && $attribute->label !== null) ? $attribute->label : $this->humanize($propertyName),
+            'label' => ($attribute !== null && $attribute->label !== null) ? $attribute->label : Text::humanize($propertyName),
             'enabled' => true,
         ];
 
@@ -207,13 +208,5 @@ class FilterMetadataProvider
         }
 
         return $config;
-    }
-
-    /**
-     * Convert property name to human-readable label.
-     */
-    private function humanize(string $text): string
-    {
-        return ucfirst(trim(strtolower(preg_replace('/(?<!^)[A-Z]/', ' $0', $text))));
     }
 }

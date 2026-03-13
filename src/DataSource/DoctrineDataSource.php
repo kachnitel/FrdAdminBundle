@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use Kachnitel\AdminBundle\Utils\Text;
 
 /**
  * Data source for Doctrine entities.
@@ -129,7 +130,7 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
                     $groupSlotIndex[$groupId] = count($slots);
                     $slots[] = new ColumnGroup(
                         id: $groupId,
-                        label: $this->humanize($groupId),
+                        label: Text::humanize($groupId),
                         columns: [$name => $metadata],
                         subLabels: $groupAttr->subLabels ?? ColumnGroup::SUB_LABELS_SHOW,
                         header: $groupAttr->header ?? ColumnGroup::HEADER_TEXT,
@@ -455,16 +456,5 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
             showAllOption: $config['showAllOption'] ?? true,
             multiple: $config['multiple'] ?? false,
         );
-    }
-
-    /**
-     * Humanise a snake_case or camelCase identifier into a readable label.
-     */
-    private function humanize(string $text): string
-    {
-        // Handle snake_case: replace underscores with spaces
-        $text = str_replace('_', ' ', $text);
-
-        return ucfirst(trim(strtolower((string) preg_replace('/(?<!^)[A-Z]/', ' $0', $text))));
     }
 }

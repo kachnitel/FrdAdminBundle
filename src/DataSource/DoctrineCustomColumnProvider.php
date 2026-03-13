@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\AdminCustomColumn;
+use Kachnitel\AdminBundle\Utils\Text;
 
 /**
  * Reads #[AdminCustomColumn] attributes from an entity class and converts them
@@ -38,7 +39,7 @@ class DoctrineCustomColumnProvider
 
             $columns[$customColumn->name] = new ColumnMetadata(
                 name: $customColumn->name,
-                label: $customColumn->label ?? $this->humanize($customColumn->name),
+                label: $customColumn->label ?? Text::humanize($customColumn->name),
                 type: 'custom',
                 sortable: $customColumn->sortable,
                 template: $customColumn->template,
@@ -46,15 +47,5 @@ class DoctrineCustomColumnProvider
         }
 
         return $columns;
-    }
-
-    /**
-     * Convert a camelCase property name to a human-readable label.
-     * Mirrors ColumnMetadata::humanize() — kept private here to avoid
-     * coupling to the readonly class internals.
-     */
-    private function humanize(string $text): string
-    {
-        return ucfirst(trim(strtolower((string) preg_replace('/(?<!^)[A-Z]/', ' $0', $text))));
     }
 }

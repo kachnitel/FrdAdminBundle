@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\DataSource;
 
+use Kachnitel\AdminBundle\Utils\Text;
+
 /**
  * Metadata for a column in a data source.
  *
@@ -42,19 +44,11 @@ readonly class ColumnMetadata
     ): self {
         return new self(
             name: $name,
-            label: $label ?? self::humanize($name),
+            label: $label ?? Text::humanize($name),
             type: $type,
             sortable: $sortable,
             template: $template,
             group: $group,
         );
-    }
-
-    /**
-     * Convert property name to human-readable label.
-     */
-    private static function humanize(string $text): string
-    {
-        return ucfirst(trim(strtolower((string) preg_replace('/(?<!^)[A-Z]/', ' $0', $text))));
     }
 }
