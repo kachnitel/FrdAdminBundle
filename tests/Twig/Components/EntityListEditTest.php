@@ -19,8 +19,13 @@ use PHPUnit\Framework\TestCase;
 /**
  * Unit tests for EntityList row-level editing.
  *
- * canEditRow() and editRow() are tested by mocking EntityListPermissionService,
- * which now owns the inline-edit logic (attribute flag + voter).
+ * Covers only what cannot be verified at the functional tier:
+ *   - canEditRow() delegates to EntityListPermissionService with the correct arguments
+ *   - editRow() throws AccessDeniedException when permission is denied
+ *
+ * State-machine behaviour (editingRowId lifecycle, isRowEditing) is covered
+ * by the functional suite in EntityListInlineEditTest, which exercises the
+ * full LiveComponent stack and provides higher-fidelity assertions.
  *
  * @covers \Kachnitel\AdminBundle\Twig\Components\EntityList
  */
@@ -41,43 +46,6 @@ class EntityListEditTest extends TestCase
         $this->permissionService->method('canViewList')->willReturn(true);
 
         $this->component = $this->makeComponent($this->permissionService);
-    }
-
-    public function testEditingRowIdIsNullByDefault(): void
-    {
-        $this->assertNull($this->component->editingRowId);
-    }
-
-    public function testCanActivateEditModeForRow(): void
-    {
-        $entity = new TestListEntity(1, 'Test');
-        $this->component->editRow($entity->getId());
-        $this->assertSame(1, $this->component->editingRowId);
-    }
-
-    public function testIsRowEditingReturnsTrueForEditingRow(): void
-    {
-        $entity1 = new TestListEntity(1, 'Test 1');
-        $entity2 = new TestListEntity(2, 'Test 2');
-
-        $this->component->editRow($entity1->getId());
-
-        $this->assertTrue($this->component->isRowEditing($entity1));
-        $this->assertFalse($this->component->isRowEditing($entity2));
-    }
-
-    public function testOnlyOneRowCanBeEditedAtATime(): void
-    {
-        $entity1 = new TestListEntity(1, 'Test 1');
-        $entity2 = new TestListEntity(2, 'Test 2');
-
-        $this->component->editRow($entity1->getId());
-        $this->assertSame(1, $this->component->editingRowId);
-
-        $this->component->editRow($entity2->getId());
-        $this->assertSame(2, $this->component->editingRowId);
-        $this->assertFalse($this->component->isRowEditing($entity1));
-        $this->assertTrue($this->component->isRowEditing($entity2));
     }
 
     public function testCanEditRowReturnsTrueWhenPermissionServiceAllows(): void
@@ -120,18 +88,6 @@ class EntityListEditTest extends TestCase
 
         $component = $this->makeComponent($permissionService);
         $component->editRow(1);
-    }
-
-    /**
-     * Entity self-validation (setter throws) prevents invalid data from reaching saveRow.
-     */
-    public function testEntitySelfValidationPreventsInvalidData(): void
-    {
-        $entity = new TestListEntity(1, 'Test');
-        $this->component->editRow($entity->getId());
-
-        $this->expectException(\InvalidArgumentException::class);
-        $entity->setName(''); // throws before saveRow is reached
     }
 
     private function makeComponent(EntityListPermissionService $permissionService): EntityList

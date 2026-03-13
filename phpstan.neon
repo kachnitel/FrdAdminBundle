@@ -7,8 +7,6 @@ parameters:
         # - tests/Functional/TestKernel.php
     tmpDir: .phpstan
     ignoreErrors:
-        # PHPUnit mock method false positives
-        - '#Call to an undefined method .+::(method|expects|with|willReturn|willReturnCallback)\(\)#'
         # Test fixtures - properties set by Doctrine, not in tests
         - '#Property Kachnitel\\AdminBundle\\Tests\\Fixtures\\.+ is never assigned#'
         # Test fixtures - properties only written by Doctrine

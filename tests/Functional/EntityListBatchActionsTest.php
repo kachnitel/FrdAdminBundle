@@ -313,7 +313,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
         );
 
         $component = $testComponent->component();
-        $this->assertTrue($component->permissionService->canBatchDelete($component->entityClass, $component->entityShortClass));
+        $this->assertTrue($component->canBatchDelete($component->entityClass, $component->entityShortClass));
     }
 
     public function testIsBatchActionsEnabledReturnsFalseByDefault(): void

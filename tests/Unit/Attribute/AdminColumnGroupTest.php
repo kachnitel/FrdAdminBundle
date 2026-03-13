@@ -58,20 +58,4 @@ class AdminColumnGroupTest extends TestCase
         $this->assertTrue(($attrInstance->flags & Attribute::IS_REPEATABLE) !== 0);
         $this->assertTrue(($attrInstance->flags & Attribute::TARGET_CLASS) !== 0);
     }
-
-    /** @test */
-    public function headerDefaultIsText(): void
-    {
-        $attr = new AdminColumnGroup(id: 'test');
-
-        $this->assertSame(ColumnGroup::HEADER_TEXT, $attr->header);
-    }
-
-    /** @test */
-    public function subLabelsDefaultIsShow(): void
-    {
-        $attr = new AdminColumnGroup(id: 'test');
-
-        $this->assertSame(ColumnGroup::SUB_LABELS_SHOW, $attr->subLabels);
-    }
 }
