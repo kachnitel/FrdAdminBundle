@@ -15,8 +15,6 @@
 {% endblock %}
 
 {% block headerButtons %}
-  {{ include('@KachnitelAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
-
   {# Render entity actions for the 'show' context.
      Context filtering in RowActionRegistry ensures list-only actions (e.g. InlineEditButton)
      are never included here; no additional filtering needed in the template. #}
@@ -30,6 +28,8 @@
       }) }}
     {% endif %}
   {% endfor %}
+
+  {{ include('@KachnitelAdmin/admin/_delete_form.html.twig', {}, ignore_missing = true) }}
 {% endblock %}
 
 {% block content %}
