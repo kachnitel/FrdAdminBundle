@@ -96,7 +96,7 @@
             "phpstan/extension-installer": true
         }
     },
-    "version": "0.7.1",
+    "version": "0.8.0",
     "extra": {
         "symfony": {
             "allow-contrib": false,

@@ -7,7 +7,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.7.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.7.0...v0.7.1) (2026-03-08)
+## [0.8.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.7.1...v0.8.0) (2026-03-13)
+
+### Features
+
+* Improve global search UI ([7c7880](https://github.com/kachnitel/FrdAdminBundle/commit/7c7880b7b74380e9a73a290687e5cb84bf64ee26))
+* Live forms for edit page ([0acb51](https://github.com/kachnitel/FrdAdminBundle/commit/0acb5161da23d62133017579cac586ce3b666674))
+* Swap row action buttons in show/edit before save/delete buttons ([ceca71](https://github.com/kachnitel/FrdAdminBundle/commit/ceca714cf1758051fe8a573665e9e7be6dc84748))
+
+##### Composite-columns
+
+* Add header and individual labels configuration ([cf5039](https://github.com/kachnitel/FrdAdminBundle/commit/cf5039f9dfa63b70e93e557d5ff9026210b63bbe))
+* Group entity properties into stacked composite table cells ([40a579](https://github.com/kachnitel/FrdAdminBundle/commit/40a579099830c5834f3fd4e4c3fb79cc0880b5e0))
+
+##### Row-actions
+
+* Render entity actions on show/edit page headers ([512810](https://github.com/kachnitel/FrdAdminBundle/commit/512810d71b9982e175a638cce26c695179a281be))
+
+### Bug Fixes
+
+* 6.4 support in property-info getType/getTypes ([a51cb6](https://github.com/kachnitel/FrdAdminBundle/commit/a51cb61637f0a8506a797e8235b1fbb715d027ea))
+
+##### Dashboard
+
+* Hide entities user cannot list in dashboard ([06d901](https://github.com/kachnitel/FrdAdminBundle/commit/06d901eaea203e7d6739ff66d43539b930aea251))
+
+##### Row-actions
+
+* Show regular edit icon in show page if entity has inline edit enabled ([e80688](https://github.com/kachnitel/FrdAdminBundle/commit/e8068841f04c7c1fe088c5ad5075948d418347d3))
+
+### Code Refactoring
+
+* Deduplicate string humanize into Text::humanize util ([4ac5f1](https://github.com/kachnitel/FrdAdminBundle/commit/4ac5f17a6bc17b094a91fb73693fdda3ecbd29b9))
+* Extract column type mapping responsibility from DoctrineDataSource ([22d45d](https://github.com/kachnitel/FrdAdminBundle/commit/22d45df0628a7f36d3125af28465471e58ed4248))
+
+
+---
+
+## [0.7.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.7.0...v0.7.1) (2026-03-07)
 
 ### Features
 
