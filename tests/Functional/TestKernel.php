@@ -4,10 +4,10 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
-use Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface;
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestDataSourceProvider;
 use Kachnitel\ComponentsBundle\KachnitelComponentsBundle;
+use Kachnitel\DataSourceContracts\DataSourceProviderInterface;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
@@ -149,8 +149,8 @@ class TestKernel extends Kernel
             'form_namespace'   => 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\',
         ]);
 
-        // Register test data source provider for custom column template testing
-        // AutowireIterator uses the interface FQCN as the tag for discovery
+        // Register test data source provider for custom column template testing.
+        // Tag uses the contracts FQCN to match DataSourceRegistry's AutowireIterator.
         $container->register(TestDataSourceProvider::class)
             ->setAutowired(true)
             ->setPublic(true)

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Attribute;
 
 use Attribute;
+use Kachnitel\DataSourceContracts\FilterMetadata;
 
 /**
  * Configure column filtering for entity properties.
@@ -15,26 +16,22 @@ use Attribute;
  * in admin list views.
  *
  * @example Basic text search:
- * #[ColumnFilter(type: 'text')]
+ * #[ColumnFilter(type: ColumnFilter::TYPE_TEXT)]
  * private string $name;
  *
  * @example Date range:
- * #[ColumnFilter(type: 'daterange')]
+ * #[ColumnFilter(type: ColumnFilter::TYPE_DATERANGE)]
  * private \DateTimeInterface $createdAt;
- *
- * @example Enum dropdown:
- * #[ColumnFilter(type: 'enum')]
- * private SafetyIncidentType $type;
  *
  * @example Multi-select enum:
  * #[ColumnFilter(multiple: true)]
  * private OrderStatus $status;
  *
  * @example Relationship with custom searchable fields:
- * #[ColumnFilter(type: 'relation', searchFields: ['name', 'email', 'phone'])]
+ * #[ColumnFilter(type: ColumnFilter::TYPE_RELATION, searchFields: ['name', 'email'])]
  * private User $createdBy;
  *
- * @example Collection (ManyToMany/OneToMany) with searchable fields:
+ * @example Collection (ManyToMany/OneToMany):
  * #[ColumnFilter(searchFields: ['name', 'display'])]
  * private Collection $tags;
  *
@@ -45,19 +42,38 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class ColumnFilter
 {
-    public const TYPE_TEXT = 'text';
-    public const TYPE_NUMBER = 'number';
-    public const TYPE_DATE = 'date';
-    public const TYPE_DATERANGE = 'daterange';
-    public const TYPE_ENUM = 'enum';
-    public const TYPE_BOOLEAN = 'boolean';
-    public const TYPE_RELATION = 'relation';
-    public const TYPE_COLLECTION = 'collection';
+    // ── Type constants — canonical values live on FilterMetadata ─────────────
+    // These are preserved here so existing #[ColumnFilter(type: ColumnFilter::TYPE_TEXT)]
+    // references continue to work with no changes.
+
+    /** @see FilterMetadata::TYPE_TEXT */
+    public const TYPE_TEXT = FilterMetadata::TYPE_TEXT;
+
+    /** @see FilterMetadata::TYPE_NUMBER */
+    public const TYPE_NUMBER = FilterMetadata::TYPE_NUMBER;
+
+    /** @see FilterMetadata::TYPE_DATE */
+    public const TYPE_DATE = FilterMetadata::TYPE_DATE;
+
+    /** @see FilterMetadata::TYPE_DATERANGE */
+    public const TYPE_DATERANGE = FilterMetadata::TYPE_DATERANGE;
+
+    /** @see FilterMetadata::TYPE_ENUM */
+    public const TYPE_ENUM = FilterMetadata::TYPE_ENUM;
+
+    /** @see FilterMetadata::TYPE_BOOLEAN */
+    public const TYPE_BOOLEAN = FilterMetadata::TYPE_BOOLEAN;
+
+    /** @see FilterMetadata::TYPE_RELATION */
+    public const TYPE_RELATION = FilterMetadata::TYPE_RELATION;
+
+    /** @see FilterMetadata::TYPE_COLLECTION */
+    public const TYPE_COLLECTION = FilterMetadata::TYPE_COLLECTION;
 
     public function __construct(
         /**
-         * Filter type (text, number, date, daterange, enum, boolean, relation).
-         * Auto-detected from property type if not specified.
+         * Filter type. Auto-detected from property type if null.
+         * Use the TYPE_* constants above or the string values directly.
          */
         public ?string $type = null,
 
@@ -73,8 +89,8 @@ class ColumnFilter
         public ?string $label = null,
 
         /**
-         * For relation filters: which fields to search on the related entity.
-         * Example: ['name', 'email', 'phone'] for User
+         * For relation / collection filters: which fields to search on the related entity.
+         *
          * @var array<string>
          */
         public array $searchFields = [],
@@ -85,35 +101,35 @@ class ColumnFilter
         public bool $deep = false,
 
         /**
-         * Custom operator (=, !=, <, >, <=, >=, LIKE, IN, BETWEEN).
+         * Custom SQL operator (=, !=, <, >, <=, >=, LIKE, IN, BETWEEN).
          * Auto-selected based on type if not specified.
          */
         public ?string $operator = null,
 
         /**
-         * For enum filters: whether to show "All" option.
+         * For enum / boolean filters: whether to show "All" option.
          */
         public bool $showAllOption = true,
 
         /**
          * For enum filters: whether to allow multiple selection.
-         * When true, uses IN operator instead of =.
+         * When true, uses the IN operator instead of =.
          */
         public bool $multiple = false,
 
         /**
-         * Custom placeholder text for filter input.
+         * Custom placeholder text for the filter input.
          */
         public ?string $placeholder = null,
 
         /**
-         * Position/order in filter display (lower numbers appear first).
+         * Display order in the filter panel (lower numbers appear first).
          */
         public ?int $priority = null,
 
         /**
          * For collection filters: whether to exclude from global search.
-         * Default is true for performance - collection searches can be expensive.
+         * Default true — collection searches can be expensive.
          */
         public bool $excludeFromGlobalSearch = true,
     ) {}

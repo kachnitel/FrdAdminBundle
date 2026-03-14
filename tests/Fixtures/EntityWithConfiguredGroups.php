@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
-use Kachnitel\AdminBundle\DataSource\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnGroup;
 
 /**
  * Fixture entity for composite column display-option tests.

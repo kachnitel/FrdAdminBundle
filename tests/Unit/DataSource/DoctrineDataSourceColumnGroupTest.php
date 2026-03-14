@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
-use Kachnitel\AdminBundle\DataSource\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
@@ -178,4 +178,3 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertSame('name_block', $columns['firstName']->group);
     }
 }
-

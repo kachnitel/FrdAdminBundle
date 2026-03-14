@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\AdminCustomColumn;
-use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use PHPUnit\Framework\TestCase;
 

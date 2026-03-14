@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
-use Kachnitel\AdminBundle\DataSource\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithGroupedColumns;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;

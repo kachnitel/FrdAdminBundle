@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
-use Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
+use Kachnitel\DataSourceContracts\DataSourceProviderInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;

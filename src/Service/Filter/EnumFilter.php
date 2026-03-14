@@ -13,9 +13,8 @@ class EnumFilter extends AbstractFilter
         string $name,
         string $label,
         private string $field,
-        private string $enumClass
+        string $enumClass,
     ) {
-        // Get enum options
         $options = [];
         if (enum_exists($enumClass)) {
             foreach ($enumClass::cases() as $case) {

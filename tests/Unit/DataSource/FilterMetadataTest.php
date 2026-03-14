@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
-use Kachnitel\AdminBundle\DataSource\FilterEnumOptions;
-use Kachnitel\AdminBundle\DataSource\FilterMetadata;
+use Kachnitel\DataSourceContracts\FilterEnumOptions;
+use Kachnitel\DataSourceContracts\FilterMetadata;
 use PHPUnit\Framework\TestCase;
 
 class FilterMetadataTest extends TestCase

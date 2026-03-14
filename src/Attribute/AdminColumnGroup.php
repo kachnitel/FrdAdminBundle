@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Attribute;
 
 use Attribute;
-use Kachnitel\AdminBundle\DataSource\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnGroup;
 
 /**
  * Configures display options for a composite column group declared via

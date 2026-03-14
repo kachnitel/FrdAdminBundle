@@ -40,7 +40,7 @@ Fine-tune how a group looks using the `#[AdminColumnGroup]` attribute on the
 
 ```php
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
-use Kachnitel\AdminBundle\DataSource\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnGroup;
 
 #[Admin(label: 'Orders')]
 #[AdminColumnGroup(
@@ -55,11 +55,11 @@ class Order { ... }
 
 Three practical modes control what the group header cell renders:
 
-| Constant                        | Behaviour                                                                            | Default |
-|---------------------------------|--------------------------------------------------------------------------------------|---------|
-| `ColumnGroup::HEADER_TEXT`      | Renders only the humanized group label as plain text — like a regular column header  | ✔       |
+| Constant                          | Behaviour                                                                                    | Default |
+|-----------------------------------|----------------------------------------------------------------------------------------------|---------|
+| `ColumnGroup::HEADER_TEXT`        | Renders only the humanized group label as plain text — like a regular column header          | ✔       |
 | `ColumnGroup::HEADER_COLLAPSIBLE` | Group label inside a native `<details>`/`<summary>` toggle; per-sub-column sort and filter rows are hidden by default and revealed on click. No JavaScript required. | |
-| `ColumnGroup::HEADER_FULL`      | Group label strip always visible plus all per-sub-column sort and filter rows always expanded | |
+| `ColumnGroup::HEADER_FULL`        | Group label strip always visible plus all per-sub-column sort and filter rows always expanded | |
 
 **Choosing a mode:**
 
@@ -155,11 +155,11 @@ See earlier in this file — these sections are unaffected by header/subLabels c
 ## Custom Data Sources
 
 `DataSourceInterface` includes `getColumnGroups()`. Implementations that do not
-need grouping should include `FlatColumnGroupsTrait` to satisfy the contract:
+need grouping should use `FlatColumnGroupsTrait` to satisfy the contract:
 
 ```php
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
-use Kachnitel\AdminBundle\DataSource\FlatColumnGroupsTrait;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
+use Kachnitel\DataSourceContracts\FlatColumnGroupsTrait;
 
 class MyDataSource implements DataSourceInterface
 {
@@ -173,8 +173,8 @@ Custom data sources can also return `ColumnGroup` instances manually, including
 display options:
 
 ```php
-use Kachnitel\AdminBundle\DataSource\ColumnGroup;
-use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
+use Kachnitel\DataSourceContracts\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
 
 public function getColumnGroups(): array
 {

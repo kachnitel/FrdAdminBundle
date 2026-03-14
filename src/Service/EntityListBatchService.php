@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Twig\Components;
 
 use Kachnitel\AdminBundle\Config\EntityListConfig;
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
-use Kachnitel\AdminBundle\DataSource\SearchAwareDataSourceInterface;
+use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;

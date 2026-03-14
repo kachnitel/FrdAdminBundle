@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Command;
 
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
-use Kachnitel\AdminBundle\DataSource\FilterMetadata;
+use Kachnitel\DataSourceContracts\FilterMetadata;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
-use Kachnitel\AdminBundle\DataSource\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;

@@ -11,7 +11,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
-use Kachnitel\AdminBundle\DataSource\SearchAwareDataSourceInterface;
+use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -150,7 +150,6 @@ class DoctrineDataSourceSearchAwareTest extends TestCase
         $this->assertContains('Name', $labels);
         $this->assertNotContains('Hidden field', $labels);
     }
-
 
     /** @test */
     public function returnsLabelsForStringAndTextFieldsInColumns(): void

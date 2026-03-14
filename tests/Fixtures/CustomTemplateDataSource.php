@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
-use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
-use Kachnitel\AdminBundle\DataSource\FlatColumnGroupsTrait;
-use Kachnitel\AdminBundle\DataSource\FilterMetadata;
-use Kachnitel\AdminBundle\DataSource\PaginatedResult;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
+use Kachnitel\DataSourceContracts\FlatColumnGroupsTrait;
+use Kachnitel\DataSourceContracts\FilterMetadata;
+use Kachnitel\DataSourceContracts\PaginatedResult;
 
 /**
  * Test data source with custom column templates.

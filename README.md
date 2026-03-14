@@ -2,7 +2,7 @@
 
 <!-- BADGES -->
 ![Tests](<https://img.shields.io/badge/tests-1142%20passed-red>)
-![Coverage](<https://img.shields.io/badge/coverage-83%25-brightgreen>)
+![Coverage](<https://img.shields.io/badge/coverage-82%25-brightgreen>)
 ![Assertions](<https://img.shields.io/badge/assertions-2353-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
@@ -169,7 +169,7 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 - **Column Visibility** - Show/hide columns with session or database-backed preferences
 - **Row Actions** — Per-row buttons with conditions, permissions, and priority ordering; extend defaults or replace them
 - **Composite Columns** — Group related properties into a single stacked table cell with `#[AdminColumn(group: '...')]`
-- **DataSource Abstraction** - Display data from external APIs, audit logs, or any source
+- **DataSource Abstraction** - Display data from external APIs, audit logs, or any source via [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts)
 - **LiveComponent-Powered** - Real-time search, filters, and updates without full page reloads
 
 ## Documentation
@@ -187,6 +187,7 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 | [DataSource](docs/DATASOURCE.md) | Non-Doctrine data sources |
 | [Assets](docs/ASSETS.md) | AssetMapper and Webpack Encore setup |
 | [Development](docs/DEVELOPMENT.md) | Contributing and running tests |
+| [Upgrade Guide](UPGRADE.md) | Migrating between major versions |
 
 <details>
 <summary><strong>How does this compare to EasyAdmin?</strong></summary>
@@ -202,6 +203,8 @@ EasyAdmin and SonataAdmin use PHP configuration, while this bundle leans heavily
 - PHP 8.4 or higher
 - Symfony 6.4 / 7.0 / 8.0
 - Doctrine ORM 3.5+
+- [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts) (pulled automatically by Composer)
+- [`kachnitel/entity-expression-language`](https://github.com/kachnitel/entity-expression-language) (pulled automatically by Composer)
 
 ## License
 

@@ -293,7 +293,7 @@ class RowActionExpressionLanguageTest extends TestCase
             ->method('isGranted')
             ->with(
                 'ADMIN_EDIT',
-                $this->callback(fn (mixed $subject) => !($subject instanceof \Kachnitel\AdminBundle\RowAction\PropertyAccessProxy)),
+                $this->callback(fn (mixed $subject) => !($subject instanceof \Kachnitel\EntityExpressionLanguage\PropertyAccessProxy)),
             )
             ->willReturn(true);
 

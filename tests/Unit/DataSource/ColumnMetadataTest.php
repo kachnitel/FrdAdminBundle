@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
-use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
 use PHPUnit\Framework\TestCase;
 
 class ColumnMetadataTest extends TestCase

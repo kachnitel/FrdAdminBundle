@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
-use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
-use Kachnitel\AdminBundle\DataSource\FilterMetadata;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
+use Kachnitel\DataSourceContracts\FilterMetadata;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;

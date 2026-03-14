@@ -7,7 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
-use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;

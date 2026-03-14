@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
-use Kachnitel\AdminBundle\DataSource\PaginatedResult;
+use Kachnitel\DataSourceContracts\PaginatedResult;
 use PHPUnit\Framework\TestCase;
 
 class PaginatedResultTest extends TestCase

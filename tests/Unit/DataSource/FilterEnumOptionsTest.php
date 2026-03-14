@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
-use Kachnitel\AdminBundle\DataSource\FilterEnumOptions;
+use Kachnitel\DataSourceContracts\FilterEnumOptions;
 use PHPUnit\Framework\TestCase;
 
 enum TestEnumStatus: string

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 
-use Kachnitel\AdminBundle\ValueObject\PaginationInfo;
+use Kachnitel\DataSourceContracts\PaginationInfo;
 use PHPUnit\Framework\TestCase;
 
 class PaginationInfoTest extends TestCase

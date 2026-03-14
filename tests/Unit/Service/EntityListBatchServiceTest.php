@@ -6,7 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;

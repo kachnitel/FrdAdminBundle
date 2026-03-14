@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\AdminCustomColumn;
 use Kachnitel\AdminBundle\Utils\Text;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
 
 /**
  * Reads #[AdminCustomColumn] attributes from an entity class and converts them

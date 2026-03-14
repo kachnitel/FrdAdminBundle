@@ -10,6 +10,13 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Utils\Text;
+use Kachnitel\DataSourceContracts\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
+use Kachnitel\DataSourceContracts\FilterEnumOptions;
+use Kachnitel\DataSourceContracts\FilterMetadata;
+use Kachnitel\DataSourceContracts\PaginatedResult;
+use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 
 /**
  * Data source for Doctrine entities.
@@ -136,16 +143,15 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
                         header: $groupAttr->header ?? ColumnGroup::HEADER_TEXT,
                     );
                 } else {
-                    // Subsequent member — append to the existing slot
-                    $idx = $groupSlotIndex[$groupId];
-                    /** @var ColumnGroup $existing */
-                    $existing = $slots[$idx];
-                    $slots[$idx] = new ColumnGroup(
-                        id: $existing->id,
-                        label: $existing->label,
-                        columns: array_merge($existing->columns, [$name => $metadata]),
-                        subLabels: $existing->subLabels,
-                        header: $existing->header,
+                    // Subsequent member — append to existing ColumnGroup
+                    /** @var ColumnGroup $existingGroup */
+                    $existingGroup = $slots[$groupSlotIndex[$groupId]];
+                    $slots[$groupSlotIndex[$groupId]] = new ColumnGroup(
+                        id: $existingGroup->id,
+                        label: $existingGroup->label,
+                        columns: array_merge($existingGroup->columns, [$name => $metadata]),
+                        subLabels: $existingGroup->subLabels,
+                        header: $existingGroup->header,
                     );
                 }
             } else {
@@ -153,40 +159,9 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
             }
         }
 
-        $this->columnGroupsCache = array_values($slots);
+        $this->columnGroupsCache = $slots;
 
         return $this->columnGroupsCache;
-    }
-
-    /**
-     * Returns human-readable labels for the entity fields that are included
-     * in global search (all string/text Doctrine fields that are also visible
-     * as columns in this data source).
-     *
-     * Fields that exist at DB level but are not part of the configured column
-     * list are excluded — showing them in the tooltip would be confusing because
-     * users cannot see those values in the list.
-     *
-     * @return array<string>
-     */
-    public function getGlobalSearchColumnLabels(): array
-    {
-        $searchableFields = $this->queryService->getSearchableFieldNames($this->entityClass);
-
-        if ($searchableFields === []) {
-            return [];
-        }
-
-        $columns = $this->getColumns();
-        $labels = [];
-
-        foreach ($searchableFields as $field) {
-            if (isset($columns[$field])) {
-                $labels[] = $columns[$field]->label;
-            }
-        }
-
-        return $labels;
     }
 
     public function getFilters(): array
@@ -321,6 +296,35 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         }
 
         return null;
+    }
+
+    /**
+     * Returns human-readable labels for searchable columns.
+     *
+     * Fields that exist at DB level but are not part of the configured column
+     * list are excluded — showing them in the tooltip would be confusing because
+     * users cannot see those values in the list.
+     *
+     * @return array<string>
+     */
+    public function getGlobalSearchColumnLabels(): array
+    {
+        $searchableFields = $this->queryService->getSearchableFieldNames($this->entityClass);
+
+        if ($searchableFields === []) {
+            return [];
+        }
+
+        $columns = $this->getColumns();
+        $labels = [];
+
+        foreach ($searchableFields as $field) {
+            if (isset($columns[$field])) {
+                $labels[] = $columns[$field]->label;
+            }
+        }
+
+        return $labels;
     }
 
     /**

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Command;
 
 use Kachnitel\AdminBundle\Command\DebugDataSourceCommand;
-use Kachnitel\AdminBundle\DataSource\ColumnMetadata;
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
-use Kachnitel\AdminBundle\DataSource\FilterEnumOptions;
-use Kachnitel\AdminBundle\DataSource\FilterMetadata;
+use Kachnitel\DataSourceContracts\FilterEnumOptions;
+use Kachnitel\DataSourceContracts\FilterMetadata;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;

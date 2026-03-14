@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\DataSource;
 
+use Kachnitel\DataSourceContracts\DataSourceInterface as ContractsDataSourceInterface;
+use Kachnitel\DataSourceContracts\DataSourceProviderInterface as ContractsProviderInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
@@ -16,18 +18,18 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
  */
 class DataSourceRegistry
 {
-    /** @var array<string, DataSourceInterface>|null Cached data sources */
+    /** @var array<string, ContractsDataSourceInterface>|null Cached data sources */
     private ?array $dataSources = null;
 
     /**
-     * @param iterable<DataSourceInterface> $customDataSources Custom data source implementations
-     * @param iterable<DataSourceProviderInterface> $dataSourceProviders Providers of multiple data sources
-     * @param DoctrineDataSourceFactory $doctrineFactory Factory for Doctrine entity data sources
+     * @param iterable<ContractsDataSourceInterface> $customDataSources Custom data source implementations
+     * @param iterable<ContractsProviderInterface>   $dataSourceProviders Providers of multiple data sources
+     * @param DoctrineDataSourceFactory              $doctrineFactory Factory for Doctrine entity data sources
      */
     public function __construct(
-        #[AutowireIterator(DataSourceInterface::class, exclude: [DoctrineDataSource::class])]
+        #[AutowireIterator(ContractsDataSourceInterface::class, exclude: [DoctrineDataSource::class])]
         private readonly iterable $customDataSources,
-        #[AutowireIterator(DataSourceProviderInterface::class)]
+        #[AutowireIterator(ContractsProviderInterface::class)]
         private readonly iterable $dataSourceProviders,
         private readonly DoctrineDataSourceFactory $doctrineFactory,
     ) {}
@@ -35,7 +37,7 @@ class DataSourceRegistry
     /**
      * Get all available data sources.
      *
-     * @return array<string, DataSourceInterface> Map of identifier => data source
+     * @return array<string, ContractsDataSourceInterface> Map of identifier => data source
      */
     public function all(): array
     {
@@ -68,7 +70,7 @@ class DataSourceRegistry
     /**
      * Get a data source by identifier.
      */
-    public function get(string $identifier): ?DataSourceInterface
+    public function get(string $identifier): ?ContractsDataSourceInterface
     {
         return $this->all()[$identifier] ?? null;
     }
@@ -93,19 +95,24 @@ class DataSourceRegistry
 
     /**
      * Resolve a data source using a fallback chain:
-     * 1. Explicit dataSourceId from registry
-     * 2. Entity short class from registry
-     * 3. On-demand DoctrineDataSource for entity class
+     * 1. dataSourceId (explicit registry lookup)
+     * 2. entityShortClass (registry lookup for Doctrine entities)
+     * 3. entityClass (on-demand DoctrineDataSource creation)
      *
-     * @throws \RuntimeException If no data source can be resolved
+     * @throws \RuntimeException if no data source can be resolved
      */
-    public function resolve(?string $dataSourceId, string $entityShortClass, string $entityClass): DataSourceInterface
+    public function resolve(?string $dataSourceId, string $entityShortClass, string $entityClass): ContractsDataSourceInterface
     {
+        // 1. Explicit data source ID
         if ($dataSourceId !== null) {
-            return $this->get($dataSourceId)
-                ?? throw new \RuntimeException(sprintf('Data source "%s" not found.', $dataSourceId));
+            $dataSource = $this->get($dataSourceId);
+            if ($dataSource !== null) {
+                return $dataSource;
+            }
+            throw new \RuntimeException(sprintf('Data source "%s" not found.', $dataSourceId));
         }
 
+        // 2. Entity short class from registry
         if ($entityShortClass !== '') {
             $dataSource = $this->get($entityShortClass);
             if ($dataSource !== null) {
@@ -113,6 +120,7 @@ class DataSourceRegistry
             }
         }
 
+        // 3. On-demand Doctrine data source
         if ($entityClass !== '') {
             return $this->doctrineFactory->createForClass($entityClass);
         }

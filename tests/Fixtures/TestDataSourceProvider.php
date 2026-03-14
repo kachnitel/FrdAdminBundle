@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Kachnitel\AdminBundle\DataSource\DataSourceInterface;
-use Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
+use Kachnitel\DataSourceContracts\DataSourceProviderInterface;
 
 /**
  * Test provider that provides custom data sources for testing.

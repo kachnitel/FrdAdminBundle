@@ -3,17 +3,38 @@ parameters:
     paths:
         - src
         - tests
-    excludePaths:
-        # - tests/Functional/TestKernel.php
-    tmpDir: .phpstan
     ignoreErrors:
-        # Test fixtures - properties set by Doctrine, not in tests
-        - '#Property Kachnitel\\AdminBundle\\Tests\\Fixtures\\.+ is never assigned#'
-        # Test fixtures - properties only written by Doctrine
-        - '#Property .+ is never read, only written#'
-        # Match expression in tests handling various types
-        - '#Match expression does not handle remaining value#'
-        # Ignore PHPMD @SuppressWarnings annotation parsing errors
-        - '#PHPDoc tag @SuppressWarnings has invalid value#'
-        # Doctrine repository template type cannot be resolved statically
-        - '#Unable to resolve the template type T in call to method Doctrine\\ORM\\EntityManagerInterface::getRepository\(\)#'
+        # PHPMD @SuppressWarnings annotations — PHPStan cannot parse PHPMD syntax.
+        # These tags are intentional and correct for PHPMD; they are not PHPStan directives.
+        - identifier: phpDoc.parseError
+
+        # Doctrine fixture entities: $id is typed int|null because Doctrine sets the
+        # int value via reflection after persist(). PHPStan never sees that assignment.
+        - identifier: property.unusedType
+          paths:
+            - tests/Fixtures
+
+        # Test helper entities/inlined classes use write-only properties that are
+        # exercised via getters, reflection, or the Doctrine ORM internals.
+        - identifier: property.onlyWritten
+          paths:
+            - tests/
+
+        # match expressions in mock callbacks intentionally omit default — the test
+        # controls which values are passed and extra arms are not needed.
+        - identifier: match.unhandled
+          paths:
+            - tests/
+
+        # getRepository() is a generic method (EntityRepository<T>). Calls with a
+        # runtime string variable cannot be resolved by PHPStan without a stub.
+        - identifier: argument.templateType
+          paths:
+            - src/Controller/AbstractAdminController.php
+            - src/Service/EntityListQueryService.php
+
+        # $dashboardRoute is injected via DI and forwarded to templates / redirect
+        # helpers in the parent controller. PHPStan cannot trace Symfony DI usage.
+        - identifier: property.onlyWritten
+          paths:
+            - src/Controller/GenericAdminController.php
