@@ -108,3 +108,18 @@
 #}
 {% macro field_editable_cell() %}d-inline-flex align-items-center gap-1 field-editable-cell{% endmacro %}
 {% macro field_edit_trigger() %}btn btn-link p-0 text-body-tertiary lh-1 field-edit-trigger{% endmacro %}
+
+{# Archive / Soft-delete
+   admin-row-archived is added to <tr> elements when showArchived=true and the row
+   is an archived/soft-deleted record.
+
+   No default style is bundled — add this rule to your project CSS (e.g. app.css)
+   to visually differentiate archived rows:
+
+       tr.admin-row-archived td { opacity: 0.5; }
+
+   Or with a left-border indicator:
+
+       tr.admin-row-archived { border-left: 3px solid var(--bs-warning); }
+       tr.admin-row-archived td { opacity: 0.6; font-style: italic; }
+#}

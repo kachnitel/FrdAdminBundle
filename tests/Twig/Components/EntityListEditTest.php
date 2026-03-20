@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Twig\Components;
 
+use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
-use Kachnitel\AdminBundle\Service\EntityListArchiveService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
@@ -19,14 +19,6 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for EntityList row-level editing.
- *
- * Covers only what cannot be verified at the functional tier:
- *   - canEditRow() delegates to EntityListPermissionService with the correct arguments
- *   - editRow() throws AccessDeniedException when permission is denied
- *
- * State-machine behaviour (editingRowId lifecycle, isRowEditing) is covered
- * by the functional suite in EntityListInlineEditTest, which exercises the
- * full LiveComponent stack and provides higher-fidelity assertions.
  *
  * @covers \Kachnitel\AdminBundle\Twig\Components\EntityList
  */
@@ -42,7 +34,6 @@ class EntityListEditTest extends TestCase
     {
         $this->permissionService = $this->createMock(EntityListPermissionService::class);
 
-        // Allow inline editing and list viewing by default; override in specific tests.
         $this->permissionService->method('canInlineEdit')->willReturn(true);
         $this->permissionService->method('canViewList')->willReturn(true);
 
@@ -51,7 +42,6 @@ class EntityListEditTest extends TestCase
 
     public function testCanEditRowReturnsTrueWhenPermissionServiceAllows(): void
     {
-        // Default setUp already configures canInlineEdit → true
         $this->assertTrue($this->component->canEditRow());
     }
 
@@ -100,7 +90,7 @@ class EntityListEditTest extends TestCase
             $this->createMock(EntityListBatchService::class),
             $this->createMock(AdminPreferencesStorageInterface::class),
             $this->createMock(EntityListColumnService::class),
-            $this->createMock(EntityListArchiveService::class),
+            $this->createMock(ArchiveService::class),
         );
         $component->entityClass = TestListEntity::class;
         $component->entityShortClass = 'TestListEntity';

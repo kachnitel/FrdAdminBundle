@@ -31,7 +31,8 @@ class EntityListQueryService
      * @param string $entityClass Full entity class name
      * @param array<string, mixed> $columnFilters
      * @param array<string, array<string, mixed>> $filterMetadata
-     * @param string|null $archiveDqlCondition Optional pre-built DQL WHERE fragment from ArchiveService
+     * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
+     *                                         (e.g. 'e.deletedAt IS NULL' or 'e.archived = false')
      * @return array{entities: array<object>, total: int, page: int}
      */
     public function getEntities(
@@ -84,7 +85,7 @@ class EntityListQueryService
      *
      * @param array<string, mixed> $columnFilters
      * @param array<string, array<string, mixed>> $filterMetadata
-     * @param string|null $archiveDqlCondition Optional pre-built DQL WHERE fragment from ArchiveService
+     * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
      */
     public function buildQuery(
         string $entityClass,
@@ -116,7 +117,9 @@ class EntityListQueryService
             }
         }
 
-        // Apply archive condition (e.g. 'e.archived = false' or 'e.deletedAt IS NULL')
+        // Archive condition — a pre-built DQL fragment originating from ArchiveService
+        // (e.g. 'e.deletedAt IS NULL' or 'e.archived = false').  Applied after column
+        // filters and before ORDER BY so it restricts the full result set.
         if ($archiveDqlCondition !== null) {
             $qb->andWhere($archiveDqlCondition);
         }
@@ -146,9 +149,6 @@ class EntityListQueryService
         return $fields;
     }
 
-    /**
-     * Apply global search across all text fields.
-     */
     private function applyGlobalSearch(QueryBuilder $qb, string $entityClass, string $search): void
     {
         $metadata = $this->em->getClassMetadata($entityClass);
@@ -175,8 +175,6 @@ class EntityListQueryService
     }
 
     /**
-     * Apply a column-specific filter.
-     *
      * @param array<string, mixed> $metadata
      */
     private function applyColumnFilter(QueryBuilder $qb, string $column, mixed $value, array $metadata): void
@@ -187,25 +185,20 @@ class EntityListQueryService
             case ColumnFilter::TYPE_TEXT:
                 $this->applyTextFilter($qb, $column, $value, $metadata);
                 break;
-
             case ColumnFilter::TYPE_NUMBER:
             case ColumnFilter::TYPE_BOOLEAN:
             case ColumnFilter::TYPE_ENUM:
                 $this->applySimpleFilter($qb, $column, $value, $metadata);
                 break;
-
             case ColumnFilter::TYPE_DATE:
                 $this->applyDateFilter($qb, $column, $value, $metadata);
                 break;
-
             case ColumnFilter::TYPE_DATERANGE:
                 $this->applyDateRangeFilter($qb, $column, $value, $metadata);
                 break;
-
             case ColumnFilter::TYPE_RELATION:
                 $this->applyRelationFilter($qb, $column, $value, $metadata);
                 break;
-
             case ColumnFilter::TYPE_COLLECTION:
                 $this->applyCollectionFilter($qb, $column, $value, $metadata);
                 break;
@@ -213,7 +206,6 @@ class EntityListQueryService
     }
 
     /**
-     * @param string $column
      * @param array<string, mixed> $metadata
      * @return array{0: string, 1: string}
      */

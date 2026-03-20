@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components;
 
-use Kachnitel\AdminBundle\Archive\ArchiveConfig;
+use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
+use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\DataSourceContracts\PaginatedResult;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
-use Kachnitel\AdminBundle\Service\EntityListArchiveService;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
@@ -27,8 +27,11 @@ use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
+use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 
 /**
+ * LiveComponent for reactive entity lists.
+ *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessivePublicCount)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -53,9 +56,7 @@ class EntityList
     #[LiveProp(writable: true, url: true)]
     public string $sortDirection = self::SORT_DESC;
 
-    /**
-     * @var array<string, mixed>
-     */
+    /** @var array<string, mixed> */
     #[LiveProp(writable: true, url: true, onUpdated: 'onColumnFiltersUpdated')]
     public array $columnFilters = [];
 
@@ -65,15 +66,11 @@ class EntityList
     #[LiveProp(writable: true, url: true)]
     public int $itemsPerPage;
 
-    /**
-     * @var array<int|string>
-     */
+    /** @var array<int|string> */
     #[LiveProp(writable: true)]
     public array $selectedIds = [];
 
-    /**
-     * @var array<string>
-     */
+    /** @var array<string> */
     #[LiveProp(writable: true)]
     public array $hiddenColumns = [];
 
@@ -93,8 +90,7 @@ class EntityList
     public ?int $editingRowId = null;
 
     /**
-     * Whether to include archived (soft-deleted) rows in the list.
-     * Default: false (archived rows hidden). Toggle via toggleArchive().
+     * When true, archived/soft-deleted records are shown alongside active ones.
      */
     #[LiveProp(writable: true, url: true)]
     public bool $showArchived = false;
@@ -109,7 +105,6 @@ class EntityList
      *     columns?: array<int|string, string>,
      *     columnSlots?: list<string|ColumnGroup>,
      *     dataSource?: DataSourceInterface,
-     *     archiveConfig?: ArchiveConfig|null,
      *     visibilityLoaded?: bool
      * }
      */
@@ -122,7 +117,7 @@ class EntityList
         private EntityListBatchService $batchService,
         private AdminPreferencesStorageInterface $preferencesStorage,
         private EntityListColumnService $columnService,
-        private EntityListArchiveService $archiveService,
+        private ArchiveService $archiveService,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -136,10 +131,7 @@ class EntityList
         $identifier = $this->dataSourceId ?? $this->entityShortClass;
 
         if (!$this->permissionService->canViewList($identifier)) {
-            throw new AccessDeniedException(sprintf(
-                'Access denied to view %s.',
-                $identifier
-            ));
+            throw new AccessDeniedException(sprintf('Access denied to view %s.', $identifier));
         }
     }
 
@@ -177,39 +169,83 @@ class EntityList
         );
     }
 
-    // ── Archive ────────────────────────────────────────────────────────────────
-
-    public function getArchiveConfig(): ?ArchiveConfig
+    /** @return array<string> */
+    public function getGlobalSearchColumnLabels(): array
     {
-        if (!array_key_exists('archiveConfig', $this->cache)) {
-            $this->cache['archiveConfig'] = $this->entityClass !== ''
-                ? $this->archiveService->resolveConfig($this->entityClass)
-                : null;
+        $dataSource = $this->getDataSource();
+
+        if (!$dataSource instanceof SearchAwareDataSourceInterface) {
+            return [];
         }
 
-        return $this->cache['archiveConfig'];
+        return $dataSource->getGlobalSearchColumnLabels();
     }
 
+    // ── Archive ────────────────────────────────────────────────────────────────
+
+    /**
+     * Resolved ArchiveConfig for the current entity, or null when not configured.
+     * Exposed to Twig so templates can branch on `archiveConfig` without calling
+     * resolveConfig() twice.
+     */
+    #[ExposeInTemplate('archiveConfig')]
+    public function getArchiveConfig(): ?\Kachnitel\AdminBundle\Archive\ArchiveConfig
+    {
+        if (!$this->isDoctrineEntity()) {
+            return null;
+        }
+
+        return $this->archiveService->resolveConfig($this->entityClass);
+    }
+
+    /**
+     * Whether the current entity has archive filtering configured and the
+     * current user has permission to toggle it.
+     */
     public function canToggleArchive(): bool
     {
-        return $this->archiveService->canToggle($this->getArchiveConfig());
+        if (!$this->isDoctrineEntity()) {
+            return false;
+        }
+
+        $config = $this->archiveService->resolveConfig($this->entityClass);
+
+        return $this->permissionService->canToggleArchive($config);
     }
 
+    /**
+     * Whether the given entity row should be visually marked as archived
+     * (for CSS styling when showArchived=true).
+     */
     public function isArchivedRow(object $entity): bool
     {
-        $config = $this->getArchiveConfig();
+        if (!$this->showArchived || !$this->isDoctrineEntity()) {
+            return false;
+        }
+
+        $config = $this->archiveService->resolveConfig($this->entityClass);
         if ($config === null) {
             return false;
         }
 
-        return $this->archiveService->isArchivedRow($entity, $config);
+        return $this->archiveService->isArchived($entity, $config->expression);
+    }
+
+    #[LiveAction]
+    public function toggleArchive(): void
+    {
+        if (!$this->canToggleArchive()) {
+            throw new AccessDeniedException('Access denied for toggling archive visibility.');
+        }
+
+        $this->showArchived = !$this->showArchived;
+        $this->page = 1;
+        unset($this->cache['queryResult']);
     }
 
     // ── Queries ────────────────────────────────────────────────────────────────
 
-    /**
-     * @return array<object>
-     */
+    /** @return array<object> */
     public function getEntities(): array
     {
         if (isset($this->cache['queryResult'])) {
@@ -221,24 +257,30 @@ class EntityList
             $this->sortDirection = $this->getDataSource()->getDefaultSortDirection();
         }
 
-        $filters = $this->columnFilters;
-        if ($this->isDoctrineEntity()) {
-            $config = $this->getArchiveConfig();
-            if ($config !== null) {
-                $condition = $this->archiveService->buildDqlCondition($config, $this->showArchived);
-                if ($condition !== null) {
-                    $filters['__archiveDqlCondition'] = $condition;
-                }
+        // For Doctrine entities, apply the archive DQL condition via the
+        // DoctrineDataSource setter so it flows through as a proper parameter
+        // rather than being smuggled through the $filters array.
+        $dataSource = $this->getDataSource();
+        if ($this->isDoctrineEntity() && $dataSource instanceof DoctrineDataSource) {
+            $archiveConfig = $this->archiveService->resolveConfig($this->entityClass);
+            if ($archiveConfig !== null) {
+                $condition = $this->archiveService->buildDqlCondition(
+                    'e',
+                    $archiveConfig->field,
+                    $archiveConfig->doctrineType,
+                    $this->showArchived,
+                );
+                $dataSource->setArchiveDqlCondition($condition);
             }
         }
 
-        $this->cache['queryResult'] = $this->getDataSource()->query(
+        $this->cache['queryResult'] = $dataSource->query(
             search: $this->search,
-            filters: $filters,
+            filters: $this->columnFilters,
             sortBy: $this->sortBy,
             sortDirection: $this->sortDirection,
             page: $this->page,
-            itemsPerPage: $this->itemsPerPage
+            itemsPerPage: $this->itemsPerPage,
         );
 
         $this->page = $this->cache['queryResult']->currentPage;
@@ -253,20 +295,6 @@ class EntityList
         }
 
         return $this->cache['queryResult']->toPaginationInfo();
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getGlobalSearchColumnLabels(): array
-    {
-        $dataSource = $this->getDataSource();
-
-        if (!$dataSource instanceof SearchAwareDataSourceInterface) {
-            return [];
-        }
-
-        return $dataSource->getGlobalSearchColumnLabels();
     }
 
     // ── LiveActions: sorting / pagination ─────────────────────────────────────
@@ -330,21 +358,7 @@ class EntityList
         unset($this->cache['queryResult']);
     }
 
-    // ── LiveActions: archive ───────────────────────────────────────────────────
-
-    #[LiveAction]
-    public function toggleArchive(): void
-    {
-        if (!$this->canToggleArchive()) {
-            throw new AccessDeniedException('Access denied to toggle archive filter.');
-        }
-
-        $this->showArchived = !$this->showArchived;
-        $this->page = 1;
-        unset($this->cache['queryResult']);
-    }
-
-    // ── LiveActions: batch operations ─────────────────────────────────────────
+    // ── LiveActions: batch ────────────────────────────────────────────────────
 
     #[LiveAction]
     public function batchDelete(): void
@@ -363,11 +377,7 @@ class EntityList
     #[LiveAction]
     public function selectAll(): void
     {
-        $newIds = $this->batchService->getEntityIds(
-            $this->getEntities(),
-            $this->getDataSource(),
-        );
-
+        $newIds = $this->batchService->getEntityIds($this->getEntities(), $this->getDataSource());
         $this->selectedIds = array_values(array_unique(array_merge($this->selectedIds, $newIds)));
     }
 
@@ -381,10 +391,7 @@ class EntityList
 
     public function canEditRow(): bool
     {
-        return $this->permissionService->canInlineEdit(
-            $this->entityClass,
-            $this->entityShortClass,
-        );
+        return $this->permissionService->canInlineEdit($this->entityClass, $this->entityShortClass);
     }
 
     #[LiveAction]
@@ -412,9 +419,7 @@ class EntityList
 
     // ── Column / filter helpers ────────────────────────────────────────────────
 
-    /**
-     * @return array<string, array<string, mixed>>
-     */
+    /** @return array<string, array<string, mixed>> */
     public function getFilterMetadata(): array
     {
         return $this->cache['filterMetadata'] ??= $this->columnService->getPermittedFilters(
@@ -423,9 +428,7 @@ class EntityList
         );
     }
 
-    /**
-     * @return array<int|string, string>
-     */
+    /** @return array<int|string, string> */
     public function getColumns(): array
     {
         return $this->cache['columns'] ??= $this->columnService->getPermittedColumns(
@@ -444,9 +447,7 @@ class EntityList
         return $this->getDataSource()->supportsAction('column_visibility');
     }
 
-    /**
-     * @return array<int|string, string>
-     */
+    /** @return array<int|string, string> */
     public function getVisibleColumns(): array
     {
         $allColumns = $this->getColumns();
@@ -466,9 +467,7 @@ class EntityList
         ));
     }
 
-    /**
-     * @return list<string|ColumnGroup>
-     */
+    /** @return list<string|ColumnGroup> */
     public function getColumnSlots(): array
     {
         if (isset($this->cache['columnSlots'])) {
@@ -505,9 +504,6 @@ class EntityList
         return $this->cache['columnSlots'] = $result;
     }
 
-    /**
-     * @param string|ColumnGroup $slot
-     */
     public function isColumnGroup(string|ColumnGroup $slot): bool
     {
         return $slot instanceof ColumnGroup;
@@ -523,8 +519,7 @@ class EntityList
         }
 
         $this->saveHiddenColumns($this->hiddenColumns);
-        unset($this->cache['queryResult']);
-        unset($this->cache['columnSlots']);
+        unset($this->cache['queryResult'], $this->cache['columnSlots']);
     }
 
     #[PostHydrate]

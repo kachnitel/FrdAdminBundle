@@ -48,7 +48,7 @@ class EntityListBatchService
         }
 
         /** @var \Doctrine\ORM\EntityRepository<object> $repository */
-        $repository = $this->em->getRepository($dataSource->getEntityClass()); // @phpstan-ignore argument.templateType
+        $repository = $this->em->getRepository($dataSource->getEntityClass());
 
         foreach ($selectedIds as $id) {
             $entity = $repository->find($id);

@@ -37,6 +37,16 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     private ?array $columnGroupsCache = null;
 
     /**
+     * Optional pre-built DQL WHERE fragment injected by EntityList when archive
+     * filtering is active (e.g. 'e.deletedAt IS NULL' or 'e.archived = false').
+     *
+     * Set via setArchiveDqlCondition() before calling query().
+     * Cleared automatically after each query() call so stale conditions
+     * do not leak into subsequent renders.
+     */
+    private ?string $archiveDqlCondition = null;
+
+    /**
      * @param class-string $entityClass Fully-qualified entity class name
      */
     public function __construct(
@@ -49,6 +59,24 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         private readonly DoctrineColumnAttributeProvider $columnAttributeProvider,
         private readonly DoctrineColumnTypeMapper $columnTypeMapper,
     ) {}
+
+    // ── Archive condition ──────────────────────────────────────────────────────
+
+    /**
+     * Set a pre-built DQL WHERE fragment for archive filtering.
+     *
+     * Called by EntityList when it determines the archive condition from
+     * ArchiveService.  The condition is applied as an additional andWhere()
+     * in the next query() call.
+     *
+     * Only DoctrineDataSource supports this; custom DataSources are unaffected.
+     */
+    public function setArchiveDqlCondition(?string $condition): void
+    {
+        $this->archiveDqlCondition = $condition;
+    }
+
+    // ── DataSourceInterface ────────────────────────────────────────────────────
 
     public function getIdentifier(): string
     {
@@ -195,12 +223,10 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         int $page,
         int $itemsPerPage,
     ): PaginatedResult {
-        // Extract the pre-built archive DQL condition (set by EntityList, which owns ArchiveService).
-        // DoctrineDataSource itself has no dependency on ArchiveService.
-        $archiveDqlCondition = isset($filters['__archiveDqlCondition'])
-            ? (string) $filters['__archiveDqlCondition']
-            : null;
-        unset($filters['__archiveDqlCondition']);
+        // Consume and clear the archive condition so it doesn't leak into
+        // subsequent renders if the DataSource instance is reused.
+        $archiveDqlCondition = $this->archiveDqlCondition;
+        $this->archiveDqlCondition = null;
 
         $filterMetadata = [];
         foreach ($this->getFilters() as $name => $filter) {
@@ -283,6 +309,9 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         return null;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getGlobalSearchColumnLabels(): array
     {
         $searchableFields = $this->queryService->getSearchableFieldNames($this->entityClass);
@@ -303,6 +332,9 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         return $labels;
     }
 
+    /**
+     * @return class-string
+     */
     public function getEntityClass(): string
     {
         return $this->entityClass;
@@ -353,13 +385,17 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         return array_merge($allDoctrineColumns, $extraCustom);
     }
 
-    /** @param ClassMetadata<object> $metadata */
+    /**
+     * @param ClassMetadata<object> $metadata
+     */
     private function isColumnSortable(ClassMetadata $metadata, string $column): bool
     {
         return $metadata->hasField($column);
     }
 
-    /** @param array<string, mixed> $config */
+    /**
+     * @param array<string, mixed> $config
+     */
     private function buildFilter(string $name, array $config): FilterMetadata
     {
         $enumOptions = $this->buildEnumOptions($config);
@@ -379,7 +415,9 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         );
     }
 
-    /** @param array<string, mixed> $config */
+    /**
+     * @param array<string, mixed> $config
+     */
     private function buildEnumOptions(array $config): ?FilterEnumOptions
     {
         $keysToCheck = ['options', 'enumClass', 'showAllOption', 'multiple'];
