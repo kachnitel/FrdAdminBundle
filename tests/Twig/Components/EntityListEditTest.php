@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Twig\Components;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
+use Kachnitel\AdminBundle\Service\EntityListArchiveService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
@@ -99,6 +100,7 @@ class EntityListEditTest extends TestCase
             $this->createMock(EntityListBatchService::class),
             $this->createMock(AdminPreferencesStorageInterface::class),
             $this->createMock(EntityListColumnService::class),
+            $this->createMock(EntityListArchiveService::class),
         );
         $component->entityClass = TestListEntity::class;
         $component->entityShortClass = 'TestListEntity';

@@ -1,9 +1,9 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1142%20passed-red>)
-![Coverage](<https://img.shields.io/badge/coverage-82%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-2353-blue>)
+![Tests](<https://img.shields.io/badge/tests-1175%20passed-red>)
+![Coverage](<https://img.shields.io/badge/coverage-85%25-brightgreen>)
+![Assertions](<https://img.shields.io/badge/assertions-2410-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0|^8.0-000000?logo=symfony&logoColor=white>)
@@ -160,6 +160,44 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 
 </details>
 
+<details>
+<summary><strong>Archive / Soft-Delete Filtering</strong></summary>
+
+**Level 1:** Point at a boolean field — the list hides archived rows by default, with a toggle to reveal them:
+```php
+#[Admin(label: 'Products', archiveExpression: 'item.archived')]
+class Product
+{
+    private bool $archived = false;
+}
+```
+
+**Level 2:** Nullable-datetime (soft-delete pattern):
+```php
+#[Admin(archiveExpression: 'item.deletedAt')]
+class Order
+{
+    private ?\DateTimeImmutable $deletedAt = null;
+}
+```
+
+**Level 3:** Global default for all entities + role-gate the toggle:
+```yaml
+kachnitel_admin:
+    archive:
+        expression: 'item.deletedAt'
+        role: 'ROLE_ADMIN'
+```
+
+**Level 4:** Opt out per entity when a global is configured:
+```php
+#[Admin(label: 'Categories', archiveDisabled: true)]
+```
+
+**Details:** [Archive Guide](docs/ARCHIVE.md)
+
+</details>
+
 ## Features
 
 - **Multi-Layer Permissions** - Entity, action, and column-level control
@@ -169,6 +207,7 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 - **Column Visibility** - Show/hide columns with session or database-backed preferences
 - **Row Actions** — Per-row buttons with conditions, permissions, and priority ordering; extend defaults or replace them
 - **Composite Columns** — Group related properties into a single stacked table cell with `#[AdminColumn(group: '...')]`
+- **Archive / Soft-Delete** — Hide archived rows by default with a live toggle; works with boolean flags and nullable-datetime fields; no Doctrine filter needed
 - **DataSource Abstraction** - Display data from external APIs, audit logs, or any source via [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts)
 - **LiveComponent-Powered** - Real-time search, filters, and updates without full page reloads
 
@@ -182,6 +221,7 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 | [Row Actions](docs/ROW_ACTIONS.md) | Custom action buttons per row — conditions, ordering, providers |
 | [Inline Editing](docs/INLINE_EDIT.md) | Per-field in-place editing in list views |
 | [Composite Columns](docs/COMPOSITE_COLUMNS.md) | Group related properties into one stacked table cell |
+| [Archive](docs/ARCHIVE.md) | Soft-delete / archive filtering with show/hide toggle |
 | [Template Overrides](docs/TEMPLATE_OVERRIDES.md) | Customize the admin appearance |
 | [Batch Actions](docs/BATCH_ACTIONS.md) | Multi-select and bulk operations |
 | [DataSource](docs/DATASOURCE.md) | Non-Doctrine data sources |

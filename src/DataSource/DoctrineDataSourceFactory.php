@@ -12,8 +12,6 @@ use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 
 /**
  * Factory for creating DoctrineDataSource instances.
- *
- * Creates a data source for each Doctrine entity with the #[Admin] attribute.
  */
 class DoctrineDataSourceFactory
 {
@@ -31,8 +29,6 @@ class DoctrineDataSourceFactory
     ) {}
 
     /**
-     * Create data sources for all entities with #[Admin] attribute.
-     *
      * @return array<DoctrineDataSource>
      */
     public function createAll(): array
@@ -52,10 +48,7 @@ class DoctrineDataSourceFactory
     }
 
     /**
-     * Create a data source for a specific entity class with #[Admin] attribute.
-     *
      * @param class-string $entityClass
-     * @return DoctrineDataSource|null Returns null if entity doesn't have #[Admin] attribute
      */
     public function create(string $entityClass): ?DoctrineDataSource
     {
@@ -69,11 +62,6 @@ class DoctrineDataSourceFactory
     }
 
     /**
-     * Create a data source for any Doctrine entity class.
-     *
-     * Uses the #[Admin] attribute if present, otherwise creates with default settings.
-     * This allows EntityList to work with any Doctrine entity.
-     *
      * @param class-string $entityClass
      */
     public function createForClass(string $entityClass): DoctrineDataSource
@@ -84,28 +72,19 @@ class DoctrineDataSourceFactory
         return $this->buildDataSource($entityClass, $adminAttribute);
     }
 
-    /**
-     * Get a data source by entity short name.
-     */
     public function getByShortName(string $shortName): ?DoctrineDataSource
     {
-        // Ensure cache is populated
         $this->createAll();
 
         return $this->dataSourcesCache[$shortName] ?? null;
     }
 
-    /**
-     * Clear the cached data sources.
-     */
     public function clearCache(): void
     {
         $this->dataSourcesCache = null;
     }
 
-    /**
-     * @param class-string $entityClass
-     */
+    /** @param class-string $entityClass */
     private function buildDataSource(string $entityClass, Admin $adminAttribute): DoctrineDataSource
     {
         return new DoctrineDataSource(

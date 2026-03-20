@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Service;
 
+use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Symfony\Bundle\SecurityBundle\Security;
 
@@ -28,9 +29,6 @@ class EntityListPermissionService
 
     /**
      * Whether batch delete is allowed.
-     *
-     * For Doctrine entities (entityClass non-empty): checks #[Admin] attribute + ADMIN_DELETE voter.
-     * For non-Doctrine data sources: checks ADMIN_DELETE voter on the identifier.
      */
     public function canBatchDelete(
         string $entityClass,
@@ -49,12 +47,6 @@ class EntityListPermissionService
 
     /**
      * Whether the current user may open rows of this entity type for inline editing.
-     *
-     * Both conditions must pass:
-     *   1. The entity has opted in via #[Admin(enableInlineEdit: true)] — cheap flag check first.
-     *   2. The current user is granted ADMIN_EDIT — security gate.
-     *
-     * Always returns false for non-Doctrine data sources (empty entityClass).
      */
     public function canInlineEdit(string $entityClass, string $entityShortClass): bool
     {
@@ -72,9 +64,28 @@ class EntityListPermissionService
     }
 
     /**
-     * Whether the current user may view the list for the given identifier.
+     * Whether the current user may toggle the archive filter for this entity.
      *
-     * The identifier is the dataSourceId when present, otherwise the entityShortClass.
+     * Returns false when archive is not configured (no ArchiveConfig).
+     * When a role is required, the user must have that role.
+     * When no role is required, any authenticated user may toggle.
+     */
+    public function canToggleArchive(?ArchiveConfig $archiveConfig): bool
+    {
+        if ($archiveConfig === null) {
+            return false;
+        }
+
+        if ($archiveConfig->role !== null) {
+            return $this->security->isGranted($archiveConfig->role);
+        }
+
+        // No role required — any authenticated user
+        return $this->security->getUser() !== null;
+    }
+
+    /**
+     * Whether the current user may view the list for the given identifier.
      */
     public function canViewList(string $identifier): bool
     {

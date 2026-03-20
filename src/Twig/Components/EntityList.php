@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components;
 
+use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
@@ -11,6 +12,7 @@ use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\DataSourceContracts\PaginatedResult;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
+use Kachnitel\AdminBundle\Service\EntityListArchiveService;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
@@ -27,28 +29,11 @@ use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
 /**
- * LiveComponent for reactive entity lists with per-column search/filter, sorting, and pagination.
- *
- * Supports two modes:
- * 1. DataSource mode: Pass dataSourceId for any DataSourceInterface implementation
- * 2. Entity mode: Pass entityClass and entityShortClass for Doctrine entities
- *
- * Both modes use the DataSource abstraction. When using entity mode, a DoctrineDataSource
- * is resolved from the registry or created on-demand by the factory.
- *
- * Security: Requires ADMIN_INDEX permission for the entity/data source being displayed.
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods) LiveComponent requires public methods for LiveActions
- * @SuppressWarnings(PHPMD.ExcessivePublicCount) LiveComponent requires public LiveProps and LiveActions;
- *     each #[LiveProp] is a URL-synchronised state variable and must be public for the framework to
- *     hydrate it. Core logic is already decomposed into EntityListQueryService,
- *     EntityListBatchService, EntityListPermissionService, etc.
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Component bridges UI, data sources, and services
- * @SuppressWarnings(PHPMD.TooManyFields) Each LiveProp is a URL-synchronised state variable; the
- *     count is an architectural consequence of LiveComponent, not avoidable design debt.
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) WMC is inflated by many small public
- *     LiveAction methods that the framework requires to be public. Core logic is already
- *     decomposed into EntityListQueryService, EntityListBatchService, EntityListPermissionService, etc.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessivePublicCount)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 #[AsLiveComponent('K:Admin:EntityList', template: '@KachnitelAdmin/components/EntityList.html.twig')]
 class EntityList
@@ -69,10 +54,6 @@ class EntityList
     public string $sortDirection = self::SORT_DESC;
 
     /**
-     * Column-specific filter values.
-     *
-     * Format: ['columnName' => 'filterValue', ...]
-     *
      * @var array<string, mixed>
      */
     #[LiveProp(writable: true, url: true, onUpdated: 'onColumnFiltersUpdated')]
@@ -85,65 +66,50 @@ class EntityList
     public int $itemsPerPage;
 
     /**
-     * Selected entity IDs for batch actions.
-     *
      * @var array<int|string>
      */
     #[LiveProp(writable: true)]
     public array $selectedIds = [];
 
     /**
-     * Column names currently hidden by the user.
-     *
      * @var array<string>
      */
     #[LiveProp(writable: true)]
     public array $hiddenColumns = [];
 
-    /**
-     * Data source identifier (alternative to entityClass).
-     * When set, the component uses DataSourceRegistry to resolve the data source.
-     */
     #[LiveProp]
     public ?string $dataSourceId = null;
 
-    /**
-     * Entity class for Doctrine entities.
-     * Used when dataSourceId is not set. A DoctrineDataSource will be resolved or created.
-     */
     #[LiveProp]
     public string $entityClass = '';
 
-    /**
-     * Entity short class for Doctrine entities.
-     * Used as the identifier for registry lookup.
-     */
     #[LiveProp]
     public string $entityShortClass = '';
 
     #[LiveProp]
     public ?string $repositoryMethod = null;
 
-    /**
-     * Integer PK of the row currently in edit mode. Null = no row is being edited.
-     * ?int — nullable because no row is selected by default. Not a union type.
-     */
     #[LiveProp(writable: true)]
     public ?int $editingRowId = null;
 
-    /** @var array<int> Allowed items per page options */
+    /**
+     * Whether to include archived (soft-deleted) rows in the list.
+     * Default: false (archived rows hidden). Toggle via toggleArchive().
+     */
+    #[LiveProp(writable: true, url: true)]
+    public bool $showArchived = false;
+
+    /** @var array<int> */
     public array $allowedItemsPerPage;
 
     /**
-     * Internal cache for query results and resolved data source.
-     *
      * @var array{
      *     queryResult?: PaginatedResult,
      *     filterMetadata?: array<string, array<string, mixed>>,
      *     columns?: array<int|string, string>,
      *     columnSlots?: list<string|ColumnGroup>,
      *     dataSource?: DataSourceInterface,
-     *     dataSourceResolved?: bool,
+     *     archiveConfig?: ArchiveConfig|null,
      *     visibilityLoaded?: bool
      * }
      */
@@ -156,6 +122,7 @@ class EntityList
         private EntityListBatchService $batchService,
         private AdminPreferencesStorageInterface $preferencesStorage,
         private EntityListColumnService $columnService,
+        private EntityListArchiveService $archiveService,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -163,9 +130,6 @@ class EntityList
 
     // ── Security ───────────────────────────────────────────────────────────────
 
-    /**
-     * Check permissions after component hydration.
-     */
     #[PostHydrate]
     public function checkPermissions(): void
     {
@@ -213,31 +177,37 @@ class EntityList
         );
     }
 
-    /**
-     * Returns human-readable labels for columns included in global search.
-     *
-     * Delegates to the resolved DataSource when it implements
-     * SearchAwareDataSourceInterface. Returns an empty array for custom
-     * DataSources that do not implement the interface, so no tooltip is rendered.
-     *
-     * @return array<string>
-     */
-    public function getGlobalSearchColumnLabels(): array
-    {
-        $dataSource = $this->getDataSource();
+    // ── Archive ────────────────────────────────────────────────────────────────
 
-        if (!$dataSource instanceof SearchAwareDataSourceInterface) {
-            return [];
+    public function getArchiveConfig(): ?ArchiveConfig
+    {
+        if (!array_key_exists('archiveConfig', $this->cache)) {
+            $this->cache['archiveConfig'] = $this->entityClass !== ''
+                ? $this->archiveService->resolveConfig($this->entityClass)
+                : null;
         }
 
-        return $dataSource->getGlobalSearchColumnLabels();
+        return $this->cache['archiveConfig'];
+    }
+
+    public function canToggleArchive(): bool
+    {
+        return $this->archiveService->canToggle($this->getArchiveConfig());
+    }
+
+    public function isArchivedRow(object $entity): bool
+    {
+        $config = $this->getArchiveConfig();
+        if ($config === null) {
+            return false;
+        }
+
+        return $this->archiveService->isArchivedRow($entity, $config);
     }
 
     // ── Queries ────────────────────────────────────────────────────────────────
 
     /**
-     * Get filtered, sorted, and paginated entities.
-     *
      * @return array<object>
      */
     public function getEntities(): array
@@ -251,9 +221,20 @@ class EntityList
             $this->sortDirection = $this->getDataSource()->getDefaultSortDirection();
         }
 
+        $filters = $this->columnFilters;
+        if ($this->isDoctrineEntity()) {
+            $config = $this->getArchiveConfig();
+            if ($config !== null) {
+                $condition = $this->archiveService->buildDqlCondition($config, $this->showArchived);
+                if ($condition !== null) {
+                    $filters['__archiveDqlCondition'] = $condition;
+                }
+            }
+        }
+
         $this->cache['queryResult'] = $this->getDataSource()->query(
             search: $this->search,
-            filters: $this->columnFilters,
+            filters: $filters,
             sortBy: $this->sortBy,
             sortDirection: $this->sortDirection,
             page: $this->page,
@@ -272,6 +253,20 @@ class EntityList
         }
 
         return $this->cache['queryResult']->toPaginationInfo();
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getGlobalSearchColumnLabels(): array
+    {
+        $dataSource = $this->getDataSource();
+
+        if (!$dataSource instanceof SearchAwareDataSourceInterface) {
+            return [];
+        }
+
+        return $dataSource->getGlobalSearchColumnLabels();
     }
 
     // ── LiveActions: sorting / pagination ─────────────────────────────────────
@@ -335,6 +330,20 @@ class EntityList
         unset($this->cache['queryResult']);
     }
 
+    // ── LiveActions: archive ───────────────────────────────────────────────────
+
+    #[LiveAction]
+    public function toggleArchive(): void
+    {
+        if (!$this->canToggleArchive()) {
+            throw new AccessDeniedException('Access denied to toggle archive filter.');
+        }
+
+        $this->showArchived = !$this->showArchived;
+        $this->page = 1;
+        unset($this->cache['queryResult']);
+    }
+
     // ── LiveActions: batch operations ─────────────────────────────────────────
 
     #[LiveAction]
@@ -370,14 +379,6 @@ class EntityList
 
     // ── LiveActions: inline row editing ───────────────────────────────────────
 
-    /**
-     * Whether the current user may open rows of this entity type for inline editing.
-     *
-     * Delegated entirely to EntityListPermissionService, which checks both the
-     * #[Admin(enableInlineEdit: true)] flag and the ADMIN_EDIT voter.
-     *
-     * Always returns false for non-Doctrine data sources.
-     */
     public function canEditRow(): bool
     {
         return $this->permissionService->canInlineEdit(
@@ -386,9 +387,6 @@ class EntityList
         );
     }
 
-    /**
-     * Open a row for editing. Closes any currently open row first.
-     */
     #[LiveAction]
     public function editRow(#[LiveArg] int $id): void
     {
@@ -399,9 +397,6 @@ class EntityList
         $this->editingRowId = $id;
     }
 
-    /**
-     * Whether a specific entity row is currently open for editing.
-     */
     public function isRowEditing(object $entity): bool
     {
         if ($this->editingRowId === null) {
@@ -472,15 +467,6 @@ class EntityList
     }
 
     /**
-     * Return the ordered list of display slots for the list table header and body.
-     *
-     * Each slot is either:
-     * - A plain column name (string) — renders as a regular <th>/<td>.
-     * - A ColumnGroup — renders as a composite stacked <th>/<td>.
-     *
-     * Hidden columns are removed. For groups, only visible sub-columns are included.
-     * A group with ALL sub-columns hidden is removed from the result entirely.
-     *
      * @return list<string|ColumnGroup>
      */
     public function getColumnSlots(): array
@@ -499,7 +485,6 @@ class EntityList
                     $result[] = $slot;
                 }
             } else {
-                // Filter sub-columns to those that are visible
                 $visibleSubColumns = array_filter(
                     $slot->columns,
                     fn (ColumnMetadata $col) => in_array($col->name, $visibleColumns, true)
@@ -521,11 +506,6 @@ class EntityList
     }
 
     /**
-     * Returns true when the given slot is a ColumnGroup (composite), false for a plain column name.
-     *
-     * Used in Twig as `this.isColumnGroup(slot)` to branch between composite
-     * and regular cell rendering.
-     *
      * @param string|ColumnGroup $slot
      */
     public function isColumnGroup(string|ColumnGroup $slot): bool
@@ -576,14 +556,6 @@ class EntityList
         return $this->getDataSource()->getItemId($entity);
     }
 
-    // ── Private helpers ────────────────────────────────────────────────────────
-
-    /**
-     * Return true only if the given column is known to the data source AND marked sortable.
-     *
-     * Used as a guard in sort() and getEntities() to prevent DQL errors when a caller
-     * (URL parameter, UI button) requests sorting by an association or custom column.
-     */
     private function isSortableColumn(string $column): bool
     {
         $columns = $this->getDataSource()->getColumns();

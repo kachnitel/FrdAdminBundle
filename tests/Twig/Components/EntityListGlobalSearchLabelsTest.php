@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Twig\Components;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
+use Kachnitel\AdminBundle\Service\EntityListArchiveService;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
@@ -41,6 +42,7 @@ class EntityListGlobalSearchLabelsTest extends TestCase
             $this->createMock(EntityListBatchService::class),
             $this->createMock(AdminPreferencesStorageInterface::class),
             $this->createMock(EntityListColumnService::class),
+            $this->createMock(EntityListArchiveService::class),
         );
         $component->entityClass = 'App\\Entity\\User';
         $component->entityShortClass = 'User';

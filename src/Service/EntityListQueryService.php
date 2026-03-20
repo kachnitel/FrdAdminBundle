@@ -14,8 +14,6 @@ use Kachnitel\AdminBundle\Service\Traits\ScalarFilterTrait;
 
 /**
  * Service responsible for building database queries for entity lists.
- *
- * This service abstracts away ORM-specific query building logic from the EntityList
  */
 class EntityListQueryService
 {
@@ -33,6 +31,7 @@ class EntityListQueryService
      * @param string $entityClass Full entity class name
      * @param array<string, mixed> $columnFilters
      * @param array<string, array<string, mixed>> $filterMetadata
+     * @param string|null $archiveDqlCondition Optional pre-built DQL WHERE fragment from ArchiveService
      * @return array{entities: array<object>, total: int, page: int}
      */
     public function getEntities(
@@ -44,7 +43,8 @@ class EntityListQueryService
         string $sortBy,
         string $sortDirection,
         int $page,
-        int $itemsPerPage
+        int $itemsPerPage,
+        ?string $archiveDqlCondition = null,
     ): array {
         $qb = $this->buildQuery(
             $entityClass,
@@ -53,25 +53,21 @@ class EntityListQueryService
             $columnFilters,
             $filterMetadata,
             $sortBy,
-            $sortDirection
+            $sortDirection,
+            $archiveDqlCondition,
         );
 
-        // Ensure valid page number
         $page = max(1, $page);
 
-        // Apply pagination
         $qb->setFirstResult(($page - 1) * $itemsPerPage)
             ->setMaxResults($itemsPerPage);
 
-        // Use Doctrine Paginator for efficient counting
         $paginator = new Paginator($qb, fetchJoinCollection: true);
         $total = $paginator->count();
 
-        // Clamp page to valid range
         $totalPages = $total > 0 ? (int) ceil($total / $itemsPerPage) : 0;
         if ($totalPages > 0 && $page > $totalPages) {
             $page = $totalPages;
-            // Recalculate with corrected page
             $qb->setFirstResult(($page - 1) * $itemsPerPage);
             $paginator = new Paginator($qb, fetchJoinCollection: true);
         }
@@ -88,6 +84,7 @@ class EntityListQueryService
      *
      * @param array<string, mixed> $columnFilters
      * @param array<string, array<string, mixed>> $filterMetadata
+     * @param string|null $archiveDqlCondition Optional pre-built DQL WHERE fragment from ArchiveService
      */
     public function buildQuery(
         string $entityClass,
@@ -96,12 +93,12 @@ class EntityListQueryService
         array $columnFilters,
         array $filterMetadata,
         string $sortBy,
-        string $sortDirection
+        string $sortDirection,
+        ?string $archiveDqlCondition = null,
     ): QueryBuilder {
         /** @var \Doctrine\ORM\EntityRepository<object> $repository */
         $repository = $this->em->getRepository($entityClass);
 
-        // Use custom repository method if specified
         if ($repositoryMethod && method_exists($repository, $repositoryMethod)) {
             /** @var QueryBuilder $qb */
             $qb = $repository->{$repositoryMethod}();
@@ -109,30 +106,28 @@ class EntityListQueryService
             $qb = $repository->createQueryBuilder('e');
         }
 
-        // Apply global search (searches all text fields)
         if ($search) {
             $this->applyGlobalSearch($qb, $entityClass, $search);
         }
 
-        // Apply column-specific filters
         foreach ($columnFilters as $column => $value) {
             if (isset($filterMetadata[$column]) && $value !== null && $value !== '') {
                 $this->applyColumnFilter($qb, $column, $value, $filterMetadata[$column]);
             }
         }
 
-        // Apply sorting
+        // Apply archive condition (e.g. 'e.archived = false' or 'e.deletedAt IS NULL')
+        if ($archiveDqlCondition !== null) {
+            $qb->andWhere($archiveDqlCondition);
+        }
+
         $qb->orderBy('e.' . $sortBy, $sortDirection);
 
         return $qb;
     }
 
     /**
-     * Return the names of entity fields that are included in global search.
-     *
-     * These are exactly the fields queried by applyGlobalSearch() — all Doctrine
-     * mapped fields of type 'string' or 'text'. Exposed as a public method so that
-     * the data-source layer can advertise searchable column labels to the UI.
+     * Return the names of entity fields included in global search.
      *
      * @return array<string>
      */
@@ -159,7 +154,6 @@ class EntityListQueryService
         $metadata = $this->em->getClassMetadata($entityClass);
         $searchableFields = [];
 
-        // Search in string fields
         foreach ($metadata->getFieldNames() as $field) {
             $type = $metadata->getTypeOfField($field);
             if (in_array($type, ['string', 'text'])) {
@@ -219,11 +213,9 @@ class EntityListQueryService
     }
 
     /**
-     * Helper to extract common filter context (parameter name and operator).
-     *
-     * @param string $column The entity column or association name.
-     * @param array<string, mixed> $metadata Configuration metadata.
-     * @return array{0: string, 1: string} [operator, paramName]
+     * @param string $column
+     * @param array<string, mixed> $metadata
+     * @return array{0: string, 1: string}
      */
     protected function getFilterContext(string $column, array $metadata): array
     {

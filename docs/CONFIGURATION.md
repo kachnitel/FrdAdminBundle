@@ -82,6 +82,11 @@ kachnitel_admin:
     pagination:
         default_items_per_page: 20      # Default items per page
         allowed_items_per_page: [10, 20, 50, 100]  # Allowed values
+
+    # Archive / soft-delete filtering
+    archive:
+        expression: 'item.deletedAt'  # field expression applied to every entity
+        role: ~                        # role required to toggle; ~ = everyone
 ```
 
 ### Key Configuration Options
@@ -220,6 +225,52 @@ class Product { }
 Individual columns can override this setting via `#[AdminColumn(editable: ...)]`.
 See the full [Inline Editing Guide](INLINE_EDIT.md) for details, including
 per-column opt-in/opt-out, expression-based editability, and supported field types.
+
+#### archiveExpression
+**Type:** `?string` **Default:** `null`
+
+Expression that evaluates to `true` when a row is archived or soft-deleted.
+Must be of the form `item.fieldName` or `entity.fieldName` for list-level
+DQL filtering to work. Supported backing field types: `boolean` and all
+Doctrine datetime variants (`datetime`, `datetime_immutable`, `date`,
+`date_immutable`, `datetimetz`, `datetimetz_immutable`).
+
+```php
+#[Admin(archiveExpression: 'item.archived')]   // boolean flag
+#[Admin(archiveExpression: 'item.deletedAt')]  // nullable datetime (soft-delete)
+```
+
+When set, a **Show archived** toggle appears in the entity list next to the
+search bar. Archived rows are hidden by default; the toggle reveals them.
+The `showArchived` state is URL-synchronised so it survives page refreshes.
+
+Can also be set globally for all entities via `kachnitel_admin.archive.expression`
+in the bundle configuration. A per-entity value takes priority over the global one.
+
+See the full [Archive Guide](ARCHIVE.md).
+
+#### archiveRole
+**Type:** `?string` **Default:** `null`
+
+Required role to use the **Show archived** toggle. When `null` (the default),
+all users who can view the list may toggle it. The underlying DQL restriction
+still applies for users who lack the role — they always see the non-archived view.
+
+```php
+#[Admin(archiveExpression: 'item.archived', archiveRole: 'ROLE_ADMIN')]
+```
+
+Can also be set globally via `kachnitel_admin.archive.role`.
+
+#### archiveDisabled
+**Type:** `bool` **Default:** `false`
+
+Opt this entity out of archive filtering even when a global
+`kachnitel_admin.archive.expression` is configured.
+
+```php
+#[Admin(label: 'Categories', archiveDisabled: true)]
+```
 
 ### Column Configuration
 
@@ -567,6 +618,14 @@ class User { }
     permissions: ['index' => 'ROLE_ADMIN', 'show' => 'ROLE_ADMIN']
 )]
 class AuditLog { }
+
+// Soft-delete with role-gated toggle
+#[Admin(
+    label: 'Orders',
+    archiveExpression: 'item.deletedAt',
+    archiveRole: 'ROLE_ADMIN',
+)]
+class Order { }
 ```
 
 <details>
@@ -730,8 +789,9 @@ class Admin
         ?string $icon = null,
         ?string $formType = null,
         bool $enableFilters = true,
-        bool $enableBatchActions = true,
-        bool $enableInlineEdit = false,      // NEW — opt-in for inline editing
+        bool $enableBatchActions = false,
+        bool $enableColumnVisibility = false,
+        bool $enableInlineEdit = false,
         ?array $columns = null,
         ?array $excludeColumns = null,
         ?array $filterableColumns = null,
@@ -739,6 +799,9 @@ class Admin
         ?int $itemsPerPage = null,
         ?string $sortBy = null,
         ?string $sortDirection = null,
+        ?string $archiveExpression = null,
+        ?string $archiveRole = null,
+        bool $archiveDisabled = false,
     ) {}
 }
 ```

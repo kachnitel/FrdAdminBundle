@@ -1,0 +1,26 @@
+{#
+ # Archive/soft-delete filter toggle button.
+ #
+ # Shown next to the global search bar when:
+ # - The entity has archive filtering configured (archiveConfig is not null)
+ # - The current user has the required role (canToggleArchive is true)
+ #
+ # Variables:
+ # @var bool showArchived - Current toggle state
+ #}
+
+{% import kachnitel_admin_theme as css %}
+
+<button
+    type="button"
+    class="{{ css.btn_outline_secondary() }} {{ css.btn_sm() }}"
+    data-action="live#action"
+    data-live-action-param="toggleArchive"
+    title="{{ showArchived ? 'Hide archived' : 'Show archived' }}"
+>
+    {% if showArchived %}
+        👁 Hide archived
+    {% else %}
+        🗃 Show archived
+    {% endif %}
+</button>

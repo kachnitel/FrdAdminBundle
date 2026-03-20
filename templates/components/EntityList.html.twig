@@ -8,6 +8,7 @@
  # @var string sortBy - Sort field
  # @var string sortDirection - ASC or DESC
  # @var array columnFilters - Per-column filter values
+ # @var bool showArchived - Whether archived rows are shown
  #}
 
 {% import kachnitel_admin_theme as css %}
@@ -16,6 +17,7 @@
 {% set showBatchColumn = this.canBatchDelete() %}
 {% set showColumnVisibility = this.supportsColumnVisibility() %}
 {% set visibleColumns = showColumnVisibility ? this.visibleColumns : this.columns %}
+{% set archiveConfig = this.archiveConfig %}
 
 <div
     {% if showBatchColumn %}
@@ -45,33 +47,32 @@
         } only %}
     {% endif %}
 
-    {# Global Search #}
-    {% if block('search') is defined %}
-        <div class="admin-global-search {{ css.mb_3() }}">
-            {{ block('search') }}
-        </div>
-    {% else %}
-        {% set searchColumnLabels = this.globalSearchColumnLabels %}
-        <div class="admin-global-search {{ css.mb_3() }}" style="display:flex;align-items:center;gap:0.5rem;">
-            <input
-                type="text"
-                class="{{ css.form_input() }}"
-                placeholder="Search…"
-                data-model="search"
-                value="{{ this.search }}"
-                style="flex:1;"
-            >
-            {% if searchColumnLabels is not empty %}
-                <span
-                    class="admin-search-help"
-                    title="Searches in: {{ searchColumnLabels|join(', ') }}"
-                    aria-label="Searches in: {{ searchColumnLabels|join(', ') }}"
-                    style="cursor:help;opacity:0.5;font-size:0.9em;flex-shrink:0;user-select:none;"
-                    role="img"
-                >&#9432;</span>
-            {% endif %}
-        </div>
-    {% endif %}
+    {# Global Search + Archive Toggle #}
+    {% set searchColumnLabels = this.globalSearchColumnLabels %}
+    <div class="admin-global-search {{ css.mb_3() }}" style="display:flex;align-items:center;gap:0.5rem;">
+        <input
+            type="text"
+            class="{{ css.form_input() }}"
+            placeholder="Search…"
+            data-model="search"
+            value="{{ this.search }}"
+            style="flex:1;"
+        >
+        {% if searchColumnLabels is not empty %}
+            <span
+                class="admin-search-help"
+                title="Searches in: {{ searchColumnLabels|join(', ') }}"
+                aria-label="Searches in: {{ searchColumnLabels|join(', ') }}"
+                style="cursor:help;opacity:0.5;font-size:0.9em;flex-shrink:0;user-select:none;"
+                role="img"
+            >&#9432;</span>
+        {% endif %}
+        {% if archiveConfig is not null and this.canToggleArchive() %}
+            {% include '@KachnitelAdmin/components/EntityList/_ArchiveToggle.html.twig' with {
+                showArchived: showArchived
+            } only %}
+        {% endif %}
+    </div>
 
     <div class="{{ css.overflow_x_auto() }}">
     <table class="{{ css.table() }}">
@@ -139,7 +140,8 @@
             {% for entity in this.entities %}
                 {% set entityId = this.getEntityId(entity) %}
                 {% set rowEditing = isDoctrineEntity and this.isRowEditing(entity) %}
-                <tr>
+                {% set isArchived = archiveConfig is not null and this.isArchivedRow(entity) %}
+                <tr {% if isArchived %}class="admin-row-archived"{% endif %}>
                     {% if showBatchColumn %}
                         <td>
                             <input

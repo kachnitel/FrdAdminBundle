@@ -15,9 +15,7 @@
 {% endblock %}
 
 {% block headerButtons %}
-  {# Render entity actions for the 'show' context.
-     Context filtering in RowActionRegistry ensures list-only actions (e.g. InlineEditButton)
-     are never included here; no additional filtering needed in the template. #}
+  {# Render entity actions for the 'show' context. #}
   {% set entityShortClass = entityClass|split('\\')|last %}
   {% for action in admin_visible_row_actions(entityClass, entity, entityShortClass, 'show') %}
     {% if action.name != 'show' %}
@@ -33,6 +31,8 @@
 {% endblock %}
 
 {% block content %}
+  {{ include('@KachnitelAdmin/admin/_archive_banner.html.twig') }}
+
   <table class="{{ css.table_simple() }}">
     <tbody>
       {% for property, value in admin_get_entity_data(entity) %}

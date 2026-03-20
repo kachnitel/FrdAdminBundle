@@ -13,9 +13,6 @@
 {% block headerTitle %}Edit{% endblock %}
 
 {% block headerButtons %}
-  {# Render entity actions for the 'edit' context.
-     Context filtering in RowActionRegistry ensures list-only actions (e.g. InlineEditButton)
-     are never included here; no additional filtering needed in the template. #}
   {% set entityShortClass = entityClass|split('\\')|last %}
   {% for action in admin_visible_row_actions(entityClass, entity, entityShortClass, 'edit') %}
     {% if action.name != 'edit' %}
@@ -32,6 +29,8 @@
 {% endblock %}
 
 {% block content %}
+  {{ include('@KachnitelAdmin/admin/_archive_banner.html.twig') }}
+
   {{ component(formComponentName, {
       entityClass: entityClass,
       entityId: entity.id,

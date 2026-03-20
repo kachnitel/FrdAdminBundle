@@ -12,6 +12,7 @@ use Attribute;
  * For per-column role-based visibility, @see ColumnPermission
  * For user-toggleable column visibility, use enableColumnVisibility: true
  * For inline editing in list views, use enableInlineEdit: true
+ * For archive/soft-delete filtering, use archiveExpression: 'item.fieldName'
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 class Admin
@@ -33,6 +34,15 @@ class Admin
      * @param int|null $itemsPerPage Default items per page (null = use global default)
      * @param string|null $sortBy Default sort column (null = 'id')
      * @param string|null $sortDirection Default sort direction 'ASC' or 'DESC' (null = 'DESC')
+     * @param string|null $archiveExpression ExpressionLanguage expression evaluated against
+     *   the entity to determine whether it is archived (e.g. 'item.archived', 'item.deletedAt').
+     *   Overrides the global `kachnitel_admin.archive.expression` YAML setting for this entity.
+     *   Must use `item.fieldName` convention for the DB-level hide condition to work.
+     * @param string|null $archiveRole Role required to see and use the archive toggle.
+     *   Overrides the global `kachnitel_admin.archive.role` for this entity.
+     *   Null means any authenticated user can toggle (default).
+     * @param bool $archiveDisabled Set true to disable archive filtering for this entity even
+     *   when a global `kachnitel_admin.archive.expression` is configured.
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -52,6 +62,9 @@ class Admin
         private ?int $itemsPerPage = null,
         private ?string $sortBy = null,
         private ?string $sortDirection = null,
+        private ?string $archiveExpression = null,
+        private ?string $archiveRole = null,
+        private bool $archiveDisabled = false,
     ) {}
 
     public function getLabel(): ?string
@@ -90,8 +103,6 @@ class Admin
     }
 
     /**
-     * Get explicit column list, or null to auto-detect.
-     *
      * @return array<string>|null
      */
     public function getColumns(): ?array
@@ -138,9 +149,6 @@ class Admin
         return $this->sortDirection;
     }
 
-    /**
-     * Get the required role for a specific action, or null for no restriction.
-     */
     public function getPermissionForAction(string $action): ?string
     {
         return $this->permissions[$action] ?? null;
@@ -149,5 +157,20 @@ class Admin
     public function getFormComponent(): ?string
     {
         return $this->formComponent;
+    }
+
+    public function getArchiveExpression(): ?string
+    {
+        return $this->archiveExpression;
+    }
+
+    public function getArchiveRole(): ?string
+    {
+        return $this->archiveRole;
+    }
+
+    public function isArchiveDisabled(): bool
+    {
+        return $this->archiveDisabled;
     }
 }

@@ -21,16 +21,6 @@ use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 /**
  * Data source for Doctrine entities.
  *
- * Wraps a Doctrine entity class and provides data access through the DataSourceInterface.
- * Uses the existing EntityListQueryService and FilterMetadataProvider for querying and filtering.
- *
- * Custom (virtual) columns can be declared via #[AdminCustomColumn] on the entity class.
- * These columns are appended after Doctrine-backed columns when no explicit `columns:`
- * list is set, or they are placed wherever the developer puts their name in `columns:`.
- *
- * Composite columns can be declared via #[AdminColumn(group: 'identifier')] on entity properties.
- * Properties sharing the same group identifier are rendered in a single stacked table cell.
- *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceInterface
@@ -88,11 +78,9 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
 
         $this->columnsCache = [];
 
-        // Get the ordered list of column names to include
         $columnNames = $this->getColumnNames($metadata, $customColumns);
 
         foreach ($columnNames as $columnName) {
-            // Custom columns take priority — they carry their own ColumnMetadata
             if (isset($customColumns[$columnName])) {
                 $this->columnsCache[$columnName] = $customColumns[$columnName];
                 continue;
@@ -124,7 +112,7 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
 
         /** @var list<string|ColumnGroup> $slots */
         $slots = [];
-        /** @var array<string, int> $groupSlotIndex group id => index in $slots */
+        /** @var array<string, int> $groupSlotIndex */
         $groupSlotIndex = [];
 
         foreach ($columns as $name => $metadata) {
@@ -133,7 +121,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
                 $groupAttr = $groupAttrs[$groupId] ?? null;
 
                 if (!isset($groupSlotIndex[$groupId])) {
-                    // First member of this group — create a new ColumnGroup slot
                     $groupSlotIndex[$groupId] = count($slots);
                     $slots[] = new ColumnGroup(
                         id: $groupId,
@@ -143,7 +130,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
                         header: $groupAttr->header ?? ColumnGroup::HEADER_TEXT,
                     );
                 } else {
-                    // Subsequent member — append to existing ColumnGroup
                     /** @var ColumnGroup $existingGroup */
                     $existingGroup = $slots[$groupSlotIndex[$groupId]];
                     $slots[$groupSlotIndex[$groupId]] = new ColumnGroup(
@@ -170,15 +156,12 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
             return $this->filtersCache;
         }
 
-        // Use existing FilterMetadataProvider for compatibility
         $legacyFilters = $this->filterMetadataProvider->getFilters($this->entityClass);
         $this->filtersCache = [];
 
-        // If filterableColumns is set, only include those filters
         $filterableColumns = $this->adminAttribute->getFilterableColumns();
 
         foreach ($legacyFilters as $name => $config) {
-            // Skip filters not in filterableColumns whitelist (when configured)
             if ($filterableColumns !== null && !in_array($name, $filterableColumns, true)) {
                 continue;
             }
@@ -212,7 +195,13 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         int $page,
         int $itemsPerPage,
     ): PaginatedResult {
-        // Convert FilterMetadata array to legacy format for EntityListQueryService
+        // Extract the pre-built archive DQL condition (set by EntityList, which owns ArchiveService).
+        // DoctrineDataSource itself has no dependency on ArchiveService.
+        $archiveDqlCondition = isset($filters['__archiveDqlCondition'])
+            ? (string) $filters['__archiveDqlCondition']
+            : null;
+        unset($filters['__archiveDqlCondition']);
+
         $filterMetadata = [];
         foreach ($this->getFilters() as $name => $filter) {
             $filterMetadata[$name] = $filter->toArray();
@@ -228,6 +217,7 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
             sortDirection: $sortDirection,
             page: $page,
             itemsPerPage: $itemsPerPage,
+            archiveDqlCondition: $archiveDqlCondition,
         );
 
         return PaginatedResult::fromQueryResult($result, $itemsPerPage);
@@ -265,7 +255,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
 
     public function getItemValue(object $item, string $field): mixed
     {
-        // Custom columns have no Doctrine field — templates read `entity` directly
         $customColumns = $this->customColumnProvider->getCustomColumns($this->entityClass);
         if (isset($customColumns[$field])) {
             return null;
@@ -273,23 +262,19 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
 
         $metadata = $this->em->getClassMetadata($this->entityClass);
 
-        // For regular fields, use field value
         if ($metadata->hasField($field)) {
             return $metadata->getFieldValue($item, $field);
         }
 
-        // For associations, get the related entity
         if ($metadata->hasAssociation($field)) {
             return $metadata->getFieldValue($item, $field);
         }
 
-        // Fallback to getter method
         $getter = 'get' . ucfirst($field);
         if (method_exists($item, $getter)) {
             return $item->$getter();
         }
 
-        // Try 'is' prefix for booleans
         $isGetter = 'is' . ucfirst($field);
         if (method_exists($item, $isGetter)) {
             return $item->$isGetter();
@@ -298,15 +283,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         return null;
     }
 
-    /**
-     * Returns human-readable labels for searchable columns.
-     *
-     * Fields that exist at DB level but are not part of the configured column
-     * list are excluded — showing them in the tooltip would be confusing because
-     * users cannot see those values in the list.
-     *
-     * @return array<string>
-     */
     public function getGlobalSearchColumnLabels(): array
     {
         $searchableFields = $this->queryService->getSearchableFieldNames($this->entityClass);
@@ -327,27 +303,16 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         return $labels;
     }
 
-    /**
-     * Get the entity class.
-     *
-     * @return class-string
-     */
     public function getEntityClass(): string
     {
         return $this->entityClass;
     }
 
-    /**
-     * Get the Admin attribute.
-     */
     public function getAdminAttribute(): Admin
     {
         return $this->adminAttribute;
     }
 
-    /**
-     * Get the short class name.
-     */
     public function getShortName(): string
     {
         if ($this->shortName === null) {
@@ -361,29 +326,18 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     // ── Private helpers ────────────────────────────────────────────────────────
 
     /**
-     * Get column names in display order.
-     *
-     * Rules:
-     *  1. If Admin::columns is set explicitly, use exactly that list (which may include
-     *     custom column names at any position).
-     *  2. Otherwise, use all auto-detected Doctrine columns, then append custom columns
-     *     that are not already in the list.
-     *
      * @param ClassMetadata<object>         $metadata
      * @param array<string, ColumnMetadata> $customColumns
      * @return array<string>
      */
     private function getColumnNames(ClassMetadata $metadata, array $customColumns): array
     {
-        // Explicit list: developer controls order entirely
         if ($this->adminAttribute->getColumns() !== null) {
             return $this->adminAttribute->getColumns();
         }
 
-        // Auto-detect Doctrine columns
         $allDoctrineColumns = array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
 
-        // Apply excludeColumns filter
         if ($this->adminAttribute->getExcludeColumns() !== null) {
             $excludeColumns = $this->adminAttribute->getExcludeColumns();
             $allDoctrineColumns = array_values(
@@ -391,7 +345,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
             );
         }
 
-        // Append custom columns that are not already listed
         $customNames = array_keys($customColumns);
         $extraCustom = array_values(
             array_filter($customNames, fn ($name) => !in_array($name, $allDoctrineColumns))
@@ -400,28 +353,13 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         return array_merge($allDoctrineColumns, $extraCustom);
     }
 
-    /**
-     * Check if a column is sortable.
-     *
-     * Only regular Doctrine fields support direct ORDER BY in DQL.
-     * Associations — whether single-valued (ManyToOne/OneToOne) or collection-valued
-     * (OneToMany/ManyToMany) — cannot be sorted without an explicit JOIN, which this
-     * data source does not perform. Custom columns have no backing Doctrine field at all.
-     *
-     * @param ClassMetadata<object> $metadata
-     */
+    /** @param ClassMetadata<object> $metadata */
     private function isColumnSortable(ClassMetadata $metadata, string $column): bool
     {
         return $metadata->hasField($column);
     }
 
-    /**
-     * Build a FilterMetadata from a legacy config array entry.
-     *
-     * Extracted to reduce cyclomatic complexity of getFilters().
-     *
-     * @param array<string, mixed> $config
-     */
+    /** @param array<string, mixed> $config */
     private function buildFilter(string $name, array $config): FilterMetadata
     {
         $enumOptions = $this->buildEnumOptions($config);
@@ -441,11 +379,7 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         );
     }
 
-    /**
-     * Build FilterEnumOptions from a legacy config array, or return null when no enum keys present.
-     *
-     * @param array<string, mixed> $config
-     */
+    /** @param array<string, mixed> $config */
     private function buildEnumOptions(array $config): ?FilterEnumOptions
     {
         $keysToCheck = ['options', 'enumClass', 'showAllOption', 'multiple'];

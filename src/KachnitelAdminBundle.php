@@ -68,6 +68,20 @@ class KachnitelAdminBundle extends AbstractBundle
                     ->defaultValue('@KachnitelAdmin/theme/bootstrap.html.twig')
                     ->info('CSS theme template. Use @KachnitelAdmin/theme/tailwind.html.twig for Tailwind, or provide your own.')
                 ->end()
+                ->arrayNode('archive')
+                    ->info('Global archive/soft-delete filter configuration. Override per-entity with #[Admin(archiveExpression: ...)].')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('expression')
+                            ->defaultNull()
+                            ->info('ExpressionLanguage expression identifying archived rows (e.g. "item.archived", "item.deletedAt"). Must use item.fieldName format for DB-level filtering.')
+                        ->end()
+                        ->scalarNode('role')
+                            ->defaultNull()
+                            ->info('Role required to toggle the archive filter. Null = any authenticated user. Override per-entity with #[Admin(archiveRole: ...)].')
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
     }
 
@@ -81,7 +95,6 @@ class KachnitelAdminBundle extends AbstractBundle
      */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        // Store configuration as parameters
         $builder->setParameter('kachnitel_admin.entity_namespace', $config['entity_namespace']);
         $builder->setParameter('kachnitel_admin.form_namespace', $config['form_namespace']);
         $builder->setParameter('kachnitel_admin.form_suffix', $config['form_suffix']);
@@ -93,21 +106,20 @@ class KachnitelAdminBundle extends AbstractBundle
         $builder->setParameter('kachnitel_admin.pagination.default_items_per_page', $config['pagination']['default_items_per_page']);
         $builder->setParameter('kachnitel_admin.pagination.allowed_items_per_page', $config['pagination']['allowed_items_per_page']);
         $builder->setParameter('kachnitel_admin.theme', $config['theme']);
+        $builder->setParameter('kachnitel_admin.archive.expression', $config['archive']['expression']);
+        $builder->setParameter('kachnitel_admin.archive.role', $config['archive']['role']);
 
-        // Load services
         $container->import('../config/services.yaml');
     }
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        // Register LiveComponent namespace
         $container->extension('twig_component', [
             'defaults' => [
                 'Kachnitel\\AdminBundle\\Twig\\Components\\' => 'components/',
             ],
         ]);
 
-        // Register AssetMapper paths for Stimulus controllers
         if ($this->isAssetMapperAvailable($builder)) {
             $builder->prependExtensionConfig('framework', [
                 'asset_mapper' => [
@@ -119,9 +131,6 @@ class KachnitelAdminBundle extends AbstractBundle
         }
     }
 
-    /**
-     * Check if AssetMapper is available in the application.
-     */
     private function isAssetMapperAvailable(ContainerBuilder $builder): bool
     {
         /** @disregard P1009 AssetMapper is optional */

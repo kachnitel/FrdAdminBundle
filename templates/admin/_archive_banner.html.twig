@@ -1,0 +1,18 @@
+{#
+ # Warning banner shown on show/edit pages when the entity is archived.
+ #
+ # Rendered only when:
+ # - Archive filtering is configured for this entity
+ # - The entity's archive expression evaluates to true
+ #
+ # Variables:
+ # @var object entity - The entity being displayed
+ #}
+{% import kachnitel_admin_theme as css %}
+
+{% if admin_is_archived(entity) %}
+<div class="{{ css.alert_warning() }}" role="alert" style="margin-bottom: 1rem;">
+    <strong>🗃 Archived</strong>
+    &nbsp;This record is archived and hidden from the default list view.
+</div>
+{% endif %}

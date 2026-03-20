@@ -11,8 +11,6 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * Handles batch operations for entity lists.
- *
- * Extracted from EntityList to reduce component complexity and coupling.
  */
 class EntityListBatchService
 {
@@ -25,9 +23,6 @@ class EntityListBatchService
      * Delete selected entities.
      *
      * @param array<int|string> $selectedIds IDs to delete
-     * @param DataSourceInterface $dataSource Current data source
-     * @param string $entityClass Entity class (used for permission check)
-     * @param string $entityShortClass Entity short class (used for permission check)
      * @throws AccessDeniedException
      */
     public function batchDelete(
@@ -52,7 +47,8 @@ class EntityListBatchService
             return;
         }
 
-        $repository = $this->em->getRepository($dataSource->getEntityClass());
+        /** @var \Doctrine\ORM\EntityRepository<object> $repository */
+        $repository = $this->em->getRepository($dataSource->getEntityClass()); // @phpstan-ignore argument.templateType
 
         foreach ($selectedIds as $id) {
             $entity = $repository->find($id);
@@ -68,7 +64,6 @@ class EntityListBatchService
      * Get entity IDs from a list of entities.
      *
      * @param array<object> $entities
-     * @param DataSourceInterface $dataSource
      * @return array<int|string>
      */
     public function getEntityIds(
