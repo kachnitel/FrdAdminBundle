@@ -110,16 +110,13 @@
 {% macro field_edit_trigger() %}btn btn-link p-0 text-body-tertiary lh-1 field-edit-trigger{% endmacro %}
 
 {# Archive / Soft-delete
-   admin-row-archived is added to <tr> elements when showArchived=true and the row
-   is an archived/soft-deleted record.
+   row_archived() — applied to <tr> elements for archived/soft-deleted records
+   when showArchived=true. Uses Bootstrap's table-secondary contextual class for
+   a muted grey background, combined with text-muted and fst-italic so archived
+   rows are visually recessive without hiding information.
 
-   No default style is bundled — add this rule to your project CSS (e.g. app.css)
-   to visually differentiate archived rows:
-
-       tr.admin-row-archived td { opacity: 0.5; }
-
-   Or with a left-border indicator:
+   Override in your own theme or via CSS if you prefer a different treatment, e.g.:
 
        tr.admin-row-archived { border-left: 3px solid var(--bs-warning); }
-       tr.admin-row-archived td { opacity: 0.6; font-style: italic; }
 #}
+{% macro row_archived() %}table-secondary text-muted fst-italic opacity-50{% endmacro %}

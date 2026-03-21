@@ -94,20 +94,8 @@
 {% macro field_edit_trigger() %}opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 text-gray-400 hover:text-gray-600 p-0.5 rounded leading-none{% endmacro %}
 
 {# Archive / Soft-delete
-   admin-row-archived is added to <tr> elements when showArchived=true and the row
-   is an archived/soft-deleted record.
-
-   No default Tailwind class is bundled to avoid purge issues. Add a safelist rule
-   in tailwind.config.js and your own CSS utility, for example:
-
-       // tailwind.config.js
-       safelist: ['admin-row-archived'],
-
-   Then in your CSS:
-
-       .admin-row-archived td { @apply opacity-50 italic; }
-
-   Or using Tailwind's arbitrary-value approach in a global stylesheet:
-
-       tr.admin-row-archived > td { opacity: 0.5; font-style: italic; }
+   row_archived() — applied to <tr> elements for archived/soft-deleted records
+   when showArchived=true. Uses standard Tailwind utility classes that are
+   scanned from this template file, so no safelist entry is required.
 #}
+{% macro row_archived() %}opacity-60 italic text-gray-400{% endmacro %}

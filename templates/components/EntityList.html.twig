@@ -141,7 +141,7 @@
                 {% set entityId = this.getEntityId(entity) %}
                 {% set rowEditing = isDoctrineEntity and this.isRowEditing(entity) %}
                 {% set isArchived = archiveConfig is not null and this.isArchivedRow(entity) %}
-                <tr {% if isArchived %}class="admin-row-archived"{% endif %}>
+                <tr {% if isArchived %}class="{{ css.row_archived() }}" title="Archived"{% endif %}>
                     {% if showBatchColumn %}
                         <td>
                             <input
