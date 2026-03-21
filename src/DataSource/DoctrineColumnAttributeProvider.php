@@ -6,14 +6,16 @@ namespace Kachnitel\AdminBundle\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
+use Kachnitel\AdminBundle\Utils\Text;
+use Kachnitel\DataSourceContracts\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
 
 /**
  * Reads `#[AdminColumn]` and `#[AdminColumnGroup]` attributes from entity classes
  * and returns them in structured form for use by the data source layer.
  *
- * Extracted to a dedicated service so it can be independently unit-tested and
- * injected wherever per-property AdminColumn metadata is needed, without
- * coupling callers to raw reflection APIs.
+ * Also builds the ordered list of column slots (strings and ColumnGroup objects)
+ * used by EntityList's header and body rendering.
  *
  * @see DoctrineCustomColumnProvider for the parallel service that reads #[AdminCustomColumn]
  */
@@ -69,5 +71,61 @@ class DoctrineColumnAttributeProvider
         }
 
         return $result;
+    }
+
+    /**
+     * Build the ordered list of column slots for the entity list header and body.
+     *
+     * Each slot is either:
+     * - a plain column name (string) — rendered as a single <th>/<td>
+     * - a ColumnGroup value object  — rendered as a composite <th>/<td> that stacks sub-columns
+     *
+     * Group members appear at the position of their first member in the column order.
+     * Non-contiguous members are merged into the group opened at the first-member position.
+     *
+     * @param array<string, ColumnMetadata>   $columns    Column map from DoctrineDataSource::getColumns()
+     * @param array<string, AdminColumnGroup> $groupAttrs Group attribute map from getGroupAttributes()
+     * @return list<string|ColumnGroup>
+     */
+    public function build(array $columns, array $groupAttrs): array
+    {
+        /** @var list<string|ColumnGroup> $slots */
+        $slots = [];
+        /** @var array<string, int> $groupSlotIndex Map of group ID => slot index */
+        $groupSlotIndex = [];
+
+        foreach ($columns as $name => $metadata) {
+            if ($metadata->group === null) {
+                $slots[] = $name;
+                continue;
+            }
+
+            $groupId   = $metadata->group;
+            $groupAttr = $groupAttrs[$groupId] ?? null;
+
+            if (!isset($groupSlotIndex[$groupId])) {
+                $groupSlotIndex[$groupId] = count($slots);
+                $slots[] = new ColumnGroup(
+                    id: $groupId,
+                    label: Text::humanize($groupId),
+                    columns: [$name => $metadata],
+                    subLabels: $groupAttr?->subLabels ?? ColumnGroup::SUB_LABELS_SHOW, // @phpstan-ignore nullsafe.neverNull
+                    header: $groupAttr?->header ?? ColumnGroup::HEADER_TEXT, // @phpstan-ignore nullsafe.neverNull
+                );
+            } else {
+                $idx = $groupSlotIndex[$groupId];
+                /** @var ColumnGroup $existing */
+                $existing    = $slots[$idx];
+                $slots[$idx] = new ColumnGroup(
+                    id: $existing->id,
+                    label: $existing->label,
+                    columns: array_merge($existing->columns, [$name => $metadata]),
+                    subLabels: $existing->subLabels,
+                    header: $existing->header,
+                );
+            }
+        }
+
+        return $slots;
     }
 }

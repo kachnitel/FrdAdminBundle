@@ -13,6 +13,8 @@ use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
+use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
+use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\DataSourceContracts\FilterMetadata;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
@@ -55,6 +57,7 @@ class DoctrineDataSourceTest extends TestCase
 
         $this->columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $this->columnAttrProvider->method('getColumnAttributes')->willReturn([]);
+        $this->columnAttrProvider->method('getGroupAttributes')->willReturn([]);
 
         $this->columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
         $this->columnTypeMapper->method('getColumnType')->willReturn('string');
@@ -75,6 +78,8 @@ class DoctrineDataSourceTest extends TestCase
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $this->columnAttrProvider,
             columnTypeMapper: $this->columnTypeMapper,
+            filterConverter: new DoctrineFilterConverter(),
+            itemValueResolver: new DoctrineItemValueResolver(),
         );
     }
 

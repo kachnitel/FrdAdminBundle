@@ -11,6 +11,8 @@ use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
+use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
+use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
@@ -68,6 +70,8 @@ class DoctrineDataSourceFactoryTest extends TestCase
             $this->customColumnProvider,
             $this->columnAttrProvider,
             $this->columnTypeMapper,
+            new DoctrineFilterConverter(),
+            new DoctrineItemValueResolver(),
         );
     }
 

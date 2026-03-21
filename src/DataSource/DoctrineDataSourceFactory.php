@@ -26,6 +26,8 @@ class DoctrineDataSourceFactory
         private readonly DoctrineCustomColumnProvider $customColumnProvider,
         private readonly DoctrineColumnAttributeProvider $columnAttributeProvider,
         private readonly DoctrineColumnTypeMapper $columnTypeMapper,
+        private readonly DoctrineFilterConverter $filterConverter,
+        private readonly DoctrineItemValueResolver $itemValueResolver,
     ) {}
 
     /**
@@ -96,6 +98,8 @@ class DoctrineDataSourceFactory
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $this->columnAttributeProvider,
             columnTypeMapper: $this->columnTypeMapper,
+            filterConverter: $this->filterConverter,
+            itemValueResolver: $this->itemValueResolver,
         );
     }
 }

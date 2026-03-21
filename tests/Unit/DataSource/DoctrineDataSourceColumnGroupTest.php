@@ -13,6 +13,8 @@ use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
+use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
+use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -48,11 +50,6 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
     }
 
     /**
-     * Build a DoctrineDataSource with a fresh local columnAttrProvider mock.
-     *
-     * Using a local mock per test avoids the PHPUnit stub-precedence issue where
-     * a setUp() willReturn([]) would silently override per-test willReturn([...]).
-     *
      * @param array<string, AdminColumn> $columnAttributes
      */
     private function createDataSource(
@@ -61,6 +58,9 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
     ): DoctrineDataSource {
         $columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $columnAttrProvider->method('getColumnAttributes')->willReturn($columnAttributes);
+        $columnAttrProvider->method('getGroupAttributes')->willReturn([]);
+        $columnAttrProvider->method('build')
+            ->willReturnCallback(fn (array $cols, array $attrs) => (new DoctrineColumnAttributeProvider())->build($cols, $attrs));
 
         $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
         $columnTypeMapper->method('getColumnType')->willReturn('string');
@@ -74,6 +74,8 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $columnAttrProvider,
             columnTypeMapper: $columnTypeMapper,
+            filterConverter: new DoctrineFilterConverter(),
+            itemValueResolver: new DoctrineItemValueResolver(),
         );
     }
 
@@ -139,8 +141,6 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
     /** @test */
     public function getColumnGroupsHandlesNonContiguousColumnsInSameGroup(): void
     {
-        // firstName and lastName share group 'name_block'; email is in between but ungrouped.
-        // Group should appear at position of first member (firstName); email stays separate.
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'email', 'lastName']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
         $this->metadata->method('hasField')->willReturn(true);
@@ -151,8 +151,6 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
             'lastName'  => new AdminColumn(group: 'name_block'),
         ])->getColumnGroups();
 
-        // Expected: slot[0] = ColumnGroup{firstName, lastName}, slot[1] = 'email'
-        // Non-contiguous members are collected into the group at the first-member position.
         $this->assertCount(2, $slots);
         $this->assertInstanceOf(ColumnGroup::class, $slots[0]);
         /** @var ColumnGroup $group */

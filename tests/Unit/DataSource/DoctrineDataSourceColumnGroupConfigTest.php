@@ -14,14 +14,14 @@ use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
+use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
+use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests that AdminColumnGroup configuration is propagated to ColumnGroup instances.
- *
  * @group composite-columns
  */
 class DoctrineDataSourceColumnGroupConfigTest extends TestCase
@@ -61,6 +61,8 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $columnAttrProvider->method('getColumnAttributes')->willReturn($columnAttributes);
         $columnAttrProvider->method('getGroupAttributes')->willReturn($groupAttributes);
+        $columnAttrProvider->method('build')
+            ->willReturnCallback(fn (array $cols, array $attrs) => (new DoctrineColumnAttributeProvider())->build($cols, $attrs));
 
         $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
         $columnTypeMapper->method('getColumnType')->willReturn('string');
@@ -74,6 +76,8 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $columnAttrProvider,
             columnTypeMapper: $columnTypeMapper,
+            filterConverter: new DoctrineFilterConverter(),
+            itemValueResolver: new DoctrineItemValueResolver(),
         );
     }
 

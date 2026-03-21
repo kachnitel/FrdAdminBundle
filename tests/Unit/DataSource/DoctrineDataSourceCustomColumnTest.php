@@ -12,6 +12,8 @@ use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
+use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
+use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
@@ -19,11 +21,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests DoctrineDataSource #[AdminCustomColumn] integration.
- *
- * The existing DoctrineDataSourceTest covers the Doctrine-backed column logic;
- * this class focuses exclusively on the #[AdminCustomColumn] integration.
- *
  * @group custom-columns
  */
 class DoctrineDataSourceCustomColumnTest extends TestCase
@@ -59,6 +56,7 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
 
         $this->columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $this->columnAttrProvider->method('getColumnAttributes')->willReturn([]);
+        $this->columnAttrProvider->method('getGroupAttributes')->willReturn([]);
 
         $this->columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
         $this->columnTypeMapper->method('getColumnType')->willReturn('string');
@@ -81,12 +79,10 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $this->columnAttrProvider,
             columnTypeMapper: $this->columnTypeMapper,
+            filterConverter: new DoctrineFilterConverter(),
+            itemValueResolver: new DoctrineItemValueResolver(),
         );
     }
-
-    // -------------------------------------------------------------------------
-    // getColumns() — custom column merging
-    // -------------------------------------------------------------------------
 
     /** @test */
     public function getColumnsAppendsCustomColumnsAfterDoctrineColumns(): void
@@ -115,7 +111,6 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
     /** @test */
     public function getColumnsUsesCustomColumnMetadataDirectly(): void
     {
-        // The custom column metadata should win (it's checked first in the loop).
         $this->metadata->method('getFieldNames')->willReturn(['id', 'badge']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
         $this->metadata->method('hasField')->willReturn(true);
@@ -127,14 +122,9 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
         $dataSource = $this->createDataSource();
         $columns = $dataSource->getColumns();
 
-        // Should appear only once; custom metadata wins
         $this->assertCount(2, $columns);
         $this->assertSame($customMeta, $columns['badge']);
     }
-
-    // -------------------------------------------------------------------------
-    // getItemValue() — custom column returns null
-    // -------------------------------------------------------------------------
 
     /** @test */
     public function getItemValueReturnsNullForCustomColumn(): void

@@ -12,20 +12,14 @@ use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
+use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
+use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests that DoctrineDataSource correctly marks columns as sortable/non-sortable.
- *
- * Rules:
- *   - Regular Doctrine fields          → sortable: true
- *   - ManyToOne / OneToOne relations   → sortable: false  (DQL cannot ORDER BY a relation)
- *   - OneToMany / ManyToMany relations → sortable: false
- *   - Custom (#[AdminCustomColumn])    → sortable: false by default (from AdminCustomColumn.sortable)
- *
  * @group sorting
  */
 class DoctrineDataSourceSortableTest extends TestCase
@@ -50,12 +44,6 @@ class DoctrineDataSourceSortableTest extends TestCase
         $this->filterProvider->method('getFilters')->willReturn([]);
     }
 
-    /**
-     * Build a fresh DoctrineDataSource with no custom columns (empty provider stubs).
-     *
-     * Using local mocks each time avoids stub-conflict issues when a test needs
-     * a different return value for getCustomColumns.
-     */
     private function createDataSource(
         ?Admin $admin = null,
         ?DoctrineCustomColumnProvider $customColumnProvider = null,
@@ -67,9 +55,8 @@ class DoctrineDataSourceSortableTest extends TestCase
 
         $columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $columnAttrProvider->method('getColumnAttributes')->willReturn([]);
+        $columnAttrProvider->method('getGroupAttributes')->willReturn([]);
 
-        // The real mapper is used here: sortable logic lives in isColumnSortable(),
-        // but the type is still resolved through the mapper for ColumnMetadata.create().
         $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
         $columnTypeMapper->method('getColumnType')->willReturn('string');
 
@@ -82,6 +69,8 @@ class DoctrineDataSourceSortableTest extends TestCase
             customColumnProvider: $customColumnProvider,
             columnAttributeProvider: $columnAttrProvider,
             columnTypeMapper: $columnTypeMapper,
+            filterConverter: new DoctrineFilterConverter(),
+            itemValueResolver: new DoctrineItemValueResolver(),
         );
     }
 

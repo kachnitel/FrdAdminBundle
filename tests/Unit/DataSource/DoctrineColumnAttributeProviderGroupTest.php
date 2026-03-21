@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -114,5 +115,156 @@ class DoctrineColumnAttributeProviderGroupTest extends TestCase
 
         $this->assertArrayHasKey('firstName', $columnAttrs);
         $this->assertArrayHasKey('name_block', $groupAttrs);
+    }
+
+    // ── build() — slot construction ───────────────────────────────────────────
+
+    /** @test */
+    public function buildReturnsPlainStringSlotForUngroupedColumn(): void
+    {
+        $columns = [
+            'id'   => ColumnMetadata::create('id'),
+            'name' => ColumnMetadata::create('name'),
+        ];
+
+        $slots = $this->provider->build($columns, []);
+
+        $this->assertSame(['id', 'name'], $slots);
+    }
+
+    /** @test */
+    public function buildGroupsColumnsWithSameGroupId(): void
+    {
+        $columns = [
+            'firstName' => ColumnMetadata::create('firstName', group: 'name_block'),
+            'lastName'  => ColumnMetadata::create('lastName', group: 'name_block'),
+        ];
+
+        $slots = $this->provider->build($columns, []);
+
+        $this->assertCount(1, $slots);
+        $this->assertInstanceOf(ColumnGroup::class, $slots[0]);
+        /** @var ColumnGroup $group */
+        $group = $slots[0];
+        $this->assertSame('name_block', $group->id);
+        $this->assertArrayHasKey('firstName', $group->columns);
+        $this->assertArrayHasKey('lastName', $group->columns);
+    }
+
+    /** @test */
+    public function buildHumanisesGroupLabelFromIdentifier(): void
+    {
+        $columns = ['firstName' => ColumnMetadata::create('firstName', group: 'name_block')];
+
+        $slots = $this->provider->build($columns, []);
+
+        /** @var ColumnGroup $group */
+        $group = $slots[0];
+        $this->assertSame('Name block', $group->label);
+    }
+
+    /** @test */
+    public function buildAppliesGroupAttributeSubLabelsAndHeader(): void
+    {
+        $columns = [
+            'city'    => ColumnMetadata::create('city', group: 'addr'),
+            'country' => ColumnMetadata::create('country', group: 'addr'),
+        ];
+        $groupAttrs = [
+            'addr' => new AdminColumnGroup(
+                id: 'addr',
+                subLabels: ColumnGroup::SUB_LABELS_ICON,
+                header: ColumnGroup::HEADER_COLLAPSIBLE,
+            ),
+        ];
+
+        $slots = $this->provider->build($columns, $groupAttrs);
+
+        /** @var ColumnGroup $group */
+        $group = $slots[0];
+        $this->assertSame(ColumnGroup::SUB_LABELS_ICON, $group->subLabels);
+        $this->assertSame(ColumnGroup::HEADER_COLLAPSIBLE, $group->header);
+    }
+
+    /** @test */
+    public function buildDefaultsToShowSubLabelsAndTextHeader(): void
+    {
+        $columns = ['firstName' => ColumnMetadata::create('firstName', group: 'name')];
+
+        $slots = $this->provider->build($columns, []);
+
+        /** @var ColumnGroup $group */
+        $group = $slots[0];
+        $this->assertSame(ColumnGroup::SUB_LABELS_SHOW, $group->subLabels);
+        $this->assertSame(ColumnGroup::HEADER_TEXT, $group->header);
+    }
+
+    /** @test */
+    public function buildGroupAppearsAtPositionOfFirstMember(): void
+    {
+        $columns = [
+            'id'        => ColumnMetadata::create('id'),
+            'firstName' => ColumnMetadata::create('firstName', group: 'name'),
+            'email'     => ColumnMetadata::create('email'),
+            'lastName'  => ColumnMetadata::create('lastName', group: 'name'),
+        ];
+
+        $slots = $this->provider->build($columns, []);
+
+        // id, [group: name], email — lastName appended to the group at slot[1]
+        $this->assertCount(3, $slots);
+        $this->assertSame('id', $slots[0]);
+        $this->assertInstanceOf(ColumnGroup::class, $slots[1]);
+        $this->assertSame('email', $slots[2]);
+        /** @var ColumnGroup $group */
+        $group = $slots[1];
+        $this->assertArrayHasKey('firstName', $group->columns);
+        $this->assertArrayHasKey('lastName', $group->columns);
+    }
+
+    /** @test */
+    public function buildPreservesColumnOrderWithinGroup(): void
+    {
+        $columns = [
+            'firstName' => ColumnMetadata::create('firstName', group: 'name'),
+            'lastName'  => ColumnMetadata::create('lastName', group: 'name'),
+        ];
+
+        $slots = $this->provider->build($columns, []);
+
+        /** @var ColumnGroup $group */
+        $group = $slots[0];
+        $this->assertSame(['firstName', 'lastName'], array_keys($group->columns));
+    }
+
+    /** @test */
+    public function buildHandlesMultipleIndependentGroups(): void
+    {
+        $columns = [
+            'firstName' => ColumnMetadata::create('firstName', group: 'name'),
+            'lastName'  => ColumnMetadata::create('lastName', group: 'name'),
+            'city'      => ColumnMetadata::create('city', group: 'address'),
+            'country'   => ColumnMetadata::create('country', group: 'address'),
+        ];
+
+        $slots = $this->provider->build($columns, []);
+
+        $this->assertCount(2, $slots);
+        $this->assertInstanceOf(ColumnGroup::class, $slots[0]);
+        $this->assertInstanceOf(ColumnGroup::class, $slots[1]);
+        /** @var ColumnGroup $nameGroup */
+        $nameGroup = $slots[0];
+        /** @var ColumnGroup $addrGroup */
+        $addrGroup = $slots[1];
+        $this->assertSame('name', $nameGroup->id);
+        $this->assertSame('address', $addrGroup->id);
+    }
+
+    /** @test */
+    public function buildReturnsEmptySlotsForEmptyColumns(): void
+    {
+        $slots = $this->provider->build([], []);
+
+        $this->assertSame([], $slots);
     }
 }

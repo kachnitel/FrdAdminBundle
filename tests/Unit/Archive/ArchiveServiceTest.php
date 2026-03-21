@@ -6,7 +6,6 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Archive;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;

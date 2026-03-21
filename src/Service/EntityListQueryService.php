@@ -34,6 +34,8 @@ class EntityListQueryService
      * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
      *                                         (e.g. 'e.deletedAt IS NULL' or 'e.archived = false')
      * @return array{entities: array<object>, total: int, page: int}
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function getEntities(
         string $entityClass,

@@ -11,6 +11,8 @@ use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
+use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
+use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
@@ -87,6 +89,8 @@ class DoctrineDataSourceSearchAwareTest extends TestCase
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $this->columnAttrProvider,
             columnTypeMapper: $this->columnTypeMapper,
+            filterConverter: new DoctrineFilterConverter(),
+            itemValueResolver: new DoctrineItemValueResolver(),
         );
     }
 
@@ -140,11 +144,10 @@ class DoctrineDataSourceSearchAwareTest extends TestCase
     /** @test */
     public function excludesSearchableFieldsNotPresentAsColumns(): void
     {
-        // 'hiddenField' is searchable but not in the configured columns list
         $this->stubDoctrineFields(['id' => 'integer', 'name' => 'string']);
         $this->queryService->method('getSearchableFieldNames')->willReturn(['name', 'hiddenField']);
 
-        $admin = new Admin(columns: ['id', 'name']); // hiddenField not listed
+        $admin = new Admin(columns: ['id', 'name']);
         $labels = $this->makeDataSource(admin: $admin)->getGlobalSearchColumnLabels();
 
         $this->assertContains('Name', $labels);
@@ -176,14 +179,10 @@ class DoctrineDataSourceSearchAwareTest extends TestCase
     /** @test */
     public function skipsSearchableFieldsNotInVisibleColumns(): void
     {
-        // Both fields are Doctrine string fields
         $this->stubDoctrineFields(['id' => 'integer', 'name' => 'string', 'internalCode' => 'string']);
-
-        // Both are searchable at the DB level
         $this->queryService->method('getSearchableFieldNames')
             ->willReturn(['name', 'internalCode']);
 
-        // But #[Admin] only exposes 'name' in the UI
         $labels = $this->makeDataSource(admin: new Admin(columns: ['id', 'name']))->getGlobalSearchColumnLabels();
 
         $this->assertContains('Name', $labels);
