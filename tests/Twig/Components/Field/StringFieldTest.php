@@ -6,15 +6,10 @@ namespace Kachnitel\AdminBundle\Tests\Functional\Field;
 
 use Kachnitel\AdminBundle\Tests\Fixtures\InlineEditEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
+use Kachnitel\EntityComponentsBundle\Components\Field\StringField;
 
 /**
  * Functional tests for StringField LiveComponent.
- *
- * Covers:
- *  - mount() initialises currentValue from the entity
- *  - save() writes the new value and persists
- *  - cancelEdit() reverts currentValue to the refreshed entity state
- *  - Null / empty-string edge cases
  *
  * @group inline-edit
  * @group inline-edit-field
@@ -39,16 +34,11 @@ class StringFieldTest extends ComponentTestCase
     {
         $entity = $this->createEntity('Hello World');
 
-        $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
-            data: [
-                'entity'    => $entity,
-                'property'  => 'title',
-                'editMode'  => true,
-            ],
-        );
+        $component = static::getContainer()->get(StringField::class);
+        $component->editMode = true;
+        $component->mount($entity, 'title');
 
-        $this->assertSame('Hello World', $component->component()->currentValue);
+        $this->assertSame('Hello World', $component->currentValue);
     }
 
     public function testMountDoesNotSetCurrentValueWhenNotInEditMode(): void
@@ -56,7 +46,7 @@ class StringFieldTest extends ComponentTestCase
         $entity = $this->createEntity('Should Not Appear');
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'   => $entity,
                 'property' => 'title',
@@ -64,7 +54,6 @@ class StringFieldTest extends ComponentTestCase
             ],
         );
 
-        // currentValue is only loaded on editMode = true; display uses readValue() in template
         $this->assertFalse($component->component()->editMode);
     }
 
@@ -72,16 +61,11 @@ class StringFieldTest extends ComponentTestCase
     {
         $entity = $this->createEntity('');
 
-        $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
-            data: [
-                'entity'   => $entity,
-                'property' => 'title',
-                'editMode' => true,
-            ],
-        );
+        $component = static::getContainer()->get(StringField::class);
+        $component->editMode = true;
+        $component->mount($entity, 'title');
 
-        $this->assertSame('', $component->component()->currentValue);
+        $this->assertSame('', $component->currentValue);
     }
 
     // ── save() ────────────────────────────────────────────────────────────────
@@ -91,7 +75,7 @@ class StringFieldTest extends ComponentTestCase
         $entity = $this->createEntity('Before');
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'   => $entity,
                 'property' => 'title',
@@ -112,7 +96,7 @@ class StringFieldTest extends ComponentTestCase
         $entity = $this->createEntity();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'   => $entity,
                 'property' => 'title',
@@ -131,7 +115,7 @@ class StringFieldTest extends ComponentTestCase
         $entity = $this->createEntity('Was Set');
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'   => $entity,
                 'property' => 'title',
@@ -154,7 +138,7 @@ class StringFieldTest extends ComponentTestCase
         $entity = $this->createEntity();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'   => $entity,
                 'property' => 'title',
@@ -172,7 +156,7 @@ class StringFieldTest extends ComponentTestCase
         $entity = $this->createEntity('Persisted');
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'   => $entity,
                 'property' => 'title',
@@ -180,7 +164,6 @@ class StringFieldTest extends ComponentTestCase
             ],
         );
 
-        // Simulate user editing without saving
         $component->set('currentValue', 'Unsaved Draft');
         $component->call('cancelEdit');
 
@@ -193,7 +176,7 @@ class StringFieldTest extends ComponentTestCase
         $id = $entity->getId();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'   => $entity,
                 'property' => 'title',

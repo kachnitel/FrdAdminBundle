@@ -1,0 +1,19 @@
+{#
+ # Admin-bundle override of entity-components-bundle's _display.html.twig.
+ #
+ # When rendered inside the EntityList inline-edit context, `entity` and `property`
+ # are always available (injected by AbstractEditableField via #[ExposeInTemplate]).
+ # Delegates to the admin type-template hierarchy which handles all Doctrine types,
+ # enums, related entities, collections, and scalars correctly.
+ #
+ # Variables (inherited from the parent field template scope):
+ #   entity   - object (#[ExposeInTemplate] on resolvedEntity)
+ #   value    - mixed  (#[ExposeInTemplate] on readValue())
+ #   property - string (LiveProp)
+ #}
+{{ include(admin_entity_column_templates(entity, property), {
+    value: value,
+    entity: entity,
+    property: property,
+    cell: false
+}, ignore_missing = true) }}

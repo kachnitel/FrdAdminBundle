@@ -8,6 +8,7 @@ use Kachnitel\AdminBundle\KachnitelAdminBundle;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestDataSourceProvider;
 use Kachnitel\ComponentsBundle\KachnitelComponentsBundle;
 use Kachnitel\DataSourceContracts\DataSourceProviderInterface;
+use Kachnitel\EntityComponentsBundle\KachnitelEntityComponentsBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
@@ -41,7 +42,8 @@ class TestKernel extends Kernel
             new WebpackEncoreBundle(),
 
             new KachnitelAdminBundle(),
-            new KachnitelComponentsBundle()
+            new KachnitelComponentsBundle(),
+            new KachnitelEntityComponentsBundle()
         ];
     }
 

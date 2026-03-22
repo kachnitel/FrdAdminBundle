@@ -6,24 +6,11 @@ namespace Kachnitel\AdminBundle\Tests\Functional\Field;
 
 use Kachnitel\AdminBundle\Tests\Fixtures\InlineEditValidatableEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
-use Kachnitel\AdminBundle\Twig\Components\Field\FloatField;
-use Kachnitel\AdminBundle\Twig\Components\Field\StringField;
+use Kachnitel\EntityComponentsBundle\Components\Field\FloatField;
+use Kachnitel\EntityComponentsBundle\Components\Field\StringField;
 
 /**
- * Functional tests for the validation and save-feedback path introduced in the
- * template-method refactor of AbstractEditableField.save().
- *
- * ## What is tested
- *
- *   1. canEdit() guard — save() on a field whose property is not editable throws RuntimeException
- *      before any entity mutation (security fix).
- *   2. Validation — when a Symfony validator constraint is violated, errorMessage is set,
- *      editMode stays true, and no flush occurs.
- *   3. Save success feedback — after a valid save, saveSuccess=true and editMode=false.
- *   4. Templates — error message and success indicator appear in the rendered HTML.
- *
- * Uses InlineEditValidatableEntity which has explicit #[Assert\NotBlank] and
- * #[Assert\Length] constraints.
+ * Functional tests for the validation and save-feedback path in AbstractEditableField.save().
  *
  * @group inline-edit
  * @group inline-edit-validation
@@ -44,10 +31,6 @@ class InlineEditValidationTest extends ComponentTestCase
 
     // ── Validation: StringField ───────────────────────────────────────────────
 
-    /**
-     * Saving a title that exceeds the #[Assert\Length(max: 20)] constraint must
-     * populate errorMessage and keep the component in edit mode.
-     */
     public function testSaveWithTooLongTitleSetsErrorMessage(): void
     {
         $entity = $this->createEntity();
@@ -55,7 +38,7 @@ class InlineEditValidationTest extends ComponentTestCase
         $component = static::getContainer()->get(StringField::class);
         $component->editMode = true;
         $component->mount($entity, 'title');
-        $component->currentValue = str_repeat('x', 25); // exceeds max:20
+        $component->currentValue = str_repeat('x', 25);
 
         $component->save();
 
@@ -63,9 +46,6 @@ class InlineEditValidationTest extends ComponentTestCase
         $this->assertTrue($component->editMode, 'editMode must stay true after failed validation');
     }
 
-    /**
-     * Saving a blank title against #[Assert\NotBlank] must set errorMessage.
-     */
     public function testSaveWithBlankTitleSetsErrorMessage(): void
     {
         $entity = $this->createEntity();
@@ -80,9 +60,6 @@ class InlineEditValidationTest extends ComponentTestCase
         $this->assertNotSame('', $component->errorMessage);
     }
 
-    /**
-     * A failed save must NOT persist the violating value to the database.
-     */
     public function testValidationFailureDoesNotPersistToDB(): void
     {
         $entity = $this->createEntity('Original');
@@ -100,16 +77,13 @@ class InlineEditValidationTest extends ComponentTestCase
         $this->assertSame('Original', $reloaded?->getTitle(), 'DB value must not change after a failed validation');
     }
 
-    /**
-     * A valid save must clear errorMessage, exit editMode, and set saveSuccess.
-     */
     public function testValidSaveClearsErrorAndSetsSuccessFlag(): void
     {
         $entity = $this->createEntity('Old');
 
         $component = static::getContainer()->get(StringField::class);
         $component->editMode     = true;
-        $component->errorMessage = 'Previous error'; // simulate prior failure
+        $component->errorMessage = 'Previous error';
         $component->mount($entity, 'title');
         $component->currentValue = 'New';
 
@@ -120,9 +94,6 @@ class InlineEditValidationTest extends ComponentTestCase
         $this->assertFalse($component->editMode);
     }
 
-    /**
-     * After a successful save, the new value must be persisted to the database.
-     */
     public function testValidSavePersistsToDB(): void
     {
         $entity = $this->createEntity('Old Title');
@@ -142,9 +113,6 @@ class InlineEditValidationTest extends ComponentTestCase
 
     // ── Validation: FloatField ─────────────────────────────────────────────────
 
-    /**
-     * Saving a score outside the #[Assert\Range(min:0, max:100)] constraint sets errorMessage.
-     */
     public function testSaveWithOutOfRangeScoreSetsErrorMessage(): void
     {
         $entity = $this->createEntity();
@@ -152,7 +120,7 @@ class InlineEditValidationTest extends ComponentTestCase
         $component = static::getContainer()->get(FloatField::class);
         $component->editMode = true;
         $component->mount($entity, 'score');
-        $component->currentValue = 150.0; // exceeds max:100
+        $component->currentValue = 150.0;
 
         $component->save();
 
@@ -162,10 +130,6 @@ class InlineEditValidationTest extends ComponentTestCase
 
     // ── activateEditing clears feedback state ─────────────────────────────────
 
-    /**
-     * activateEditing() must reset errorMessage and saveSuccess so stale feedback
-     * from the previous interaction does not bleed into the new edit session.
-     */
     public function testActivateEditingClearsFeedbackState(): void
     {
         $entity = $this->createEntity();
@@ -185,16 +149,12 @@ class InlineEditValidationTest extends ComponentTestCase
 
     // ── Template output ────────────────────────────────────────────────────────
 
-    /**
-     * When errorMessage is set, the rendered template must contain the error text and
-     * the is-invalid CSS class to trigger Bootstrap's error styling.
-     */
     public function testTemplateRendersErrorMessage(): void
     {
         $entity = $this->createEntity();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'       => $entity,
                 'property'     => 'title',
@@ -209,16 +169,12 @@ class InlineEditValidationTest extends ComponentTestCase
         $this->assertStringContainsString('is-invalid', $html);
     }
 
-    /**
-     * When saveSuccess is true and the component is in display mode, the rendered
-     * template must show the "✓ Saved" indicator.
-     */
     public function testTemplateRendersSaveSuccessIndicator(): void
     {
         $entity = $this->createEntity();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'      => $entity,
                 'property'    => 'title',
@@ -233,15 +189,12 @@ class InlineEditValidationTest extends ComponentTestCase
         $this->assertStringContainsString('✓', $html);
     }
 
-    /**
-     * Verify template does NOT show the success indicator when saveSuccess is false.
-     */
     public function testTemplateDoesNotRenderSuccessIndicatorByDefault(): void
     {
         $entity = $this->createEntity();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:String',
+            name: 'K:Entity:Field:String',
             data: [
                 'entity'      => $entity,
                 'property'    => 'title',

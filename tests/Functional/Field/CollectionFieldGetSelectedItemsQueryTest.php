@@ -7,14 +7,11 @@ namespace Kachnitel\AdminBundle\Tests\Functional\Field;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
-use Kachnitel\AdminBundle\Twig\Components\Field\CollectionField;
+use Kachnitel\EntityComponentsBundle\Components\Field\CollectionField;
 
 /**
  * Verifies that CollectionField::getSelectedItems() correctly resolves all selected
  * entities in a single batch query (IN clause) rather than one find() per ID.
- *
- * The original implementation called EntityManager::find() inside array_map(), which
- * issued one SELECT per selected ID. The fix uses a single IN query via QueryBuilder.
  *
  * @group inline-edit
  * @group inline-edit-collection
@@ -53,9 +50,6 @@ class CollectionFieldGetSelectedItemsQueryTest extends ComponentTestCase
         return $component;
     }
 
-    /**
-     * With 5 selected IDs, all 5 must be returned with correct labels.
-     */
     public function testGetSelectedItemsReturnsAllFiveItems(): void
     {
         $fixtures = $this->createFixturesWithManyTags(5);
@@ -75,9 +69,6 @@ class CollectionFieldGetSelectedItemsQueryTest extends ComponentTestCase
         }
     }
 
-    /**
-     * Items must be returned in selectedIds order, not DB insertion order.
-     */
     public function testGetSelectedItemsPreservesSelectionOrder(): void
     {
         $fixtures = $this->createFixturesWithManyTags(3);
@@ -87,7 +78,6 @@ class CollectionFieldGetSelectedItemsQueryTest extends ComponentTestCase
         $component->editMode = true;
         $component->mount($fixtures['post'], 'tags');
 
-        // Reverse the order from DB insertion order
         $component->selectedIds = array_reverse(
             array_map(fn(TagEntity $t) => $t->getId(), $tags)
         );
@@ -100,9 +90,6 @@ class CollectionFieldGetSelectedItemsQueryTest extends ComponentTestCase
         $this->assertSame($component->selectedIds[2], $items[2]['id']);
     }
 
-    /**
-     * Entity labels must be resolved (TagEntity::__toString returns its name).
-     */
     public function testGetSelectedItemsResolvesEntityLabels(): void
     {
         $fixtures = $this->createFixturesWithManyTags(3);
@@ -125,11 +112,6 @@ class CollectionFieldGetSelectedItemsQueryTest extends ComponentTestCase
         }
     }
 
-    /**
-     * A non-existent ID must produce a "#ID" fallback label rather than throwing or
-     * silently dropping the entry. The IN query returns partial results; the implementation
-     * must fill in missing IDs from the original selectedIds list.
-     */
     public function testGetSelectedItemsFallsBackToIdLabelForMissingEntity(): void
     {
         $fixtures = $this->createFixturesWithManyTags(1);
@@ -138,7 +120,7 @@ class CollectionFieldGetSelectedItemsQueryTest extends ComponentTestCase
         $component->editMode = true;
         $component->mount($fixtures['post'], 'tags');
 
-        $component->selectedIds[] = 99999; // non-existent
+        $component->selectedIds[] = 99999;
 
         $items = $component->getSelectedItems();
 
@@ -154,9 +136,6 @@ class CollectionFieldGetSelectedItemsQueryTest extends ComponentTestCase
         $this->assertSame('#99999', $missingItem['label']);
     }
 
-    /**
-     * Empty selectedIds must return empty array immediately (no DB query).
-     */
     public function testGetSelectedItemsReturnsEmptyArrayWhenNoIdsSelected(): void
     {
         $post = new TestEntity();

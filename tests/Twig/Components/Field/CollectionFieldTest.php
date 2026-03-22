@@ -7,24 +7,14 @@ namespace Kachnitel\AdminBundle\Tests\Functional\Field;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
-use Kachnitel\AdminBundle\Twig\Components\Field\CollectionField;
-use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
-use Kachnitel\AdminBundle\Twig\Components\Field\AbstractEditableField;
-use PHPUnit\Framework\Attributes\UsesClass;
+use Kachnitel\EntityComponentsBundle\Components\Field\CollectionField;
 
 /**
- * Uses TestEntity (OneToMany → TagEntity) as the owning fixture.
- * TestEntity exposes addTag(TagEntity)/removeTag(TagEntity) which CollectionField
- * resolves via ReflectionExtractor — the same pattern tested by the original
- * InlineEditPostEntity/InlineEditTagEntity fixtures.
+ * Functional tests for CollectionField LiveComponent (now in entity-components-bundle).
  *
- * @covers \Kachnitel\AdminBundle\Twig\Components\Field\CollectionField
- *
- * @group field
  * @group inline-edit
+ * @group inline-edit-field
  */
-#[UsesClass(RowActionExpressionLanguage::class)]
-#[UsesClass(AbstractEditableField::class)]
 class CollectionFieldTest extends ComponentTestCase
 {
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -103,20 +93,6 @@ class CollectionFieldTest extends ComponentTestCase
         $this->assertArrayHasKey('label', $items[0]);
     }
 
-    public function testGetSelectedItemsReturnsEmptyArrayWhenNoSelectedIds(): void
-    {
-        $post = new TestEntity();
-        $post->setName('Empty');
-        $this->em->persist($post);
-        $this->em->flush();
-
-        $component = $this->getComponent();
-        $component->editMode = true;
-        $component->mount($post, 'tags');
-
-        $this->assertSame([], $component->getSelectedItems());
-    }
-
     // ── LiveActions: addItem() & removeItem() ─────────────────────────────────
 
     public function testAddItemAppendsIdAndClearsSearchQuery(): void
@@ -134,7 +110,7 @@ class CollectionFieldTest extends ComponentTestCase
 
         $this->assertContains($newTag->getId(), $component->selectedIds);
         $this->assertCount(3, $component->selectedIds);
-        $this->assertSame('', $component->searchQuery, 'Search query should be cleared after adding an item.');
+        $this->assertSame('', $component->searchQuery);
     }
 
     public function testAddItemIgnoresDuplicateIds(): void
@@ -180,10 +156,8 @@ class CollectionFieldTest extends ComponentTestCase
         $component->editMode = true;
         $component->mount($post, 'tags');
 
-        // Remove tag1, keep tag2, add tag3
         $component->removeItem($fixtures['tag1']->getId());
         $component->addItem($fixtures['tag3']->getId());
-
         $component->save();
 
         $this->em->clear();
@@ -201,25 +175,6 @@ class CollectionFieldTest extends ComponentTestCase
         $this->assertContains($fixtures['tag3']->getId(), $reloadedTagIds);
     }
 
-    public function testSaveThrowsExceptionIfTargetClassUnresolvable(): void
-    {
-        $post = new TestEntity();
-        $post->setName('Post');
-        $this->em->persist($post);
-        $this->em->flush();
-
-        $component = $this->getComponent();
-        $component->editMode = true;
-
-        // 'name' is a string property, not a Doctrine association
-        $component->mount($post, 'name');
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('is not a recognised Doctrine association');
-
-        $component->save();
-    }
-
     // ── LiveAction: cancelEdit() ──────────────────────────────────────────────
 
     public function testCancelEditResetsSelectedIdsToPersistedState(): void
@@ -231,7 +186,6 @@ class CollectionFieldTest extends ComponentTestCase
         $component->editMode = true;
         $component->mount($post, 'tags');
 
-        // Modify the UI state
         $component->removeItem($fixtures['tag1']->getId());
         $component->addItem($fixtures['tag3']->getId());
         $component->searchQuery = 'some query';

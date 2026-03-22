@@ -37,6 +37,14 @@ services:
     Kachnitel\AdminBundle\Archive\:
         resource: '../src/Archive'
 
+    # Field editability resolver — admin implementation overrides the permissive default
+    # from kachnitel/entity-components-bundle
+    Kachnitel\AdminBundle\Field\:
+        resource: '../src/Field'
+
+    Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface:
+        alias: Kachnitel\AdminBundle\Field\AdminEditabilityResolver
+
     # Twig Extensions
     Kachnitel\AdminBundle\Twig\Extension\:
         resource: '../src/Twig/Extension'

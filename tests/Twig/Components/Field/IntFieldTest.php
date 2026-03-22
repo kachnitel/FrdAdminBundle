@@ -8,13 +8,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\InlineEditEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
 
 /**
- * Functional tests for IntField LiveComponent.
- *
- * Covers:
- *  - mount() initialises currentValue as string representation of the int
- *  - save() coerces currentValue to int and persists
- *  - cancelEdit() reverts currentValue to the refreshed entity state
- *  - Zero and negative value edge cases
+ * Functional tests for IntField LiveComponent (now in entity-components-bundle).
  *
  * @group inline-edit
  * @group inline-edit-field
@@ -40,7 +34,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity(99);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -48,7 +42,6 @@ class IntFieldTest extends ComponentTestCase
             ],
         );
 
-        // currentValue is stored as the native int from the entity
         $this->assertSame(99, $component->component()->currentValue);
     }
 
@@ -57,7 +50,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity(0);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -73,7 +66,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity(-5);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -91,7 +84,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity(10);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -112,7 +105,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity(50);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -133,7 +126,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity(100);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -154,7 +147,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -175,7 +168,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -193,7 +186,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity(42);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -213,7 +206,7 @@ class IntFieldTest extends ComponentTestCase
         $id = $entity->getId();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -234,7 +227,7 @@ class IntFieldTest extends ComponentTestCase
         $entity = $this->createEntity(0);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Int',
+            name: 'K:Entity:Field:Int',
             data: [
                 'entity'   => $entity,
                 'property' => 'count',
@@ -245,7 +238,6 @@ class IntFieldTest extends ComponentTestCase
         $component->set('currentValue', 99);
         $component->call('cancelEdit');
 
-        // Zero must revert to 0 (int), not null or '' — guards against (int) null = 0 false-positive
         $this->assertSame(0, $component->component()->currentValue);
     }
 }

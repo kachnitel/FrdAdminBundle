@@ -190,20 +190,18 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
     /**
      * Resolve the LiveComponent name for a column's inline-edit field.
      *
-     * Moved from EntityList::getFieldComponentName() so the resolution lives
-     * in the extension layer and templates need only one call:
-     *
-     *   {{ component(admin_field_component_name(entity, column), { ... }) }}
+     * Components are registered by kachnitel/entity-components-bundle under the
+     * K:Entity:Field:* namespace.
      *
      * Resolution order:
-     *   Doctrine association (collection)  → K:Admin:Field:Collection
-     *   Doctrine association (single)      → K:Admin:Field:Relationship
-     *   Date/time types                    → K:Admin:Field:Date
-     *   PHP enum field                     → K:Admin:Field:Enum
-     *   integer/bigint/smallint            → K:Admin:Field:Int
-     *   float/decimal                      → K:Admin:Field:Float
-     *   boolean                            → K:Admin:Field:Bool
-     *   string / unknown / fallback        → K:Admin:Field:String
+     *   Doctrine association (collection)  → K:Entity:Field:Collection
+     *   Doctrine association (single)      → K:Entity:Field:Relationship
+     *   Date/time types                    → K:Entity:Field:Date
+     *   PHP enum field                     → K:Entity:Field:Enum
+     *   integer/bigint/smallint            → K:Entity:Field:Int
+     *   float/decimal                      → K:Entity:Field:Float
+     *   boolean                            → K:Entity:Field:Bool
+     *   string / unknown / fallback        → K:Entity:Field:String
      */
     public function getFieldComponentName(object $entity, string $column): ?string
     {
@@ -214,8 +212,8 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
             if ($metadata->hasAssociation($column)) {
                 return $metadata->isSingleValuedAssociation($column)
-                    ? 'K:Admin:Field:Relationship'
-                    : 'K:Admin:Field:Collection';
+                    ? 'K:Entity:Field:Relationship'
+                    : 'K:Entity:Field:Collection';
             }
 
             if (!$metadata->hasField($column)) {
@@ -228,18 +226,33 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
                 'date', 'datetime', 'datetimetz', 'time',
                 'date_immutable', 'datetime_immutable', 'datetimetz_immutable', 'time_immutable',
             ], true)) {
-                return 'K:Admin:Field:Date';
+                return 'K:Entity:Field:Date';
             }
 
+            // Enum detection: try Doctrine metadata first, fall back to PHP reflection.
+            // FieldFilterConfigTrait uses reflection and is the proven approach.
             if (!empty($metadata->getFieldMapping($column)->enumType)) {
-                return 'K:Admin:Field:Enum';
+                return 'K:Entity:Field:Enum';
+            }
+
+            try {
+                $reflProp = (new \ReflectionClass($entityClass))->getProperty($column);
+                $type     = $reflProp->getType();
+                if ($type instanceof \ReflectionNamedType
+                    && !$type->isBuiltin()
+                    && enum_exists($type->getName())
+                ) {
+                    return 'K:Entity:Field:Enum';
+                }
+            } catch (\ReflectionException) {
+                // property not declared on this class — continue
             }
 
             return match ($fieldType) {
-                'integer', 'bigint', 'smallint' => 'K:Admin:Field:Int',
-                'float', 'decimal'              => 'K:Admin:Field:Float',
-                'boolean'                       => 'K:Admin:Field:Bool',
-                default                         => 'K:Admin:Field:String',
+                'integer', 'bigint', 'smallint' => 'K:Entity:Field:Int',
+                'float', 'decimal'              => 'K:Entity:Field:Float',
+                'boolean'                       => 'K:Entity:Field:Bool',
+                default                         => 'K:Entity:Field:String',
             };
         } catch (\ReflectionException) {
             return null;

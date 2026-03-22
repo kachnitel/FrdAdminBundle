@@ -8,17 +8,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\InlineEditEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
 
 /**
- * Functional tests for BoolField LiveComponent.
- *
- * BoolField stores currentValue as bool — not ?bool. Null values from the
- * entity are coerced to false. BoolField does not support nullable boolean
- * columns; use a non-nullable boolean column with a sensible default instead.
- *
- * Covers:
- *  - mount() sets currentValue to bool (null coerced to false — documented below)
- *  - save() writes the bool back and persists
- *  - cancelEdit() reverts currentValue from the refreshed entity state
- *  - True/false state transitions
+ * Functional tests for BoolField LiveComponent (now in entity-components-bundle).
  *
  * @group inline-edit
  * @group inline-edit-field
@@ -44,7 +34,7 @@ class BoolFieldTest extends ComponentTestCase
         $entity = $this->createEntity(true);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',
@@ -60,7 +50,7 @@ class BoolFieldTest extends ComponentTestCase
         $entity = $this->createEntity(false);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',
@@ -71,16 +61,12 @@ class BoolFieldTest extends ComponentTestCase
         $this->assertFalse($component->component()->currentValue);
     }
 
-    /**
-     * BoolField coerces null → false. Nullable boolean columns are not
-     * supported by this field component; document this as a known limitation.
-     */
     public function testMountCoercesNullToFalse(): void
     {
         $entity = $this->createEntity(null);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',
@@ -88,7 +74,6 @@ class BoolFieldTest extends ComponentTestCase
             ],
         );
 
-        // BoolField does not differentiate null from false
         $this->assertFalse($component->component()->currentValue);
     }
 
@@ -99,7 +84,7 @@ class BoolFieldTest extends ComponentTestCase
         $entity = $this->createEntity(false);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',
@@ -120,7 +105,7 @@ class BoolFieldTest extends ComponentTestCase
         $entity = $this->createEntity(true);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',
@@ -141,7 +126,7 @@ class BoolFieldTest extends ComponentTestCase
         $entity = $this->createEntity();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',
@@ -162,7 +147,7 @@ class BoolFieldTest extends ComponentTestCase
         $entity = $this->createEntity(true);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',
@@ -180,7 +165,7 @@ class BoolFieldTest extends ComponentTestCase
         $entity = $this->createEntity(true);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',
@@ -199,7 +184,7 @@ class BoolFieldTest extends ComponentTestCase
         $entity = $this->createEntity(false);
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',
@@ -219,7 +204,7 @@ class BoolFieldTest extends ComponentTestCase
         $id = $entity->getId();
 
         $component = $this->createLiveComponent(
-            name: 'K:Admin:Field:Bool',
+            name: 'K:Entity:Field:Bool',
             data: [
                 'entity'   => $entity,
                 'property' => 'active',

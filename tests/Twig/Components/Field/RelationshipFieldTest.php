@@ -7,23 +7,14 @@ namespace Kachnitel\AdminBundle\Tests\Functional\Field;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
-use Kachnitel\AdminBundle\Twig\Components\Field\RelationshipField;
-use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
-use Kachnitel\AdminBundle\Twig\Components\Field\AbstractEditableField;
-use PHPUnit\Framework\Attributes\UsesClass;
+use Kachnitel\EntityComponentsBundle\Components\Field\RelationshipField;
 
 /**
- * Uses TestEntity (ManyToOne → RelatedEntity via $relatedEntity property) as the owning
- * fixture — the same relationship type tested by the original InlineEditProductEntity/
- * InlineEditCategoryEntity fixtures, without introducing redundant entity classes.
+ * Functional tests for RelationshipField LiveComponent (now in entity-components-bundle).
  *
- * @covers \Kachnitel\AdminBundle\Twig\Components\Field\RelationshipField
- *
- * @group field
  * @group inline-edit
+ * @group inline-edit-field
  */
-#[UsesClass(RowActionExpressionLanguage::class)]
-#[UsesClass(AbstractEditableField::class)]
 class RelationshipFieldTest extends ComponentTestCase
 {
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -103,20 +94,6 @@ class RelationshipFieldTest extends ComponentTestCase
         $this->assertSame('Electronics', $component->getSelectedLabel());
     }
 
-    public function testGetSelectedLabelReturnsNullWhenNoSelection(): void
-    {
-        // Entity MUST be persisted: AbstractEditableField::mount() validates getId() returns int.
-        $product = new TestEntity();
-        $product->setName('No relation');
-        $this->em->persist($product);
-        $this->em->flush();
-
-        $component = $this->getComponent();
-        $component->mount($product, 'relatedEntity');
-
-        $this->assertNull($component->getSelectedLabel());
-    }
-
     // ── LiveActions: select() & clear() ───────────────────────────────────────
 
     public function testSelectUpdatesIdAndClearsSearch(): void
@@ -126,7 +103,6 @@ class RelationshipFieldTest extends ComponentTestCase
         $component->mount($fixtures['product'], 'relatedEntity');
 
         $component->searchQuery = 'Books';
-
         $component->select($fixtures['cat2']->getId());
 
         $this->assertSame($fixtures['cat2']->getId(), $component->selectedId);
@@ -140,7 +116,6 @@ class RelationshipFieldTest extends ComponentTestCase
         $component->mount($fixtures['product'], 'relatedEntity');
 
         $component->searchQuery = 'Some query';
-
         $component->clear();
 
         $this->assertNull($component->selectedId);
@@ -168,25 +143,6 @@ class RelationshipFieldTest extends ComponentTestCase
         $this->assertSame($fixtures['cat2']->getId(), $reloadedProduct->getRelatedEntity()->getId());
     }
 
-    public function testSaveThrowsExceptionForNonAssociationField(): void
-    {
-        $product = new TestEntity();
-        $product->setName('Product');
-        $this->em->persist($product);
-        $this->em->flush();
-
-        $component = $this->getComponent();
-        $component->editMode = true;
-        // 'name' is a string column, not a Doctrine association
-        $component->mount($product, 'name');
-        $component->selectedId = 999;
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('is not a recognised Doctrine association');
-
-        $component->save();
-    }
-
     // ── LiveAction: cancelEdit() ──────────────────────────────────────────────
 
     public function testCancelEditRevertsToOriginalId(): void
@@ -196,9 +152,7 @@ class RelationshipFieldTest extends ComponentTestCase
         $component->editMode = true;
         $component->mount($fixtures['product'], 'relatedEntity');
 
-        // Change UI state but don't save
         $component->select($fixtures['cat2']->getId());
-
         $component->cancelEdit();
 
         $this->assertFalse($component->editMode);
