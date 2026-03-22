@@ -195,9 +195,9 @@ class RowActionRuntime implements RuntimeExtensionInterface
             $this->logger->warning(
                 'Row action DI condition failed — action will be hidden.',
                 [
-                    'service' => $serviceClass,
-                    'method'  => $method,
-                    'entity'  => $entity::class,
+                    'service'   => $serviceClass,
+                    'method'    => $method,
+                    'entity'    => $entity::class,
                     'exception' => $e->getMessage(),
                 ],
             );
@@ -212,11 +212,12 @@ class RowActionRuntime implements RuntimeExtensionInterface
     private function mapVoterAttributeToActionName(string $voterAttribute): string
     {
         return match ($voterAttribute) {
-            'ADMIN_EDIT'   => 'edit',
-            'ADMIN_SHOW'   => 'show',
-            'ADMIN_DELETE' => 'delete',
-            'ADMIN_NEW'    => 'new',
-            default        => strtolower($voterAttribute),
+            'ADMIN_EDIT'    => 'edit',
+            'ADMIN_SHOW'    => 'show',
+            'ADMIN_DELETE'  => 'delete',
+            'ADMIN_NEW'     => 'new',
+            'ADMIN_ARCHIVE' => 'archive',
+            default         => strtolower($voterAttribute),
         };
     }
 }

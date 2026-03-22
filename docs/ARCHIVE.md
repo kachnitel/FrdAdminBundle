@@ -10,6 +10,9 @@ The archive feature adds a show/hide toggle to the entity list for soft-deleted 
   - [Global Default](#global-default)
   - [Per-Entity Override](#per-entity-override)
   - [Disabling per Entity](#disabling-per-entity)
+- [Archive / Unarchive Row Actions](#archive--unarchive-row-actions)
+  - [Archive Permission](#archive-permission)
+  - [Customising the Buttons](#customising-the-buttons)
 - [Supported Field Types](#supported-field-types)
 - [Role-Gating the Toggle](#role-gating-the-toggle)
 - [Show/Edit Page Banner](#showedit-page-banner)
@@ -35,7 +38,11 @@ class Product
 }
 ```
 
-**2. That's it.** An **"Show archived"** toggle appears in the list view next to the search bar. Archived rows are hidden by default; clicking the toggle reveals them.
+**2. That's it.** The bundle provides:
+
+- A **"Show archived"** toggle in the list view next to the search bar
+- An **Archive** button on each row (for active items)
+- An **Unarchive** button on each row (for archived items, when `showArchived` is on)
 
 ---
 
@@ -43,8 +50,9 @@ class Product
 
 When `archiveExpression` resolves to a simple `item.fieldName` or `entity.fieldName` expression pointing to a Doctrine-mapped boolean or nullable-datetime field, the bundle:
 
-1. Builds a DQL `WHERE` fragment at query time and passes it through the filter pipeline to `EntityListQueryService`.
-2. Evaluates the expression per-row via `RowActionExpressionLanguage` for the show/edit page banner (`admin_is_archived()`).
+1. Builds a DQL `WHERE` fragment at query time to hide archived rows by default.
+2. Evaluates the expression per-row for the archive/unarchive button visibility.
+3. Provides Archive and Unarchive row actions that POST to `/admin/{entitySlug}/{id}/archive` and `/admin/{entitySlug}/{id}/unarchive`.
 
 The `showArchived` state is a `#[LiveProp(url: true)]` on `EntityList`, so the toggle is bookmarkable and survives page refreshes.
 
@@ -73,6 +81,9 @@ Entities that have no per-entity `archiveExpression` will inherit this global se
     label: 'Orders',
     archiveExpression: 'item.cancelledAt',  // overrides global
     archiveRole: 'ROLE_MANAGER',            // overrides global role
+    permissions: [
+        'archive' => 'ROLE_MANAGER',        // who can archive/unarchive
+    ]
 )]
 class Order
 {
@@ -92,6 +103,77 @@ class Category { }
 
 ---
 
+## Archive / Unarchive Row Actions
+
+When archive is configured for an entity, two action buttons appear automatically in the row actions column:
+
+| Button | Icon | Visible when |
+|--------|------|--------------|
+| Archive | 🗃 | Entity is **not** currently archived |
+| Unarchive | 📤 | Entity **is** currently archived (requires "Show archived" toggle) |
+
+Both buttons send a `POST` request with CSRF protection to:
+- `POST /admin/{entitySlug}/{id}/archive`
+- `POST /admin/{entitySlug}/{id}/unarchive`
+
+On success, the page redirects back to the referring page (or to the entity list if no referer is available), and a flash message confirms the action.
+
+### What happens to the field
+
+| Doctrine type | Archive sets | Unarchive sets |
+|---|---|---|
+| `boolean` | `true` | `false` |
+| `datetime` | `new \DateTime()` | `null` |
+| `datetime_immutable` | `new \DateTimeImmutable()` | `null` |
+| `datetimetz` | `new \DateTime()` | `null` |
+| `datetimetz_immutable` | `new \DateTimeImmutable()` | `null` |
+| `date` | `new \DateTime('today')` | `null` |
+| `date_immutable` | `new \DateTimeImmutable('today')` | `null` |
+
+### Archive Permission
+
+The archive and unarchive actions are guarded by the `ADMIN_ARCHIVE` voter attribute. This is a distinct permission that sits **between edit and delete**, so you can allow editors to archive without granting them delete access.
+
+**Configure in `#[Admin]`:**
+
+```php
+#[Admin(
+    label: 'Articles',
+    archiveExpression: 'item.archived',
+    permissions: [
+        'index'   => 'ROLE_USER',
+        'show'    => 'ROLE_USER',
+        'new'     => 'ROLE_EDITOR',
+        'edit'    => 'ROLE_EDITOR',
+        'archive' => 'ROLE_EDITOR',   // ← archive permission
+        'delete'  => 'ROLE_ADMIN',
+    ],
+)]
+class Article { }
+```
+
+If no `archive` permission is set, it falls back to the global `kachnitel_admin.required_role` (default: `ROLE_ADMIN`).
+
+**Use in custom controllers:**
+
+```php
+$this->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_ARCHIVE, 'Article');
+```
+
+### Customising the Buttons
+
+Override the defaults via `#[AdminAction]` with `override: true`:
+
+```php
+// Change the archive button label and icon
+#[AdminAction(name: 'archive', label: 'Soft Delete', icon: '🗑', override: true)]
+
+// Remove the unarchive button
+#[AdminActionsConfig(exclude: ['unarchive'])]
+```
+
+---
+
 ## Supported Field Types
 
 | Doctrine type | "Hide archived" DQL condition |
@@ -104,7 +186,7 @@ class Category { }
 | `date` | `e.field IS NULL` |
 | `date_immutable` | `e.field IS NULL` |
 
-Fields of any other type (string, integer, enum, …) are not supported for DQL generation. The expression is still evaluated per-row by the expression language, but no list-level filtering occurs and `resolveConfig()` returns null — the toggle will not appear.
+Fields of any other type (string, integer, enum, …) are not supported for DQL generation. The expression is still evaluated per-row, but no list-level filtering occurs and `resolveConfig()` returns null — the toggle and archive buttons will not appear.
 
 ---
 
@@ -123,6 +205,8 @@ kachnitel_admin:
 ```
 
 When `archiveRole` is set, the toggle button is hidden for users who do not hold the required role. The DQL restriction (`WHERE e.archived = false`) still applies regardless of role — unapproved users always see the non-archived view only.
+
+> **Note:** `archiveRole` controls the **filter toggle**. The archive/unarchive **action buttons** are controlled separately by the `archive` permission in `#[Admin(permissions: [...])]` or the global `required_role`.
 
 ---
 
@@ -149,8 +233,6 @@ The banner only renders when `admin_is_archived(entity)` returns true, so it is 
     <div class="alert alert-warning">This product is archived.</div>
 {% endif %}
 ```
-
-The function evaluates the configured `archiveExpression` via the expression language, returning a bool. It handles Doctrine proxies transparently.
 
 ---
 
@@ -179,8 +261,10 @@ Variables available:
 
 ## Limitations
 
-- **Simple expressions only for DQL.** The archive filter in the list view only works when the expression is exactly `item.fieldName` or `entity.fieldName`. Complex expressions (e.g. `item.status == "archived"`) are evaluated per-row via the expression language but **do not produce a DQL WHERE clause**, so the list is not pre-filtered — `resolveConfig()` returns null and the toggle does not appear. Use a dedicated boolean or nullable-datetime field for reliable list filtering.
+- **Simple expressions only for DQL.** The archive filter in the list view only works when the expression is exactly `item.fieldName` or `entity.fieldName`. Complex expressions (e.g. `item.status == "archived"`) are evaluated per-row via the expression language but **do not produce a DQL WHERE clause**, so the list is not pre-filtered — `resolveConfig()` returns null and the toggle/buttons do not appear. Use a dedicated boolean or nullable-datetime field for reliable list filtering.
 
 - **No Doctrine filter.** The bundle deliberately does not register a global Doctrine filter. This keeps the feature opt-in and avoids side effects in repositories, console commands, or non-admin code that queries the same entities.
 
 - **Single field per entity.** Only one archive expression per entity is supported.
+
+- **Archive button requires `ArchiveConditionService` in the condition locator.** It implements `RowActionConditionInterface` and is auto-discovered. No manual registration is needed.

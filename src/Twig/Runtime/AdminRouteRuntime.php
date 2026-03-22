@@ -46,7 +46,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             ));
         }
 
-        // Auto-fill route parameters
         $parameters = $this->autoFillIdParameter($object, $route, $parameters);
         $parameters = $this->autoFillClassParameter($object, $route, $parameters);
         $parameters = $this->autoFillEntitySlugParameter($object, $route, $parameters);
@@ -55,9 +54,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * Auto-fill id parameter if object has getId() method or a public $id property.
-     * The property fallback covers DataSource items that use plain objects/stdClass.
-     *
      * @param array<string, mixed> $parameters
      * @return array<string, mixed>
      */
@@ -79,7 +75,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * Auto-fill class parameter if route needs it.
      * @param array<string, mixed> $parameters
      * @return array<string, mixed>
      */
@@ -94,7 +89,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * Auto-fill entitySlug parameter if route needs it (for GenericAdminController).
      * @param array<string, mixed> $parameters
      * @return array<string, mixed>
      */
@@ -103,7 +97,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         if (empty($parameters['entitySlug']) && $this->routeHasParameter($route, 'entitySlug')) {
             $class = is_object($object) ? $this->getRealClass($object) : $object;
             $shortName = (new \ReflectionClass($class))->getShortName();
-            // Convert PascalCase to kebab-case (e.g., WorkStation -> work-station)
             $parameters['entitySlug'] = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($shortName)));
         }
 
@@ -122,7 +115,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             return true;
         }
 
-        // Check if generic admin route exists for this action
         return $this->getGenericAdminRoute($name) !== null;
     }
 
@@ -138,7 +130,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             return $routes->get($name);
         }
 
-        // Fallback to generic admin controller routes
         return $this->getGenericAdminRoute($name);
     }
 
@@ -147,22 +138,20 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
      */
     private function getGenericAdminRoute(string $action): ?string
     {
-        return match($action) {
-            'index' => 'app_admin_entity_index',
-            'show' => 'app_admin_entity_show',
-            'edit' => 'app_admin_entity_edit',
-            'new' => 'app_admin_entity_new',
-            'delete' => 'app_admin_entity_delete',
-            default => null,
+        return match ($action) {
+            'index'     => 'app_admin_entity_index',
+            'show'      => 'app_admin_entity_show',
+            'edit'      => 'app_admin_entity_edit',
+            'new'       => 'app_admin_entity_new',
+            'archive'   => 'app_admin_entity_archive',
+            'unarchive' => 'app_admin_entity_unarchive',
+            'delete'    => 'app_admin_entity_delete',
+            default     => null,
         };
     }
 
-    /**
-     * Get routes attribute - checks both AdminRoutes and App\Attributes\Entity\Routes.
-     */
     private function getRoutesAttribute(object|string $object): ?object
     {
-        // First try AdminRoutes
         $routes = $this->attributeHelper->getAttribute($object, AdminRoutes::class);
 
         if ($routes) {
@@ -172,28 +161,15 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         return null;
     }
 
-    /**
-     * Check if the current user has access to a route.
-     */
     public function isRouteAccessible(string $route): bool
     {
-        // If no auth checker, assume accessible
         if ($this->authChecker === null) {
             return true;
         }
 
-        // For now, just check if route exists
-        // Applications can extend this with custom security logic
         return $this->router->getRouteCollection()->get($route) !== null;
     }
 
-    /**
-     * Check if the current user can perform an action on a specific entity object.
-     *
-     * @param object $entity The entity object
-     * @param string $action Action name ('show', 'edit', 'delete')
-     * @return bool True if action is accessible
-     */
     public function canPerformAction(object $entity, string $action): bool
     {
         $entityClass = $this->getRealClass($entity);
@@ -207,34 +183,31 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
      * Checks permissions and form availability.
      *
      * @param string $entityShortName Entity short name (e.g., 'Product', 'User')
-     * @param string $action Action name ('index', 'show', 'new', 'edit', 'delete')
+     * @param string $action Action name ('index', 'show', 'new', 'edit', 'archive', 'unarchive', 'delete')
      * @return bool True if action is accessible
      */
     public function isActionAccessible(string $entityShortName, string $action): bool
     {
-        // Check if route exists
         if (!$this->hasRoute($entityShortName, $action)) {
             return false;
         }
 
-        // Map action to voter attribute
-        $voterAttribute = match($action) {
-            'index' => AdminEntityVoter::ADMIN_INDEX,
-            'show' => AdminEntityVoter::ADMIN_SHOW,
-            'new' => AdminEntityVoter::ADMIN_NEW,
-            'edit' => AdminEntityVoter::ADMIN_EDIT,
-            'delete' => AdminEntityVoter::ADMIN_DELETE,
-            default => null,
+        $voterAttribute = match ($action) {
+            'index'              => AdminEntityVoter::ADMIN_INDEX,
+            'show'               => AdminEntityVoter::ADMIN_SHOW,
+            'new'                => AdminEntityVoter::ADMIN_NEW,
+            'edit'               => AdminEntityVoter::ADMIN_EDIT,
+            'archive', 'unarchive' => AdminEntityVoter::ADMIN_ARCHIVE,
+            'delete'             => AdminEntityVoter::ADMIN_DELETE,
+            default              => null,
         };
 
-        // Check permission via voter (if auth checker is available)
         if ($this->authChecker !== null && $voterAttribute !== null) {
             if (!$this->authChecker->isGranted($voterAttribute, $entityShortName)) {
                 return false;
             }
         }
 
-        // For new/edit actions, check if form exists
         if (in_array($action, ['new', 'edit'], true)) {
             if (!$this->hasForm($entityShortName)) {
                 return false;
@@ -244,17 +217,12 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         return true;
     }
 
-    /**
-     * Check if an entity has a form defined.
-     */
     private function hasForm(string $entityShortName): bool
     {
         if ($this->formRegistry === null || $this->entityDiscovery === null) {
-            // If dependencies not available, assume form exists
             return true;
         }
 
-        // Try to get form type from Admin attribute first, using the configured entity namespace
         try {
             $entityClass = $this->entityDiscovery->resolveEntityClass($entityShortName, $this->entityNamespace);
             if ($entityClass) {
@@ -267,14 +235,10 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             // Fall through to default behavior
         }
 
-        // Default: check standard form type
         $formType = $this->formNamespace . $entityShortName . $this->formSuffix;
         return $this->formRegistry->hasType($formType);
     }
 
-    /**
-     * Check if route has a specific parameter.
-     */
     private function routeHasParameter(string $route, string $parameter): bool
     {
         $routeObj = $this->router->getRouteCollection()->get($route);
@@ -291,12 +255,8 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         return str_contains($path, '{' . $parameter . '}');
     }
 
-    /**
-     * Get the real class name of an object, handling Doctrine proxies.
-     */
     private function getRealClass(object $object): string
     {
-        // If it's a Doctrine proxy, get the parent class (the real entity class)
         if ($object instanceof Proxy) {
             return get_parent_class($object);
         }

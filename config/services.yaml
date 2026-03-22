@@ -37,6 +37,11 @@ services:
     Kachnitel\AdminBundle\Archive\:
         resource: '../src/Archive'
 
+    # ArchiveEntityService needs PropertyAccessor explicitly
+    Kachnitel\AdminBundle\Archive\ArchiveEntityService:
+        arguments:
+            $propertyAccessor: '@property_accessor'
+
     # Field editability resolver — admin implementation overrides the permissive default
     # from kachnitel/entity-components-bundle
     Kachnitel\AdminBundle\Field\:

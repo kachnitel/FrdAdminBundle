@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Controller;
 
+use Kachnitel\AdminBundle\Archive\ArchiveEntityService;
+use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
@@ -50,9 +52,7 @@ class GenericAdminController extends AbstractAdminController
     }
 
     /**
-     * List of supported entities discovered via #[Admin] attribute.
-     *
-     * @return array<string> List of entity short names (e.g., 'Product', 'Region')
+     * @return array<string>
      */
     protected function getSupportedEntities(): array
     {
@@ -85,58 +85,46 @@ class GenericAdminController extends AbstractAdminController
     #[Route('/admin', name: 'app_admin_dashboard', methods: ['GET'])]
     public function dashboard(): Response
     {
-        // Dashboard uses global required_role (doesn't check entity-specific permissions)
         $this->checkGlobalPermission();
 
         $supportedEntities = $this->getSupportedEntities();
 
-        // sort entities alphabetically by label (with fallback to name if no label)
-        usort($supportedEntities, function($a, $b) {
+        usort($supportedEntities, function ($a, $b) {
             $labelA = $this->entityDiscovery->getAdminAttribute($this->entityNamespace . $a)?->getLabel() ?? $a;
             $labelB = $this->entityDiscovery->getAdminAttribute($this->entityNamespace . $b)?->getLabel() ?? $b;
             return strcasecmp($labelA, $labelB);
         });
 
-        // Filter to entities the current user can index
         $supportedEntities = $this->filterAccessibleEntities($supportedEntities);
 
-        // Convert entities to view data with label and icon from #[Admin] attribute
-        $entities = array_map(function($entityName) {
-            // Resolve full class name
+        $entities = array_map(function ($entityName) {
             $entityClass = $this->entityDiscovery->resolveEntityClass($entityName, $this->entityNamespace);
-
-            // Get Admin attribute if available
             $adminAttr = $entityClass ? $this->entityDiscovery->getAdminAttribute($entityClass) : null;
 
             return [
-                'name' => $entityName,
-                // Use label from attribute, or fallback to formatted entity name
+                'name'  => $entityName,
                 'label' => $adminAttr?->getLabel() ?? trim(preg_replace('/[A-Z]/', ' $0', $entityName)),
-                // Use icon from attribute, or null
-                'icon' => $adminAttr?->getIcon(),
-                // PascalCase to kebab-case slug (e.g. WorkStation -> work-station)
+                'icon'  => $adminAttr?->getIcon(),
                 'slug'  => strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($entityName))),
-                'type' => 'entity',
+                'type'  => 'entity',
             ];
         }, $supportedEntities);
 
-        // Collect non-Doctrine data sources (e.g., audit logs)
         $dataSources = [];
         foreach ($this->dataSourceRegistry->all() as $identifier => $dataSource) {
-            // Skip Doctrine data sources (they're already in entities list)
             if ($dataSource instanceof DoctrineDataSource) {
                 continue;
             }
             $dataSources[] = [
                 'identifier' => $identifier,
-                'label' => $dataSource->getLabel(),
-                'icon' => $dataSource->getIcon(),
-                'type' => 'datasource',
+                'label'      => $dataSource->getLabel(),
+                'icon'       => $dataSource->getIcon(),
+                'type'       => 'datasource',
             ];
         }
 
         return $this->render('@KachnitelAdmin/admin/dashboard.html.twig', [
-            'entities' => $entities,
+            'entities'    => $entities,
             'dataSources' => $dataSources,
         ]);
     }
@@ -148,8 +136,8 @@ class GenericAdminController extends AbstractAdminController
         $this->checkEntityPermission(AdminEntityVoter::ADMIN_INDEX, $entityName);
 
         return $this->render('@KachnitelAdmin/admin/index_live.html.twig', [
-            'entityClass' => $this->entityNamespace . $entityName,
-            'entityShortClass' => $entityName
+            'entityClass'      => $this->entityNamespace . $entityName,
+            'entityShortClass' => $entityName,
         ]);
     }
 
@@ -180,6 +168,91 @@ class GenericAdminController extends AbstractAdminController
         return $this->doEdit($entityName, $id);
     }
 
+    // ── Archive / Unarchive ────────────────────────────────────────────────────
+
+    /**
+     * Archive an entity (set the configured archive field).
+     *
+     * The archive field and type are determined by the entity's #[Admin(archiveExpression:)]
+     * attribute or the global kachnitel_admin.archive.expression configuration.
+     *
+     * Requires ADMIN_ARCHIVE voter attribute.
+     * The CSRF token is validated using the key "archive_{id}".
+     * Redirects to referer on success, or to the entity index.
+     */
+    #[Route('/admin/{entitySlug}/{id}/archive', name: 'app_admin_entity_archive', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function archive(
+        Request $request,
+        string $entitySlug,
+        int $id,
+        ArchiveService $archiveService,
+        ArchiveEntityService $archiveEntityService,
+    ): Response {
+        $entityName = $this->resolveEntityName($entitySlug);
+        $this->checkEntityPermission(AdminEntityVoter::ADMIN_ARCHIVE, $entityName);
+
+        $entity = $this->getRepository($entityName)->find($id);
+        if (!$entity) {
+            throw $this->createNotFoundException('No ' . $entityName . ' found for id ' . $id);
+        }
+
+        $this->validateArchiveCsrf($request, 'archive', $id);
+
+        $entityClass = $this->entityNamespace . $entityName;
+        $config = $archiveService->resolveConfig($entityClass);
+
+        if ($config === null) {
+            throw new NotFoundHttpException('Archive is not configured for ' . $entityName);
+        }
+
+        $archiveEntityService->archive($entity, $config);
+
+        $this->addFlash('success', $entityName . ' #' . $id . ' archived.');
+
+        return $this->redirectToRefererOrIndex($request, $entitySlug);
+    }
+
+    /**
+     * Unarchive an entity (clear the configured archive field).
+     *
+     * Requires ADMIN_ARCHIVE voter attribute.
+     * The CSRF token is validated using the key "unarchive_{id}".
+     * Redirects to referer on success, or to the entity index.
+     */
+    #[Route('/admin/{entitySlug}/{id}/unarchive', name: 'app_admin_entity_unarchive', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function unarchive(
+        Request $request,
+        string $entitySlug,
+        int $id,
+        ArchiveService $archiveService,
+        ArchiveEntityService $archiveEntityService,
+    ): Response {
+        $entityName = $this->resolveEntityName($entitySlug);
+        $this->checkEntityPermission(AdminEntityVoter::ADMIN_ARCHIVE, $entityName);
+
+        $entity = $this->getRepository($entityName)->find($id);
+        if (!$entity) {
+            throw $this->createNotFoundException('No ' . $entityName . ' found for id ' . $id);
+        }
+
+        $this->validateArchiveCsrf($request, 'unarchive', $id);
+
+        $entityClass = $this->entityNamespace . $entityName;
+        $config = $archiveService->resolveConfig($entityClass);
+
+        if ($config === null) {
+            throw new NotFoundHttpException('Archive is not configured for ' . $entityName);
+        }
+
+        $archiveEntityService->unarchive($entity, $config);
+
+        $this->addFlash('success', $entityName . ' #' . $id . ' unarchived.');
+
+        return $this->redirectToRefererOrIndex($request, $entitySlug);
+    }
+
+    // ── Delete ─────────────────────────────────────────────────────────────────
+
     #[Route('/admin/{entitySlug}/{id}', name: 'app_admin_entity_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function delete(Request $request, string $entitySlug, int $id): Response
     {
@@ -189,11 +262,8 @@ class GenericAdminController extends AbstractAdminController
         return $this->doDeleteEntity($entityName, $id, $request);
     }
 
-    // ===== Data Source Routes (for non-Doctrine data sources like audit logs) =====
+    // ── Data Source Routes ─────────────────────────────────────────────────────
 
-    /**
-     * List data source entries.
-     */
     #[Route('/admin/data/{dataSourceId}', name: 'app_admin_datasource_index', methods: ['GET'], priority: 10)]
     public function dataSourceIndex(string $dataSourceId): Response
     {
@@ -206,13 +276,10 @@ class GenericAdminController extends AbstractAdminController
 
         return $this->render('@KachnitelAdmin/admin/datasource_index.html.twig', [
             'dataSourceId' => $dataSourceId,
-            'dataSource' => $dataSource,
+            'dataSource'   => $dataSource,
         ]);
     }
 
-    /**
-     * Show a single data source entry.
-     */
     #[Route('/admin/data/{dataSourceId}/{id}', name: 'app_admin_datasource_show', methods: ['GET'], priority: 10)]
     public function dataSourceShow(string $dataSourceId, string $id): Response
     {
@@ -234,15 +301,14 @@ class GenericAdminController extends AbstractAdminController
 
         return $this->render('@KachnitelAdmin/admin/datasource_show.html.twig', [
             'dataSourceId' => $dataSourceId,
-            'dataSource' => $dataSource,
-            'item' => $item,
+            'dataSource'   => $dataSource,
+            'item'         => $item,
         ]);
     }
 
+    // ── Private helpers ────────────────────────────────────────────────────────
+
     /**
-     * Filter entity names to only those the current user is granted ADMIN_INDEX on.
-     * When authentication is disabled (requiredRole === null), all entities pass through.
-     *
      * @param array<string> $entityNames
      * @return array<string>
      */
@@ -254,13 +320,10 @@ class GenericAdminController extends AbstractAdminController
 
         return array_values(array_filter(
             $entityNames,
-            fn(string $name) => $this->isGranted(AdminEntityVoter::ADMIN_INDEX, $name)
+            fn (string $name) => $this->isGranted(AdminEntityVoter::ADMIN_INDEX, $name)
         ));
     }
 
-    /**
-     * Check entity-specific permissions if authentication is enabled.
-     */
     private function checkEntityPermission(string $attribute, string $entityName): void
     {
         if ($this->requiredRole !== null) {
@@ -268,9 +331,6 @@ class GenericAdminController extends AbstractAdminController
         }
     }
 
-    /**
-     * Check global permissions if authentication is enabled.
-     */
     private function checkGlobalPermission(): void
     {
         if ($this->requiredRole !== null) {
@@ -278,15 +338,10 @@ class GenericAdminController extends AbstractAdminController
         }
     }
 
-    /**
-     * Converts a kebab-case slug (e.g. work-station) to PascalCase Entity name (e.g. WorkStation).
-     * Validates against the supported entities list.
-     */
     private function resolveEntityName(string $slug): string
     {
-        // Convert 'work-station' to 'WorkStation'
         $entityName = implode('', array_map(
-            fn($part) => ucfirst($part),
+            fn ($part) => ucfirst($part),
             explode('-', $slug)
         ));
 
@@ -302,5 +357,31 @@ class GenericAdminController extends AbstractAdminController
         $entityClass = $this->entityNamespace . $class;
         $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
         return $adminAttr?->getFormComponent() ?? 'K:Admin:EntityForm';
+    }
+
+    /**
+     * Validate the CSRF token for archive/unarchive actions.
+     * The token key matches what _RowActionButton.html.twig generates:
+     * "{{ csrf_token(action.name ~ '_' ~ entityId) }}"
+     */
+    private function validateArchiveCsrf(Request $request, string $actionName, int $entityId): void
+    {
+        $csrfKey = $actionName . '_' . $entityId;
+        if (!$this->isCsrfTokenValid($csrfKey, $request->request->get('_token'))) {
+            throw new \InvalidArgumentException('Invalid CSRF token for ' . $csrfKey);
+        }
+    }
+
+    /**
+     * Redirect to the HTTP referer if available and safe, otherwise to the entity index.
+     */
+    private function redirectToRefererOrIndex(Request $request, string $entitySlug): Response
+    {
+        $referer = $request->headers->get('referer');
+        if ($referer) {
+            return $this->redirect($referer);
+        }
+
+        return $this->redirectToRoute('app_admin_entity_index', ['entitySlug' => $entitySlug]);
     }
 }

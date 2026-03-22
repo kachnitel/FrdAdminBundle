@@ -23,6 +23,7 @@ class TestAdminEntityVoter extends Voter
             AdminEntityVoter::ADMIN_SHOW,
             AdminEntityVoter::ADMIN_NEW,
             AdminEntityVoter::ADMIN_EDIT,
+            AdminEntityVoter::ADMIN_ARCHIVE,
             AdminEntityVoter::ADMIN_DELETE,
         ], true);
     }

@@ -14,7 +14,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 /**
  * Security voter for admin entity access control.
  *
- * Supports attributes: ADMIN_INDEX, ADMIN_SHOW, ADMIN_NEW, ADMIN_EDIT, ADMIN_DELETE
+ * Supports attributes: ADMIN_INDEX, ADMIN_SHOW, ADMIN_NEW, ADMIN_EDIT, ADMIN_ARCHIVE, ADMIN_DELETE
  * Subject must be the entity short name (e.g., 'Product')
  *
  * Permission resolution order:
@@ -24,7 +24,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  *
  * Usage in controllers:
  *   #[IsGranted('ADMIN_INDEX', subject: 'entityName')]
- *   #[IsGranted('ADMIN_EDIT', subject: 'entityName')]
+ *   #[IsGranted('ADMIN_ARCHIVE', subject: 'entityName')]
  *
  * @extends Voter<string, string>
  */
@@ -34,17 +34,19 @@ class AdminEntityVoter extends Voter
     public const ADMIN_SHOW = 'ADMIN_SHOW';
     public const ADMIN_NEW = 'ADMIN_NEW';
     public const ADMIN_EDIT = 'ADMIN_EDIT';
+    public const ADMIN_ARCHIVE = 'ADMIN_ARCHIVE';
     public const ADMIN_DELETE = 'ADMIN_DELETE';
 
     /**
      * Map voter attributes to Admin attribute action names.
      */
     private const ACTION_MAP = [
-        self::ADMIN_INDEX => 'index',
-        self::ADMIN_SHOW => 'show',
-        self::ADMIN_NEW => 'new',
-        self::ADMIN_EDIT => 'edit',
-        self::ADMIN_DELETE => 'delete',
+        self::ADMIN_INDEX   => 'index',
+        self::ADMIN_SHOW    => 'show',
+        self::ADMIN_NEW     => 'new',
+        self::ADMIN_EDIT    => 'edit',
+        self::ADMIN_ARCHIVE => 'archive',
+        self::ADMIN_DELETE  => 'delete',
     ];
 
     public function __construct(
@@ -56,18 +58,17 @@ class AdminEntityVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        // Check if attribute is one we support
         if (!in_array($attribute, [
             self::ADMIN_INDEX,
             self::ADMIN_SHOW,
             self::ADMIN_NEW,
             self::ADMIN_EDIT,
+            self::ADMIN_ARCHIVE,
             self::ADMIN_DELETE,
         ], true)) {
             return false;
         }
 
-        // Subject must be a string (entity short name)
         return is_string($subject);
     }
 
@@ -76,25 +77,19 @@ class AdminEntityVoter extends Voter
      */
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
-        // Get the action name from our map
         $action = self::ACTION_MAP[$attribute];
-
-        // Resolve required role for this entity and action
         $requiredRole = $this->getRequiredRole($subject, $action);
 
-        // If no role is required (null), grant access (authentication disabled)
         if ($requiredRole === null) {
             return true;
         }
 
         $user = $token->getUser();
 
-        // User must be logged in
         if (!$user instanceof UserInterface) {
             return false;
         }
 
-        // Check if user has the required role
         return $this->hasRole($token, $requiredRole);
     }
 
@@ -102,49 +97,38 @@ class AdminEntityVoter extends Voter
      * Get the required role for a specific entity action.
      *
      * @param string $entityName Entity short name (e.g., 'Product')
-     * @param string $action Action name ('index', 'show', 'new', 'edit', 'delete')
-     * @return string|null Required role (e.g., 'ROLE_ADMIN') or null if authentication disabled
+     * @param string $action Action name ('index', 'show', 'new', 'edit', 'archive', 'delete')
+     * @return string|null Required role or null if authentication disabled
      */
     private function getRequiredRole(string $entityName, string $action): ?string
     {
-        // Resolve full entity class name
         $entityClass = $this->entityDiscovery->resolveEntityClass($entityName, $this->entityNamespace);
 
         if (!$entityClass) {
-            // Entity not found, use default role
             return $this->defaultRequiredRole;
         }
 
-        // Get Admin attribute
         $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
 
         if (!$adminAttr) {
-            // No Admin attribute, use default role
             return $this->defaultRequiredRole;
         }
 
-        // Check for action-specific permission
         $actionPermission = $adminAttr->getPermissionForAction($action);
 
         if ($actionPermission !== null) {
             return $actionPermission;
         }
 
-        // Fall back to default role
         return $this->defaultRequiredRole;
     }
 
-    /**
-     * Check if user has the specified role.
-     * Delegates to the AccessDecisionManager to handle hierarchy and special roles.
-     */
     private function hasRole(TokenInterface $token, string $role): bool
     {
         if (null !== $this->decisionManager) {
             return $this->decisionManager->decide($token, [$role]);
         }
 
-        // Fall back to simple string comparison (no hierarchy support)
         foreach ($token->getRoleNames() as $tokenRole) {
             if ($tokenRole === $role) {
                 return true;
