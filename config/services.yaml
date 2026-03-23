@@ -100,13 +100,15 @@ services:
     # Generic Admin Controller (auto-discovers entities via #[Admin] attribute)
     Kachnitel\AdminBundle\Controller\GenericAdminController:
         arguments:
+            $em: '@doctrine.orm.entity_manager'
             $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
-            $routePrefix: '%kachnitel_admin.route_prefix%'
-            $dashboardRoute: '%kachnitel_admin.dashboard_route%'
             $entityNamespace: '%kachnitel_admin.entity_namespace%'
-            $requiredRole: '%kachnitel_admin.required_role%'
             $formNamespace: '%kachnitel_admin.form_namespace%'
             $formSuffix: '%kachnitel_admin.form_suffix%'
+            $dataSourceRegistry: '@Kachnitel\AdminBundle\DataSource\DataSourceRegistry'
+            $routePrefix: '%kachnitel_admin.route_prefix%'
+            $dashboardRoute: '%kachnitel_admin.dashboard_route%'
+            $requiredRole: '%kachnitel_admin.required_role%'
         tags: ['controller.service_arguments']
 
     # Security Voter for entity admin access control

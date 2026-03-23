@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Archive\ArchiveEntityService;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
@@ -14,7 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * Generic Admin Controller with auto-discovery via #[Admin] attribute.
@@ -30,25 +30,23 @@ use Symfony\Contracts\Service\Attribute\Required;
  * Permissions are checked using the AdminEntityVoter which respects:
  * 1. Entity-specific permissions from #[Admin(permissions: [...])]
  * 2. Global required_role configuration (fallback)
+ *
+ * @SuppressWarnings(TooManyPublicMethods)
  */
 class GenericAdminController extends AbstractAdminController
 {
-    private DataSourceRegistry $dataSourceRegistry;
-
     public function __construct(
+        EntityManagerInterface $em,
         private readonly EntityDiscoveryService $entityDiscovery,
         private readonly string $entityNamespace,
         private readonly string $formNamespace,
         private readonly string $formSuffix,
+        private readonly DataSourceRegistry $dataSourceRegistry,
         private readonly string $routePrefix = 'app_admin_entity',
         private readonly string $dashboardRoute = 'app_admin_dashboard',
         private readonly ?string $requiredRole = 'ROLE_ADMIN',
-    ) {}
-
-    #[Required]
-    public function setDataSourceRegistry(DataSourceRegistry $registry): void
-    {
-        $this->dataSourceRegistry = $registry;
+    ) {
+        parent::__construct($em);
     }
 
     /**

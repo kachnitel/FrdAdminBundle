@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Controller\AbstractAdminController;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,7 +25,9 @@ class AbstractAdminControllerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->controller = new ConcreteAdminController();
+        /** @var EntityManagerInterface|MockObject $em */
+        $em = $this->createMock(EntityManagerInterface::class);
+        $this->controller = new ConcreteAdminController($em);
     }
 
     /**

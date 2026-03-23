@@ -222,41 +222,61 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
             $fieldType = $metadata->getTypeOfField($column);
 
-            if (in_array($fieldType, [
-                'date', 'datetime', 'datetimetz', 'time',
-                'date_immutable', 'datetime_immutable', 'datetimetz_immutable', 'time_immutable',
-            ], true)) {
+            if ($this->isDateTimeFieldType($fieldType)) {
                 return 'K:Entity:Field:Date';
             }
 
-            // Enum detection: try Doctrine metadata first, fall back to PHP reflection.
-            // FieldFilterConfigTrait uses reflection and is the proven approach.
-            if (!empty($metadata->getFieldMapping($column)->enumType)) {
+            if ($this->isEnumField($metadata, $entityClass, $column)) {
                 return 'K:Entity:Field:Enum';
             }
 
-            try {
-                $reflProp = (new \ReflectionClass($entityClass))->getProperty($column);
-                $type     = $reflProp->getType();
-                if ($type instanceof \ReflectionNamedType
-                    && !$type->isBuiltin()
-                    && enum_exists($type->getName())
-                ) {
-                    return 'K:Entity:Field:Enum';
-                }
-            } catch (\ReflectionException) {
-                // property not declared on this class — continue
-            }
-
-            return match ($fieldType) {
-                'integer', 'bigint', 'smallint' => 'K:Entity:Field:Int',
-                'float', 'decimal'              => 'K:Entity:Field:Float',
-                'boolean'                       => 'K:Entity:Field:Bool',
-                default                         => 'K:Entity:Field:String',
-            };
+            return $this->mapScalarFieldType($fieldType);
         } catch (\ReflectionException) {
             return null;
         }
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    private function isDateTimeFieldType(?string $fieldType): bool
+    {
+        return in_array($fieldType, [
+            'date', 'datetime', 'datetimetz', 'time',
+            'date_immutable', 'datetime_immutable', 'datetimetz_immutable', 'time_immutable',
+        ], true);
+    }
+
+    /**
+     * @param \Doctrine\ORM\Mapping\ClassMetadata<object> $metadata
+     */
+    private function isEnumField(
+        \Doctrine\ORM\Mapping\ClassMetadata $metadata,
+        string $entityClass,
+        string $column
+    ): bool {
+        if (!empty($metadata->getFieldMapping($column)->enumType)) {
+            return true;
+        }
+
+        try {
+            $reflProp = (new \ReflectionClass($entityClass))->getProperty($column);
+            $type     = $reflProp->getType();
+            return $type instanceof \ReflectionNamedType
+                && !$type->isBuiltin()
+                && enum_exists($type->getName());
+        } catch (\ReflectionException) {
+            return false;
+        }
+    }
+
+    private function mapScalarFieldType(?string $fieldType): string
+    {
+        return match ($fieldType) {
+            'integer', 'bigint', 'smallint' => 'K:Entity:Field:Int',
+            'float', 'decimal'              => 'K:Entity:Field:Float',
+            'boolean'                       => 'K:Entity:Field:Bool',
+            default                         => 'K:Entity:Field:String',
+        };
     }
 
     /**

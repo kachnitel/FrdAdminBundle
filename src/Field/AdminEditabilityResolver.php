@@ -50,32 +50,8 @@ final class AdminEditabilityResolver implements EditabilityResolverInterface
             AdminColumn::class,
         );
 
-        // 1. Explicit false — never editable; short-circuits everything
-        if ($attr !== null && $attr->editable === false) {
+        if (!$this->isEligibleByAttribute($entity, $attr)) {
             return false;
-        }
-
-        // 2. Expression string — evaluate; entity default bypassed entirely
-        if ($attr !== null && is_string($attr->editable)) {
-            if (!$this->expressionLanguage->evaluate(
-                $attr->editable,
-                $entity,
-                $this->authorizationChecker,
-            )) {
-                return false;
-            }
-            // Expression passed — fall through to voter + writable
-        } elseif ($attr !== null && $attr->editable === true) {
-            // 3. Explicit true — bypass entity default; fall through to voter + writable
-        } else {
-            // 4. null or no attribute — check entity-level enableInlineEdit
-            /** @var Admin|null $adminAttr */
-            $adminAttr = $this->attributeHelper->getAttribute($entity::class, Admin::class);
-
-            if ($adminAttr === null || !$adminAttr->isEnableInlineEdit()) {
-                return false;
-            }
-            // Entity flag passes — fall through to voter + writable
         }
 
         // 5. Voter check — AdminEntityVoter must grant ADMIN_EDIT for this entity type
@@ -86,5 +62,39 @@ final class AdminEditabilityResolver implements EditabilityResolverInterface
 
         // 6. Property must have a setter
         return $this->propertyAccessor->isWritable($entity, $property);
+    }
+
+    /**
+     * Determine editability eligibility based solely on #[AdminColumn] and #[Admin] attributes.
+     *
+     * Returns false when the column/entity configuration prohibits editing.
+     * Returns true when it is permitted (voter + writable checks still apply after).
+     */
+    private function isEligibleByAttribute(object $entity, ?AdminColumn $attr): bool
+    {
+        // 1. Explicit false — never editable; short-circuits everything
+        if ($attr !== null && $attr->editable === false) {
+            return false;
+        }
+
+        // 2. Expression string — evaluate; entity default bypassed entirely
+        if ($attr !== null && is_string($attr->editable)) {
+            return $this->expressionLanguage->evaluate(
+                $attr->editable,
+                $entity,
+                $this->authorizationChecker,
+            );
+        }
+
+        // 3. Explicit true — bypass entity default; eligible
+        if ($attr !== null && $attr->editable === true) {
+            return true;
+        }
+
+        // 4. null or no attribute — check entity-level enableInlineEdit
+        /** @var Admin|null $adminAttr */
+        $adminAttr = $this->attributeHelper->getAttribute($entity::class, Admin::class);
+
+        return $adminAttr !== null && $adminAttr->isEnableInlineEdit();
     }
 }

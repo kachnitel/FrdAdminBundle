@@ -7,7 +7,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * Abstract base controller for entity CRUD operations.
@@ -22,13 +21,7 @@ abstract class AbstractAdminController extends AbstractController
 {
     use DeleteEntityTrait;
 
-    protected EntityManagerInterface $em;
-
-    #[Required]
-    public function setEntityManager(EntityManagerInterface $em): void
-    {
-        $this->em = $em;
-    }
+    public function __construct(protected EntityManagerInterface $em) {}
 
     /**
      * List all entities of the given class.
