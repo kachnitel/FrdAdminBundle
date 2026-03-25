@@ -1,6 +1,6 @@
-![Tests](<https://img.shields.io/badge/tests-1154%20passed-red>)
+![Tests](<https://img.shields.io/badge/tests-1236%20passed-red>)
 ![Coverage](<https://img.shields.io/badge/coverage-81%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-2394-blue>)
+![Assertions](<https://img.shields.io/badge/assertions-2507-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-6-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0|^8.0-000000?logo=symfony&logoColor=white>)

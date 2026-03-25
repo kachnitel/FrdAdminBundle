@@ -23,23 +23,21 @@ class AdminEditabilityResolverTest extends TestCase
     /** @var AttributeHelper&MockObject */
     private AttributeHelper $attributeHelper;
 
-    /** @var RowActionExpressionLanguage&MockObject */
-    private RowActionExpressionLanguage $expressionLanguage;
-
     /** @var AuthorizationCheckerInterface&MockObject */
     private AuthorizationCheckerInterface $authChecker;
 
     /** @var PropertyAccessorInterface&MockObject */
     private PropertyAccessorInterface $propertyAccessor;
 
+    private RowActionExpressionLanguage $expressionLanguage;
     private AdminEditabilityResolver $resolver;
 
     protected function setUp(): void
     {
         $this->attributeHelper    = $this->createMock(AttributeHelper::class);
-        $this->expressionLanguage = $this->createMock(RowActionExpressionLanguage::class);
         $this->authChecker        = $this->createMock(AuthorizationCheckerInterface::class);
         $this->propertyAccessor   = $this->createMock(PropertyAccessorInterface::class);
+        $this->expressionLanguage = new RowActionExpressionLanguage();
 
         $this->resolver = new AdminEditabilityResolver(
             $this->attributeHelper,
@@ -49,192 +47,292 @@ class AdminEditabilityResolverTest extends TestCase
         );
     }
 
-    // ── editable: false — short-circuits everything ─────────────────────────
-
-    /** @test */
-    public function editableFalseReturnsFalseWithoutCheckingAnythingElse(): void
+    private function stubEntityAdmin(?Admin $admin): void
     {
-        $entity = new \stdClass();
-
-        $this->attributeHelper->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: false));
-
-        // Should never reach voter or writable checks
-        $this->authChecker->expects($this->never())->method('isGranted');
-        $this->propertyAccessor->expects($this->never())->method('isWritable');
-        $this->attributeHelper->expects($this->never())->method('getAttribute');
-
-        $this->assertFalse($this->resolver->canEdit($entity, 'name'));
+        $this->attributeHelper
+            ->method('getAttribute')
+            ->willReturn($admin);
     }
 
-    // ── editable: 'expression' ──────────────────────────────────────────────
-
-    /** @test */
-    public function expressionFalseReturnsFalseWithoutVoterCheck(): void
+    private function stubColumnAttr(?AdminColumn $attr): void
     {
-        $entity = new \stdClass();
-
-        $this->attributeHelper->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: 'entity.active'));
-
-        $this->expressionLanguage->method('evaluate')->willReturn(false);
-
-        $this->authChecker->expects($this->never())->method('isGranted');
-
-        $this->assertFalse($this->resolver->canEdit($entity, 'name'));
+        $this->attributeHelper
+            ->method('getPropertyAttribute')
+            ->willReturn($attr);
     }
 
-    /** @test */
-    public function expressionTrueStillChecksVoterAndWritable(): void
+    private function stubVoterGranted(bool $granted = true): void
     {
-        $entity = new \stdClass();
-
-        $this->attributeHelper->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: 'entity.active'));
-
-        $this->expressionLanguage->method('evaluate')->willReturn(true);
-        $this->authChecker->method('isGranted')->willReturn(true);
-        $this->propertyAccessor->method('isWritable')->willReturn(true);
-
-        $this->assertTrue($this->resolver->canEdit($entity, 'name'));
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturn($granted);
     }
 
-    /** @test */
-    public function expressionTrueButVoterDeniesReturnsFalse(): void
+    private function stubWritable(bool $writable = true): void
     {
-        $entity = new \stdClass();
-
-        $this->attributeHelper->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: 'entity.active'));
-
-        $this->expressionLanguage->method('evaluate')->willReturn(true);
-        $this->authChecker->method('isGranted')->willReturn(false);
-
-        $this->assertFalse($this->resolver->canEdit($entity, 'name'));
+        $this->propertyAccessor
+            ->method('isWritable')
+            ->willReturn($writable);
     }
 
-    // ── editable: true — bypasses entity default ────────────────────────────
-
-    /** @test */
-    public function editableTrueBypassesEntityFlagAndChecksVoterAndWritable(): void
+    private function makeEntity(): object
     {
-        $entity = new \stdClass();
-
-        $this->attributeHelper->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: true));
-
-        // Entity-level attribute must NOT be consulted
-        $this->attributeHelper->expects($this->never())->method('getAttribute');
-
-        $this->authChecker->method('isGranted')->willReturn(true);
-        $this->propertyAccessor->method('isWritable')->willReturn(true);
-
-        $this->assertTrue($this->resolver->canEdit($entity, 'name'));
+        return new class {
+            public string $title = '';
+        };
     }
 
-    /** @test */
-    public function editableTrueButVoterDeniesReturnsFalse(): void
-    {
-        $entity = new \stdClass();
-
-        $this->attributeHelper->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: true));
-
-        $this->authChecker->method('isGranted')->willReturn(false);
-
-        $this->assertFalse($this->resolver->canEdit($entity, 'name'));
-    }
+    // ── editable: false short-circuits everything ──────────────────────────────
 
     /** @test */
-    public function editableTrueButNotWritableReturnsFalse(): void
+    public function editableFalseReturnsFalseRegardlessOfEverythingElse(): void
     {
-        $entity = new \stdClass();
+        $this->stubColumnAttr(new AdminColumn(editable: false));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(true);
+        $this->stubWritable(true);
 
-        $this->attributeHelper->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: true));
-
-        $this->authChecker->method('isGranted')->willReturn(true);
-        $this->propertyAccessor->method('isWritable')->willReturn(false);
-
-        $this->assertFalse($this->resolver->canEdit($entity, 'name'));
-    }
-
-    // ── editable: null / no attribute — falls back to entity flag ───────────
-
-    /** @test */
-    public function nullColumnAttrAndEntityEnabledAllowsEditWhenVoterGrantsAndWritable(): void
-    {
-        $entity = new \stdClass();
-
-        $this->attributeHelper->method('getPropertyAttribute')->willReturn(null);
-        $this->attributeHelper->method('getAttribute')
-            ->willReturn(new Admin(enableInlineEdit: true));
-
-        $this->authChecker->method('isGranted')->willReturn(true);
-        $this->propertyAccessor->method('isWritable')->willReturn(true);
-
-        $this->assertTrue($this->resolver->canEdit($entity, 'name'));
-    }
-
-    /** @test */
-    public function nullColumnAttrAndEntityDisabledReturnsFalseWithoutVoterCheck(): void
-    {
-        $entity = new \stdClass();
-
-        $this->attributeHelper->method('getPropertyAttribute')->willReturn(null);
-        $this->attributeHelper->method('getAttribute')
-            ->willReturn(new Admin(enableInlineEdit: false));
-
+        // Voter and writable should never be consulted
         $this->authChecker->expects($this->never())->method('isGranted');
         $this->propertyAccessor->expects($this->never())->method('isWritable');
 
-        $this->assertFalse($this->resolver->canEdit($entity, 'name'));
+        $this->assertFalse($this->resolver->canEdit($this->makeEntity(), 'title'));
+    }
+
+    // ── editable: true bypasses entity default, still needs voter + writable ──
+
+    /** @test */
+    public function editableTrueReturnsTrueWhenVoterGrantedAndWritable(): void
+    {
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: false)); // entity default OFF
+        $this->stubVoterGranted(true);
+        $this->stubWritable(true);
+
+        $this->assertTrue(
+            $this->resolver->canEdit($this->makeEntity(), 'title'),
+            'editable:true should bypass entity default and allow editing when voter+writable pass.'
+        );
     }
 
     /** @test */
-    public function noAdminAttributeReturnsFalse(): void
+    public function editableTrueReturnsFalseWhenPropertyHasNoSetter(): void
     {
-        $entity = new \stdClass();
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(true);
+        $this->stubWritable(false); // ← No setter
 
-        $this->attributeHelper->method('getPropertyAttribute')->willReturn(null);
-        $this->attributeHelper->method('getAttribute')->willReturn(null);
-
-        $this->assertFalse($this->resolver->canEdit($entity, 'name'));
+        $this->assertFalse(
+            $this->resolver->canEdit($this->makeEntity(), 'title'),
+            'editable:true must still be blocked when the property has no setter.'
+        );
     }
 
     /** @test */
-    public function adminColumnNullEditable_FallsBackToEntityFlag(): void
+    public function editableTrueReturnsFalseWhenVoterDenies(): void
     {
-        $entity = new \stdClass();
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(false); // ← Voter denies
+        $this->stubWritable(true);
 
-        $this->attributeHelper->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: null));
-        $this->attributeHelper->method('getAttribute')
-            ->willReturn(new Admin(enableInlineEdit: true));
+        $this->assertFalse(
+            $this->resolver->canEdit($this->makeEntity(), 'title'),
+            'editable:true must still be blocked when the ADMIN_EDIT voter denies.'
+        );
+    }
+
+    // ── editable: null inherits entity-level setting ──────────────────────────
+
+    /** @test */
+    public function nullEditableWithEntityInlineEditTrueAllowsEditing(): void
+    {
+        $this->stubColumnAttr(new AdminColumn(editable: null));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(true);
+        $this->stubWritable(true);
+
+        $this->assertTrue($this->resolver->canEdit($this->makeEntity(), 'title'));
+    }
+
+    /** @test */
+    public function nullEditableWithEntityInlineEditFalseBlocksEditing(): void
+    {
+        $this->stubColumnAttr(new AdminColumn(editable: null));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: false));
+
+        // Voter and writable are not reached when the entity default is off
+        $this->authChecker->expects($this->never())->method('isGranted');
+        $this->propertyAccessor->expects($this->never())->method('isWritable');
+
+        $this->assertFalse($this->resolver->canEdit($this->makeEntity(), 'title'));
+    }
+
+    /** @test */
+    public function noAdminColumnAttrWithEntityInlineEditFalseBlocksEditing(): void
+    {
+        $this->stubColumnAttr(null); // No #[AdminColumn] on the property
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: false));
+
+        $this->assertFalse($this->resolver->canEdit($this->makeEntity(), 'title'));
+    }
+
+    /** @test */
+    public function noAdminColumnAttrWithEntityInlineEditTrueAndVoterGrantedAllows(): void
+    {
+        $this->stubColumnAttr(null);
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(true);
+        $this->stubWritable(true);
+
+        $this->assertTrue($this->resolver->canEdit($this->makeEntity(), 'title'));
+    }
+
+    /** @test */
+    public function noAdminAttributeOnEntityBlocksEditing(): void
+    {
+        $this->stubColumnAttr(null); // No AdminColumn
+        $this->stubEntityAdmin(null); // No Admin attr either
+
+        $this->authChecker->expects($this->never())->method('isGranted');
+        $this->propertyAccessor->expects($this->never())->method('isWritable');
+
+        $this->assertFalse($this->resolver->canEdit($this->makeEntity(), 'title'));
+    }
+
+    // ── editable: expression ──────────────────────────────────────────────────
+
+    /** @test */
+    public function expressionTrueAllowsEditing(): void
+    {
+        $entity = new class { public string $status = 'draft'; };
+
+        $this->stubColumnAttr(new AdminColumn(editable: 'entity.status == "draft"'));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: false)); // entity default irrelevant
+        $this->stubVoterGranted(true);
+        $this->stubWritable(true);
+
+        $this->assertTrue($this->resolver->canEdit($entity, 'status'));
+    }
+
+    /** @test */
+    public function expressionFalseBlocksEditing(): void
+    {
+        $entity = new class { public string $status = 'published'; };
+
+        $this->stubColumnAttr(new AdminColumn(editable: 'entity.status == "draft"'));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true)); // entity default irrelevant
+
+        // When expression is false, voter and writable must not be consulted
+        $this->authChecker->expects($this->never())->method('isGranted');
+        $this->propertyAccessor->expects($this->never())->method('isWritable');
+
+        $this->assertFalse($this->resolver->canEdit($entity, 'status'));
+    }
+
+    /** @test */
+    public function expressionWithIsGrantedAllowsWhenRoleGranted(): void
+    {
+        $entity = new class { public string $title = 'Hello'; };
+
+        $this->stubColumnAttr(new AdminColumn(editable: 'is_granted("ROLE_EDITOR")'));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: false));
+
+        // canEdit makes TWO isGranted calls:
+        //   1. Expression language: is_granted("ROLE_EDITOR")   → must be true
+        //   2. Voter check:         isGranted('ADMIN_EDIT', ...) → must be true
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturnCallback(function (string $attr): bool {
+                return in_array($attr, ['ROLE_EDITOR', 'ADMIN_EDIT'], true);
+            });
+
+        $this->stubWritable(true);
+
+        $this->assertTrue($this->resolver->canEdit($entity, 'title'));
+    }
+
+    /** @test */
+    public function expressionWithIsGrantedBlocksWhenRoleMissing(): void
+    {
+        $entity = new class { public string $title = 'Hello'; };
+
+        $this->stubColumnAttr(new AdminColumn(editable: 'is_granted("ROLE_EDITOR")'));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: false));
+
+        // Expression is_granted("ROLE_EDITOR") returns false → isEligibleByAttribute is false
+        // → canEdit returns early, voter is never reached
+        $this->authChecker->method('isGranted')->willReturn(false);
+
+        $this->assertFalse($this->resolver->canEdit($entity, 'title'));
+    }
+
+    /** @test */
+    public function expressionCombinedPropertyAndRoleAllowsWhenBothPass(): void
+    {
+        $entity = new class {
+            public string $status = 'draft';
+        };
+
+        $this->stubColumnAttr(new AdminColumn(editable: 'entity.status == "draft" && is_granted("ROLE_EDITOR")'));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: false));
+
+        // Both expression's is_granted("ROLE_EDITOR") AND the voter's ADMIN_EDIT check need true
+        $this->authChecker
+            ->method('isGranted')
+            ->willReturnCallback(fn (string $attr) => in_array($attr, ['ROLE_EDITOR', 'ADMIN_EDIT'], true));
+
+        $this->stubWritable(true);
+
+        $this->assertTrue($this->resolver->canEdit($entity, 'status'));
+    }
+
+    /** @test */
+    public function expressionCombinedBlocksWhenPropertyConditionFails(): void
+    {
+        $entity = new class {
+            public string $status = 'published'; // not draft
+        };
+
+        $this->stubColumnAttr(new AdminColumn(editable: 'entity.status == "draft" && is_granted("ROLE_EDITOR")'));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: false));
 
         $this->authChecker->method('isGranted')->willReturn(true);
-        $this->propertyAccessor->method('isWritable')->willReturn(true);
 
-        $this->assertTrue($this->resolver->canEdit($entity, 'name'));
+        $this->assertFalse($this->resolver->canEdit($entity, 'status'));
     }
 
-    // ── Voter attribute uses entity short class ──────────────────────────────
+    /** @test */
+    public function invalidExpressionReturnsFalse(): void
+    {
+        $entity = new class {};
+
+        $this->stubColumnAttr(new AdminColumn(editable: 'entity.nonExistentProp == true'));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+
+        // Expression fails silently — should not throw, should return false
+        $this->assertFalse($this->resolver->canEdit($entity, 'title'));
+    }
+
+    // ── Voter is checked with correct entity short class ──────────────────────
 
     /** @test */
     public function voterIsCalledWithAdminEditAttributeAndShortClassName(): void
     {
-        $entity = new \stdClass();
+        $entity = new class {};
+        $shortClass = (new \ReflectionClass($entity))->getShortName();
 
-        $this->attributeHelper->method('getPropertyAttribute')
-            ->willReturn(new AdminColumn(editable: true));
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubWritable(true);
 
-        $this->authChecker->expects($this->once())
+        $this->authChecker
+            ->expects($this->atLeastOnce())
             ->method('isGranted')
-            ->with('ADMIN_EDIT', 'stdClass')
+            ->with('ADMIN_EDIT', $shortClass)
             ->willReturn(true);
 
-        $this->propertyAccessor->method('isWritable')->willReturn(true);
-
-        $this->resolver->canEdit($entity, 'name');
+        $this->resolver->canEdit($entity, 'title');
     }
 }

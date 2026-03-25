@@ -13,6 +13,7 @@ use Attribute;
  *     'new' => 'app_product_new',
  *     'show' => 'app_product_show',
  *     'edit' => 'app_product_edit',
+ *     'archive' => 'app_product_archive',
  *     'delete' => 'app_product_delete'
  * ])]
  */

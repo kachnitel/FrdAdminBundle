@@ -4,6 +4,21 @@ parameters:
         - src
         - tests
     ignoreErrors:
+        # getRepository() is a generic method (EntityRepository<T>). Calls with a
+        # runtime string variable cannot be resolved by PHPStan without a stub.
+        - identifier: argument.templateType
+          paths:
+            - src/Controller/AbstractAdminController.php
+            - src/Service/EntityListQueryService.php
+
+        # $dashboardRoute is injected via DI and forwarded to templates / redirect
+        # helpers in the parent controller. PHPStan cannot trace Symfony DI usage.
+        - identifier: property.onlyWritten
+          paths:
+            - src/Controller/GenericAdminController.php
+
+        # --- Tests ---
+
         # PHPMD @SuppressWarnings annotations — PHPStan cannot parse PHPMD syntax.
         # These tags are intentional and correct for PHPMD; they are not PHPStan directives.
         - identifier: phpDoc.parseError
@@ -26,15 +41,10 @@ parameters:
           paths:
             - tests/
 
-        # getRepository() is a generic method (EntityRepository<T>). Calls with a
-        # runtime string variable cannot be resolved by PHPStan without a stub.
-        - identifier: argument.templateType
+        # Ignore dummy class strings in tests
+        - identifier: argument.type
+          message: '~expects class-string, string given~'
           paths:
-            - src/Controller/AbstractAdminController.php
-            - src/Service/EntityListQueryService.php
+            - tests/
 
-        # $dashboardRoute is injected via DI and forwarded to templates / redirect
-        # helpers in the parent controller. PHPStan cannot trace Symfony DI usage.
-        - identifier: property.onlyWritten
-          paths:
-            - src/Controller/GenericAdminController.php
+
