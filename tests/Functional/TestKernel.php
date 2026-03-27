@@ -6,7 +6,6 @@ use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestDataSourceProvider;
-use Kachnitel\ComponentsBundle\KachnitelComponentsBundle;
 use Kachnitel\DataSourceContracts\DataSourceProviderInterface;
 use Kachnitel\EntityComponentsBundle\KachnitelEntityComponentsBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -42,7 +41,6 @@ class TestKernel extends Kernel
             new WebpackEncoreBundle(),
 
             new KachnitelAdminBundle(),
-            new KachnitelComponentsBundle(),
             new KachnitelEntityComponentsBundle()
         ];
     }

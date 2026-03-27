@@ -41,9 +41,8 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  * />
  * ```
  *
- * The Save button in the page header uses `K:Components:LiveEmitTrigger` to emit
- * a `save` event targeted at this component by name. The event is received via
- * `#[LiveListener('save')]`.
+ * The Save button in the page header uses `el.__component.action('save');` to trigger
+ * a `save` action.
  *
  * ## CSRF handling
  *

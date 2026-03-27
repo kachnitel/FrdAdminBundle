@@ -23,7 +23,6 @@
         "php": ">=8.4",
         "doctrine/doctrine-bundle": "^3.0",
         "doctrine/orm": "^3.5",
-        "kachnitel/components-bundle": "dev-main",
         "kachnitel/datasource-contracts": "dev-master",
         "kachnitel/entity-components-bundle": "dev-master",
         "kachnitel/entity-expression-language": "dev-master",

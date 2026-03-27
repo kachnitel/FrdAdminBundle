@@ -1,8 +1,8 @@
 {% import kachnitel_admin_theme as css %}
 
-{{ component('K:Components:LiveEmitTrigger', {
-    target: formComponentName,
-    action: 'save',
-    label: 'Save',
-    class: css.btn_primary()
-}) }}
+// TODO: visual feedback
+<button type="button"
+        class="{{ css.btn_primary() }}"
+        onclick="var el = document.querySelector('[data-admin-form]'); if (el && el.__component) el.__component.action('save');">
+  Save
+</button>
