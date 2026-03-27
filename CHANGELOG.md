@@ -7,7 +7,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.8.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.7.1...v0.8.0) (2026-03-13)
+## [0.9.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.8.0...v0.9.0) (2026-03-27)
+
+### Features
+
+* Delegate role hierarchy decision to symfony's AccessDecisionManager ([59c3d8](https://github.com/kachnitel/FrdAdminBundle/commit/59c3d812c22d102370b821395960ed5a1f831596))
+* Use inline JS to drop components-bundle dependency ([2ea88e](https://github.com/kachnitel/FrdAdminBundle/commit/2ea88e41f5b3b8b3d2af9d245b8e41cc79796cdf))
+
+##### Archive
+
+* Add an automatic "archive" filter with permission check ([152eed](https://github.com/kachnitel/FrdAdminBundle/commit/152eed6b9b463c613235b8f64600b93fa96f2f6e))
+* Add native buttons to archive/unarchive configured entities ([00d1cc](https://github.com/kachnitel/FrdAdminBundle/commit/00d1ccda62a72eb00d0b0a60246b90b6425cbb02))
+* Implement css macros for archived rows ([0382f4](https://github.com/kachnitel/FrdAdminBundle/commit/0382f44a742b2fe09d0668f3a4819be3bb3fe059))
+
+##### Ui
+
+* Move table controls to a single row ([ad378f](https://github.com/kachnitel/FrdAdminBundle/commit/ad378f5b77a8bc2b3e7e6a9f5856764da80a977e))
+
+### Bug Fixes
+
+
+##### Archive
+
+* Correct ArchiveService call signatures and test fixtures ([c7bbe7](https://github.com/kachnitel/FrdAdminBundle/commit/c7bbe75f2024f0a8ff43e64baf609dc19e7f9019))
+
+##### DX
+
+* Add return template to AttributeHelper::getPropertyAttribute ([673ec3](https://github.com/kachnitel/FrdAdminBundle/commit/673ec3c19c04911030cfd1a1914bde5d9d669bf9))
+
+##### Ui
+
+* Bring columns selection list back to screen ([afc017](https://github.com/kachnitel/FrdAdminBundle/commit/afc017d2cf240697c86186fb0d87f297454c462a))
+
+### Code Refactoring
+
+* Clean up DoctrineDataSource to focus its responsibility ([5c22ba](https://github.com/kachnitel/FrdAdminBundle/commit/5c22ba1d8649d1f6d78e97ca30f45dfcdf7fe155))
+* Extract contracts into a separate repo ([409a3b](https://github.com/kachnitel/FrdAdminBundle/commit/409a3bdd66d83f2bc530943cee16be0f64f1addf))
+* Move field components to entity-components-bundle ([10a9b4](https://github.com/kachnitel/FrdAdminBundle/commit/10a9b4d5b1fa3d59b2080f156bdbfa182f59c2df))
+
+### Tests
+
+* Cover some edge cases ([aedfd7](https://github.com/kachnitel/FrdAdminBundle/commit/aedfd7c1d9eef93d07a10ef16665b1a4c903c2ce))
+
+
+---
+
+## [0.8.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.7.1...v0.8.0) (2026-03-12)
 
 ### Features
 
