@@ -34,6 +34,11 @@ class AttributeHelper
 
     /**
      * Get an attribute from a property.
+     *
+     * @template T of object
+     * @param object|class-string $entity
+     * @param class-string<T> $attributeClass
+     * @return T|null
      */
     public function getPropertyAttribute(object|string $entity, string $property, string $attributeClass): mixed
     {

@@ -43,7 +43,7 @@ parameters:
 
         # Ignore dummy class strings in tests
         - identifier: argument.type
-          message: '~expects class-string, string given~'
+          message: '~expects class-string(.*), string given~'
           paths:
             - tests/
 
