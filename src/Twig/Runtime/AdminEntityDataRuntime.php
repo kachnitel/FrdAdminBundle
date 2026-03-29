@@ -112,7 +112,7 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
         $metadata = $this->em->getClassMetadata(get_class($entity));
         return $this->isAssociation($entity, $property)
             ? $metadata->getAssociationTargetClass($property)
-            : $metadata->getTypeOfField($property);
+            : ($metadata->getTypeOfField($property) ?? 'string');
     }
 
     /**
@@ -248,6 +248,7 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
     /**
      * @param \Doctrine\ORM\Mapping\ClassMetadata<object> $metadata
+     * @param class-string $entityClass
      */
     private function isEnumField(
         \Doctrine\ORM\Mapping\ClassMetadata $metadata,
@@ -282,13 +283,17 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
     /**
      * Resolve the real entity class from an object, stripping Doctrine proxy prefixes.
      * Doctrine proxies are subclasses; get_parent_class() gives the mapped entity class.
+     *
+     * @return class-string
      */
     private function resolveEntityClass(object $entity): string
     {
         $class = $entity::class;
         if (str_contains($class, 'Proxies\\__CG__\\')) {
             $parent = get_parent_class($entity);
-            return $parent !== false ? $parent : $class;
+            if ($parent !== false) {
+                return $parent;
+            }
         }
 
         return $class;
@@ -330,9 +335,10 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
         try {
             return $this->normalizer->normalize($value, 'array', [
-                'circular_reference_handler' => function ($object) {
-                    return method_exists($object, 'getId') ? $object->getId() : null;
-                }
+                'circular_reference_handler' => fn ($object) => (
+                    is_object($object)
+                    && method_exists($object, 'getId')
+                 ) ? $object->getId() : null
             ]);
         } catch (\Exception $e) {
             return $value;

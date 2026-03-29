@@ -42,6 +42,7 @@ class DoctrineDataSourceFactory
         $this->dataSourcesCache = [];
 
         foreach ($this->entityDiscovery->getAdminEntities() as $entityClass => $adminAttribute) {
+            /** @var class-string $entityClass */
             $dataSource = $this->buildDataSource($entityClass, $adminAttribute);
             $this->dataSourcesCache[$dataSource->getIdentifier()] = $dataSource;
         }

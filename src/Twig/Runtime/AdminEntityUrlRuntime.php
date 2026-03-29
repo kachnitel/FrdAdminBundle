@@ -185,11 +185,16 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
 
     /**
      * Get the real class name of an object, handling Doctrine proxies.
+     *
+     * @return class-string
      */
     private function getRealClass(object $object): string
     {
         if ($object instanceof Proxy) {
-            return get_parent_class($object);
+            $parent = get_parent_class($object);
+            if ($parent !== false) {
+                return $parent;
+            }
         }
 
         return get_class($object);

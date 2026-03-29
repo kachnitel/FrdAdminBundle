@@ -36,7 +36,7 @@ class FilterMetadataProvider
     /**
      * Get filter metadata for all filterable columns of an entity.
      *
-     * @param string $entityClass Full class name
+     * @param class-string $entityClass Full class name
      * @return array<string, array<string, mixed>> Map of property name => filter metadata
      */
     public function getFilters(string $entityClass): array

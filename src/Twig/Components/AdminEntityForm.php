@@ -24,33 +24,6 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  * Provides real-time validation as-you-type and inline save feedback
  * without full-page reloads.
  *
- * Usage in Twig (edit):
- * ```twig
- * <twig:AdminEntityForm
- *     entityClass="App\Entity\Product"
- *     entityId="{{ entity.id }}"
- *     formTypeClass="App\Form\ProductFormType"
- * />
- * ```
- *
- * Usage in Twig (new):
- * ```twig
- * <twig:AdminEntityForm
- *     entityClass="App\Entity\Product"
- *     formTypeClass="App\Form\ProductFormType"
- * />
- * ```
- *
- * The Save button in the page header uses `el.__component.action('save');` to trigger
- * a `save` action.
- *
- * ## CSRF handling
- *
- * The form is created with `csrf_protection: false`. LiveComponent manages its
- * own request integrity (via its own CSRF token on the Ajax request), so adding
- * a second CSRF token inside the form would cause spurious validation failures
- * since the token is never included in `formValues`.
- *
  * @see \Kachnitel\AdminBundle\Controller\AbstractAdminController
  */
 #[AsLiveComponent(name: 'K:Admin:EntityForm', template: '@KachnitelAdmin/components/AdminEntityForm.html.twig')]
@@ -105,29 +78,26 @@ class AdminEntityForm extends AbstractController
      */
     protected function instantiateForm(): FormInterface
     {
-        /** @var class-string $class */
-        $class = $this->entityClass;
+        /** @var class-string $entityClassName */
+        $entityClassName = $this->entityClass;
 
         if ($this->entityId !== null) {
-            $entity = $this->em->find($class, $this->entityId);
+            $entity = $this->em->find($entityClassName, $this->entityId);
         } else {
-            $entity = new $class();
+            $entity = new $entityClassName();
         }
 
-        return $this->createForm($this->formTypeClass, $entity, [
+        /** @var class-string<\Symfony\Component\Form\FormTypeInterface<object|null>> $formTypeClass */
+        $formTypeClass = $this->formTypeClass;
+
+        /** @phpstan-ignore-next-line argument.templateType */
+        return $this->createForm($formTypeClass, $entity, [
             'csrf_protection' => false,
         ]);
     }
 
     /**
      * Persist the form data.
-     *
-     * Triggered by the `save` LiveComponent event emitted by `K:Components:LiveEmitTrigger`
-     * (the header Save button), and directly as a LiveAction for tests via `->call('save')`.
-     *
-     * `submitForm()` integrates with the LiveComponent lifecycle and avoids double-submission
-     * issues. When the form is invalid it throws `UnprocessableEntityHttpException`; we catch
-     * that to stay on the page and let the component re-render with inline errors.
      */
     #[LiveAction]
     #[LiveListener('save')]

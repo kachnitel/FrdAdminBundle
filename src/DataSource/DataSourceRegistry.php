@@ -122,6 +122,7 @@ class DataSourceRegistry
 
         // 3. On-demand Doctrine data source
         if ($entityClass !== '') {
+            /** @var class-string $entityClass */
             return $this->doctrineFactory->createForClass($entityClass);
         }
 

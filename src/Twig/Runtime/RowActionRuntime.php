@@ -17,20 +17,6 @@ use Twig\Extension\RuntimeExtensionInterface;
 
 /**
  * Twig runtime for row action rendering.
- *
- * DI-tuple conditions ([ServiceClass::class, 'method']) are resolved from a scoped ServiceLocator
- * containing only services that implement RowActionConditionInterface.
- *
- * Visibility check for voterAttribute differs by action type:
- *   - Link/form actions: delegated to AdminRouteRuntime::isActionAccessible(), which verifies
- *     both route existence and voter permission.
- *   - Component actions (liveComponent set): voter checked directly via AuthorizationChecker.
- *     Route/form existence is irrelevant — the component handles its own rendering.
- *
- * Error behaviour (DI tuple failures only — string expression errors always fail-safe):
- *  - conditionLocator === null:  fail-open (no condition services registered)
- *  - service not in locator / method throws + debug=true:  throws \RuntimeException immediately
- *  - service not in locator / method throws + debug=false: logs warning, hides action (fail-safe)
  */
 class RowActionRuntime implements RuntimeExtensionInterface
 {
@@ -55,10 +41,12 @@ class RowActionRuntime implements RuntimeExtensionInterface
     /**
      * Get all registered actions for an entity class (unfiltered).
      *
+     * @param class-string|string $entityClass
      * @return array<RowAction>
      */
     public function getRowActions(string $entityClass): array
     {
+        /** @var class-string $entityClass */
         return $this->registry->getActions($entityClass);
     }
 
@@ -66,10 +54,12 @@ class RowActionRuntime implements RuntimeExtensionInterface
      * Get actions visible for a specific entity instance.
      * Filters by permissions, voter attributes, and conditions.
      *
+     * @param class-string|string $entityClass
      * @return array<RowAction>
      */
     public function getVisibleRowActions(string $entityClass, object $entity, string $entityShortClass, string $context = ''): array
     {
+        /** @var class-string $entityClass */
         $visible = [];
 
         foreach ($this->registry->getActions($entityClass, $context) as $action) {
@@ -83,10 +73,6 @@ class RowActionRuntime implements RuntimeExtensionInterface
 
     /**
      * Check if a single action should be visible for a specific entity.
-     *
-     * For component actions (liveComponent set), voterAttribute is checked directly via
-     * AuthorizationChecker — route/form existence is not required.
-     * For all other actions, isActionAccessible() validates route + voter together.
      */
     public function isActionVisible(RowAction $action, object $entity, string $entityShortClass): bool
     {
@@ -114,10 +100,6 @@ class RowActionRuntime implements RuntimeExtensionInterface
 
     /**
      * Check voter / route access for the given action.
-     *
-     * Returns true when no voterAttribute is set (no restriction).
-     * For component actions, delegates to AuthorizationChecker directly.
-     * For link/form actions, delegates to AdminRouteRuntime::isActionAccessible().
      */
     private function checkVoterAccess(RowAction $action, string $entityShortClass): bool
     {
@@ -126,8 +108,6 @@ class RowActionRuntime implements RuntimeExtensionInterface
         }
 
         if ($action->isComponentAction()) {
-            // Component actions have no route or form — check the voter directly.
-            // Fail-open when no auth checker is available (e.g. in CLI context).
             return $this->authChecker === null
                 || $this->authChecker->isGranted($action->voterAttribute, $entityShortClass);
         }
@@ -150,11 +130,6 @@ class RowActionRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * Resolve and invoke a [ServiceClass::class, 'method'] tuple from the condition locator.
-     *
-     * Fail-open when the locator itself is null (no condition services registered at all) —
-     * this is the "feature not in use" state and should not hide actions.
-     *
      * @param array{0: class-string, 1: string} $condition
      *
      * @throws \RuntimeException in debug mode when the service is missing or method throws

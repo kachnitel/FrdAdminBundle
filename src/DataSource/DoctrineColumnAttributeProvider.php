@@ -126,6 +126,6 @@ class DoctrineColumnAttributeProvider
             }
         }
 
-        return $slots;
+        return array_values($slots);
     }
 }

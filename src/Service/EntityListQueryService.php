@@ -28,7 +28,7 @@ class EntityListQueryService
     /**
      * Get filtered, sorted, and paginated entities.
      *
-     * @param string $entityClass Full entity class name
+     * @param class-string $entityClass Full entity class name
      * @param array<string, mixed> $columnFilters
      * @param array<string, array<string, mixed>> $filterMetadata
      * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
@@ -85,6 +85,7 @@ class EntityListQueryService
     /**
      * Build the base query with filters and sorting.
      *
+     * @param class-string $entityClass
      * @param array<string, mixed> $columnFilters
      * @param array<string, array<string, mixed>> $filterMetadata
      * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
@@ -120,8 +121,6 @@ class EntityListQueryService
         }
 
         // Archive condition — a pre-built DQL fragment originating from ArchiveService
-        // (e.g. 'e.deletedAt IS NULL' or 'e.archived = false').  Applied after column
-        // filters and before ORDER BY so it restricts the full result set.
         if ($archiveDqlCondition !== null) {
             $qb->andWhere($archiveDqlCondition);
         }
@@ -134,6 +133,7 @@ class EntityListQueryService
     /**
      * Return the names of entity fields included in global search.
      *
+     * @param class-string $entityClass
      * @return array<string>
      */
     public function getSearchableFieldNames(string $entityClass): array
@@ -151,6 +151,9 @@ class EntityListQueryService
         return $fields;
     }
 
+    /**
+     * @param class-string $entityClass
+     */
     private function applyGlobalSearch(QueryBuilder $qb, string $entityClass, string $search): void
     {
         $metadata = $this->em->getClassMetadata($entityClass);

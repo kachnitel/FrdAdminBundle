@@ -114,7 +114,7 @@ abstract class AbstractAdminController extends AbstractController
         }
 
         // Convert class name to entitySlug format (PascalCase -> kebab-case)
-        $entitySlug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
+        $entitySlug = strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
 
         return $this->doDelete(
             $request,
@@ -128,12 +128,14 @@ abstract class AbstractAdminController extends AbstractController
 
     /**
      * Get repository for entity class.
-     * @return object
-     * @phpstan-return \Doctrine\ORM\EntityRepository<object>
+     * @return \Doctrine\ORM\EntityRepository<object>
      */
-    protected function getRepository(string $class): object
+    protected function getRepository(string $class): \Doctrine\ORM\EntityRepository
     {
         $className = $this->getEntityNamespace() . $class;
+        if (!class_exists($className)) {
+            throw new \InvalidArgumentException(sprintf('Class "%s" does not exist.', $className));
+        }
         /** @var \Doctrine\ORM\EntityRepository<object> $repository */
         $repository = $this->em->getRepository($className);
         return $repository;
@@ -174,18 +176,19 @@ abstract class AbstractAdminController extends AbstractController
     protected function getBreadcrumbs(string $class, ?object $entity = null): array
     {
         // Convert class name to entitySlug format (PascalCase -> kebab-case)
-        $entitySlug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
+        $entitySlug = strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
 
         $breadcrumbs = [[
             'url' => $this->generateUrl($this->getRoutePrefix() . '_index', ['entitySlug' => $entitySlug]),
             'label' => $class
         ]];
 
-        if ($entity) {
+        if ($entity !== null) {
             $entityLabel = $this->getEntityLabel($entity);
+            $entityId = method_exists($entity, 'getId') ? $entity->getId() : null;
             $breadcrumbs[] = [
                 'url' => $this->generateUrl($this->getRoutePrefix() . '_show', [
-                    'id' => $entity->getId(),
+                    'id' => $entityId,
                     'entitySlug' => $entitySlug
                 ]),
                 'label' => $entityLabel
@@ -201,15 +204,18 @@ abstract class AbstractAdminController extends AbstractController
     protected function getEntityLabel(object $entity): string
     {
         if (method_exists($entity, 'getName') && $entity->getName()) {
-            return $entity->getName();
+            return (string) $entity->getName();
         }
         if (method_exists($entity, 'getLabel') && $entity->getLabel()) {
-            return $entity->getLabel();
+            return (string) $entity->getLabel();
         }
         if (method_exists($entity, 'getValue') && $entity->getValue()) {
-            return $entity->getValue();
+            return (string) $entity->getValue();
         }
-        return '#' . $entity->getId();
+        if (method_exists($entity, 'getId')) {
+            return '#' . $entity->getId();
+        }
+        return '#unknown';
     }
 
     // Template resolution methods (can be overridden for custom template paths)

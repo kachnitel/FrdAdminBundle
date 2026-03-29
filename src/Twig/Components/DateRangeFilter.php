@@ -88,10 +88,11 @@ class DateRangeFilter
         }
 
         // from or to changed
-        $this->value = json_encode([
+        $encoded = json_encode([
             'from' => $this->from ?: null,
             'to'   => $this->to ?: null,
         ]);
+        $this->value = $encoded !== false ? $encoded : '';
 
         $this->emitUp('filter:updated', [
             'column' => $this->column,

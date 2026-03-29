@@ -32,6 +32,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
 
     /**
      * Generate a path for an entity's route.
+     * @param object|class-string $object
      * @param array<string, mixed> $parameters
      */
     public function getPath(object|string $object, string $routeName, array $parameters = []): string
@@ -54,6 +55,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     }
 
     /**
+     * @param object|class-string $object
      * @param array<string, mixed> $parameters
      * @return array<string, mixed>
      */
@@ -75,29 +77,36 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     }
 
     /**
+     * @param object|class-string $object
      * @param array<string, mixed> $parameters
      * @return array<string, mixed>
      */
     private function autoFillClassParameter(object|string $object, string $route, array $parameters): array
     {
         if (empty($parameters['class']) && $this->routeHasParameter($route, 'class')) {
-            $class = is_object($object) ? $this->getRealClass($object) : $object;
-            $parameters['class'] = (new \ReflectionClass($class))->getShortName();
+            $shortName = $this->getShortClassName($object);
+            if ($shortName === false) {
+                return $parameters;
+            }
+            $parameters['class'] = $shortName;
         }
 
         return $parameters;
     }
 
     /**
+     * @param object|class-string $object
      * @param array<string, mixed> $parameters
      * @return array<string, mixed>
      */
     private function autoFillEntitySlugParameter(object|string $object, string $route, array $parameters): array
     {
         if (empty($parameters['entitySlug']) && $this->routeHasParameter($route, 'entitySlug')) {
-            $class = is_object($object) ? $this->getRealClass($object) : $object;
-            $shortName = (new \ReflectionClass($class))->getShortName();
-            $parameters['entitySlug'] = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($shortName)));
+            $shortName = $this->getShortClassName($object);
+            if ($shortName === false) {
+                return $parameters;
+            }
+            $parameters['entitySlug'] = strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($shortName)));
         }
 
         return $parameters;
@@ -111,7 +120,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     {
         $routes = $this->getRoutesAttribute($object);
 
-        if ($routes && $routes->has($name)) {
+        if ($routes !== null && $routes->has($name)) {
             return true;
         }
 
@@ -126,7 +135,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     {
         $routes = $this->getRoutesAttribute($object);
 
-        if ($routes) {
+        if ($routes !== null) {
             return $routes->get($name);
         }
 
@@ -150,15 +159,12 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         };
     }
 
-    private function getRoutesAttribute(object|string $object): ?object
+    private function getRoutesAttribute(object|string $object): ?AdminRoutes
     {
+        /** @var AdminRoutes|null $routes */
         $routes = $this->attributeHelper->getAttribute($object, AdminRoutes::class);
 
-        if ($routes) {
-            return $routes;
-        }
-
-        return null;
+        return $routes;
     }
 
     public function isRouteAccessible(string $route): bool
@@ -255,12 +261,33 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         return str_contains($path, '{' . $parameter . '}');
     }
 
+    /**
+     * @return class-string
+     */
     private function getRealClass(object $object): string
     {
         if ($object instanceof Proxy) {
-            return get_parent_class($object);
+            $parent = get_parent_class($object);
+            if ($parent !== false) {
+                return $parent;
+            }
         }
 
         return get_class($object);
+    }
+
+    /**
+     * @param object|class-string $object
+     */
+    private function getShortClassName(object|string $object): string|false
+    {
+        $class = is_object($object) ? $this->getRealClass($object) : $object;
+        if (!class_exists($class)) {
+            // fallback — can't reflect non-existent class
+            return false;
+        }
+
+        /** @var class-string $class */
+        return (new \ReflectionClass($class))->getShortName();
     }
 }

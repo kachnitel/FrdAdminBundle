@@ -195,7 +195,10 @@ class EntityList
             return null;
         }
 
-        return $this->archiveService->resolveConfig($this->entityClass);
+        /** @var class-string $entityClass */
+        $entityClass = $this->entityClass;
+
+        return $this->archiveService->resolveConfig($entityClass);
     }
 
     /**
@@ -208,7 +211,9 @@ class EntityList
             return false;
         }
 
-        $config = $this->archiveService->resolveConfig($this->entityClass);
+        /** @var class-string $entityClass */
+        $entityClass = $this->entityClass;
+        $config = $this->archiveService->resolveConfig($entityClass);
 
         return $this->permissionService->canToggleArchive($config);
     }
@@ -223,7 +228,9 @@ class EntityList
             return false;
         }
 
-        $config = $this->archiveService->resolveConfig($this->entityClass);
+        /** @var class-string $entityClass */
+        $entityClass = $this->entityClass;
+        $config = $this->archiveService->resolveConfig($entityClass);
         if ($config === null) {
             return false;
         }
@@ -262,7 +269,9 @@ class EntityList
         // rather than being smuggled through the $filters array.
         $dataSource = $this->getDataSource();
         if ($this->isDoctrineEntity() && $dataSource instanceof DoctrineDataSource) {
-            $archiveConfig = $this->archiveService->resolveConfig($this->entityClass);
+            /** @var class-string $entityClass */
+            $entityClass = $this->entityClass;
+            $archiveConfig = $this->archiveService->resolveConfig($entityClass);
             if ($archiveConfig !== null) {
                 $condition = $this->archiveService->buildDqlCondition(
                     'e',
@@ -294,7 +303,10 @@ class EntityList
             $this->getEntities();
         }
 
-        return $this->cache['queryResult']->toPaginationInfo();
+        $queryResult = $this->cache['queryResult']
+            ?? throw new \LogicException('queryResult not populated; call getEntities() first.');
+
+        return $queryResult->toPaginationInfo();
     }
 
     // ── LiveActions: sorting / pagination ─────────────────────────────────────

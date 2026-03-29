@@ -58,15 +58,25 @@ class AttributeHelper
 
     /**
      * Get the real class name (unwrap Doctrine proxies).
+     *
+     * @param class-string|string $class
+     * @return class-string
      */
-    private function getRealClass(string|object $entityOrClass): string
+    private function getRealClass(string $class): string
     {
-        $class = is_object($entityOrClass) ? $entityOrClass::class : $entityOrClass;
-
-        if (is_subclass_of($class, Proxy::class, true)) {
-            return get_parent_class($class);
+        if (!class_exists($class)) {
+            /** @var class-string $class */
+            return $class;
         }
 
+        if (is_subclass_of($class, Proxy::class, true)) {
+            $parent = get_parent_class($class);
+            if ($parent !== false) {
+                return $parent;
+            }
+        }
+
+        /** @var class-string $class */
         return $class;
     }
 }

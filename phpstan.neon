@@ -4,13 +4,6 @@ parameters:
         - src
         - tests
     ignoreErrors:
-        # getRepository() is a generic method (EntityRepository<T>). Calls with a
-        # runtime string variable cannot be resolved by PHPStan without a stub.
-        - identifier: argument.templateType
-          paths:
-            - src/Controller/AbstractAdminController.php
-            - src/Service/EntityListQueryService.php
-
         # $dashboardRoute is injected via DI and forwarded to templates / redirect
         # helpers in the parent controller. PHPStan cannot trace Symfony DI usage.
         - identifier: property.onlyWritten

@@ -162,6 +162,7 @@ class SyncTestTemplatesCommand extends Command
             return [sprintf('Failed to read: %s', $source)];
         }
 
+        /** @var array{marker: string, insertPoint: 'prepend'|array{context: string, position: 'after'|'before'}} $config */
         $targetContent = $this->generateTargetContent($sourceContent, $config, $patcher);
         if ($targetContent === null) {
             return [
@@ -202,7 +203,7 @@ class SyncTestTemplatesCommand extends Command
     /**
      * Generate the target template content with patches applied.
      *
-     * @param array<string, mixed> $config Template patch configuration
+     * @param array{marker: string, insertPoint: 'prepend'|array{context: string, position: 'after'|'before'}} $config Template patch configuration\n"
      * @return string|null The patched content, or null if patching failed
      */
     private function generateTargetContent(

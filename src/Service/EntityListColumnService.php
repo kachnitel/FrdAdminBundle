@@ -36,6 +36,7 @@ class EntityListColumnService
             return $allColumns;
         }
 
+        /** @var class-string $entityClass */
         $denied = $this->columnPermissionService->getDeniedColumnsForAction(
             $entityClass,
             AdminEntityVoter::ADMIN_SHOW

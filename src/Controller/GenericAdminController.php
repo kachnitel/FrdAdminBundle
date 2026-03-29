@@ -88,8 +88,10 @@ class GenericAdminController extends AbstractAdminController
         $supportedEntities = $this->getSupportedEntities();
 
         usort($supportedEntities, function ($a, $b) {
-            $labelA = $this->entityDiscovery->getAdminAttribute($this->entityNamespace . $a)?->getLabel() ?? $a;
-            $labelB = $this->entityDiscovery->getAdminAttribute($this->entityNamespace . $b)?->getLabel() ?? $b;
+            $entityClassA = $this->entityDiscovery->resolveEntityClass($a, $this->entityNamespace);
+            $entityClassB = $this->entityDiscovery->resolveEntityClass($b, $this->entityNamespace);
+            $labelA = $entityClassA ? ($this->entityDiscovery->getAdminAttribute($entityClassA)?->getLabel() ?? $a) : $a;
+            $labelB = $entityClassB ? ($this->entityDiscovery->getAdminAttribute($entityClassB)?->getLabel() ?? $b) : $b;
             return strcasecmp($labelA, $labelB);
         });
 
@@ -101,9 +103,9 @@ class GenericAdminController extends AbstractAdminController
 
             return [
                 'name'  => $entityName,
-                'label' => $adminAttr?->getLabel() ?? trim(preg_replace('/[A-Z]/', ' $0', $entityName)),
+                'label' => $adminAttr?->getLabel() ?? trim((string) preg_replace('/[A-Z]/', ' $0', $entityName)),
                 'icon'  => $adminAttr?->getIcon(),
-                'slug'  => strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($entityName))),
+                'slug'  => strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($entityName))),
                 'type'  => 'entity',
             ];
         }, $supportedEntities);
@@ -170,13 +172,6 @@ class GenericAdminController extends AbstractAdminController
 
     /**
      * Archive an entity (set the configured archive field).
-     *
-     * The archive field and type are determined by the entity's #[Admin(archiveExpression:)]
-     * attribute or the global kachnitel_admin.archive.expression configuration.
-     *
-     * Requires ADMIN_ARCHIVE voter attribute.
-     * The CSRF token is validated using the key "archive_{id}".
-     * Redirects to referer on success, or to the entity index.
      */
     #[Route('/admin/{entitySlug}/{id}/archive', name: 'app_admin_entity_archive', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function archive(
@@ -196,7 +191,13 @@ class GenericAdminController extends AbstractAdminController
 
         $this->validateArchiveCsrf($request, 'archive', $id);
 
-        $entityClass = $this->entityNamespace . $entityName;
+        $entityClassName = $this->entityNamespace . $entityName;
+        if (!class_exists($entityClassName)) {
+            throw new NotFoundHttpException('Entity class not found: ' . $entityClassName);
+        }
+
+        /** @var class-string $entityClass */
+        $entityClass = $entityClassName;
         $config = $archiveService->resolveConfig($entityClass);
 
         if ($config === null) {
@@ -212,10 +213,6 @@ class GenericAdminController extends AbstractAdminController
 
     /**
      * Unarchive an entity (clear the configured archive field).
-     *
-     * Requires ADMIN_ARCHIVE voter attribute.
-     * The CSRF token is validated using the key "unarchive_{id}".
-     * Redirects to referer on success, or to the entity index.
      */
     #[Route('/admin/{entitySlug}/{id}/unarchive', name: 'app_admin_entity_unarchive', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function unarchive(
@@ -235,7 +232,13 @@ class GenericAdminController extends AbstractAdminController
 
         $this->validateArchiveCsrf($request, 'unarchive', $id);
 
-        $entityClass = $this->entityNamespace . $entityName;
+        $entityClassName = $this->entityNamespace . $entityName;
+        if (!class_exists($entityClassName)) {
+            throw new NotFoundHttpException('Entity class not found: ' . $entityClassName);
+        }
+
+        /** @var class-string $entityClass */
+        $entityClass = $entityClassName;
         $config = $archiveService->resolveConfig($entityClass);
 
         if ($config === null) {
@@ -352,8 +355,8 @@ class GenericAdminController extends AbstractAdminController
 
     protected function getFormComponentName(string $class): string
     {
-        $entityClass = $this->entityNamespace . $class;
-        $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
+        $entityClass = $this->entityDiscovery->resolveEntityClass($class, $this->entityNamespace);
+        $adminAttr = $entityClass ? $this->entityDiscovery->getAdminAttribute($entityClass) : null;
         return $adminAttr?->getFormComponent() ?? 'K:Admin:EntityForm';
     }
 
@@ -365,7 +368,8 @@ class GenericAdminController extends AbstractAdminController
     private function validateArchiveCsrf(Request $request, string $actionName, int $entityId): void
     {
         $csrfKey = $actionName . '_' . $entityId;
-        if (!$this->isCsrfTokenValid($csrfKey, $request->request->get('_token'))) {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid($csrfKey, is_string($token) ? $token : null)) {
             throw new \InvalidArgumentException('Invalid CSRF token for ' . $csrfKey);
         }
     }
