@@ -80,6 +80,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $actions = $this->provider->getActions(TestEntity::class);
         $archive = current(array_filter($actions, fn ($a) => $a->name === 'archive'));
 
+        $this->assertNotFalse($archive);
         $this->assertSame(AdminEntityVoter::ADMIN_ARCHIVE, $archive->voterAttribute);
     }
 
@@ -91,6 +92,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $actions = $this->provider->getActions(TestEntity::class);
         $unarchive = current(array_filter($actions, fn ($a) => $a->name === 'unarchive'));
 
+        $this->assertNotFalse($unarchive);
         $this->assertSame(AdminEntityVoter::ADMIN_ARCHIVE, $unarchive->voterAttribute);
     }
 
@@ -102,6 +104,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $actions = $this->provider->getActions(TestEntity::class);
         $archive = current(array_filter($actions, fn ($a) => $a->name === 'archive'));
 
+        $this->assertNotFalse($archive);
         $this->assertSame('POST', $archive->method);
     }
 
@@ -113,6 +116,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $actions = $this->provider->getActions(TestEntity::class);
         $unarchive = current(array_filter($actions, fn ($a) => $a->name === 'unarchive'));
 
+        $this->assertNotFalse($unarchive);
         $this->assertSame('POST', $unarchive->method);
     }
 
@@ -124,6 +128,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $actions = $this->provider->getActions(TestEntity::class);
         $archive = current(array_filter($actions, fn ($a) => $a->name === 'archive'));
 
+        $this->assertNotFalse($archive);
         $this->assertIsString($archive->condition);
         $this->assertSame('!(item.archived)', $archive->condition);
     }
@@ -136,6 +141,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $actions = $this->provider->getActions(TestEntity::class);
         $unarchive = current(array_filter($actions, fn ($a) => $a->name === 'unarchive'));
 
+        $this->assertNotFalse($unarchive);
         $this->assertIsString($unarchive->condition);
         $this->assertSame('item.archived', $unarchive->condition);
     }
@@ -151,7 +157,10 @@ class ArchiveRowActionProviderTest extends TestCase
         $archive   = current(array_filter($actions, fn ($a) => $a->name === 'archive'));
         $unarchive = current(array_filter($actions, fn ($a) => $a->name === 'unarchive'));
 
+        $this->assertNotFalse($archive);
         $this->assertSame('!(item.deletedAt)', $archive->condition);
+
+        $this->assertNotFalse($unarchive);
         $this->assertSame('item.deletedAt', $unarchive->condition);
     }
 
@@ -163,6 +172,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $actions = $this->provider->getActions(TestEntity::class);
         $archive = current(array_filter($actions, fn ($a) => $a->name === 'archive'));
 
+        $this->assertNotFalse($archive);
         $this->assertNotNull($archive->confirmMessage);
     }
 
@@ -174,6 +184,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $actions = $this->provider->getActions(TestEntity::class);
         $archive = current(array_filter($actions, fn ($a) => $a->name === 'archive'));
 
+        $this->assertNotFalse($archive);
         $this->assertGreaterThan(20, $archive->priority);
         $this->assertLessThan(100, $archive->priority);
     }

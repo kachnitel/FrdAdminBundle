@@ -1,5 +1,5 @@
 parameters:
-    level: 6
+    level: 7
     paths:
         - src
         - tests
@@ -40,4 +40,12 @@ parameters:
           paths:
             - tests/
 
+        - identifier: method.notFound
+          message: '~Call to an undefined method object::~'
+          paths:
+            - tests/Functional/
 
+        - identifier: property.notFound
+          message: '~Access to an undefined property object::~'
+          paths:
+            - tests/Functional/

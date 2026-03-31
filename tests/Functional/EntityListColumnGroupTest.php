@@ -174,6 +174,8 @@ class EntityListColumnGroupTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $component */
+
         $component = $testComponent->component();
 
         $group = new ColumnGroup('test', 'Test', []);

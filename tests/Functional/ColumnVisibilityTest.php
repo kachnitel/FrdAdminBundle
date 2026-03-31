@@ -171,6 +171,7 @@ class ColumnVisibilityTest extends ComponentTestCase
         );
 
         // Get the component instance once and reuse it
+        /** @var EntityList $component */
         $component = $testComponent->component();
 
         // Manually set hiddenColumns on the component instance

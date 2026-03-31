@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
+use Kachnitel\AdminBundle\Twig\Components\EnumMultiFilter;
+
 class EnumMultiFilterComponentTest extends ComponentTestCase
 {
     /**
@@ -20,6 +22,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
             ],
         );
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $this->assertSame(['pending', 'approved'], $component->selectedValues);
     }
@@ -38,6 +41,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
             ],
         );
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $this->assertSame([], $component->selectedValues);
     }
@@ -56,6 +60,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
             ],
         );
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $this->assertSame(['pending'], $component->selectedValues);
     }
@@ -76,6 +81,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
 
         $testComponent->set('selectedValues', ['pending', 'approved']);
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $this->assertSame('["pending","approved"]', $component->value);
     }
@@ -96,6 +102,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
 
         $testComponent->set('selectedValues', []);
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $this->assertSame('', $component->value);
     }
@@ -116,6 +123,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
 
         $testComponent->call('clear');
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $this->assertSame('', $component->value);
         $this->assertSame([], $component->selectedValues);
@@ -135,6 +143,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
             ],
         );
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $choices = $component->getChoices();
         $this->assertSame(['active' => 'ACTIVE', 'inactive' => 'INACTIVE', 'archived' => 'ARCHIVED'], $choices);
@@ -154,6 +163,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
             ],
         );
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $this->assertSame(
             ['electronics' => 'electronics', 'clothing' => 'clothing', 'food' => 'food'],
@@ -197,6 +207,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
 
         $testComponent->set('selectedValues', ['electronics', 'food']);
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $this->assertSame('["electronics","food"]', $component->value);
     }
@@ -217,6 +228,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
 
         $testComponent->call('clear');
 
+        /** @var EnumMultiFilter $component */
         $component = $testComponent->component();
         $this->assertSame('', $component->value);
         $this->assertSame([], $component->selectedValues);

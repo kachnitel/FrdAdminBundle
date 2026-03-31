@@ -31,7 +31,9 @@ class PermissionEnforcementTest extends KernelTestCase
         self::bootKernel();
         $container = self::getContainer();
 
+        /* @phpstan-ignore assign.propertyType */
         $this->accessDecisionManager = $container->get('security.access.decision_manager');
+        /* @phpstan-ignore assign.propertyType */
         $this->voter = $container->get(AdminEntityVoter::class);
     }
 

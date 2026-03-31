@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithoutBatchActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Twig\Components\EntityList;
 
 class EntityListBatchActionsTest extends ComponentTestCase
 {
     public function testBatchActionsUIRendersWhenEnabled(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         for ($i = 1; $i <= 5; $i++) {
@@ -43,8 +47,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testBatchActionsCheckboxesRenderedForEachEntity(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create 3 test entities
         for ($i = 1; $i <= 3; $i++) {
@@ -69,8 +75,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testSelectedIdsLivePropTrackSelection(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         for ($i = 1; $i <= 5; $i++) {
@@ -89,6 +97,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame([1, 2, 3], $component->selectedIds);
     }
@@ -96,8 +105,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testBatchDeleteRemovesSelectedEntities(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         $entityIds = [];
@@ -145,8 +156,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testBatchDeleteClearsSelectionAfterDeletion(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         $entityIds = [];
@@ -170,6 +183,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
         // Execute batch delete
         $testComponent->call('batchDelete');
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertEmpty($component->selectedIds, 'selectedIds should be cleared after batch delete');
     }
@@ -177,8 +191,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testBatchDeleteWithEmptySelectionDoesNothing(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         for ($i = 1; $i <= 3; $i++) {
@@ -211,8 +227,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testBatchDeleteHandlesNonExistentIds(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create one test entity
         $entity = new TestEntity();
@@ -242,8 +260,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testSelectAllActionAddsCurrentPageEntitiesToSelection(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         $entityIds = [];
@@ -266,6 +286,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
         // Execute selectAll action
         $testComponent->call('selectAll');
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
 
         // Verify all entity IDs are selected
@@ -278,8 +299,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testDeselectAllActionClearsSelection(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         for ($i = 1; $i <= 3; $i++) {
@@ -301,6 +324,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
         // Execute deselectAll action
         $testComponent->call('deselectAll');
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertEmpty($component->selectedIds);
     }
@@ -312,8 +336,9 @@ class EntityListBatchActionsTest extends ComponentTestCase
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
-        $this->assertTrue($component->canBatchDelete($component->entityClass, $component->entityShortClass));
+        $this->assertTrue($component->canBatchDelete());
     }
 
     public function testIsBatchActionsEnabledReturnsFalseByDefault(): void
@@ -324,6 +349,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
             data: ['entityClass' => EntityWithoutBatchActions::class, 'entityShortClass' => 'EntityWithoutBatchActions'],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertFalse($component->permissionService->isBatchActionsEnabled($component->entityClass));
     }
@@ -331,8 +357,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testCheckboxesHaveProperDataModelBinding(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entity
         $entity = new TestEntity();
@@ -354,8 +382,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testDeleteButtonRendersAsStandardLiveAction(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entity
         $entity = new TestEntity();
@@ -378,8 +408,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testSelectedIdsPersistedViaDataModelBinding(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         $entityIds = [];
@@ -399,6 +431,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
         // Simulate selecting checkboxes via LiveProp set (mimics data-model binding)
         $testComponent->set('selectedIds', [$entityIds[0], $entityIds[1]]);
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertCount(2, $component->selectedIds);
         $this->assertContains($entityIds[0], $component->selectedIds);
@@ -419,8 +452,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testSelectedCheckboxesArePreservedAfterRerender(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         $entityIds = [];
@@ -459,8 +494,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testDeleteSelectedCountReflectsSelectedIds(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         for ($i = 1; $i <= 5; $i++) {
@@ -488,8 +525,10 @@ class EntityListBatchActionsTest extends ComponentTestCase
     public function testBatchDeleteUpdatesTotalItemsCount(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         $entityIds = [];
@@ -510,12 +549,14 @@ class EntityListBatchActionsTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame(5, $component->getPaginationInfo()->totalItems);
 
         // Execute batch delete
         $testComponent->call('batchDelete');
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame(3, $component->getPaginationInfo()->totalItems);
     }

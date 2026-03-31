@@ -37,6 +37,7 @@ class EntityListSortingTest extends ComponentTestCase
 
         // Capture the component reference ONCE — calling component() multiple times
         // may return a fresh hydrated instance, discarding mutations made by getEntities().
+        /** @var EntityList $entityList */
         $entityList = $testComponent->component();
 
         // getEntities() must not throw and must silently reset sortBy to default
@@ -66,6 +67,8 @@ class EntityListSortingTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $entityList */
+
         $entityList = $testComponent->component();
         $entityList->getEntities();
 
@@ -94,6 +97,8 @@ class EntityListSortingTest extends ComponentTestCase
         );
 
         $testComponent->call('sort', ['column' => 'relatedEntity']);
+
+        /** @var EntityList $entityList */
 
         $entityList = $testComponent->component();
 

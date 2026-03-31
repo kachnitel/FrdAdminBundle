@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Twig\Components\EntityList;
 
 /**
  * Functional tests for EntityList component in dataSourceId mode.
@@ -53,11 +54,12 @@ class EntityListDataSourceTest extends ComponentTestCase
             data: ['dataSourceId' => 'TestEntity'],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
 
         // When using dataSourceId without entityClass, isDoctrineEntity is false
         $this->assertFalse($component->isDoctrineEntity());
-        $this->assertNotNull($component->getDataSource());
+        $this->assertNotNull($component->getDataSource()); // @phpstan-ignore method.alreadyNarrowedType
     }
 
     public function testIsDoctrineEntityReturnsTrueForEntityClass(): void
@@ -70,6 +72,7 @@ class EntityListDataSourceTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
 
         // When using entityClass, isDoctrineEntity is true
@@ -113,6 +116,7 @@ class EntityListDataSourceTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $entities = $component->getEntities();
 
@@ -137,6 +141,7 @@ class EntityListDataSourceTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $paginationInfo = $component->getPaginationInfo();
 
@@ -162,6 +167,7 @@ class EntityListDataSourceTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $entities = $component->getEntities();
 
@@ -188,6 +194,7 @@ class EntityListDataSourceTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $entities = $component->getEntities();
 
@@ -209,12 +216,13 @@ class EntityListDataSourceTest extends ComponentTestCase
             data: ['dataSourceId' => 'TestEntity'],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $entities = $component->getEntities();
 
         $entityId = $component->getEntityId($entities[0]);
 
-        $this->assertNotNull($entityId);
+        $this->assertNotNull($entityId); // @phpstan-ignore method.alreadyNarrowedType
         $this->assertIsInt($entityId);
     }
 
@@ -230,6 +238,7 @@ class EntityListDataSourceTest extends ComponentTestCase
             data: ['dataSourceId' => 'TestEntity'],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $entities = $component->getEntities();
 
@@ -245,10 +254,11 @@ class EntityListDataSourceTest extends ComponentTestCase
             data: ['dataSourceId' => 'TestEntity'],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $columns = $component->getColumns();
 
-        $this->assertIsArray($columns);
+        $this->assertIsArray($columns); // @phpstan-ignore method.alreadyNarrowedType
         $this->assertNotEmpty($columns);
         $this->assertContains('name', $columns);
     }
@@ -260,10 +270,11 @@ class EntityListDataSourceTest extends ComponentTestCase
             data: ['dataSourceId' => 'TestEntity'],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $filters = $component->getFilterMetadata();
 
-        $this->assertIsArray($filters);
+        $this->assertIsArray($filters); // @phpstan-ignore method.alreadyNarrowedType
         // Should have filters for TestEntity fields
         $this->assertArrayHasKey('name', $filters);
     }
@@ -276,6 +287,7 @@ class EntityListDataSourceTest extends ComponentTestCase
             data: ['dataSourceId' => 'EntityWithoutBatchActions'],
         );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
 
         // EntityWithoutBatchActions has #[Admin] without enableBatchActions, so batch is disabled
@@ -324,6 +336,7 @@ class EntityListDataSourceTest extends ComponentTestCase
         // Re-render and check state preserved
         $rendered = (string) $testComponent->render();
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame('Entity 1', $component->search);
         $this->assertSame('name', $component->sortBy);

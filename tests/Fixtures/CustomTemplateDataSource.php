@@ -105,25 +105,28 @@ class CustomTemplateDataSource implements DataSourceInterface
 
         // Apply search filter
         if ($search !== '') {
-            $items = array_filter($items, fn (object $item) => str_contains(
-                strtolower((string) ($item->name ?? '')),
-                strtolower($search)
-            ));
+            $items = array_filter($items, function (object $item) use ($search): bool {
+                /** @var \stdClass $item */
+                return str_contains(strtolower((string) ($item->name ?? '')), strtolower($search));
+            });
         }
 
         // Apply name filter
         if (!empty($filters['name'])) {
-            $items = array_filter($items, fn (object $item) => str_contains(
-                strtolower((string) ($item->name ?? '')),
-                strtolower((string) $filters['name'])
-            ));
+            $nameFilter = (string) $filters['name'];
+            $items = array_filter($items, function (object $item) use ($nameFilter): bool {
+                /** @var \stdClass $item */
+                return str_contains(strtolower((string) ($item->name ?? '')), strtolower($nameFilter));
+            });
         }
 
         $items = array_values($items);
         $total = count($items);
 
         // Apply sorting
-        usort($items, function (object $a, object $b) use ($sortBy, $sortDirection) {
+        usort($items, function (object $a, object $b) use ($sortBy, $sortDirection): int {
+            /** @var \stdClass $a */
+            /** @var \stdClass $b */
             $aVal = $a->{$sortBy} ?? null;
             $bVal = $b->{$sortBy} ?? null;
             $cmp = $aVal <=> $bVal;
@@ -145,7 +148,7 @@ class CustomTemplateDataSource implements DataSourceInterface
     public function find(string|int $id): ?object
     {
         foreach ($this->items as $item) {
-            if ($item->id === $id) {
+            if ($this->getItemId($item) === $id) {
                 return $item;
             }
         }
@@ -164,11 +167,13 @@ class CustomTemplateDataSource implements DataSourceInterface
 
     public function getItemId(object $item): string|int
     {
+        /** @var \stdClass $item */
         return $item->id;
     }
 
     public function getItemValue(object $item, string $field): mixed
     {
+        /** @var \stdClass $item */
         return $item->{$field} ?? null;
     }
 }

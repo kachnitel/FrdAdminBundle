@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
@@ -43,8 +44,10 @@ class TemplateOverrideTest extends ComponentTestCase
     public function testAdminIndexLiveTemplateCanBeOverridden(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity = new TestEntity();
         $entity->setName('Test Entity');
@@ -70,8 +73,10 @@ class TemplateOverrideTest extends ComponentTestCase
     public function testComponentTemplateCanBeOverridden(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity1 = new TestEntity();
         $entity1->setName('Entity One');
@@ -99,6 +104,7 @@ class TemplateOverrideTest extends ComponentTestCase
         // This set() triggers a re-render/action. If TestLiveComponent uses the client
         // to simulate a request.
         $testComponent->set('search', 'One');
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame('One', $component->search);
     }
@@ -109,8 +115,10 @@ class TemplateOverrideTest extends ComponentTestCase
     public function testTypePreviewTemplateCanBeOverridden(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity = new TestEntity();
         $entity->setName('Test Name');
@@ -136,8 +144,10 @@ class TemplateOverrideTest extends ComponentTestCase
     public function testTypeSpecificOverrideTakesPrecedenceForEntity(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity = new TestEntity();
         $entity->setName('Active Entity');
@@ -169,8 +179,10 @@ class TemplateOverrideTest extends ComponentTestCase
     public function testDataSourceSpecificOverrideTakesPrecedence(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity = new TestEntity();
         $entity->setName('Data Source Test');
@@ -200,8 +212,10 @@ class TemplateOverrideTest extends ComponentTestCase
     public function testOverrideFallbackChainWorksCorrectly(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $related = new RelatedEntity();
         $related->setName('Related Item');
@@ -244,8 +258,10 @@ class TemplateOverrideTest extends ComponentTestCase
     public function testEntitySpecificPropertyOverrideHasHighestPriority(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity = new TestEntity();
         $entity->setName('Test Entity Name');
@@ -271,8 +287,10 @@ class TemplateOverrideTest extends ComponentTestCase
     public function testOverridesPreserveLiveComponentFunctionality(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         for ($i = 1; $i <= 5; $i++) {
             $entity = new TestEntity();
@@ -297,12 +315,14 @@ class TemplateOverrideTest extends ComponentTestCase
 
         $testComponent->set('sortBy', 'name');
         $testComponent->set('sortDirection', 'ASC');
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame('name', $component->sortBy);
         $this->assertSame('ASC', $component->sortDirection);
 
         $testComponent->set('itemsPerPage', 2);
         $testComponent->set('search', '');
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame(2, $component->itemsPerPage);
         $this->assertSame(3, $component->getPaginationInfo()->getTotalPages());

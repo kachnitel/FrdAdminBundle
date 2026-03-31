@@ -20,6 +20,8 @@ class EntityListEnhancedTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $inner */
+
         $inner = $component->component();
         $this->assertSame(TestEntity::class, $inner->entityClass);
         $this->assertSame('', $inner->search);
@@ -41,6 +43,8 @@ class EntityListEnhancedTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $inner */
+
         $inner = $component->component();
         $this->assertSame(TestEntity::class, $inner->entityClass);
         $this->assertSame('TestEntity', $inner->entityShortClass);
@@ -61,6 +65,8 @@ class EntityListEnhancedTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $inner */
+
         $inner = $component->component();
         $this->assertSame('test search term', $inner->search);
     }
@@ -79,6 +85,8 @@ class EntityListEnhancedTest extends ComponentTestCase
                 'sortDirection' => 'ASC',
             ],
         );
+
+        /** @var EntityList $inner */
 
         $inner = $component->component();
         $this->assertSame('name', $inner->sortBy);
@@ -100,6 +108,8 @@ class EntityListEnhancedTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $inner */
+
         $inner = $component->component();
         $this->assertSame(2, $inner->page);
         $this->assertSame(50, $inner->itemsPerPage);
@@ -119,6 +129,8 @@ class EntityListEnhancedTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $inner */
+
         $inner = $component->component();
         $this->assertSame(['name' => 'test', 'status' => 'active'], $inner->columnFilters);
     }
@@ -136,6 +148,8 @@ class EntityListEnhancedTest extends ComponentTestCase
                 'selectedIds' => [1, 2, 3],
             ],
         );
+
+        /** @var EntityList $inner */
 
         $inner = $component->component();
         $this->assertSame([1, 2, 3], $inner->selectedIds);
@@ -160,6 +174,8 @@ class EntityListEnhancedTest extends ComponentTestCase
                 'selectedIds' => [1],
             ],
         );
+
+        /** @var EntityList $inner */
 
         $inner = $component->component();
         $this->assertSame('search_term', $inner->search);
@@ -188,6 +204,8 @@ class EntityListEnhancedTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $inner */
+
         $inner = $component->component();
         $this->assertSame('', $inner->search);
     }
@@ -206,6 +224,8 @@ class EntityListEnhancedTest extends ComponentTestCase
             ],
         );
 
+        /** @var EntityList $inner */
+
         $inner = $component->component();
         $this->assertSame([], $inner->columnFilters);
     }
@@ -223,6 +243,8 @@ class EntityListEnhancedTest extends ComponentTestCase
                 'selectedIds' => [],
             ],
         );
+
+        /** @var EntityList $inner */
 
         $inner = $component->component();
         $this->assertSame([], $inner->selectedIds);

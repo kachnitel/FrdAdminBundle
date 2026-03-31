@@ -19,8 +19,10 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
     public function testArchiveButtonAppearsForNonArchivedEntity(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity = new ArchivableEntity();
         $entity->setName('Active Item');
@@ -47,8 +49,10 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
     public function testUnarchiveButtonAppearsForArchivedEntity(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity = new ArchivableEntity();
         $entity->setName('Archived Item');
@@ -76,8 +80,10 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
     public function testMixedArchiveStateShowsCorrectButtonsPerRow(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $active = new ArchivableEntity();
         $active->setName('Active');
@@ -109,8 +115,10 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
     public function testEntityWithoutArchiveConfigHasNoArchiveButtons(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         // TestEntity has no archiveExpression configured
         $entity = new \Kachnitel\AdminBundle\Tests\Fixtures\TestEntity();
@@ -135,8 +143,10 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
     public function testSoftDeleteEntityShowsArchiveButton(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity = new SoftDeleteEntity();
         $entity->setName('Active Soft Delete');
@@ -161,8 +171,10 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
     public function testSoftDeleteEntityShowsUnarchiveButtonWhenDeleted(): void
     {
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
+        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        $em = $doctrine->getManager();
 
         $entity = new SoftDeleteEntity();
         $entity->setName('Deleted Item');

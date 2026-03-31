@@ -3,9 +3,11 @@
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Twig\Components\EntityList;
 
 class EntityListLiveComponentTest extends ComponentTestCase
 {
@@ -23,6 +25,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
         // Uses dataSource.label for the empty message
         $this->assertStringContainsString('No Test Entities found.', $rendered);
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame(TestEntity::class, $component->entityClass);
         $this->assertSame('id', $component->sortBy);
@@ -40,6 +43,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
         // This triggers a re-render internally, effectively testing the DB connection
         $testComponent->set('search', $searchQuery);
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame($searchQuery, $component->search);
 
@@ -55,20 +59,26 @@ class EntityListLiveComponentTest extends ComponentTestCase
             );
 
         // Initial check
-        $this->assertSame('name', $testComponent->component()->sortBy);
-        $this->assertSame('ASC', $testComponent->component()->sortDirection);
+        /** @var EntityList $component */
+        $component = $testComponent->component();
+        $this->assertSame('name', $component->sortBy);
+        $this->assertSame('ASC', $component->sortDirection);
 
         // Set the property directly to simulate the action's result
         $testComponent->set('sortDirection', 'DESC');
 
-        $this->assertSame('DESC', $testComponent->component()->sortDirection);
+        /** @var EntityList $component */
+        $component = $testComponent->component();
+        $this->assertSame('DESC', $component->sortDirection);
     }
 
     public function testRenderingEntityWithRelationDoesNotThrowStringConversionError(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create a related entity
         $related = new RelatedEntity();
@@ -112,8 +122,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testRenderingEntityWithProxyRelationIncludesAllTemplateElements(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create related entity without __toString method
         $related = new RelatedEntity();
@@ -151,8 +163,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testRenderingEntityWithCollectionShowsCount(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entity with collection of tags
         $entity = new TestEntity();
@@ -190,8 +204,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testPaginationDefaultsToFirstPage(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create 25 test entities
         for ($i = 1; $i <= 25; $i++) {
@@ -206,6 +222,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
             );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame(1, $component->page);
         $this->assertSame(20, $component->itemsPerPage); // Default
@@ -221,8 +238,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testPaginationNavigationBetweenPages(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create 25 test entities
         for ($i = 1; $i <= 25; $i++) {
@@ -238,13 +257,17 @@ class EntityListLiveComponentTest extends ComponentTestCase
             );
 
         // First page (default sort is ID DESC, so latest entities first)
-        $entities = $testComponent->component()->getEntities();
+        /** @var EntityList $component */
+        $component = $testComponent->component();
+        $entities = $component->getEntities();
         $this->assertCount(20, $entities);
         $this->assertStringContainsString('Entity 025', $entities[0]->getName()); // Highest ID first
 
         // Navigate to page 2
         $testComponent->set('page', 2);
-        $entities = $testComponent->component()->getEntities();
+        /** @var EntityList $component */
+        $component = $testComponent->component();
+        $entities = $component->getEntities();
         $this->assertCount(5, $entities); // Remaining 5 items
         $this->assertStringContainsString('Entity 005', $entities[0]->getName()); // Items 5-1
     }
@@ -252,8 +275,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testPaginationWithCustomItemsPerPage(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create 15 test entities
         for ($i = 1; $i <= 15; $i++) {
@@ -268,6 +293,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'itemsPerPage' => 5],
             );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame(5, $component->itemsPerPage);
 
@@ -281,8 +307,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testPaginationWithSearchFiltersResults(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create 30 test entities, half with "Special" in name
         for ($i = 1; $i <= 30; $i++) {
@@ -302,6 +330,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
             ],
             );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $entities = $component->getEntities();
 
@@ -325,6 +354,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
             );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame(0, $component->getPaginationInfo()->totalItems);
         $this->assertSame(0, $component->getPaginationInfo()->getTotalPages());
@@ -334,8 +364,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testPaginationRendersPaginationControls(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create 25 test entities to trigger pagination
         for ($i = 1; $i <= 25; $i++) {
@@ -360,8 +392,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testPaginationInvalidPageDefaultsToOne(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create 10 test entities
         for ($i = 1; $i <= 10; $i++) {
@@ -377,6 +411,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
             data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity', 'page' => 999],
             );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         // Should clamp to valid page
         $this->assertGreaterThanOrEqual(1, $component->page);
@@ -386,8 +421,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testComponentInitializesFromUrlSearchParam(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         for ($i = 1; $i <= 10; $i++) {
@@ -407,6 +444,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
             ],
             );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame('SearchMe', $component->search);
 
@@ -422,8 +460,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testComponentInitializesFromUrlSortParams(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         for ($i = 1; $i <= 5; $i++) {
@@ -444,6 +484,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
             ],
             );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame('name', $component->sortBy);
         $this->assertSame('ASC', $component->sortDirection);
@@ -457,8 +498,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testComponentInitializesFromUrlPaginationParams(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create 25 test entities
         for ($i = 1; $i <= 25; $i++) {
@@ -479,6 +522,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
             ],
             );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame(2, $component->page);
         $this->assertSame(10, $component->itemsPerPage);
@@ -492,8 +536,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testComponentInitializesFromUrlColumnFiltersParam(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities with different names
         for ($i = 1; $i <= 10; $i++) {
@@ -510,9 +556,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
                 'entityClass' => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
                 'columnFilters' => ['name' => 'Alpha']
-            ]
-        , );
+            ],
+        );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertArrayHasKey('name', $component->columnFilters);
         $this->assertSame('Alpha', $component->columnFilters['name']);
@@ -529,8 +576,10 @@ class EntityListLiveComponentTest extends ComponentTestCase
     public function testComponentInitializesFromMultipleUrlParams(): void
     {
         $container = static::getContainer();
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $container->get('doctrine');
         /** @var EntityManagerInterface $em */
-        $em = $container->get('doctrine')->getManager();
+        $em = $doctrine->getManager();
 
         // Create test entities
         for ($i = 1; $i <= 30; $i++) {
@@ -554,6 +603,7 @@ class EntityListLiveComponentTest extends ComponentTestCase
             ],
             );
 
+        /** @var EntityList $component */
         $component = $testComponent->component();
 
         // Verify all params were set

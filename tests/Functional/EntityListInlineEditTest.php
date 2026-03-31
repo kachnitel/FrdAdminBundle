@@ -172,6 +172,7 @@ class EntityListInlineEditTest extends ComponentTestCase
         $other2  = $this->createEntity('Other 2');
         $list    = $this->makeList(['editingRowId' => $editing->getId()]);
 
+        /** @var EntityList $component */
         $component = $list->component();
 
         $this->assertTrue($component->isRowEditing($editing));
@@ -393,6 +394,8 @@ class EntityListInlineEditTest extends ComponentTestCase
 
         $list->call('editRow', ['id' => $e2->getId()]);
 
+        /** @var EntityList $component */
+
         $component = $list->component();
         $this->assertFalse($component->isRowEditing($e1));
         $this->assertTrue($component->isRowEditing($e2));
@@ -508,6 +511,8 @@ class EntityListInlineEditTest extends ComponentTestCase
             'selectedIds'  => [$e1->getId()],
             'editingRowId' => $e2->getId(),
         ]);
+
+        /** @var EntityList $component */
 
         $component = $list->component();
 

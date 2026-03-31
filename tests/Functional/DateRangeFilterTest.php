@@ -15,8 +15,8 @@ class DateRangeFilterTest extends ComponentTestCase
             data: ['column' => 'createdAt', 'compact' => true],
         );
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
-        $this->assertInstanceOf(DateRangeFilter::class, $component);
         $this->assertSame('createdAt', $component->column);
         $this->assertSame('', $component->from);
         $this->assertSame('', $component->to);
@@ -40,6 +40,7 @@ class DateRangeFilterTest extends ComponentTestCase
             ],
         );
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('2024-01-15', $component->from);
         $this->assertSame('2024-12-31', $component->to);
@@ -59,6 +60,7 @@ class DateRangeFilterTest extends ComponentTestCase
             ],
         );
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('2024-01-15', $component->from);
         $this->assertSame('', $component->to);
@@ -75,6 +77,7 @@ class DateRangeFilterTest extends ComponentTestCase
             ],
         );
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         // Invalid JSON should result in empty from/to
         $this->assertSame('', $component->from);
@@ -90,6 +93,7 @@ class DateRangeFilterTest extends ComponentTestCase
 
         $testComponent->set('from', '2024-01-15');
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('2024-01-15', $component->from);
 
@@ -109,6 +113,7 @@ class DateRangeFilterTest extends ComponentTestCase
 
         $testComponent->set('to', '2024-12-31');
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('2024-12-31', $component->to);
 
@@ -129,6 +134,7 @@ class DateRangeFilterTest extends ComponentTestCase
         $testComponent->set('from', '2024-01-15');
         $testComponent->set('to', '2024-12-31');
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('2024-01-15', $component->from);
         $this->assertSame('2024-12-31', $component->to);
@@ -154,6 +160,7 @@ class DateRangeFilterTest extends ComponentTestCase
         // Clear from field
         $testComponent->set('from', '');
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('', $component->from);
         $this->assertSame('2024-12-31', $component->to);
@@ -178,6 +185,7 @@ class DateRangeFilterTest extends ComponentTestCase
         $newJsonValue = json_encode(['from' => '2024-06-01', 'to' => '2024-06-30']);
         $testComponent->set('value', $newJsonValue);
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('2024-06-01', $component->from);
         $this->assertSame('2024-06-30', $component->to);
@@ -250,6 +258,7 @@ class DateRangeFilterTest extends ComponentTestCase
         );
 
         // Initially empty
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('', $component->from);
         $this->assertSame('', $component->to);
@@ -258,6 +267,7 @@ class DateRangeFilterTest extends ComponentTestCase
         $newJsonValue = json_encode(['from' => '2025-06-10', 'to' => '2025-12-20']);
         $testComponent->set('value', $newJsonValue);
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         // Should be deserialized by onUpdated callback
         $this->assertSame('2025-06-10', $component->from);
@@ -276,6 +286,7 @@ class DateRangeFilterTest extends ComponentTestCase
         $urlEncodedValue = json_encode(['from' => '2025-12-11', 'to' => '2025-12-11']);
         $testComponent->set('value', $urlEncodedValue);
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('2025-12-11', $component->from);
         $this->assertSame('2025-12-11', $component->to);
@@ -347,6 +358,7 @@ class DateRangeFilterTest extends ComponentTestCase
         $jsonValue = json_encode(['from' => '2024-01-15', 'to' => '2024-12-31']);
         $testComponent->set('value', $jsonValue);
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         // The component should be deserialized correctly
         $this->assertSame('2024-01-15', $component->from);
@@ -369,6 +381,7 @@ class DateRangeFilterTest extends ComponentTestCase
         // Clear the value
         $testComponent->set('value', '');
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('', $component->from);
         $this->assertSame('', $component->to);
@@ -391,6 +404,7 @@ class DateRangeFilterTest extends ComponentTestCase
         // Invoke the clear live action
         $testComponent->call('clear');
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('', $component->value);
     }
@@ -411,6 +425,7 @@ class DateRangeFilterTest extends ComponentTestCase
         // Invoke the clear live action
         $testComponent->call('clear');
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         $this->assertSame('', $component->from);
         $this->assertSame('', $component->to);
@@ -433,11 +448,12 @@ class DateRangeFilterTest extends ComponentTestCase
         // with empty value, just like when from/to are cleared individually
         $testComponent->call('clear');
 
+        /** @var DateRangeFilter $component */
         $component = $testComponent->component();
         // Verify that the component state is ready to emit the event with correct data
         $this->assertSame('', $component->value);
         $this->assertSame('createdAt', $component->column);
-        
+
         // The event would be emitted with this structure:
         // emitUp('filter:updated', ['column' => 'createdAt', 'value' => ''])
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
+use Kachnitel\AdminBundle\Twig\Components\ColumnFilter;
+
 class ColumnFilterComponentTest extends ComponentTestCase
 {
     /**
@@ -20,6 +22,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
             ],
         );
 
+        /** @var ColumnFilter $component */
         $component = $testComponent->component();
         $this->assertSame('text', $component->getType());
     }
@@ -38,6 +41,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
             ],
         );
 
+        /** @var ColumnFilter $component */
         $component = $testComponent->component();
         $this->assertSame('enum', $component->getType());
     }
@@ -59,6 +63,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         // Set a value which triggers onUpdated
         $testComponent->set('value', 'test search');
 
+        /** @var ColumnFilter $component */
         $component = $testComponent->component();
         $this->assertSame('test search', $component->value);
         $this->assertSame('name', $component->column);
@@ -98,6 +103,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
 
         $testComponent->set('value', 'new');
 
+        /** @var ColumnFilter $component */
         $component = $testComponent->component();
         $this->assertSame('new', $component->value);
     }
