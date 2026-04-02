@@ -143,8 +143,7 @@ class TestEntity
         return $this->active;
     }
 
-    // public function setStatus(?TestEnum $status): self
-    public function setStatus(?TestStatus $status): self
+    public function setStatus(TestStatus $status): self
     {
         $this->status = $status;
         return $this;

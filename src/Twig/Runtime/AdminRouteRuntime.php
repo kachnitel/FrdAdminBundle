@@ -6,33 +6,30 @@ namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Attribute\AdminRoutes;
-use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
-use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
-use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
 
 /**
  * Runtime for entity routing in templates.
+ *
+ * Handles route name resolution and URL generation for admin entity actions.
+ * Permission and form-availability checks are delegated to ActionAccessibilityChecker.
  */
 class AdminRouteRuntime implements RuntimeExtensionInterface
 {
     public function __construct(
         private RouterInterface $router,
         private AttributeHelper $attributeHelper,
+        private ActionAccessibilityChecker $accessibilityChecker,
         private ?AuthorizationCheckerInterface $authChecker = null,
-        private ?EntityDiscoveryService $entityDiscovery = null,
-        private ?FormRegistryInterface $formRegistry = null,
-        private string $formNamespace = 'App\\Form\\',
-        private string $formSuffix = 'FormType',
-        private string $entityNamespace = 'App\\Entity\\',
     ) {}
 
     /**
      * Generate a path for an entity's route.
-     * @param object|class-string $object
+     *
+     * @param object|class-string  $object
      * @param array<string, mixed> $parameters
      */
     public function getPath(object|string $object, string $routeName, array $parameters = []): string
@@ -52,64 +49,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         $parameters = $this->autoFillEntitySlugParameter($object, $route, $parameters);
 
         return $this->router->generate($route, $parameters);
-    }
-
-    /**
-     * @param object|class-string $object
-     * @param array<string, mixed> $parameters
-     * @return array<string, mixed>
-     */
-    private function autoFillIdParameter(object|string $object, string $route, array $parameters): array
-    {
-        if (
-            empty($parameters['id'])
-            && is_object($object)
-            && $this->routeHasParameter($route, 'id')
-        ) {
-            if (method_exists($object, 'getId')) {
-                $parameters['id'] = $object->getId();
-            } elseif (property_exists($object, 'id') && isset($object->id)) {
-                $parameters['id'] = $object->id;
-            }
-        }
-
-        return $parameters;
-    }
-
-    /**
-     * @param object|class-string $object
-     * @param array<string, mixed> $parameters
-     * @return array<string, mixed>
-     */
-    private function autoFillClassParameter(object|string $object, string $route, array $parameters): array
-    {
-        if (empty($parameters['class']) && $this->routeHasParameter($route, 'class')) {
-            $shortName = $this->getShortClassName($object);
-            if ($shortName === false) {
-                return $parameters;
-            }
-            $parameters['class'] = $shortName;
-        }
-
-        return $parameters;
-    }
-
-    /**
-     * @param object|class-string $object
-     * @param array<string, mixed> $parameters
-     * @return array<string, mixed>
-     */
-    private function autoFillEntitySlugParameter(object|string $object, string $route, array $parameters): array
-    {
-        if (empty($parameters['entitySlug']) && $this->routeHasParameter($route, 'entitySlug')) {
-            $shortName = $this->getShortClassName($object);
-            if ($shortName === false) {
-                return $parameters;
-            }
-            $parameters['entitySlug'] = strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($shortName)));
-        }
-
-        return $parameters;
     }
 
     /**
@@ -142,9 +81,39 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         return $this->getGenericAdminRoute($name);
     }
 
+    public function isRouteAccessible(string $route): bool
+    {
+        if ($this->authChecker === null) {
+            return true;
+        }
+
+        return $this->router->getRouteCollection()->get($route) !== null;
+    }
+
+    public function canPerformAction(object $entity, string $action): bool
+    {
+        $shortName = (new \ReflectionClass($this->getRealClass($entity)))->getShortName();
+
+        return $this->isActionAccessible($shortName, $action);
+    }
+
     /**
-     * Get generic admin controller route name for an action.
+     * Check if a user can perform an action on an entity.
+     *
+     * @param string $entityShortName Entity short name (e.g., 'Product', 'User')
+     * @param string $action          Action name ('index', 'show', 'new', 'edit', 'archive', 'unarchive', 'delete')
      */
+    public function isActionAccessible(string $entityShortName, string $action): bool
+    {
+        return $this->accessibilityChecker->isActionAccessible(
+            $entityShortName,
+            $action,
+            $this->hasRoute($entityShortName, $action),
+        );
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
     private function getGenericAdminRoute(string $action): ?string
     {
         return match ($action) {
@@ -167,82 +136,62 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
         return $routes;
     }
 
-    public function isRouteAccessible(string $route): bool
+    /**
+     * @param object|class-string  $object
+     * @param array<string, mixed> $parameters
+     * @return array<string, mixed>
+     */
+    private function autoFillIdParameter(object|string $object, string $route, array $parameters): array
     {
-        if ($this->authChecker === null) {
-            return true;
+        if (
+            empty($parameters['id'])
+            && is_object($object)
+            && $this->routeHasParameter($route, 'id')
+        ) {
+            if (method_exists($object, 'getId')) {
+                $parameters['id'] = $object->getId();
+            } elseif (property_exists($object, 'id') && isset($object->id)) {
+                $parameters['id'] = $object->id;
+            }
         }
 
-        return $this->router->getRouteCollection()->get($route) !== null;
-    }
-
-    public function canPerformAction(object $entity, string $action): bool
-    {
-        $entityClass = $this->getRealClass($entity);
-        $shortName = (new \ReflectionClass($entityClass))->getShortName();
-
-        return $this->isActionAccessible($shortName, $action);
+        return $parameters;
     }
 
     /**
-     * Check if a user can perform an action on an entity.
-     * Checks permissions and form availability.
-     *
-     * @param string $entityShortName Entity short name (e.g., 'Product', 'User')
-     * @param string $action Action name ('index', 'show', 'new', 'edit', 'archive', 'unarchive', 'delete')
-     * @return bool True if action is accessible
+     * @param object|class-string  $object
+     * @param array<string, mixed> $parameters
+     * @return array<string, mixed>
      */
-    public function isActionAccessible(string $entityShortName, string $action): bool
+    private function autoFillClassParameter(object|string $object, string $route, array $parameters): array
     {
-        if (!$this->hasRoute($entityShortName, $action)) {
-            return false;
-        }
-
-        $voterAttribute = match ($action) {
-            'index'              => AdminEntityVoter::ADMIN_INDEX,
-            'show'               => AdminEntityVoter::ADMIN_SHOW,
-            'new'                => AdminEntityVoter::ADMIN_NEW,
-            'edit'               => AdminEntityVoter::ADMIN_EDIT,
-            'archive', 'unarchive' => AdminEntityVoter::ADMIN_ARCHIVE,
-            'delete'             => AdminEntityVoter::ADMIN_DELETE,
-            default              => null,
-        };
-
-        if ($this->authChecker !== null && $voterAttribute !== null) {
-            if (!$this->authChecker->isGranted($voterAttribute, $entityShortName)) {
-                return false;
+        if (empty($parameters['class']) && $this->routeHasParameter($route, 'class')) {
+            $shortName = $this->getShortClassName($object);
+            if ($shortName === false) {
+                return $parameters;
             }
+            $parameters['class'] = $shortName;
         }
 
-        if (in_array($action, ['new', 'edit'], true)) {
-            if (!$this->hasForm($entityShortName)) {
-                return false;
-            }
-        }
-
-        return true;
+        return $parameters;
     }
 
-    private function hasForm(string $entityShortName): bool
+    /**
+     * @param object|class-string  $object
+     * @param array<string, mixed> $parameters
+     * @return array<string, mixed>
+     */
+    private function autoFillEntitySlugParameter(object|string $object, string $route, array $parameters): array
     {
-        if ($this->formRegistry === null || $this->entityDiscovery === null) {
-            return true;
-        }
-
-        try {
-            $entityClass = $this->entityDiscovery->resolveEntityClass($entityShortName, $this->entityNamespace);
-            if ($entityClass) {
-                $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
-                $formType = $adminAttr?->getFormType()
-                    ?: $this->formNamespace . $entityShortName . $this->formSuffix;
-                return $this->formRegistry->hasType($formType);
+        if (empty($parameters['entitySlug']) && $this->routeHasParameter($route, 'entitySlug')) {
+            $shortName = $this->getShortClassName($object);
+            if ($shortName === false) {
+                return $parameters;
             }
-        } catch (\Exception) {
-            // Fall through to default behavior
+            $parameters['entitySlug'] = strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($shortName)));
         }
 
-        $formType = $this->formNamespace . $entityShortName . $this->formSuffix;
-        return $this->formRegistry->hasType($formType);
+        return $parameters;
     }
 
     private function routeHasParameter(string $route, string $parameter): bool
@@ -257,8 +206,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             return true;
         }
 
-        $path = $routeObj->getPath();
-        return str_contains($path, '{' . $parameter . '}');
+        return str_contains($routeObj->getPath(), '{' . $parameter . '}');
     }
 
     /**
@@ -273,7 +221,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             }
         }
 
-        return get_class($object);
+        return $object::class;
     }
 
     /**
@@ -283,7 +231,6 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     {
         $class = is_object($object) ? $this->getRealClass($object) : $object;
         if (!class_exists($class)) {
-            // fallback — can't reflect non-existent class
             return false;
         }
 

@@ -74,14 +74,21 @@ services:
             $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
         tags: ['twig.runtime']
 
-    # AdminRouteRuntime with additional dependencies for permission checks
-    Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime:
+    # ActionAccessibilityChecker — checks voter + form availability for admin actions
+    Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker:
         arguments:
+            $authChecker: '@?security.authorization_checker'
             $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
             $formRegistry: '@form.registry'
             $formNamespace: '%kachnitel_admin.form_namespace%'
             $formSuffix: '%kachnitel_admin.form_suffix%'
             $entityNamespace: '%kachnitel_admin.entity_namespace%'
+
+    # AdminRouteRuntime — route resolution and URL generation
+    Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime:
+        arguments:
+            $accessibilityChecker: '@Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker'
+            $authChecker: '@?security.authorization_checker'
         tags: ['twig.runtime']
 
     # LiveComponents
