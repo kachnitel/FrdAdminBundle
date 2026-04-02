@@ -1,8 +1,8 @@
 {
-    "generated_at": "2026-04-02 02:09:10",
+    "generated_at": "2026-04-02 02:41:31",
     "tests": {
         "count": 1231,
-        "assertions": 2509,
+        "assertions": 2511,
         "status": "failing(risky)"
     },
     "coverage": {
@@ -11,7 +11,7 @@
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {
-        "level": 7,
+        "level": 8,
         "status": "pass"
     },
     "requirements": {

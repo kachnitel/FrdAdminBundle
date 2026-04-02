@@ -237,9 +237,10 @@ class DoctrineDataSourceFactoryTest extends TestCase
             ->with(TestEntity::class)
             ->willReturn($admin);
 
-        $result = $this->factory->create(TestEntity::class);
+        $dataSource = $this->factory->create(TestEntity::class);
 
-        $this->assertSame(TestEntity::class, $result->getEntityClass());
+        $this->assertNotNull($dataSource);
+        $this->assertSame(TestEntity::class, $dataSource->getEntityClass());
     }
 
     public function testCreatedDataSourceHasCorrectAdminAttribute(): void
@@ -255,11 +256,12 @@ class DoctrineDataSourceFactoryTest extends TestCase
             ->with(TestEntity::class)
             ->willReturn($admin);
 
-        $result = $this->factory->create(TestEntity::class);
+        $dataSource = $this->factory->create(TestEntity::class);
 
-        $this->assertSame('Custom Label', $result->getLabel());
-        $this->assertSame('fa-custom', $result->getIcon());
-        $this->assertSame('name', $result->getDefaultSortBy());
-        $this->assertSame('ASC', $result->getDefaultSortDirection());
+        $this->assertNotNull($dataSource);
+        $this->assertSame('Custom Label', $dataSource->getLabel());
+        $this->assertSame('fa-custom', $dataSource->getIcon());
+        $this->assertSame('name', $dataSource->getDefaultSortBy());
+        $this->assertSame('ASC', $dataSource->getDefaultSortDirection());
     }
 }

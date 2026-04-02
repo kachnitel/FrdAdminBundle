@@ -16,11 +16,9 @@ class DebugDataSourceCommandTest extends KernelTestCase
 
     protected function setUp(): void
     {
-        self::bootKernel();
-
-        $application = new Application(self::$kernel);
+        $kernel = self::bootKernel();
+        $application = new Application($kernel);
         $command = $application->find('debug:datasource');
-
         $this->commandTester = new CommandTester($command);
     }
 

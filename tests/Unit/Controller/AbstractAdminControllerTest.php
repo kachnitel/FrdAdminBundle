@@ -212,7 +212,7 @@ class AbstractAdminControllerTest extends TestCase
         ];
 
         foreach ($classNames as $class => $expectedSlug) {
-            $slug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class)));
+            $slug = strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($class))); // @phpstan-ignore argument.type
             $this->assertSame($expectedSlug, $slug, "Failed for class: $class");
         }
     }

@@ -15,9 +15,9 @@ class DebugFiltersCommandTest extends KernelTestCase
 
     protected function setUp(): void
     {
-        self::bootKernel();
+        $kernel = self::bootKernel();
 
-        $application = new Application(self::$kernel);
+        $application = new Application($kernel);
         $command = $application->find('admin:debug:filters');
 
         $this->commandTester = new CommandTester($command);

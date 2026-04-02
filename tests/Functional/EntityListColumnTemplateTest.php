@@ -175,6 +175,8 @@ class EntityListColumnTemplateTest extends ComponentTestCase
         $registry = $container->get(DataSourceRegistry::class);
 
         $dataSource = $registry->get('custom-template-test');
+        $this->assertNotNull($dataSource);
+
         $columns = $dataSource->getColumns();
 
         // changes column has custom template
