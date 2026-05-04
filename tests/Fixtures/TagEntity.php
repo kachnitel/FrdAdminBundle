@@ -3,6 +3,7 @@
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
+use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 
 #[ORM\Entity]
 class TagEntity
@@ -16,6 +17,7 @@ class TagEntity
     private string $name = '';
 
     #[ORM\ManyToOne(targetEntity: TestEntity::class, inversedBy: 'tags')]
+    #[ColumnFilter]
     private ?TestEntity $testEntity = null;
 
     public function getId(): ?int

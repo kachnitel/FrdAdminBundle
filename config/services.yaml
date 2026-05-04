@@ -72,6 +72,7 @@ services:
     Kachnitel\AdminBundle\Twig\Runtime\AdminEntityUrlRuntime:
         arguments:
             $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
+            $debug: '%kernel.debug%'
         tags: ['twig.runtime']
 
     # ActionAccessibilityChecker — checks voter + form availability for admin actions

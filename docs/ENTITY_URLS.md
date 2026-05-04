@@ -69,8 +69,10 @@ Generates a URL to the target entity's admin list, pre-filtered to show items re
 - The property is not a collection-valued association
 
 **Behavior:**
-- For **OneToMany** associations: The URL includes a `columnFilter` on the inverse ManyToOne field, so the list shows only items belonging to the source entity
-- For **ManyToMany** associations: Links to the target admin list without a pre-applied filter
+- For **OneToMany** associations: The URL includes a `columnFilter` on the inverse ManyToOne field
+- For **ManyToMany** associations with `mappedBy` (inverse side): filter on the `mappedBy` field
+- For **ManyToMany** associations with `inversedBy` (owning side): filter on the `inversedBy` field, resolved via the numeric-ID exact-match in `applyRelationFilter`
+- For unidirectional **ManyToMany** (no `inversedBy`): links to the target list without a pre-applied filter
 
 ```twig
 {# Link to orders filtered by this customer #}

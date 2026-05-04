@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Twig\Runtime;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\Proxy;
+use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Extension\RuntimeExtensionInterface;
@@ -21,6 +22,7 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
         private AdminRouteRuntime $adminRouteRuntime,
         private ?EntityDiscoveryService $entityDiscovery = null,
         private ?EntityManagerInterface $em = null,
+        private bool $debug = false,   // ← inject %kernel.debug%
     ) {}
 
     /**
@@ -81,8 +83,11 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
         }
 
         $targetSlug = $this->toEntitySlug($targetShortName);
-        $parameters = $this->buildCollectionParameters($targetSlug, $entity, $target['metadata'], $property);
-
+        $parameters = $this->buildCollectionParameters(
+            $targetSlug, $entity, $target['metadata'],
+            $property,
+            $target['targetClass']
+        );
         return $this->router->generate($route, $parameters);
     }
 
@@ -163,6 +168,7 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
      * Build route parameters for a collection admin URL.
      *
      * @param ClassMetadata<object> $metadata
+     * @param class-string $targetClass
      * @return array<string, mixed>
      */
     private function buildCollectionParameters(
@@ -170,17 +176,61 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
         object $entity,
         ClassMetadata $metadata,
         string $property,
+        string $targetClass
     ): array {
-        $mapping = $metadata->getAssociationMapping($property);
-        $mappedBy = $mapping->mappedBy ?? null;
+        $mapping    = $metadata->getAssociationMapping($property);
+        $mappedBy   = $mapping->mappedBy   ?? null;
+        $inversedBy = $mapping->inversedBy ?? null;
 
-        $parameters = ['entitySlug' => $targetSlug];
+        $parameters  = ['entitySlug' => $targetSlug];
+        $filterField = $mappedBy ?? $inversedBy;
 
-        if ($mappedBy !== null && method_exists($entity, 'getId') && $entity->getId() !== null) {
-            $parameters['columnFilters'] = [$mappedBy => (string) $entity->getId()];
+        if ($filterField === null || !method_exists($entity, 'getId') || $entity->getId() === null) {
+            return $parameters;
         }
 
+        if (!$this->targetFieldHasColumnFilter($targetClass, $filterField)) {
+            if ($this->debug) {
+                throw new \LogicException(sprintf(
+                    'admin_collection_url() on "%s::$%s" wants to filter the target list by "%s::$%s", '
+                    . 'but that property has no #[ColumnFilter] attribute. '
+                    . 'Add #[ColumnFilter] to %s::$%s (and optionally set searchFields) '
+                    . 'so the generated link actually filters the list.',
+                    $metadata->getName(),
+                    $property,
+                    $targetClass,
+                    $filterField,
+                    $targetClass,
+                    $filterField,
+                ));
+            }
+
+            // Production: silently omit the filter rather than linking to the wrong thing.
+            return $parameters;
+        }
+
+        $parameters['columnFilters'] = [$filterField => (string) $entity->getId()];
+
         return $parameters;
+    }
+
+    /**
+     * @param class-string $targetClass
+     * @return bool
+     */
+    private function targetFieldHasColumnFilter(string $targetClass, string $fieldName): bool
+    {
+        try {
+            $reflection = new \ReflectionClass($targetClass);
+        } catch (\ReflectionException) { // @phpstan-ignore catch.neverThrown
+            return false;
+        }
+
+        if (!$reflection->hasProperty($fieldName)) {
+            return false;
+        }
+
+        return !empty($reflection->getProperty($fieldName)->getAttributes(ColumnFilter::class));
     }
 
     /**
