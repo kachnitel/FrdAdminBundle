@@ -99,3 +99,12 @@
    scanned from this template file, so no safelist entry is required.
 #}
 {% macro row_archived() %}opacity-60 italic text-gray-400{% endmacro %}
+
+{# Collection inline display #}
+{% macro collection_details() %}admin-collection-details{% endmacro %}
+{% macro collection_summary() %}admin-collection-summary flex items-center gap-1 cursor-pointer list-none{% endmacro %}
+{% macro collection_view_all() %}ml-auto{% endmacro %}
+{% macro collection_inline() %}admin-collection-inline{% endmacro %}
+{% macro collection_inline_header() %}flex items-center gap-1{% endmacro %}
+{% macro collection_list() %}list-none pl-2 mt-1 mb-0 space-y-0.5 admin-collection-list{% endmacro %}
+{% macro collection_list_item() %}text-sm{% endmacro %}

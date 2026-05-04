@@ -1,0 +1,43 @@
+{#
+ # Inline collection items list partial.
+ # Used by _collection.html.twig for both collapsible and always-visible modes.
+ #
+ # Item label priority: name → label → title → #id → string cast
+ # Each item links to its own admin show/index page when available via admin_entity_url().
+ #
+ # Variables:
+ # @var iterable    items         - Slice of the collection to render
+ # @var int         overflow      - Number of items not shown (0 = all shown)
+ # @var string|null collectionUrl - URL to the filtered collection list (for "+ N more…" link)
+ #}
+{% import kachnitel_admin_theme as css %}
+
+<ul class="{{ css.collection_list() }}">
+    {% for item in items %}
+        <li class="{{ css.collection_list_item() }}">
+            {% set itemUrl = admin_entity_url(item, true) %}
+            {% set itemLabel %}
+                {%- if item.name is defined -%}{{ item.name }}
+                {%- elseif item.label is defined -%}{{ item.label }}
+                {%- elseif item.title is defined -%}{{ item.title }}
+                {%- elseif item.id is defined -%}#{{ item.id }}
+                {%- else -%}{{ item }}
+                {%- endif -%}
+            {% endset %}
+            {%- if itemUrl -%}
+                <a href="{{ itemUrl }}">{{ itemLabel }}</a>
+            {%- else -%}
+                {{ itemLabel }}
+            {%- endif -%}
+        </li>
+    {% endfor %}
+    {% if overflow > 0 %}
+        <li class="{{ css.collection_list_item() }} {{ css.text_muted() }}">
+            {%- if collectionUrl -%}
+                <a href="{{ collectionUrl }}">+ {{ overflow }} more…</a>
+            {%- else -%}
+                + {{ overflow }} more…
+            {%- endif -%}
+        </li>
+    {% endif %}
+</ul>

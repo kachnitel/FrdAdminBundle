@@ -1,18 +1,84 @@
 {#
- # Default collection preview template - shows count with optional link
- # to the target entity's admin list (filtered by the parent entity).
+ # Default collection preview template.
+ #
+ # Rendering modes (checked in order):
+ #   1. #[AdminColumn(collectionDisplay: true, collectionCollapsible: true)]
+ #      → <details>/<summary> accordion; items shown inline, overflow links to filtered list
+ #   2. #[AdminColumn(collectionDisplay: true, collectionCollapsible: false)]
+ #      → always-visible inline list; same items + overflow behaviour
+ #   3. No #[AdminColumn] or collectionDisplay: false (default)
+ #      → count label with optional link to filtered list (original behaviour)
  #
  # Variables:
- # @var object entity - The root entity being displayed
- # @var Collection value - The collection value
- # @var string property - The property name being displayed
+ # @var object     entity   - The root entity being displayed
+ # @var Collection value    - The collection value
+ # @var string     property - The property name being displayed
  #}
+{% import kachnitel_admin_theme as css %}
 
 {% set collectionUrl = admin_collection_url(entity, property, true) %}
-{% set label %}{{ value|length }} item{{ value|length != 1 ? 's' : '' }}{% endset %}
+{% set columnAttr    = admin_column_attribute(entity, property) %}
+{% set count         = value|length %}
+{% set countLabel    = count ~ ' item' ~ (count != 1 ? 's' : '') %}
 
-{% if collectionUrl %}
-    <a href="{{ collectionUrl }}">{{ label }}</a>
+{% if count == 0 %}
+
+    <span class="{{ css.text_muted() }}">-</span>
+
+{% elseif columnAttr is not null and columnAttr.collectionDisplay %}
+
+    {% set limit        = columnAttr.collectionLimit %}
+    {% set hasLimit     = limit is not null and limit > 0 %}
+    {% set displayItems = hasLimit ? value|slice(0, limit) : value %}
+    {% set overflow     = hasLimit and count > limit ? count - limit : 0 %}
+
+    {% if columnAttr.collectionCollapsible %}
+
+        <details class="{{ css.collection_details() }}">
+            <summary class="{{ css.collection_summary() }}">
+                <span>{{ countLabel }}</span>
+                {% if collectionUrl %}
+                    {# stopPropagation prevents the click from toggling the <details> #}
+                    <a href="{{ collectionUrl }}"
+                       class="{{ css.btn_link() }} {{ css.collection_view_all() }}"
+                       onclick="event.stopPropagation()"
+                       title="View all in list">↗</a>
+                {% endif %}
+            </summary>
+            {% include '@KachnitelAdmin/types/_collection_items.html.twig' with {
+                items: displayItems,
+                overflow: overflow,
+                collectionUrl: collectionUrl,
+            } only %}
+        </details>
+
+    {% else %}
+
+        <div class="{{ css.collection_inline() }}">
+            <div class="{{ css.collection_inline_header() }}">
+                <span>{{ countLabel }}</span>
+                {% if collectionUrl %}
+                    <a href="{{ collectionUrl }}"
+                       class="{{ css.btn_link() }} {{ css.collection_view_all() }}"
+                       title="View all in list">↗</a>
+                {% endif %}
+            </div>
+            {% include '@KachnitelAdmin/types/_collection_items.html.twig' with {
+                items: displayItems,
+                overflow: overflow,
+                collectionUrl: collectionUrl,
+            } only %}
+        </div>
+
+    {% endif %}
+
 {% else %}
-    {{ label }}
+
+    {# Default: count label + optional filtered-list link #}
+    {% if collectionUrl %}
+        <a href="{{ collectionUrl }}">{{ countLabel }}</a>
+    {% else %}
+        {{ countLabel }}
+    {% endif %}
+
 {% endif %}

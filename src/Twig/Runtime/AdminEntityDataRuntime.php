@@ -3,6 +3,7 @@
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
 
@@ -234,6 +235,32 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
         } catch (\ReflectionException) {
             return null;
         }
+    }
+
+    /**
+     * Get the #[AdminColumn] attribute for a property of a Doctrine entity, or null
+     * if the property does not exist or carries no #[AdminColumn] attribute.
+     *
+     * Returns null for non-Doctrine rows (custom data source items) since the entity
+     * class cannot be resolved to Doctrine metadata in that case.
+     */
+    public function getColumnAttribute(object $entity, string $column): ?AdminColumn
+    {
+        $entityClass = $this->resolveEntityClass($entity);
+
+        try {
+            $reflection = new \ReflectionClass($entityClass);
+        } catch (\ReflectionException) { // @phpstan-ignore catch.neverThrown
+            return null;
+        }
+
+        if (!$reflection->hasProperty($column)) {
+            return null;
+        }
+
+        $attributes = $reflection->getProperty($column)->getAttributes(AdminColumn::class);
+
+        return !empty($attributes) ? $attributes[0]->newInstance() : null;
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────

@@ -120,3 +120,12 @@
        tr.admin-row-archived { border-left: 3px solid var(--bs-warning); }
 #}
 {% macro row_archived() %}table-secondary text-muted fst-italic opacity-50{% endmacro %}
+
+{# Collection inline display #}
+{% macro collection_details() %}admin-collection-details{% endmacro %}
+{% macro collection_summary() %}admin-collection-summary d-flex align-items-center gap-1{% endmacro %}
+{% macro collection_view_all() %}ms-auto{% endmacro %}
+{% macro collection_inline() %}admin-collection-inline{% endmacro %}
+{% macro collection_inline_header() %}d-flex align-items-center gap-1{% endmacro %}
+{% macro collection_list() %}list-unstyled mb-0 mt-1 ps-2 admin-collection-list{% endmacro %}
+{% macro collection_list_item() %}small{% endmacro %}

@@ -38,6 +38,22 @@ use Attribute;
  * The group label is derived by humanising the identifier string.
  * Group members appear in the composite cell in their original column order.
  *
+ * ## Collection display
+ *
+ * By default, collection-valued associations render as a count label with a
+ * link to the filtered list. Set `collectionDisplay: true` to render the
+ * items inline instead:
+ *
+ *   #[AdminColumn(collectionDisplay: true)]                        // accordion, 5 items
+ *   #[AdminColumn(collectionDisplay: true, collectionLimit: null)] // accordion, all items
+ *   #[AdminColumn(collectionDisplay: true, collectionCollapsible: false, collectionLimit: 3)]
+ *
+ * `collectionLimit` controls how many items are shown before a "+ N more…" overflow link.
+ * Set to `null` or `0` to show all items. Default: 5.
+ *
+ * `collectionCollapsible` wraps the list in a native `<details>`/`<summary>` toggle (no JS).
+ * Default: true. Set false for an always-visible list.
+ *
  * ## Precedence (checked in order)
  *
  *   1. `editable: false`        → never editable (short-circuits everything)
@@ -59,6 +75,14 @@ use Attribute;
  * @example Permanently read-only (computed / derived field):
  *   #[AdminColumn(editable: false)]
  *   private float $margin;
+ *
+ * @example Accordion with limit and overflow link:
+ *   #[AdminColumn(collectionDisplay: true, collectionLimit: 3)]
+ *   private Collection $lineItems;
+ *
+ * @example Always-visible list showing all items:
+ *   #[AdminColumn(collectionDisplay: true, collectionCollapsible: false, collectionLimit: null)]
+ *   private Collection $tags;
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class AdminColumn
@@ -72,9 +96,20 @@ class AdminColumn
      * @param string|null $group
      *   Composite column group identifier. Properties sharing the same group
      *   are rendered in a single stacked table cell. Null means no grouping.
+     * @param bool $collectionDisplay
+     *   Show collection items inline rather than just a count+link. Default false.
+     * @param bool $collectionCollapsible
+     *   Wrap the inline list in a native <details>/<summary> toggle (no JS required).
+     *   Default true. Set false for an always-visible list.
+     * @param int|null $collectionLimit
+     *   Maximum number of items shown inline before a "+ N more…" overflow link.
+     *   Set to null or 0 to show all items without truncation. Default 5.
      */
     public function __construct(
         public readonly string|bool|null $editable = null,
         public readonly ?string $group = null,
+        public readonly bool $collectionDisplay = false,
+        public readonly bool $collectionCollapsible = true,
+        public readonly ?int $collectionLimit = 5,
     ) {}
 }
