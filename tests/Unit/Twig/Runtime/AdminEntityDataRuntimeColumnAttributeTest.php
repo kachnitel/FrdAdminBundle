@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
+use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Tests\Fixtures\InlineEditEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
@@ -27,7 +28,7 @@ class AdminEntityDataRuntimeColumnAttributeTest extends TestCase
     protected function setUp(): void
     {
         $this->em      = $this->createMock(EntityManagerInterface::class);
-        $this->runtime = new AdminEntityDataRuntime($this->em);
+        $this->runtime = new AdminEntityDataRuntime($this->em, new AttributeHelper());
     }
 
     // ── getColumnAttribute ────────────────────────────────────────────────────

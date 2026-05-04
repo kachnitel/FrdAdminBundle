@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -28,7 +29,11 @@ class AdminEntityDataRuntimeTest extends TestCase
 
         $this->em->method('getClassMetadata')->willReturn($this->metadata);
 
-        $this->runtime = new AdminEntityDataRuntime($this->em, $this->normalizer);
+        $this->runtime = new AdminEntityDataRuntime(
+            $this->em,
+            new AttributeHelper(),
+            $this->normalizer
+        );
     }
 
     /**

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
-use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Attribute\AdminRoutes;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
@@ -40,7 +40,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
             throw new \Exception(sprintf(
                 'Route "%s" not found for object "%s"',
                 $routeName,
-                is_object($object) ? $this->getRealClass($object) : $object
+                is_object($object) ? ObjectHelper::getRealClass($object) : $object
             ));
         }
 
@@ -92,7 +92,7 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
 
     public function canPerformAction(object $entity, string $action): bool
     {
-        $shortName = (new \ReflectionClass($this->getRealClass($entity)))->getShortName();
+        $shortName = (new \ReflectionClass(ObjectHelper::getRealClass($entity)))->getShortName();
 
         return $this->isActionAccessible($shortName, $action);
     }
@@ -210,26 +210,11 @@ class AdminRouteRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * @return class-string
-     */
-    private function getRealClass(object $object): string
-    {
-        if ($object instanceof Proxy) {
-            $parent = get_parent_class($object);
-            if ($parent !== false) {
-                return $parent;
-            }
-        }
-
-        return $object::class;
-    }
-
-    /**
      * @param object|class-string $object
      */
     private function getShortClassName(object|string $object): string|false
     {
-        $class = is_object($object) ? $this->getRealClass($object) : $object;
+        $class = is_object($object) ? ObjectHelper::getRealClass($object) : $object;
         if (!class_exists($class)) {
             return false;
         }

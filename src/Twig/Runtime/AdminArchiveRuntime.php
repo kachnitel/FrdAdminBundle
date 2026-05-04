@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Kachnitel\AdminBundle\Archive\ArchiveService;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Twig\Extension\RuntimeExtensionInterface;
 
 /**
@@ -30,7 +31,7 @@ class AdminArchiveRuntime implements RuntimeExtensionInterface
         }
 
         /** @var class-string $entityClass */
-        $entityClass = $this->resolveClass($entity);
+        $entityClass = ObjectHelper::getRealClass($entity);
         $config = $this->archiveService->resolveConfig($entityClass);
 
         if ($config === null) {
@@ -38,16 +39,5 @@ class AdminArchiveRuntime implements RuntimeExtensionInterface
         }
 
         return $this->archiveService->isArchived($entity, $config->expression);
-    }
-
-    private function resolveClass(object $entity): string
-    {
-        $class = $entity::class;
-        if (str_contains($class, 'Proxies\\__CG__\\')) {
-            $parent = get_parent_class($entity);
-            return $parent !== false ? $parent : $class;
-        }
-
-        return $class;
     }
 }

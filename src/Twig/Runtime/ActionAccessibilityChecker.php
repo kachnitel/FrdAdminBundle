@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
-use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\Form\FormRegistryInterface;
@@ -67,23 +66,6 @@ final class ActionAccessibilityChecker
         }
 
         return true;
-    }
-
-    /**
-     * Get the real class of an object, unwrapping Doctrine proxies.
-     *
-     * @return class-string
-     */
-    public function getRealClass(object $object): string
-    {
-        if ($object instanceof Proxy) {
-            $parent = get_parent_class($object);
-            if ($parent !== false) {
-                return $parent;
-            }
-        }
-
-        return $object::class;
     }
 
     /**

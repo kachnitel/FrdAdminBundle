@@ -6,9 +6,9 @@ namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Extension\RuntimeExtensionInterface;
 
@@ -39,7 +39,7 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
             return null;
         }
 
-        $entityClass = $this->getRealClass($relatedEntity);
+        $entityClass = ObjectHelper::getRealClass($relatedEntity);
 
         if (!$this->entityDiscovery->isAdminEntity($entityClass)) {
             return null;
@@ -148,7 +148,7 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
             return null;
         }
 
-        $entityClass = $this->getRealClass($entity);
+        $entityClass = ObjectHelper::getRealClass($entity);
         $metadata = $this->em->getClassMetadata($entityClass);
 
         if (!$metadata->isCollectionValuedAssociation($property)) {
@@ -231,23 +231,6 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
         }
 
         return !empty($reflection->getProperty($fieldName)->getAttributes(ColumnFilter::class));
-    }
-
-    /**
-     * Get the real class name of an object, handling Doctrine proxies.
-     *
-     * @return class-string
-     */
-    private function getRealClass(object $object): string
-    {
-        if ($object instanceof Proxy) {
-            $parent = get_parent_class($object);
-            if ($parent !== false) {
-                return $parent;
-            }
-        }
-
-        return get_class($object);
     }
 
     /**

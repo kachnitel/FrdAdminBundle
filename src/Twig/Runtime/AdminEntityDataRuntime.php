@@ -4,6 +4,8 @@ namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
+use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
 
@@ -14,6 +16,7 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 {
     public function __construct(
         private EntityManagerInterface $em,
+        private AttributeHelper $attributeHelper,
         private ?NormalizerInterface $normalizer = null
     ) {}
 
@@ -177,7 +180,7 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
      */
     public function getEntityColumnTemplates(object $entity, string $column): array
     {
-        $entityClass = $this->resolveEntityClass($entity);
+        $entityClass = ObjectHelper::getRealClass($entity);
         $metadata    = $this->em->getClassMetadata($entityClass);
 
         $isCollection = $metadata->isCollectionValuedAssociation($column);
@@ -206,7 +209,7 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
      */
     public function getFieldComponentName(object $entity, string $column): ?string
     {
-        $entityClass = $this->resolveEntityClass($entity);
+        $entityClass = ObjectHelper::getRealClass($entity);
 
         try {
             $metadata = $this->em->getClassMetadata($entityClass);
@@ -246,21 +249,11 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
      */
     public function getColumnAttribute(object $entity, string $column): ?AdminColumn
     {
-        $entityClass = $this->resolveEntityClass($entity);
-
         try {
-            $reflection = new \ReflectionClass($entityClass);
-        } catch (\ReflectionException) { // @phpstan-ignore catch.neverThrown
+            return $this->attributeHelper->getPropertyAttribute($entity, $column, AdminColumn::class);
+        } catch (\ReflectionException) {
             return null;
         }
-
-        if (!$reflection->hasProperty($column)) {
-            return null;
-        }
-
-        $attributes = $reflection->getProperty($column)->getAttributes(AdminColumn::class);
-
-        return !empty($attributes) ? $attributes[0]->newInstance() : null;
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────
@@ -305,25 +298,6 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
             'boolean'                       => 'K:Entity:Field:Bool',
             default                         => 'K:Entity:Field:String',
         };
-    }
-
-    /**
-     * Resolve the real entity class from an object, stripping Doctrine proxy prefixes.
-     * Doctrine proxies are subclasses; get_parent_class() gives the mapped entity class.
-     *
-     * @return class-string
-     */
-    private function resolveEntityClass(object $entity): string
-    {
-        $class = $entity::class;
-        if (str_contains($class, 'Proxies\\__CG__\\')) {
-            $parent = get_parent_class($entity);
-            if ($parent !== false) {
-                return $parent;
-            }
-        }
-
-        return $class;
     }
 
     /**
