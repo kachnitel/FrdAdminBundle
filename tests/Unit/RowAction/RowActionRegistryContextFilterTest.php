@@ -8,6 +8,8 @@ use Kachnitel\AdminBundle\RowAction\AttributeRowActionProvider;
 use Kachnitel\AdminBundle\RowAction\RowActionProviderInterface;
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -25,6 +27,8 @@ use PHPUnit\Framework\TestCase;
  * @covers \Kachnitel\AdminBundle\RowAction\RowActionRegistry::getActions
  * @group row-actions
  */
+#[CoversClass(RowActionRegistry::class)]
+#[UsesClass(RowAction::class)]
 class RowActionRegistryContextFilterTest extends TestCase
 {
     /** @var AttributeRowActionProvider&MockObject */

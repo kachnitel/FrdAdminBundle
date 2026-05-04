@@ -10,6 +10,8 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -17,6 +19,8 @@ use PHPUnit\Framework\TestCase;
  * @group archive
  * @covers \Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime
  */
+#[CoversClass(RowActionRuntime::class)]
+#[UsesClass(RowAction::class)]
 class RowActionRuntimeArchiveTest extends TestCase
 {
     /** @var RowActionRegistry&MockObject */

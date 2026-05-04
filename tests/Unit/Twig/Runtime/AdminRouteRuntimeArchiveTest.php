@@ -9,6 +9,8 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Route;
@@ -28,6 +30,9 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * @covers \Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime::getGenericAdminRoute
  * @group archive
  */
+#[CoversClass(AdminRouteRuntime::class)]
+#[UsesClass(ActionAccessibilityChecker::class)]
+#[UsesClass(AdminRoutes::class)]
 class AdminRouteRuntimeArchiveTest extends TestCase
 {
     /** @var RouterInterface&MockObject */

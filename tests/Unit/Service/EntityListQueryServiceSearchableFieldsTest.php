@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -16,6 +17,7 @@ use PHPUnit\Framework\TestCase;
  * @group global-search
  * @covers \Kachnitel\AdminBundle\Service\EntityListQueryService::getSearchableFieldNames
  */
+#[CoversClass(EntityListQueryService::class)]
 class EntityListQueryServiceSearchableFieldsTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */

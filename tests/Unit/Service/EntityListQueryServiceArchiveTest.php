@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \Kachnitel\AdminBundle\Service\EntityListQueryService::buildQuery
  * @covers \Kachnitel\AdminBundle\Service\EntityListQueryService::getEntities
  */
+#[UsesClass(EntityListQueryService::class)]
 class EntityListQueryServiceArchiveTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */

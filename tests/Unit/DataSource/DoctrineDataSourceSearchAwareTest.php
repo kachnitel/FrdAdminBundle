@@ -16,6 +16,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -26,6 +27,8 @@ use PHPUnit\Framework\TestCase;
  * @group global-search
  * @covers \Kachnitel\AdminBundle\DataSource\DoctrineDataSource::getGlobalSearchColumnLabels
  */
+#[UsesClass(Admin::class)]
+#[UsesClass(DoctrineDataSource::class)]
 class DoctrineDataSourceSearchAwareTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */

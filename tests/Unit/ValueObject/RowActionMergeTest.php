@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \Kachnitel\AdminBundle\ValueObject\RowAction::merge
  * @group row-actions
  */
+#[CoversClass(RowAction::class)]
 class RowActionMergeTest extends TestCase
 {
     // ── contexts OR logic ──────────────────────────────────────────────────────

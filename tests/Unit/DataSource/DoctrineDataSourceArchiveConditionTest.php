@@ -15,6 +15,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -30,6 +31,8 @@ use PHPUnit\Framework\TestCase;
  * @covers \Kachnitel\AdminBundle\DataSource\DoctrineDataSource::query
  * @group archive
  */
+#[UsesClass(Admin::class)]
+#[UsesClass(DoctrineDataSource::class)]
 class DoctrineDataSourceArchiveConditionTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */

@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Archive;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveEntityService;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -16,6 +17,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
  * @group archive
  * @covers \Kachnitel\AdminBundle\Archive\ArchiveEntityService
  */
+#[UsesClass(ArchiveConfig::class)]
 class ArchiveEntityServiceTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */

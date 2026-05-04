@@ -9,7 +9,12 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Tests\Fixtures\InlineEditEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
+use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -18,6 +23,12 @@ use PHPUnit\Framework\TestCase;
  * @covers \Kachnitel\AdminBundle\Attribute\AdminColumn
  * @group collection-display
  */
+#[CoversClass(AdminEntityDataRuntime::class)]
+#[UsesClass(ActionAccessibilityChecker::class)]
+#[UsesClass(AdminRouteRuntime::class)]
+#[UsesClass(AdminColumn::class)]
+#[UsesClass(AttributeHelper::class)]
+#[UsesClass(ObjectHelper::class)]
 class AdminEntityDataRuntimeColumnAttributeTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */

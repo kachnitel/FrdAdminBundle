@@ -10,6 +10,9 @@ use Kachnitel\AdminBundle\RowAction\ArchiveRowActionProvider;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
+use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -17,6 +20,9 @@ use PHPUnit\Framework\TestCase;
  * @group archive
  * @covers \Kachnitel\AdminBundle\RowAction\ArchiveRowActionProvider
  */
+#[CoversClass(ArchiveRowActionProvider::class)]
+#[UsesClass(ArchiveConfig::class)]
+#[UsesClass(RowAction::class)]
 class ArchiveRowActionProviderTest extends TestCase
 {
     /** @var ArchiveService&MockObject */

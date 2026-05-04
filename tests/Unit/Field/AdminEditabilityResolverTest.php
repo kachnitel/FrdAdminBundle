@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Field\AdminEditabilityResolver;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
@@ -18,6 +19,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * @covers \Kachnitel\AdminBundle\Field\AdminEditabilityResolver
  * @group inline-edit
  */
+#[UsesClass(Admin::class)]
+#[UsesClass(AdminColumn::class)]
 class AdminEditabilityResolverTest extends TestCase
 {
     /** @var AttributeHelper&MockObject */
