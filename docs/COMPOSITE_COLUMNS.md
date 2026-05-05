@@ -199,41 +199,20 @@ public function getColumnGroups(): array
 
 ## API Reference
 
-### `#[AdminColumnGroup]`
+### `#[AdminColumnGroup]` Attribute
 
-```php
-#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-class AdminColumnGroup
-{
-    public function __construct(
-        public readonly string $id,
-        public readonly string $subLabels = ColumnGroup::SUB_LABELS_SHOW,
-        public readonly string $header    = ColumnGroup::HEADER_TEXT,
-    ) {}
-}
-```
+**Namespace:** `Kachnitel\AdminBundle\Attribute\AdminColumnGroup`
 
-### `ColumnGroup`
+| Parameter    | Type     | Default | Description |
+|--------------|----------|---------|-------------|
+| `id`         | `string` | **required** | Unique group identifier |
+| `label`      | `?string`| `null`  | Group label (humanised from `id` when null) |
+| `columns`    | `array<string, ColumnMetadata>` | **required** | Array of column keys and their metadata (label, sortable, filterable) |
+| `subLabels`  | `string` | `'show'` | How to display sub-labels: `'show'`, `'icon'`, or `'hidden'` |
+| `header`     | `string` | `'text'` | Header style: `'text'`, `'collapsible'`, or `'full'` |
 
-```php
-readonly class ColumnGroup
-{
-    // subLabels
-    public const SUB_LABELS_SHOW   = 'show';
-    public const SUB_LABELS_ICON   = 'icon';
-    public const SUB_LABELS_HIDDEN = 'hidden';
+**Constants** — use these strings in `AdminColumnGroup` parameters:
+- **subLabels:** `SUB_LABELS_SHOW`, `SUB_LABELS_ICON`, `SUB_LABELS_HIDDEN`
+- **header:** `HEADER_TEXT` (simple text), `HEADER_COLLAPSIBLE` (collapsible accordion), `HEADER_FULL` (full-width cell)
 
-    // header
-    public const HEADER_TEXT        = 'text';        // default
-    public const HEADER_COLLAPSIBLE = 'collapsible';
-    public const HEADER_FULL        = 'full';
-
-    public function __construct(
-        public string $id,
-        public string $label,
-        public array  $columns,    // array<string, ColumnMetadata>
-        public string $subLabels = self::SUB_LABELS_SHOW,
-        public string $header    = self::HEADER_TEXT,
-    ) {}
-}
-```
+See the source code for [`AdminColumnGroup`](../src/Attribute/AdminColumnGroup.php) and [`ColumnGroup`](../src/ValueObject/ColumnGroup.php) for complete details.

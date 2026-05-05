@@ -602,6 +602,13 @@ class Product { }
 #[Admin(label: 'Blog Posts', enableBatchActions: true)]
 class BlogPost { }
 
+// With collection display
+#[Admin(label: 'Orders')]
+class Order {
+    #[AdminColumn(collectionDisplay: true, collectionLimit: 3)]
+    private Collection $lineItems;
+}
+
 // With custom permissions
 #[Admin(
     label: 'Users',
@@ -778,89 +785,78 @@ class User implements UserInterface
 <details>
 <summary><strong>API Reference</strong></summary>
 
-### Admin Attribute
+**Key Attributes:**
+
+| Attribute | Target | Purpose | Source |
+|-----------|--------|---------|--------|
+| `Admin` | Class | Configure entity for admin | [src/Attribute/Admin.php](../src/Attribute/Admin.php) |
+| `AdminRoutes` | Class | Custom CRUD routes | [src/Attribute/AdminRoutes.php](../src/Attribute/AdminRoutes.php) |
+| `ColumnFilter` | Property | Fine-tune column filtering | [src/Attribute/ColumnFilter.php](../src/Attribute/ColumnFilter.php) |
+| `AdminColumn` | Property | Column display & inline edit config | [src/Attribute/AdminColumn.php](../src/Attribute/AdminColumn.php) |
+| `AdminAction` | Class | Custom row action button | [src/Attribute/AdminAction.php](../src/Attribute/AdminAction.php) |
+| `AdminActionsConfig` | Class | Show/hide/reorder default actions | [src/Attribute/AdminActionsConfig.php](../src/Attribute/AdminActionsConfig.php) |
+
+**Quick Parameter Reference:**
+
+**#[Admin]** — Common parameters:
+- `label: ?string` — Display name
+- `icon: ?string` — Material icon name
+- `columns: ?array<string>` — Visible columns (auto-detect if null)
+- `excludeColumns: ?array<string>` — Exclude from auto-detect
+- `permissions: ?array<string, string>` — Role map (index, show, new, edit, delete)
+- `enableFilters: bool = true`
+- `enableBatchActions: bool = false`
+- `enableInlineEdit: bool = false`
+- `itemsPerPage: ?int = null`
+- `sortBy: ?string = null`
+- `sortDirection: ?string = null` — 'ASC' or 'DESC'
+- `archiveExpression: ?string = null` — DQL path for soft-delete
+- `archiveRole: ?string = null`
+
+**#[AdminColumn]** — Collection display parameters:
+- `collectionDisplay: bool = false` — Show items inline instead of count+link
+- `collectionCollapsible: bool = true` — Wrap in `<details>` accordion
+- `collectionLimit: ?int = 5` — Items before "+ N more…" link; null/0 = show all
+- `collectionLabelMethod: ?string = null` — Custom method to get item label; null = auto-detect
+- `editable: bool|array|string|null` — Inline edit config (see [Inline Editing Guide](INLINE_EDIT.md))
+- `group: ?string` — Group columns together - See [Composite Columns](COMPOSITE_COLUMNS.md)
+
+**#[ColumnFilter]** — Constants:
+- `TYPE_TEXT`, `TYPE_NUMBER`, `TYPE_DATE`, `TYPE_DATERANGE`, `TYPE_BOOLEAN`, `TYPE_RELATION`
+
+See the source files linked above for complete method signatures and constructor details.
+
+#### AdminColumn Collection Display Usage
+
+When you have collection-valued associations (e.g., `OneToMany`), use the parameters above:
 
 ```php
-#[Attribute(Attribute::TARGET_CLASS)]
-class Admin
-{
-    public function __construct(
-        ?string $label = null,
-        ?string $icon = null,
-        ?string $formType = null,
-        bool $enableFilters = true,
-        bool $enableBatchActions = false,
-        bool $enableColumnVisibility = false,
-        bool $enableInlineEdit = false,
-        ?array $columns = null,
-        ?array $excludeColumns = null,
-        ?array $filterableColumns = null,
-        ?array $permissions = null,
-        ?int $itemsPerPage = null,
-        ?string $sortBy = null,
-        ?string $sortDirection = null,
-        ?string $archiveExpression = null,
-        ?string $archiveRole = null,
-        bool $archiveDisabled = false,
-    ) {}
-}
+// Default: "5 items" with a link to filtered list
+#[AdminColumn]
+private Collection $items;
+
+// Inline accordion (default limit of 5)
+#[AdminColumn(collectionDisplay: true)]
+private Collection $participants;
+
+// Always-visible list, all items
+#[AdminColumn(collectionDisplay: true, collectionCollapsible: false, collectionLimit: null)]
+private Collection $tags;
+
+// Custom label method for each item
+#[AdminColumn(collectionDisplay: true, collectionLabelMethod: 'getDisplayName')]
+private Collection $lineItems;
 ```
 
-### AdminRoutes Attribute
+**Label Auto-Detection** (when `collectionLabelMethod: null`):
+1. `getLabel()`
+2. `getName()`
+3. `getTitle()`
+4. `__toString()`
+5. `#id` (fallback)
 
-```php
-#[Attribute(Attribute::TARGET_CLASS)]
-class AdminRoutes
-{
-    public function __construct(
-        private array $routes = []
-    ) {}
-}
-```
-
-### ColumnFilter Attribute
-
-```php
-#[Attribute(Attribute::TARGET_PROPERTY)]
-class ColumnFilter
-{
-    public const TYPE_TEXT = 'text';
-    public const TYPE_NUMBER = 'number';
-    public const TYPE_DATE = 'date';
-    public const TYPE_DATERANGE = 'daterange';
-    public const TYPE_BOOLEAN = 'boolean';
-    public const TYPE_RELATION = 'relation';
-
-    public function __construct(
-        string $type = self::TYPE_TEXT,
-        bool $enabled = true,
-        ?string $placeholder = null,
-        ?array $searchFields = null,
-    ) {}
-}
-```
-
-### AdminColumn Attribute
-
-```php
-#[Attribute(Attribute::TARGET_PROPERTY)]
-class AdminColumn
-{
-    public function __construct(
-        /**
-         * Controls inline editability for this column.
-         *
-         * - null   = inherit from #[Admin(enableInlineEdit: ...)] (default)
-         * - true   = always editable (overrides entity default)
-         * - false  = never editable (overrides entity default)
-         * - string = ExpressionLanguage expression (overrides entity default)
-         */
-        string|bool|null $editable = null,
-    ) {}
-}
-```
-
-See [Inline Editing Guide](INLINE_EDIT.md) for the full precedence rules and examples.
+**Inline Editing:**
+See [Inline Editing Guide](INLINE_EDIT.md) for information about the `editable` parameter and its precedence rules.
 
 </details>
 

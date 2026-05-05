@@ -416,114 +416,32 @@ The detail view displays comprehensive information:
 
 ## API Reference
 
-<details>
-<summary>DataSourceInterface (click to expand)</summary>
+**Key Interfaces & Classes:**
 
+| Class | Purpose |
+|-------|---------|
+| [`DataSourceInterface`](../src/DataSource/DataSourceInterface.php) | Contract for all data sources — implement this to create custom data providers |
+| [`DataSourceProviderInterface`](../src/DataSource/DataSourceProviderInterface.php) | Registry-like service that returns all available data sources |
+| [`ColumnMetadata`](../src/ValueObject/ColumnMetadata.php) | Describes a column: name, label, type, sortability, template, grouping |
+| [`FilterMetadata`](../src/ValueObject/FilterMetadata.php) | Describes a filter: type, operator, options, placeholders, etc. Factory methods for common patterns |
+| [`DoctrineDataSource`](../src/DataSource/DoctrineDataSource.php) | Built-in data source for Doctrine ORM entities |
+| [`DoctrineDataSourceFactory`](../src/DataSource/DoctrineDataSourceFactory.php) | Automatically creates `DoctrineDataSource` instances for `#[Admin]` entities |
+
+**ColumnMetadata Factory Methods:**
 ```php
-interface DataSourceInterface
-{
-    public function getIdentifier(): string;
-    public function getLabel(): string;
-    public function getIcon(): ?string;
-    public function getColumns(): array;         // array<string, ColumnMetadata>
-    public function getColumnGroups(): array;    // list<string|ColumnGroup>
-    public function getFilters(): array;         // array<string, FilterMetadata>
-    public function getDefaultSortBy(): string;
-    public function getDefaultSortDirection(): string;
-    public function getDefaultItemsPerPage(): int;
-    public function query(
-        string $search,
-        array $filters,
-        string $sortBy,
-        string $sortDirection,
-        int $page,
-        int $itemsPerPage
-    ): PaginatedResult;
-    public function find(string|int $id): ?object;
-    public function supportsAction(string $action): bool;
-    public function getIdField(): string;
-    public function getItemId(object $item): string|int;
-    public function getItemValue(object $item, string $field): mixed;
-}
+ColumnMetadata::create(string $name, ?string $label = null, string $type = 'string', ...)
 ```
 
-</details>
-
-<details>
-<summary>DataSourceProviderInterface (click to expand)</summary>
-
+**FilterMetadata Factory Methods:**
 ```php
-interface DataSourceProviderInterface
-{
-    /** @return iterable<DataSourceInterface> */
-    public function getDataSources(): iterable;
-}
+FilterMetadata::text($name, $label, $placeholder)
+FilterMetadata::number($name, $label, $operator)
+FilterMetadata::date($name, $label, $operator)
+FilterMetadata::dateRange($name, $label)
+FilterMetadata::enum($name, $options, $label, $showAllOption, $multiple)
+FilterMetadata::enumClass($name, $enumClass, $label, ...)
+FilterMetadata::boolean($name, $label, $showAllOption)
+FilterMetadata::collection($name, $searchFields, $label, ...)
 ```
 
-</details>
-
-<details>
-<summary>ColumnMetadata (click to expand)</summary>
-
-```php
-readonly class ColumnMetadata
-{
-    public function __construct(
-        public string $name,
-        public string $label,
-        public string $type = 'string',
-        public bool $sortable = true,
-        public ?string $template = null,
-        public ?string $group = null,
-    );
-
-    public static function create(
-        string $name,
-        ?string $label = null,
-        string $type = 'string',
-        bool $sortable = true,
-        ?string $template = null,
-        ?string $group = null,
-    ): self;
-}
-```
-
-</details>
-
-<details>
-<summary>FilterMetadata (click to expand)</summary>
-
-```php
-readonly class FilterMetadata
-{
-    public function __construct(
-        public string $name,
-        public string $type = 'text',
-        public ?string $label = null,
-        public ?string $placeholder = null,
-        public string $operator = '=',
-        public ?FilterEnumOptions $enumOptions = null,
-        public ?array $searchFields = null,
-        public int $priority = 999,
-        public bool $enabled = true,
-        public bool $excludeFromGlobalSearch = false,
-        public ?string $targetClass = null,
-    );
-
-    public static function text(string $name, ?string $label = null, ?string $placeholder = null, int $priority = 999): self;
-    public static function number(string $name, ?string $label = null, string $operator = '=', int $priority = 999): self;
-    public static function date(string $name, ?string $label = null, string $operator = 'BETWEEN', int $priority = 999): self;
-    public static function dateRange(string $name, ?string $label = null, int $priority = 999): self;
-    public static function enum(string $name, array $options, ?string $label = null, bool $showAllOption = true, bool $multiple = false, int $priority = 999): self;
-    public static function enumClass(string $name, string $enumClass, ?string $label = null, bool $showAllOption = true, bool $multiple = false, int $priority = 999): self;
-    public static function boolean(string $name, ?string $label = null, bool $showAllOption = true, int $priority = 999): self;
-    public static function collection(string $name, array $searchFields, ?string $label = null, bool $excludeFromGlobalSearch = true, int $priority = 999, ?string $targetClass = null): self;
-
-    public function getOptions(): ?array;
-    public function getEnumClass(): ?string;
-    public function getShowAllOption(): bool;
-    public function isMultiple(): bool;
-}
-```
-
-</details>
+See the source files above for complete method signatures and constructor parameters.

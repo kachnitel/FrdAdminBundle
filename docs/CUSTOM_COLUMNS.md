@@ -114,15 +114,4 @@ class Order { }
 
 ### API Reference
 
-```php
-#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-class AdminCustomColumn
-{
-    public function __construct(
-        public readonly string $name,
-        public readonly string $template,
-        public readonly ?string $label = null,
-        public readonly bool $sortable = false,
-    ) {}
-}
-```
+See the source code for [`AdminCustomColumn`](../src/Attribute/AdminCustomColumn.php) for the complete definition.
