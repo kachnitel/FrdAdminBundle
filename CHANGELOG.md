@@ -7,6 +7,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.10.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.9.1...v0.10.0) (2026-05-05)
+
+### Features
+
+* Default collection display with preview in list ([054b0e](https://github.com/kachnitel/FrdAdminBundle/commit/054b0e1084fa9c0dcf3f13d6f851f09aef45c341))
+* Enhance AdminColumn attribute with collectionLabelMethod and update related templates ([a5e0f1](https://github.com/kachnitel/FrdAdminBundle/commit/a5e0f1bb80f27708912d3f635d8a4b60540d13ea))
+
+### Bug Fixes
+
+* Remove TODO note from ui ([89fd84](https://github.com/kachnitel/FrdAdminBundle/commit/89fd84f66212f594b593afa3f1ff9aecb706f7f1))
+
+##### Admin-url
+
+* Support ManyToMany owning side and guard missing ColumnFilter ([8b36ac](https://github.com/kachnitel/FrdAdminBundle/commit/8b36ac9152f2fd2ad29cb72ccd12b72c6fabaa68))
+
+### Code Refactoring
+
+* Deduplicate doctrine proxy class detection ([3b8b82](https://github.com/kachnitel/FrdAdminBundle/commit/3b8b8251b80b3340c9352b6103d91ce9552bd7b1))
+* Split accessibility check from AdminRouteRuntime ([5a485e](https://github.com/kachnitel/FrdAdminBundle/commit/5a485ef222643b154eeceb4dd9fa2a57f3f45517))
+
+### Documentation
+
+* Update configuration documentation; clean up code snippets in docs ([ca31d4](https://github.com/kachnitel/FrdAdminBundle/commit/ca31d492c9e7027bd2c2e804a26afb60b1dee467))
+
+
+---
+
 ## [0.9.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.9.0...v0.9.1) (2026-03-27)
 
 
