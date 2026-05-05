@@ -6,9 +6,10 @@
  # Each item links to its own admin show/index page when available via admin_entity_url().
  #
  # Variables:
- # @var iterable    items         - Slice of the collection to render
- # @var int         overflow      - Number of items not shown (0 = all shown)
- # @var string|null collectionUrl - URL to the filtered collection list (for "+ N more…" link)
+ # @var iterable         items         - Slice of the collection to render
+ # @var int              overflow      - Number of items not shown (0 = all shown)
+ # @var string|null      collectionUrl - URL to the filtered collection list (for "+ N more…" link)
+ # @var AdminColumn|null columnAttr    - The collection's AdminColumn attribute instance (optional, may be used for custom item rendering)
  #}
 {% import kachnitel_admin_theme as css %}
 
@@ -16,14 +17,7 @@
     {% for item in items %}
         <li class="{{ css.collection_list_item() }}">
             {% set itemUrl = admin_entity_url(item, true) %}
-            {% set itemLabel %}
-                {%- if item.name is defined -%}{{ item.name }}
-                {%- elseif item.label is defined -%}{{ item.label }}
-                {%- elseif item.title is defined -%}{{ item.title }}
-                {%- elseif item.id is defined -%}#{{ item.id }}
-                {%- else -%}{{ item }}
-                {%- endif -%}
-            {% endset %}
+            {% set itemLabel = admin_entity_label(item, columnAttr.collectionLabelMethod) %}
             {%- if itemUrl -%}
                 <a href="{{ itemUrl }}">{{ itemLabel }}</a>
             {%- else -%}

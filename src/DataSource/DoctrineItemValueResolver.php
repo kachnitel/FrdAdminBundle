@@ -15,6 +15,10 @@ use Doctrine\ORM\Mapping\ClassMetadata;
  *   4. isX() getter method   — boolean getter convention
  *   5. null                  — no resolution path found
  *
+ * BackedEnum field values are normalised to their backing scalar (string|int) so
+ * all downstream consumers — list templates, show-page templates, and filters —
+ * receive a consistent type regardless of how the value was retrieved.
+ *
  * The caller is responsible for the custom-column null-short-circuit
  * (custom columns have no backing Doctrine field; their value is always null
  * and rendered entirely by a Twig template).
@@ -31,7 +35,13 @@ class DoctrineItemValueResolver
     public function resolve(object $item, string $field, ClassMetadata $metadata): mixed
     {
         if ($metadata->hasField($field)) {
-            return $metadata->getFieldValue($item, $field);
+            $value = $metadata->getFieldValue($item, $field);
+
+            if ($value instanceof \BackedEnum) {
+                return $value->value;
+            }
+
+            return $value;
         }
 
         if ($metadata->hasAssociation($field)) {

@@ -54,6 +54,13 @@ use Attribute;
  * `collectionCollapsible` wraps the list in a native `<details>`/`<summary>` toggle (no JS).
  * Default: true. Set false for an always-visible list.
  *
+ * `collectionLabelMethod` specifies the method called on each collection item to produce its
+ * display label. If null (the default), the bundle auto-detects: it tries `getLabel()`,
+ * `getName()`, `getTitle()`, `__toString()`, then falls back to `#id`.
+ *
+ *   #[AdminColumn(collectionDisplay: true, collectionLabelMethod: 'getDisplayName')]
+ *   private Collection $participants;
+ *
  * ## Precedence (checked in order)
  *
  *   1. `editable: false`        → never editable (short-circuits everything)
@@ -83,6 +90,10 @@ use Attribute;
  * @example Always-visible list showing all items:
  *   #[AdminColumn(collectionDisplay: true, collectionCollapsible: false, collectionLimit: null)]
  *   private Collection $tags;
+ *
+ * @example Custom label method for collection items:
+ *   #[AdminColumn(collectionDisplay: true, collectionLabelMethod: 'getDisplayName')]
+ *   private Collection $participants;
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class AdminColumn
@@ -104,6 +115,11 @@ class AdminColumn
      * @param int|null $collectionLimit
      *   Maximum number of items shown inline before a "+ N more…" overflow link.
      *   Set to null or 0 to show all items without truncation. Default 5.
+     * @param string|null $collectionLabelMethod
+     *   Method name to call on each collection item to produce its display label.
+     *   When null (default), auto-detection is used: getLabel() → getName() → getTitle()
+     *   → __toString() → #id. Use this to specify a custom method such as 'getDisplayName'
+     *   or 'getFullTitle'. Only applies when collectionDisplay is true.
      */
     public function __construct(
         public readonly string|bool|null $editable = null,
@@ -111,5 +127,6 @@ class AdminColumn
         public readonly bool $collectionDisplay = false,
         public readonly bool $collectionCollapsible = true,
         public readonly ?int $collectionLimit = 5,
+        public readonly ?string $collectionLabelMethod = null,
     ) {}
 }
