@@ -8,318 +8,262 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
-use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
+/**
+ * @covers \Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime
+ */
 class AdminEntityDataRuntimeTest extends TestCase
 {
+    /** @var EntityManagerInterface&MockObject */
+    private EntityManagerInterface $em;
+
+    /** @var ClassMetadata<object>&MockObject */
+    private ClassMetadata $metadata;
+
     private AdminEntityDataRuntime $runtime;
-    private MockObject&EntityManagerInterface $em;
-    private MockObject&DoctrineItemValueResolver $resolver;
-    private MockObject&NormalizerInterface $normalizer;
-    /** @var ClassMetadata<TestEntity>&MockObject */
-    private MockObject&ClassMetadata $metadata;
 
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->resolver = $this->createMock(DoctrineItemValueResolver::class);
-        $this->normalizer = $this->createMock(NormalizerInterface::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
 
         $this->em->method('getClassMetadata')->willReturn($this->metadata);
 
         $this->runtime = new AdminEntityDataRuntime(
-            $this->em,
-            new AttributeHelper(),
-            $this->resolver,
-            $this->normalizer
+            em: $this->em,
+            attributeHelper: $this->createMock(AttributeHelper::class),
+            resolver: new DoctrineItemValueResolver(),
         );
     }
 
-    #[Test]
-    public function getDataReturnsExpectedKeys(): void
+    // ── isAssociation ──────────────────────────────────────────────────────────
+
+    /** @test */
+    public function isAssociationReturnsTrueForSingleValuedAssociation(): void
     {
-        $entity = new class {
-            public int $id = 1;
-            public string $name = 'Test';
+        $entity = new \stdClass();
+        $this->metadata->method('isSingleValuedAssociation')->with('category')->willReturn(true);
+        $this->metadata->method('isCollectionValuedAssociation')->with('category')->willReturn(false);
 
-            public function getId(): int
-            {
-                return $this->id;
-            }
-
-            public function getName(): string
-            {
-                return $this->name;
-            }
-        };
-
-        $this->metadata->method('getFieldNames')->willReturn(['id', 'name']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->resolver->method('resolve')->willReturnCallback(fn ($entity, $field) => match ($field) {
-            'id' => 1,
-            'name' => 'Test',
-            default => null,
-        });
-
-        $data = $this->runtime->getData($entity);
-
-        $this->assertArrayHasKey('id', $data);
-        $this->assertArrayHasKey('name', $data);
-        $this->assertCount(2, $data);
+        $this->assertTrue($this->runtime->isAssociation($entity, 'category'));
     }
 
-    #[Test]
-    public function getDataReturnsFieldValues(): void
+    /** @test */
+    public function isAssociationReturnsTrueForCollectionValuedAssociation(): void
     {
-        $entity = new class {
-            public int $id = 42;
+        $entity = new \stdClass();
+        $this->metadata->method('isSingleValuedAssociation')->with('tags')->willReturn(false);
+        $this->metadata->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
 
-            public function getId(): int
-            {
-                return $this->id;
-            }
-        };
-
-        $this->metadata->method('getFieldNames')->willReturn(['id']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->resolver->method('resolve')->willReturn(42);
-        $this->normalizer->method('normalize')->willReturnArgument(0);
-
-        $data = $this->runtime->getData($entity);
-
-        $this->assertSame(42, $data['id']);
+        $this->assertTrue($this->runtime->isAssociation($entity, 'tags'));
     }
 
-    #[Test]
-    public function getColumnsReturnsFieldNames(): void
+    /** @test */
+    public function isAssociationReturnsFalseForRegularField(): void
     {
-        $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'email']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
+        $entity = new \stdClass();
+        $this->metadata->method('isSingleValuedAssociation')->with('name')->willReturn(false);
+        $this->metadata->method('isCollectionValuedAssociation')->with('name')->willReturn(false);
 
-        $columns = $this->runtime->getColumns(TestEntity::class);
-
-        $this->assertSame(['id', 'name', 'email'], $columns);
+        $this->assertFalse($this->runtime->isAssociation($entity, 'name'));
     }
 
-    #[Test]
-    public function getColumnsIncludesAllFields(): void
+    // ── getAssociationType ─────────────────────────────────────────────────────
+
+    /** @test */
+    public function getAssociationTypeReturnsTargetClassForAssociation(): void
     {
-        $fieldNames = ['id', 'name', 'description', 'createdAt'];
-        $this->metadata->method('getFieldNames')->willReturn($fieldNames);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
+        $entity = new \stdClass();
+        $this->metadata->method('isSingleValuedAssociation')->willReturn(true);
+        $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $this->metadata->method('getAssociationTargetClass')->with('category')->willReturn('App\\Entity\\Category');
 
-        $columns = $this->runtime->getColumns(TestEntity::class);
+        $result = $this->runtime->getAssociationType($entity, 'category');
 
-        $this->assertCount(4, $columns);
-        $this->assertContains('id', $columns);
-        $this->assertContains('name', $columns);
-        $this->assertContains('description', $columns);
-        $this->assertContains('createdAt', $columns);
+        $this->assertSame('App\\Entity\\Category', $result);
     }
 
-    #[Test]
-    public function getColumnsIncludesSingleValuedAssociations(): void
+    /** @test */
+    public function getAssociationTypeReturnsNullForNonAssociation(): void
     {
-        $this->metadata->method('getFieldNames')->willReturn(['id', 'name']);
-        $this->metadata->method('getAssociationNames')->willReturn(['category', 'author']);
+        $entity = new \stdClass();
+        $this->metadata->method('isSingleValuedAssociation')->willReturn(false);
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
 
-        $columns = $this->runtime->getColumns(TestEntity::class);
+        $result = $this->runtime->getAssociationType($entity, 'name');
 
-        $this->assertCount(4, $columns);
-        $this->assertContains('category', $columns);
-        $this->assertContains('author', $columns);
+        $this->assertNull($result);
     }
 
-    #[Test]
-    public function getColumnsReturnsEmptyArrayForEmptyEntity(): void
+    /** @test */
+    public function getAssociationTypeReturnsTargetClassForCollection(): void
     {
-        $this->metadata->method('getFieldNames')->willReturn([]);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
+        $entity = new \stdClass();
+        $this->metadata->method('isSingleValuedAssociation')->with('tags')->willReturn(false);
+        $this->metadata->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
+        $this->metadata->method('getAssociationTargetClass')->with('tags')->willReturn('App\\Entity\\Tag');
 
-        $columns = $this->runtime->getColumns(TestEntity::class);
+        $result = $this->runtime->getAssociationType($entity, 'tags');
 
-        $this->assertSame([], $columns);
+        $this->assertSame('App\\Entity\\Tag', $result);
     }
 
-    #[Test]
-    public function getColumnsWithSingleStringField(): void
+    // ── isCollection ──────────────────────────────────────────────────────────
+
+    /** @test */
+    public function isCollectionReturnsTrueForCollectionValuedAssociation(): void
     {
-        $this->metadata->method('getFieldNames')->willReturn(['name']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
-
-        $columns = $this->runtime->getColumns(TestEntity::class);
-
-        $this->assertSame(['name'], $columns);
-    }
-
-    #[Test]
-    public function getColumnsWithSingleIntegerField(): void
-    {
-        $this->metadata->method('getFieldNames')->willReturn(['id']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
-
-        $columns = $this->runtime->getColumns(TestEntity::class);
-
-        $this->assertSame(['id'], $columns);
-    }
-
-    #[Test]
-    public function getColumnsWithDatetimeField(): void
-    {
-        $this->metadata->method('getFieldNames')->willReturn(['createdAt']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
-
-        $columns = $this->runtime->getColumns(TestEntity::class);
-
-        $this->assertSame(['createdAt'], $columns);
-    }
-
-    #[Test]
-    public function getColumnsWithBooleanField(): void
-    {
-        $this->metadata->method('getFieldNames')->willReturn(['isActive']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
-
-        $columns = $this->runtime->getColumns(TestEntity::class);
-
-        $this->assertSame(['isActive'], $columns);
-    }
-
-    #[Test]
-    public function singleValuedAssociationIncludedInColumns(): void
-    {
-        $this->metadata->method('getFieldNames')->willReturn([]);
-        $this->metadata->method('getAssociationNames')->willReturn(['relatedEntity']);
-        $this->metadata->method('isCollectionValuedAssociation')->with('relatedEntity')->willReturn(false);
-
-        $columns = $this->runtime->getColumns(TestEntity::class);
-
-        $this->assertSame(['relatedEntity'], $columns);
-    }
-
-    #[Test]
-    public function collectionAssociationExcludedFromColumns(): void
-    {
-        $this->metadata->method('getFieldNames')->willReturn([]);
-        $this->metadata->method('getAssociationNames')->willReturn(['items']);
+        $entity = new \stdClass();
         $this->metadata->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
 
-        $columns = $this->runtime->getColumns(TestEntity::class);
-
-        $this->assertNotContains('items', $columns);
-        $this->assertSame([], $columns);
+        $this->assertTrue($this->runtime->isCollection($entity, 'items'));
     }
 
-    #[Test]
-    public function multipleFieldsAllIncluded(): void
+    /** @test */
+    public function isCollectionReturnsFalseForSingleValuedAssociation(): void
     {
-        $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'price', 'active']);
-        $this->metadata->method('getAssociationNames')->willReturn([]);
+        $entity = new \stdClass();
+        $this->metadata->method('isCollectionValuedAssociation')->with('owner')->willReturn(false);
 
-        $columns = $this->runtime->getColumns(TestEntity::class);
-
-        $this->assertSame(['id', 'name', 'price', 'active'], $columns);
+        $this->assertFalse($this->runtime->isCollection($entity, 'owner'));
     }
 
-    #[Test]
-    public function complexEntityExcludesCollectionAssociations(): void
-    {
-        $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'createdAt', 'active']);
-        $this->metadata->method('getAssociationNames')->willReturn(['category', 'author', 'tags']);
-        $this->metadata->method('isCollectionValuedAssociation')->willReturnCallback(fn ($a) => $a === 'tags');
+    // ── getEntityLabel ────────────────────────────────────────────────────────
 
-        $columns = $this->runtime->getColumns(TestEntity::class);
+    /** @test */
+    public function getEntityLabelUsesGetNameMethod(): void
+    {
+        $entity = new class {
+            public function getName(): string { return 'Test Product'; }
+        };
+
+        $this->assertSame('Test Product', $this->runtime->getEntityLabel($entity));
+    }
+
+    /** @test */
+    public function getEntityLabelFallsBackToGetLabel(): void
+    {
+        $entity = new class {
+            public function getLabel(): string { return 'My Label'; }
+        };
+
+        $this->assertSame('My Label', $this->runtime->getEntityLabel($entity));
+    }
+
+    /** @test */
+    public function getEntityLabelFallsBackToGetTitle(): void
+    {
+        $entity = new class {
+            public function getTitle(): string { return 'My Title'; }
+        };
+
+        $this->assertSame('My Title', $this->runtime->getEntityLabel($entity));
+    }
+
+    /** @test */
+    public function getEntityLabelFallsBackToToString(): void
+    {
+        $entity = new class {
+            public function __toString(): string { return 'String Rep'; }
+        };
+
+        $this->assertSame('String Rep', $this->runtime->getEntityLabel($entity));
+    }
+
+    /** @test */
+    public function getEntityLabelFallsBackToGetId(): void
+    {
+        $entity = new class {
+            public function getId(): int { return 42; }
+        };
+
+        $this->assertSame('#42', $this->runtime->getEntityLabel($entity));
+    }
+
+    /** @test */
+    public function getEntityLabelFallsBackToClassName(): void
+    {
+        $entity = new \stdClass();
+
+        $this->assertSame('stdClass', $this->runtime->getEntityLabel($entity));
+    }
+
+    /** @test */
+    public function getEntityLabelUsesCustomGetterWhenProvided(): void
+    {
+        $entity = new class {
+            public function getDisplayName(): string { return 'Custom Display'; }
+            public function getName(): string { return 'Should Not Use'; }
+        };
+
+        $this->assertSame('Custom Display', $this->runtime->getEntityLabel($entity, 'getDisplayName'));
+    }
+
+    /** @test */
+    public function getEntityLabelPrefersLabelOverNameAndTitle(): void
+    {
+        $entity = new class {
+            public function getName(): string { return 'From name'; }
+            public function getLabel(): string { return 'From label'; }
+            public function getTitle(): string { return 'From title'; }
+        };
+
+        $this->assertSame('From label', $this->runtime->getEntityLabel($entity));
+    }
+
+    // ── getPropertyType ───────────────────────────────────────────────────────
+
+    /** @test */
+    public function getPropertyTypeReturnsDoctrineFieldType(): void
+    {
+        $entity = new \stdClass();
+        $this->metadata->method('isSingleValuedAssociation')->willReturn(false);
+        $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $this->metadata->method('getTypeOfField')->with('createdAt')->willReturn('datetime');
+
+        $this->assertSame('datetime', $this->runtime->getPropertyType($entity, 'createdAt'));
+    }
+
+    /** @test */
+    public function getPropertyTypeReturnsTargetClassForAssociation(): void
+    {
+        $entity = new \stdClass();
+        $this->metadata->method('isSingleValuedAssociation')->with('category')->willReturn(true);
+        $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $this->metadata->method('getAssociationTargetClass')->with('category')->willReturn('App\\Entity\\Category');
+
+        $this->assertSame('App\\Entity\\Category', $this->runtime->getPropertyType($entity, 'category'));
+    }
+
+    /** @test */
+    public function getPropertyTypeReturnsStringWhenFieldTypeIsNull(): void
+    {
+        $entity = new \stdClass();
+        $this->metadata->method('isSingleValuedAssociation')->willReturn(false);
+        $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $this->metadata->method('getTypeOfField')->willReturn(null);
+
+        $this->assertSame('string', $this->runtime->getPropertyType($entity, 'unknown'));
+    }
+
+    // ── getColumns ────────────────────────────────────────────────────────────
+
+    /** @test */
+    public function getColumnsReturnsMappedFieldNamesAndSingleValuedAssociations(): void
+    {
+        $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'active']);
+        $this->metadata->method('getAssociationNames')->willReturn(['category', 'tags']);
+        $this->metadata->method('isCollectionValuedAssociation')
+            ->willReturnMap([['category', false], ['tags', true]]);
+
+        $columns = $this->runtime->getColumns(\stdClass::class);
 
         $this->assertContains('id', $columns);
         $this->assertContains('name', $columns);
         $this->assertContains('category', $columns);
-        $this->assertContains('author', $columns);
-        $this->assertNotContains('tags', $columns);
-        $this->assertCount(6, $columns);
-    }
-
-    // getEntityLabel - test all label resolution priorities: custom method → getLabel → getName → getTitle → __toString → #id
-    #[Test]
-    #[DataProvider('entityLabelProvider')]
-    public function getEntityLabelReturnsCustomMethod(object $entity, string $expectedLabel, ?string $method = null): void
-    {
-        $label = $this->runtime->getEntityLabel($entity, $method);
-
-        $this->assertSame($expectedLabel, $label);
-    }
-
-    public static function entityLabelProvider(): array // @phpstan-ignore missingType.iterableValue
-    {
-        return [
-            'custom method' => [
-                new class {
-                    public function getCustomLabel(): string
-                    {
-                        return 'Custom Label';
-                    }
-                },
-                'Custom Label',
-                'getCustomLabel',
-            ],
-            'getLabel method' => [
-                new class {
-                    public function getLabel(): string
-                    {
-                        return 'Label Method';
-                    }
-                },
-                'Label Method',
-            ],
-            'getName method' => [
-                new class {
-                    public function getName(): string
-                    {
-                        return 'Name Method';
-                    }
-                },
-                'Name Method',
-            ],
-            'getTitle method' => [
-                new class {
-                    public function getTitle(): string
-                    {
-                        return 'Title Method';
-                    }
-                },
-                'Title Method',
-            ],
-            '__toString method' => [
-                new class {
-                    public function __toString(): string
-                    {
-                        return 'ToString Method';
-                    }
-                },
-                'ToString Method',
-            ],
-            '#id fallback' => [
-                new class {
-                    public int $id = 123;
-                },
-                '#123',
-            ],
-            'getId method fallback' => [
-                new class {
-                    public function getId(): int
-                    {
-                        return 456;
-                    }
-                },
-                '#456',
-            ],
-        ];
+        $this->assertNotContains('tags', $columns, 'Collection-valued associations must be excluded');
     }
 }
