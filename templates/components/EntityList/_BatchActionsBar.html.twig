@@ -3,18 +3,72 @@
  #
  # Variables:
  # @var int selectedCount - Number of selected items
+ # @var Symfony\UX\LiveComponent\ComponentWithFormTrait|this component context
  #}
 
 {% import kachnitel_admin_theme as css %}
 
 <div class="admin-batch-actions {{ css.flex_center() }} {{ css.gap_md() }}">
-    <button
-        type="button"
-        class="{{ css.btn_danger() }} {{ css.btn_sm() }}"
-        data-action="live#action"
-        data-live-action-param="batchDelete"
-        onclick="return confirm('Are you sure you want to delete the selected items?')"
-    >
-        Delete Selected ({{ selectedCount }})
-    </button>
+    {% for batchAction in this.getBatchActions() %}
+        {# Permission check: only render if user can execute this action #}
+        {% if this.canExecuteBatchAction(batchAction.name) %}
+            {% if batchAction.isLiveAction() %}
+                {% set actionName = batchAction.liveAction %}
+                <button
+                    type="button"
+                    class="{{ css.btn_sm() }} {{ batchAction.cssClass ?? css.btn_primary() }}"
+                    data-action="live#action"
+                    data-live-action-param="{{ actionName }}"
+                    {% if batchAction.requiresConfirmation() %}
+                        onclick="return confirm('{{ batchAction.confirmMessage|replace({
+                            '%count%': selectedCount,
+                            '%action_name%': batchAction.label,
+                            '%entity_name%': this.entityShortClass
+                        })|escape('js') }}')"
+                    {% endif %}
+                    {{ batchAction.icon ? 'title="' ~ batchAction.label ~ '"' : '' }}
+                >
+                    {% if batchAction.icon %}
+                        {{ batchAction.icon }}
+                    {% else %}
+                        {{ batchAction.label }}
+                    {% endif %}
+                </button>
+            {% elseif batchAction.isRouteAction() or batchAction.isUrlAction() %}
+                {# Route/URL actions render as form to preserve CSRF protection #}
+                <form method="POST" style="display: inline;" {{ batchAction.openInNewTab ? 'target="_blank"' : '' }}>
+                    {% if batchAction.isRouteAction() %}
+                        <input type="hidden" name="_route" value="{{ batchAction.route }}">
+                    {% endif %}
+                    <input type="hidden" name="_batch_action_name" value="{{ batchAction.name }}">
+                    <input type="hidden" name="_entity_class" value="{{ this.entityClass }}">
+                    <input type="hidden" name="_entity_short_class" value="{{ this.entityShortClass }}">
+                    <input type="hidden" name="_all_selected" value="0">
+                    {% for id in this.selectedIds %}
+                        <input type="hidden" name="_entity_ids[]" value="{{ id }}">
+                    {% endfor %}
+
+                    <button
+                        type="submit"
+                        formaction="{{ batchAction.isRouteAction() ? path(batchAction.route) : batchAction.url }}"
+                        class="{{ css.btn_sm() }} {{ batchAction.cssClass ?? css.btn_primary() }}"
+                        {% if batchAction.requiresConfirmation() %}
+                            onclick="return confirm('{{ batchAction.confirmMessage|replace({
+                                '%count%': selectedCount,
+                                '%action_name%': batchAction.label,
+                                '%entity_name%': this.entityShortClass
+                            })|escape('js') }}')"
+                        {% endif %}
+                        {{ batchAction.icon ? 'title="' ~ batchAction.label ~ '"' : '' }}
+                    >
+                        {% if batchAction.icon %}
+                            {{ batchAction.icon }}
+                        {% else %}
+                            {{ batchAction.label }}
+                        {% endif %}
+                    </button>
+                </form>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
 </div>

@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Twig\Components;
 
 use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
+use Kachnitel\AdminBundle\BatchAction\BatchActionRegistry;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
@@ -48,6 +49,7 @@ class EntityListArchiveToggleTest extends TestCase
             new EntityListConfig(),
             $this->createMock(DataSourceRegistry::class),
             $this->createMock(EntityListBatchService::class),
+            $this->createMock(BatchActionRegistry::class),
             $this->createMock(AdminPreferencesStorageInterface::class),
             $this->createMock(EntityListColumnService::class),
             $this->archiveService,

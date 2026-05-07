@@ -132,6 +132,15 @@ services:
     Kachnitel\AdminBundle\RowAction\:
         resource: '../src/RowAction'
 
+    # Batch Action services
+    Kachnitel\AdminBundle\BatchAction\:
+        resource: '../src/BatchAction'
+
+    # Argument Resolvers
+    Kachnitel\AdminBundle\ArgumentResolver\:
+        resource: '../src/ArgumentResolver'
+        tags: ['controller.argument_value_resolver']
+
     # RowActionRuntime needs the service container to resolve DI-tuple conditions
     Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime:
         arguments:
