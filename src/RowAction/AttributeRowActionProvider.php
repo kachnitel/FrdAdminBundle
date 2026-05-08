@@ -10,6 +10,9 @@ use Kachnitel\AdminBundle\ValueObject\RowAction;
 
 /**
  * Provides row actions declared via #[AdminAction] attributes on entity classes.
+ *
+ * Only reads actions whose `actionType` is ACTION_TYPE_ROW or ACTION_TYPE_BOTH.
+ * Batch-only actions (ACTION_TYPE_BATCH) are handled by AttributeBatchActionProvider.
  */
 class AttributeRowActionProvider implements RowActionProviderInterface
 {
@@ -45,6 +48,11 @@ class AttributeRowActionProvider implements RowActionProviderInterface
             foreach ($attributes as $attribute) {
                 /** @var AdminAction $adminAction */
                 $adminAction = $attribute->newInstance();
+
+                // Skip batch-only actions — those are handled by AttributeBatchActionProvider
+                if ($adminAction->actionType === AdminAction::ACTION_TYPE_BATCH) {
+                    continue;
+                }
 
                 $rowAction = new RowAction(
                     name: $adminAction->name,

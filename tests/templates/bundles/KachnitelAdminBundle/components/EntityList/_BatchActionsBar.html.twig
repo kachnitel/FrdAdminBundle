@@ -1,5 +1,6 @@
 {#
  # Partial template for batch actions bar (test override).
+ # Includes custom batch action rendering without live routing.
  #}
 
 <div class="admin-batch-actions mb-3 d-flex gap-2 align-items-center">
@@ -12,4 +13,30 @@
     >
         Delete Selected ({{ selectedCount }})
     </button>
+
+    {% if entityClass is defined and entityClass is not empty %}
+        {% for action in admin_batch_actions(entityClass) %}
+            {% if action.liveAction %}
+                <button
+                    type="button"
+                    class="{{ action.cssClass|default('btn btn-sm btn-outline-primary') }}"
+                    data-action="live#action"
+                    data-live-action-param="performBatchAction"
+                    data-live-name-param="{{ action.name }}"
+                >
+                    {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
+                </button>
+            {% else %}
+                <form method="post" action="#" style="display:inline;">
+                    <button
+                        type="submit"
+                        class="{{ action.cssClass|default('btn btn-sm btn-outline-primary') }}"
+                        data-batch-action="{{ action.name }}"
+                    >
+                        {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
+                    </button>
+                </form>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 </div>

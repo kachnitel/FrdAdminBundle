@@ -132,6 +132,10 @@ services:
     Kachnitel\AdminBundle\RowAction\:
         resource: '../src/RowAction'
 
+    # Batch Action services
+    Kachnitel\AdminBundle\BatchAction\:
+        resource: '../src/BatchAction'
+
     # RowActionRuntime needs the service container to resolve DI-tuple conditions
     Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime:
         arguments:
