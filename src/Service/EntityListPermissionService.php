@@ -91,37 +91,4 @@ class EntityListPermissionService
     {
         return $this->security->isGranted(AdminEntityVoter::ADMIN_INDEX, $identifier);
     }
-
-    /**
-     * Check if a batch action is permitted for the given entity.
-     *
-     * @param string $entityClass Full class name
-     * @param string $entityShortClass Short class name (used as voter identifier)
-     * @param string|null $voterAttribute Voter attribute to check, e.g. 'ADMIN_EDIT'
-     * @param string|null $permission Required role, e.g. 'ROLE_ADMIN'
-     */
-    public function canExecuteBatchAction(
-        string $entityClass,
-        string $entityShortClass,
-        ?string $voterAttribute = null,
-        ?string $permission = null,
-    ): bool {
-        // Must have batch actions enabled for the entity
-        if (!$this->isBatchActionsEnabled($entityClass)) {
-            return false;
-        }
-
-        // Check role-based permission if specified
-        if ($permission !== null && !$this->security->isGranted($permission)) {
-            return false;
-        }
-
-        // Check voter-based permission if specified (takes precedence)
-        if ($voterAttribute !== null) {
-            return $this->security->isGranted($voterAttribute, $entityShortClass);
-        }
-
-        // If neither permission nor voterAttribute specified, deny by default
-        return false;
-    }
 }

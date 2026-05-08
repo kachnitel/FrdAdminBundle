@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Kachnitel\AdminBundle\Archive\ArchiveService;
-use Kachnitel\AdminBundle\BatchAction\BatchActionRegistry;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
@@ -15,7 +14,6 @@ use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\DataSourceContracts\PaginatedResult;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
-use Kachnitel\AdminBundle\ValueObject\BatchAction;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
@@ -117,7 +115,6 @@ class EntityList
         private EntityListConfig $config,
         private DataSourceRegistry $dataSourceRegistry,
         private EntityListBatchService $batchService,
-        private BatchActionRegistry $batchActionRegistry,
         private AdminPreferencesStorageInterface $preferencesStorage,
         private EntityListColumnService $columnService,
         private ArchiveService $archiveService,
@@ -378,10 +375,6 @@ class EntityList
     #[LiveAction]
     public function batchDelete(): void
     {
-        if (!$this->canBatchDelete()) {
-            throw new AccessDeniedException('Access denied for batch delete.');
-        }
-
         $this->batchService->batchDelete(
             $this->selectedIds,
             $this->getDataSource(),
@@ -458,41 +451,7 @@ class EntityList
 
     public function supportsBatchActions(): bool
     {
-        /** @phpstan-ignore argument.type */
-        return $this->batchActionRegistry->hasActions($this->entityClass);
-    }
-
-    /** @return array<string, BatchAction> */
-    public function getBatchActions(): array
-    {
-        /** @phpstan-ignore argument.type */
-        return $this->batchActionRegistry->getActions($this->entityClass);
-    }
-
-    public function getBatchActionsByName(string $actionName): ?BatchAction
-    {
-        /** @phpstan-ignore argument.type */
-        return $this->batchActionRegistry->getAction($this->entityClass, $actionName);
-    }
-
-    /**
-     * Check if a specific batch action is permitted for the current user.
-     *
-     * Used by templates to conditionally render batch action buttons.
-     */
-    public function canExecuteBatchAction(string $actionName): bool
-    {
-        $action = $this->getBatchActionsByName($actionName);
-        if ($action === null) {
-            return false;
-        }
-
-        return $this->permissionService->canExecuteBatchAction(
-            $this->entityClass,
-            $this->entityShortClass,
-            $action->voterAttribute,
-            $action->permission,
-        );
+        return $this->getDataSource()->supportsAction('batch_delete');
     }
 
     public function supportsColumnVisibility(): bool
