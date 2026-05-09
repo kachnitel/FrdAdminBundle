@@ -29,47 +29,7 @@
     {# Custom batch actions from providers / #[AdminAction] attributes #}
     {% if entityClass is not empty %}
         {% for action in admin_batch_actions(entityClass) %}
-            {% if action.liveAction %}
-                {# LiveAction: emit browser event for app to handle #}
-                <button
-                    type="button"
-                    class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
-                    data-action="live#action"
-                    data-live-action-param="performBatchAction"
-                    data-live-name-param="{{ action.name }}"
-                    {% if action.confirmMessage %}
-                        onclick="return confirm('{{ action.getConfirmMessage(selectedCount)|e('js') }}')"
-                    {% endif %}
-                >
-                    {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
-                </button>
-            {% else %}
-                {# Route / URL: form POST with selected IDs #}
-                {% set actionUrl = action.route
-                    ? path(action.route, { entitySlug: entityShortClass|lower })
-                    : action.url %}
-                {% if actionUrl %}
-                    <form
-                        method="post"
-                        action="{{ actionUrl }}"
-                        style="display:inline;"
-                        {% if action.confirmMessage %}
-                            onsubmit="return confirm('{{ action.getConfirmMessage(selectedCount)|e('js') }}')"
-                        {% endif %}
-                    >
-                        {% for id in selectedIds %}
-                            <input type="hidden" name="ids[]" value="{{ id }}">
-                        {% endfor %}
-                        <input type="hidden" name="_token" value="{{ csrf_token('batch_' ~ action.name) }}">
-                        <button
-                            type="submit"
-                            class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
-                        >
-                            {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
-                        </button>
-                    </form>
-                {% endif %}
-            {% endif %}
+            {% include '@KachnitelAdmin/components/EntityList/_BatchActionButton.html.twig' %}
         {% endfor %}
     {% endif %}
 </div>

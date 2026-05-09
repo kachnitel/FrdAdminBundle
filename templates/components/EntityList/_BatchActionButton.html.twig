@@ -1,0 +1,54 @@
+{#
+ # Partial template for batch actions bar.
+ #
+ # Renders:
+ #   1. Default batch delete button (when entity has batch delete enabled)
+ #   2. Custom batch action buttons from BatchActionRegistry (via admin_batch_actions())
+ #
+ # Variables:
+ # @var int selectedCount - Number of selected items
+ # @var string entityClass - Full entity class (for custom batch action lookup)
+ # @var string entityShortClass - Short entity class (for route slug generation)
+ # @var array selectedIds - Selected entity IDs (for form POST)
+ #}
+
+{% if action.liveComponent %}
+    <button
+        type="button"
+        class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
+        data-action="live#action"
+        data-live-action-param="performBatchAction"
+        data-live-name-param="{{ action.name }}"
+        {% if action.confirmMessage %}
+            onclick="return confirm('{{ action.getConfirmMessage(selectedCount)|e('js') }}')"
+        {% endif %}
+    >
+        {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
+    </button>
+{% else %}
+    {# Route / URL: form POST with selected IDs #}
+    {% set actionUrl = action.route
+        ? path(action.route, { entitySlug: entityShortClass|lower })
+        : action.url %}
+    {% if actionUrl %}
+        <form
+            method="post"
+            action="{{ actionUrl }}"
+            style="display:inline;"
+            {% if action.confirmMessage %}
+                onsubmit="return confirm('{{ action.getConfirmMessage(selectedCount)|e('js') }}')"
+            {% endif %}
+        >
+            {% for id in selectedIds %}
+                <input type="hidden" name="ids[]" value="{{ id }}">
+            {% endfor %}
+            <input type="hidden" name="_token" value="{{ csrf_token('batch_' ~ action.name) }}">
+            <button
+                type="submit"
+                class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
+            >
+                {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
+            </button>
+        </form>
+    {% endif %}
+{% endif %}
