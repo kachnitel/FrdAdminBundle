@@ -22,7 +22,7 @@ class BatchActionTest extends TestCase
         $this->assertNull($action->icon);
         $this->assertNull($action->route);
         $this->assertNull($action->url);
-        $this->assertNull($action->liveAction);
+        $this->assertNull($action->liveComponent);
         $this->assertNull($action->permission);
         $this->assertNull($action->voterAttribute);
         $this->assertNull($action->cssClass);
@@ -34,28 +34,28 @@ class BatchActionTest extends TestCase
     public function isRouteActionReturnsTrueWhenRouteIsSet(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish', route: 'app_publish');
-        $this->assertTrue($action->isRouteAction());
+        $this->assertTrue($action->hasRoute());
     }
 
     /** @test */
     public function isRouteActionReturnsFalseWhenNoRoute(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish');
-        $this->assertFalse($action->isRouteAction());
+        $this->assertFalse($action->hasRoute());
     }
 
     /** @test */
     public function isLiveActionReturnsTrueWhenLiveActionIsSet(): void
     {
-        $action = new BatchAction(name: 'publish', label: 'Publish', liveAction: 'bulkPublish');
-        $this->assertTrue($action->isLiveAction());
+        $action = new BatchAction(name: 'publish', label: 'Publish', liveComponent: 'bulkPublish');
+        $this->assertTrue($action->isComponentAction());
     }
 
     /** @test */
     public function isLiveActionReturnsFalseWhenNoLiveAction(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish');
-        $this->assertFalse($action->isLiveAction());
+        $this->assertFalse($action->isComponentAction());
     }
 
     /** @test */

@@ -65,7 +65,7 @@ class RowActionRegistryContextFilterTest extends TestCase
             new RowAction(
                 name: 'edit',
                 label: 'Edit (inline)',
-                liveComponent: 'K:Admin:RowAction:InlineEdit',
+                liveComponent: 'K:Admin:Action:InlineEdit',
                 contexts: [RowAction::CONTEXT_INDEX],
             ),
         ]);
@@ -88,7 +88,7 @@ class RowActionRegistryContextFilterTest extends TestCase
             new RowAction(
                 name: 'edit',
                 label: 'Edit (inline)',
-                liveComponent: 'K:Admin:RowAction:InlineEdit',
+                liveComponent: 'K:Admin:Action:InlineEdit',
                 contexts: [RowAction::CONTEXT_INDEX],
             ),
         ]);
@@ -128,7 +128,7 @@ class RowActionRegistryContextFilterTest extends TestCase
                 name: 'edit',
                 label: 'Edit',
                 icon: '✏️',
-                liveComponent: 'K:Admin:RowAction:InlineEdit',
+                liveComponent: 'K:Admin:Action:InlineEdit',
                 contexts: [RowAction::CONTEXT_INDEX], // index only
             ),
         ]);
@@ -171,7 +171,7 @@ class RowActionRegistryContextFilterTest extends TestCase
             new RowAction(
                 name: 'edit',
                 label: 'Edit',
-                liveComponent: 'K:Admin:RowAction:InlineEdit',
+                liveComponent: 'K:Admin:Action:InlineEdit',
                 contexts: [RowAction::CONTEXT_INDEX],
             ),
         ]);
@@ -202,7 +202,7 @@ class RowActionRegistryContextFilterTest extends TestCase
             new RowAction(
                 name: 'edit',
                 label: 'Edit (inline)',
-                liveComponent: 'K:Admin:RowAction:InlineEdit',
+                liveComponent: 'K:Admin:Action:InlineEdit',
                 contexts: [RowAction::CONTEXT_INDEX],
             ),
         ]);
@@ -233,7 +233,7 @@ class RowActionRegistryContextFilterTest extends TestCase
             new RowAction(
                 name: 'edit',
                 label: 'Edit',
-                liveComponent: 'K:Admin:RowAction:InlineEdit',
+                liveComponent: 'K:Admin:Action:InlineEdit',
                 icon: '✏️',
                 contexts: [RowAction::CONTEXT_INDEX],
             ),
@@ -252,7 +252,7 @@ class RowActionRegistryContextFilterTest extends TestCase
 
         $this->assertNotNull($editAction);
         // In index context both are present → merge applies → liveComponent from high priority
-        $this->assertSame('K:Admin:RowAction:InlineEdit', $editAction->liveComponent);
+        $this->assertSame('K:Admin:Action:InlineEdit', $editAction->liveComponent);
     }
 
     /** @test */

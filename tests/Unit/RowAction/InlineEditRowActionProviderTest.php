@@ -98,7 +98,7 @@ class InlineEditRowActionProviderTest extends TestCase
                 'Action "%s" must be a component action (liveComponent must not be null).',
                 $action->name,
             ));
-            $this->assertSame('K:Admin:RowAction:InlineEdit', $action->liveComponent);
+            $this->assertSame('K:Admin:Action:InlineEdit', $action->liveComponent);
         }
     }
 

@@ -1,35 +1,35 @@
 {#
- # Partial template for batch actions bar.
+ # Batch actions bar — rendered inside EntityList when batch actions are enabled.
  #
- # Renders:
- #   1. Default batch delete button (when entity has batch delete enabled)
- #   2. Custom batch action buttons from BatchActionRegistry (via admin_batch_actions())
+ # The built-in DeleteButton is always present.
+ # Custom batch actions (liveComponent or route/url) are rendered via
+ # _BatchActionButton.html.twig for each action returned by admin_batch_actions().
  #
  # Variables:
- # @var int selectedCount - Number of selected items
- # @var string entityClass - Full entity class (for custom batch action lookup)
- # @var string entityShortClass - Short entity class (for route slug generation)
- # @var array selectedIds - Selected entity IDs (for form POST)
+ # @var array<int|string> selectedIds    - Currently selected entity IDs
+ # @var string            entityClass    - Fully-qualified entity class name
+ # @var string            entityShortClass - Short entity class name
  #}
 
 {% import kachnitel_admin_theme as css %}
 
 <div class="admin-batch-actions {{ css.flex_center() }} {{ css.gap_md() }}">
-    {# Default batch delete — always present when batch actions bar is shown #}
-    <button
-        type="button"
-        class="{{ css.btn_danger() }} {{ css.btn_sm() }}"
-        data-action="live#action"
-        data-live-action-param="batchDelete"
-        onclick="return confirm('Are you sure you want to delete the selected items?')"
-    >
-        Delete Selected ({{ selectedCount }})
-    </button>
+    {# Built-in batch delete — always present when batch actions bar is shown #}
+    <twig:K:Admin:Action:Delete
+        :selectedIds="selectedIds"
+        :entityClass="entityClass"
+        :entityShortClass="entityShortClass"
+    />
 
-    {# Custom batch actions from providers / #[AdminAction] attributes #}
+    {# Custom batch actions from providers / #[AdminAction(actionType: BATCH|BOTH)] #}
     {% if entityClass is not empty %}
         {% for action in admin_batch_actions(entityClass) %}
-            {% include '@KachnitelAdmin/components/EntityList/_BatchActionButton.html.twig' %}
+            {% include '@KachnitelAdmin/components/EntityList/_BatchActionButton.html.twig' with {
+                action: action,
+                selectedIds: selectedIds,
+                entityClass: entityClass,
+                entityShortClass: entityShortClass
+            } only %}
         {% endfor %}
     {% endif %}
 </div>

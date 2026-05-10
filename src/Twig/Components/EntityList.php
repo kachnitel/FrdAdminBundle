@@ -370,21 +370,28 @@ class EntityList
         unset($this->cache['queryResult']);
     }
 
-    // ── LiveActions: batch ────────────────────────────────────────────────────
-
-    #[LiveAction]
-    public function batchDelete(): void
+    /**
+     * Listens for 'admin:action:completed' emitted by batch action components
+     * (DeleteButton, ArchiveButton, or any custom BatchActionComponentInterface).
+     *
+     * Removes the affected IDs from the current selection (rather than clearing
+     * all selected IDs) so that rows not touched by the action remain selected.
+     * Invalidates the query cache to refresh the visible list.
+     *
+     * @param array<int|string> $affectedIds IDs mutated by the batch action
+     */
+    #[LiveListener('admin:action:completed')]
+    public function onActionCompleted(#[LiveArg] array $affectedIds = []): void
     {
-        $this->batchService->batchDelete(
-            $this->selectedIds,
-            $this->getDataSource(),
-            $this->entityClass,
-            $this->entityShortClass,
-        );
-
-        $this->selectedIds = [];
+        if (!empty($affectedIds)) {
+            $this->selectedIds = array_values(
+                array_diff($this->selectedIds, $affectedIds)
+            );
+        }
         unset($this->cache['queryResult']);
     }
+
+    // ── LiveActions: selection ────────────────────────────────────────────────
 
     #[LiveAction]
     public function selectAll(): void

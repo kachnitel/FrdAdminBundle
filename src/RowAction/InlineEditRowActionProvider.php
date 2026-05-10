@@ -57,7 +57,7 @@ class InlineEditRowActionProvider implements RowActionProviderInterface
                 label: 'Edit',
                 icon: '✏️',
                 voterAttribute: AdminEntityVoter::ADMIN_EDIT,
-                liveComponent: 'K:Admin:RowAction:InlineEdit',
+                liveComponent: 'K:Admin:Action:InlineEdit',
                 contexts: [RowAction::CONTEXT_INDEX],
                 // priority intentionally omitted — merge() keeps DefaultRowActionProvider's 20
             ),

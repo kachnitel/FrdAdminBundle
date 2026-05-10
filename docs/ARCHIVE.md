@@ -118,6 +118,11 @@ Both buttons send a `POST` request with CSRF protection to:
 
 On success, the page redirects back to the referring page (or to the entity list if no referer is available), and a flash message confirms the action.
 
+### Batch archive
+
+To also enable **batch archiving** (archive multiple selected rows at once),
+add `enableBatchActions: true` to the same entity.
+
 ### What happens to the field
 
 | Doctrine type | Archive sets | Unarchive sets |

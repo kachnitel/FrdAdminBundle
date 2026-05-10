@@ -53,7 +53,7 @@ class AttributeBatchActionProvider implements BatchActionProviderInterface
                     icon: $adminAction->icon,
                     route: $adminAction->route,
                     url: $adminAction->url,
-                    liveAction: $adminAction->liveAction,
+                    liveComponent: $adminAction->liveComponent,
                     permission: $adminAction->permission,
                     voterAttribute: $adminAction->voterAttribute,
                     cssClass: $adminAction->cssClass,

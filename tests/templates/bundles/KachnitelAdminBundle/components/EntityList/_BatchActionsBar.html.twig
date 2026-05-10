@@ -1,42 +1,26 @@
 {#
  # Partial template for batch actions bar (test override).
- # Includes custom batch action rendering without live routing.
  #}
 
-<div class="admin-batch-actions mb-3 d-flex gap-2 align-items-center">
-    <button
-        type="button"
-        class="btn btn-sm btn-danger"
-        data-action="live#action"
-        data-live-action-param="batchDelete"
-        onclick="return confirm('Are you sure you want to delete the selected items?')"
-    >
-        Delete Selected ({{ selectedCount }})
-    </button>
+{% import kachnitel_admin_theme as css %}
 
-    {% if entityClass is defined and entityClass is not empty %}
+<div class="admin-batch-actions {{ css.flex_center() }} {{ css.gap_md() }}">
+    {# Built-in batch delete — always present when batch actions bar is shown #}
+    <twig:K:Admin:Action:Delete
+        :selectedIds="selectedIds"
+        :entityClass="entityClass"
+        :entityShortClass="entityShortClass"
+    />
+
+    {# Custom batch actions from providers / #[AdminAction(actionType: BATCH|BOTH)] #}
+    {% if entityClass is not empty %}
         {% for action in admin_batch_actions(entityClass) %}
-            {% if action.liveAction %}
-                <button
-                    type="button"
-                    class="{{ action.cssClass|default('btn btn-sm btn-outline-primary') }}"
-                    data-action="live#action"
-                    data-live-action-param="performBatchAction"
-                    data-live-name-param="{{ action.name }}"
-                >
-                    {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
-                </button>
-            {% else %}
-                <form method="post" action="#" style="display:inline;">
-                    <button
-                        type="submit"
-                        class="{{ action.cssClass|default('btn btn-sm btn-outline-primary') }}"
-                        data-batch-action="{{ action.name }}"
-                    >
-                        {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
-                    </button>
-                </form>
-            {% endif %}
+            {% include '@KachnitelAdmin/components/EntityList/_BatchActionButton.html.twig' with {
+                action: action,
+                selectedIds: selectedIds,
+                entityClass: entityClass,
+                entityShortClass: entityShortClass
+            } only %}
         {% endfor %}
     {% endif %}
 </div>

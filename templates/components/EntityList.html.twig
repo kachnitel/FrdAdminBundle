@@ -57,8 +57,9 @@
             {# Batch Actions Bar #}
             {% if showBatchColumn %}
                 {% include '@KachnitelAdmin/components/EntityList/_BatchActionsBar.html.twig' with {
-                    selectedCount: this.selectedIds|length,
-                    entityClass: this.entityClass
+                    selectedIds: this.selectedIds,
+                    entityClass: this.entityClass,
+                    entityShortClass: this.entityShortClass
                 } only %}
             {% endif %}
 

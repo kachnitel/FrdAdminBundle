@@ -1,0 +1,16 @@
+{% import kachnitel_admin_theme as css %}
+
+<div {{ attributes }}>
+    <button
+        type="button"
+        class="{{ css.btn_outline_secondary() }} {{ css.btn_sm() }}"
+        data-action="live#action"
+        data-live-action-param="execute"
+        {% if this.selectedIds|length == 0 %}disabled{% endif %}
+        {% if this.selectedIds|length > 0 %}
+            onclick="return confirm('Archive {{ this.selectedIds|length }} item(s)? They will be hidden from the default list view.')"
+        {% endif %}
+    >
+        🗃 Archive Selected ({{ this.selectedIds|length }})
+    </button>
+</div>

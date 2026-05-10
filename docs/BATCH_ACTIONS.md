@@ -103,11 +103,21 @@ php bin/console cache:clear
 
 ---
 
-## Built-In Batch Delete
+## Built-In Batch Actions
 
 When `enableBatchActions: true` is set, a **Delete Selected** button appears automatically. The user must hold the `ADMIN_DELETE` voter attribute to see it.
 
 No additional configuration is needed — this is provided by the bundle out of the box.
+
+When the entity also has `archiveExpression` configured, an **Archive Selected**
+button is automatically added to the batch actions bar. No additional code needed.
+
+```
+#[Admin(
+    enableBatchActions: true,   // ← required for the bar to render at all
+    archiveExpression: 'item.archived',  // ← required for ArchiveBatchActionProvider to register the action
+)]
+```
 
 ---
 
@@ -160,13 +170,13 @@ The `actionType` parameter controls where an action button appears:
 
 Batch action buttons can submit data to your app in three ways, checked in order:
 
-**1. LiveAction** — emits a browser event for your LiveComponent to handle:
+**1. LiveComponent** — renders a LiveComponent, receiving selectedIds / entityClass / entityShortClass as LiveProps:
 
 ```php
 #[AdminAction(
     name: 'bulk-tag',
     label: 'Tag Selected',
-    liveAction: 'bulkTag',
+    liveComponent: App\LiveComponent\BatchTagger::class,
     actionType: AdminAction::ACTION_TYPE_BATCH,
 )]
 ```

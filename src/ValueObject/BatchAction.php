@@ -11,7 +11,7 @@ namespace Kachnitel\AdminBundle\ValueObject;
  * Batch actions operate on multiple selected entities via the batch actions bar in EntityList.
  *
  * Handler rendering modes (mutually exclusive, checked in order):
- *   1. liveAction  — EntityList emits 'batch:action' browser event; app handles via JS/LiveComponent
+ *   1. liveComponent — renders a LiveComponent, receiving selectedIds / entityClass / entityShortClass as LiveProps
  *   2. route       — Form POST to a Symfony route with selected IDs in request body
  *   3. url         — Form POST to a static URL with selected IDs in request body
  *
@@ -23,7 +23,7 @@ namespace Kachnitel\AdminBundle\ValueObject;
  * the number of selected items at render time.
  *
  * @see RowAction For single-entity actions
- * @see BatchActionDto For the data passed to route/liveAction handlers
+ * @see BatchActionDto For the data passed to route/liveComponent handlers
  *
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
@@ -40,7 +40,9 @@ final class BatchAction
      * @param string|null $icon           Emoji or icon identifier
      * @param string|null $route          Named Symfony route; selected IDs posted as `ids[]`
      * @param string|null $url            Static URL (alternative to route)
-     * @param string|null $liveAction     LiveComponent action name; triggers 'batch:action' browser event
+     * @param string|null $liveComponent  TwigComponent/LiveComponent name rendered instead of a link.
+     *                                    Must implement BatchActionComponentInterface.
+     *                                    Always receives {selectedEntities} as prop.
      * @param string|null $permission     Required role (e.g. 'ROLE_ADMIN')
      * @param string|null $voterAttribute Admin voter attribute (e.g. 'ADMIN_EDIT')
      * @param string|null $cssClass       Override button CSS classes
@@ -53,7 +55,7 @@ final class BatchAction
         public readonly ?string $icon = null,
         public readonly ?string $route = null,
         public readonly ?string $url = null,
-        public readonly ?string $liveAction = null,
+        public readonly ?string $liveComponent = null,
         public readonly ?string $permission = null,
         public readonly ?string $voterAttribute = null,
         public readonly ?string $cssClass = null,
@@ -64,7 +66,7 @@ final class BatchAction
     /**
      * Whether this action routes to a Symfony named route.
      */
-    public function isRouteAction(): bool
+    public function hasRoute(): bool
     {
         return $this->route !== null;
     }
@@ -72,9 +74,9 @@ final class BatchAction
     /**
      * Whether this action triggers a LiveComponent live action.
      */
-    public function isLiveAction(): bool
+    public function isComponentAction(): bool
     {
-        return $this->liveAction !== null;
+        return $this->liveComponent !== null;
     }
 
     /**

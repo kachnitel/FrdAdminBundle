@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Kachnitel\AdminBundle\Twig\Components\RowAction;
+namespace Kachnitel\AdminBundle\Twig\Components\AdminAction;
 
 use Kachnitel\AdminBundle\RowAction\RowActionComponentInterface;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
@@ -15,8 +15,11 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
  *
  * Registered as RowAction liveComponent by InlineEditRowActionProvider.
  * Prop contract: {entity} — standardised for all RowActionComponentInterface components.
+ *
+ * Moved from Twig/Components/RowAction/ to Twig/Components/AdminAction/ to sit
+ * alongside DeleteButton and ArchiveButton under the shared AdminAction namespace.
  */
-#[AsTwigComponent('K:Admin:RowAction:InlineEdit', template: '@KachnitelAdmin/components/RowAction/InlineEditButton.html.twig')]
+#[AsTwigComponent('K:Admin:Action:InlineEdit', template: '@KachnitelAdmin/components/AdminAction/InlineEditButton.html.twig')]
 class InlineEditButton implements RowActionComponentInterface
 {
     public object $entity;

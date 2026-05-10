@@ -1,54 +1,53 @@
 {#
- # Partial template for batch actions bar.
+ # Renders a single custom batch action button.
  #
- # Renders:
- #   1. Default batch delete button (when entity has batch delete enabled)
- #   2. Custom batch action buttons from BatchActionRegistry (via admin_batch_actions())
+ # Rendering modes (checked in order):
+ #   1. liveComponent — {{ component() }} with {selectedIds, entityClass, entityShortClass}
+ #   2. route / url   — form POST with ids[] in request body
  #
  # Variables:
- # @var int selectedCount - Number of selected items
- # @var string entityClass - Full entity class (for custom batch action lookup)
- # @var string entityShortClass - Short entity class (for route slug generation)
- # @var array selectedIds - Selected entity IDs (for form POST)
+ # @var BatchAction       action          - The batch action configuration
+ # @var array<int|string> selectedIds     - Currently selected entity IDs
+ # @var string            entityClass     - Fully-qualified entity class name
+ # @var string            entityShortClass - Short entity class name
  #}
 
+{% import kachnitel_admin_theme as css %}
+
 {% if action.liveComponent %}
-    <button
-        type="button"
-        class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
-        data-action="live#action"
-        data-live-action-param="performBatchAction"
-        data-live-name-param="{{ action.name }}"
+    {# Component actions receive the full selection as LiveProps.
+       The component (BatchActionComponentInterface) handles its own rendering,
+       permission checks, execution, and emitting admin:action:completed. #}
+    {{ component(action.liveComponent, {
+        selectedIds: selectedIds,
+        entityClass: entityClass,
+        entityShortClass: entityShortClass
+    }) }}
+
+{% elseif action.route or action.url %}
+    {# Form POST — selected IDs sent as ids[] in the request body.
+       The receiving route is responsible for permission and CSRF checks. #}
+    {% set actionUrl = action.route ? path(action.route) : action.url %}
+    <form
+        method="post"
+        action="{{ actionUrl }}"
+        style="display:inline;"
         {% if action.confirmMessage %}
-            onclick="return confirm('{{ action.getConfirmMessage(selectedCount)|e('js') }}')"
+            onsubmit="return confirm('{{ action.getConfirmMessage(selectedIds|length)|e('js') }}')"
         {% endif %}
     >
-        {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
-    </button>
-{% else %}
-    {# Route / URL: form POST with selected IDs #}
-    {% set actionUrl = action.route
-        ? path(action.route, { entitySlug: entityShortClass|lower })
-        : action.url %}
-    {% if actionUrl %}
-        <form
-            method="post"
-            action="{{ actionUrl }}"
-            style="display:inline;"
-            {% if action.confirmMessage %}
-                onsubmit="return confirm('{{ action.getConfirmMessage(selectedCount)|e('js') }}')"
-            {% endif %}
+        {% for id in selectedIds %}
+            <input type="hidden" name="ids[]" value="{{ id }}">
+        {% endfor %}
+        <input type="hidden" name="_token" value="{{ csrf_token('batch_' ~ action.name) }}">
+        <button
+            type="submit"
+            class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
+            data-batch-action="{{ action.name }}"
+            {% if selectedIds|length == 0 %}disabled{% endif %}
         >
-            {% for id in selectedIds %}
-                <input type="hidden" name="ids[]" value="{{ id }}">
-            {% endfor %}
-            <input type="hidden" name="_token" value="{{ csrf_token('batch_' ~ action.name) }}">
-            <button
-                type="submit"
-                class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
-            >
-                {% if action.icon %}{{ action.icon }} {% endif %}{{ action.label }} ({{ selectedCount }})
-            </button>
-        </form>
-    {% endif %}
+            {% if action.icon %}{{ action.icon }} {% endif %}
+            {{ action.label }} ({{ selectedIds|length }})
+        </button>
+    </form>
 {% endif %}

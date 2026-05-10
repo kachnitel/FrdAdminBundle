@@ -9,18 +9,25 @@ use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithoutBatchActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 
+/**
+ * Functional tests for the EntityList batch actions feature.
+ *
+ * Delete logic now lives in DeleteButton (K:Admin:Action:Delete) — see
+ * Tests\Twig\Components\AdminAction\DeleteButtonTest for delete-specific assertions.
+ * These tests cover: UI rendering, checkbox behaviour, selection state, selectAll/deselectAll,
+ * and the onActionCompleted listener on EntityList.
+ *
+ * @group batch-actions
+ */
 class EntityListBatchActionsTest extends ComponentTestCase
 {
+    // ── UI rendering ──────────────────────────────────────────────────────────
+
     public function testBatchActionsUIRendersWhenEnabled(): void
     {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
+        $em = $this->em();
         for ($i = 1; $i <= 5; $i++) {
             $entity = new TestEntity();
             $entity->setName('Entity ' . $i);
@@ -28,16 +35,9 @@ class EntityListBatchActionsTest extends ComponentTestCase
         }
         $em->flush();
 
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
-        );
+        $rendered = (string) $this->entityListComponent()->render();
 
-        $rendered = (string) $testComponent->render();
-
-        // Verify batch actions UI elements are present
         $this->assertStringContainsString('Delete Selected', $rendered);
-        // The data-controller may include multiple controllers (e.g., "batch-select live")
         $this->assertMatchesRegularExpression('/data-controller="[^"]*batch-select[^"]*"/', $rendered);
         $this->assertStringContainsString('data-batch-select-target="checkbox"', $rendered);
         $this->assertStringContainsString('data-batch-select-target="master"', $rendered);
@@ -46,13 +46,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
 
     public function testBatchActionsCheckboxesRenderedForEachEntity(): void
     {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create 3 test entities
+        $em = $this->em();
         for ($i = 1; $i <= 3; $i++) {
             $entity = new TestEntity();
             $entity->setName('Entity ' . $i);
@@ -60,27 +54,14 @@ class EntityListBatchActionsTest extends ComponentTestCase
         }
         $em->flush();
 
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
-        );
+        $rendered = (string) $this->entityListComponent()->render();
 
-        $rendered = (string) $testComponent->render();
-
-        // Count checkbox inputs (excluding the header "select all" checkbox)
-        $checkboxCount = substr_count($rendered, 'data-batch-select-target="checkbox"');
-        $this->assertSame(3, $checkboxCount, 'Should have one checkbox per entity');
+        $this->assertSame(3, substr_count($rendered, 'data-batch-select-target="checkbox"'));
     }
 
-    public function testSelectedIdsLivePropTrackSelection(): void
+    public function testDeleteSelectedCountReflectsSelectedIds(): void
     {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
+        $em = $this->em();
         for ($i = 1; $i <= 5; $i++) {
             $entity = new TestEntity();
             $entity->setName('Entity ' . $i);
@@ -88,240 +69,91 @@ class EntityListBatchActionsTest extends ComponentTestCase
         }
         $em->flush();
 
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-                'selectedIds' => [1, 2, 3],
-            ],
-        );
+        $rendered = (string) $this->entityListComponent(['selectedIds' => [1, 2, 3]])->render();
+
+        $this->assertStringContainsString('Delete Selected (3)', $rendered);
+    }
+
+    public function testSelectedCheckboxesArePreservedAfterRerender(): void
+    {
+        $em = $this->em();
+        $ids = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $entity = new TestEntity();
+            $entity->setName('Entity ' . $i);
+            $em->persist($entity);
+            $em->flush();
+            $ids[] = $entity->getId();
+        }
+
+        $rendered = (string) $this->entityListComponent(['selectedIds' => [$ids[0], $ids[1]]])->render();
+
+        $this->assertStringContainsString('value="' . $ids[0] . '"', $rendered);
+        $this->assertMatchesRegularExpression('/value="' . $ids[0] . '"[^>]*checked/', $rendered);
+        $this->assertMatchesRegularExpression('/value="' . $ids[1] . '"[^>]*checked/', $rendered);
+    }
+
+    // ── selectedIds LiveProp ──────────────────────────────────────────────────
+
+    public function testSelectedIdsLivePropTracksSelection(): void
+    {
+        $testComponent = $this->entityListComponent(['selectedIds' => [1, 2, 3]]);
 
         /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertSame([1, 2, 3], $component->selectedIds);
     }
 
-    public function testBatchDeleteRemovesSelectedEntities(): void
+    public function testSelectedIdsPersistedViaDataModelBinding(): void
     {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
-        $entityIds = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $entity = new TestEntity();
-            $entity->setName('Entity ' . $i);
-            $em->persist($entity);
-            $em->flush(); // Flush to get ID
-            $entityIds[] = $entity->getId();
-        }
-
-        $em->clear();
-
-        // Verify all entities exist
-        $this->assertSame(5, $em->getRepository(TestEntity::class)->count([]));
-
-        // Create component with selected IDs for deletion
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-                'selectedIds' => [$entityIds[0], $entityIds[1], $entityIds[2]],
-            ],
-        );
-
-        // Execute batch delete action
-        $testComponent->call('batchDelete');
-
-        $em->clear();
-
-        // Verify only 2 entities remain
-        $this->assertSame(2, $em->getRepository(TestEntity::class)->count([]));
-
-        // Verify the correct entities were deleted
-        $this->assertNull($em->find(TestEntity::class, $entityIds[0]));
-        $this->assertNull($em->find(TestEntity::class, $entityIds[1]));
-        $this->assertNull($em->find(TestEntity::class, $entityIds[2]));
-
-        // Verify remaining entities still exist
-        $this->assertNotNull($em->find(TestEntity::class, $entityIds[3]));
-        $this->assertNotNull($em->find(TestEntity::class, $entityIds[4]));
-    }
-
-    public function testBatchDeleteClearsSelectionAfterDeletion(): void
-    {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
-        $entityIds = [];
-        for ($i = 1; $i <= 3; $i++) {
+        $em = $this->em();
+        $ids = [];
+        for ($i = 0; $i < 3; $i++) {
             $entity = new TestEntity();
             $entity->setName('Entity ' . $i);
             $em->persist($entity);
             $em->flush();
-            $entityIds[] = $entity->getId();
+            $ids[] = $entity->getId();
         }
 
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-                'selectedIds' => $entityIds,
-            ],
-        );
-
-        // Execute batch delete
-        $testComponent->call('batchDelete');
+        $testComponent = $this->entityListComponent();
+        $testComponent->set('selectedIds', [$ids[0], $ids[1]]);
 
         /** @var EntityList $component */
         $component = $testComponent->component();
-        $this->assertEmpty($component->selectedIds, 'selectedIds should be cleared after batch delete');
+        $this->assertCount(2, $component->selectedIds);
+        $this->assertContains($ids[0], $component->selectedIds);
+        $this->assertContains($ids[1], $component->selectedIds);
     }
 
-    public function testBatchDeleteWithEmptySelectionDoesNothing(): void
+    // ── selectAll / deselectAll ───────────────────────────────────────────────
+
+    public function testSelectAllAddsCurrentPageEntitiesToSelection(): void
     {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
-        for ($i = 1; $i <= 3; $i++) {
-            $entity = new TestEntity();
-            $entity->setName('Entity ' . $i);
-            $em->persist($entity);
-        }
-        $em->flush();
-
-        $initialCount = $em->getRepository(TestEntity::class)->count([]);
-
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-                'selectedIds' => [],
-            ],
-        );
-
-        // Execute batch delete with empty selection
-        $testComponent->call('batchDelete');
-
-        $em->clear();
-
-        // Verify no entities were deleted
-        $this->assertSame($initialCount, $em->getRepository(TestEntity::class)->count([]));
-    }
-
-    public function testBatchDeleteHandlesNonExistentIds(): void
-    {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create one test entity
-        $entity = new TestEntity();
-        $entity->setName('Entity 1');
-        $em->persist($entity);
-        $em->flush();
-        $validId = $entity->getId();
-
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-                'selectedIds' => [$validId, 999, 1000], // Mix of valid and invalid IDs
-            ],
-        );
-
-        // Should not throw exception
-        $testComponent->call('batchDelete');
-
-        $em->clear();
-
-        // Verify the valid entity was deleted
-        $this->assertNull($em->find(TestEntity::class, $validId));
-    }
-
-    public function testSelectAllActionAddsCurrentPageEntitiesToSelection(): void
-    {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
-        $entityIds = [];
+        $em = $this->em();
+        $ids = [];
         for ($i = 1; $i <= 5; $i++) {
             $entity = new TestEntity();
             $entity->setName('Entity ' . $i);
             $em->persist($entity);
             $em->flush();
-            $entityIds[] = $entity->getId();
+            $ids[] = $entity->getId();
         }
 
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-            ],
-        );
-
-        // Execute selectAll action
+        $testComponent = $this->entityListComponent();
         $testComponent->call('selectAll');
 
         /** @var EntityList $component */
         $component = $testComponent->component();
-
-        // Verify all entity IDs are selected
         $this->assertCount(5, $component->selectedIds);
-        foreach ($entityIds as $id) {
+        foreach ($ids as $id) {
             $this->assertContains($id, $component->selectedIds);
         }
     }
 
-    public function testDeselectAllActionClearsSelection(): void
+    public function testDeselectAllClearsSelection(): void
     {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
-        for ($i = 1; $i <= 3; $i++) {
-            $entity = new TestEntity();
-            $entity->setName('Entity ' . $i);
-            $em->persist($entity);
-        }
-        $em->flush();
-
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-                'selectedIds' => [1, 2, 3],
-            ],
-        );
-
-        // Execute deselectAll action
+        $testComponent = $this->entityListComponent(['selectedIds' => [1, 2, 3]]);
         $testComponent->call('deselectAll');
 
         /** @var EntityList $component */
@@ -329,235 +161,121 @@ class EntityListBatchActionsTest extends ComponentTestCase
         $this->assertEmpty($component->selectedIds);
     }
 
-    public function testCanBatchDeleteReturnsTrueWhenPermitted(): void
+    // ── onActionCompleted listener ────────────────────────────────────────────
+
+    public function testOnActionCompletedRemovesAffectedIdsFromSelection(): void
     {
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
-        );
+        $testComponent = $this->entityListComponent(['selectedIds' => [1, 2, 3, 4, 5]]);
+        $testComponent->call('onActionCompleted', ['affectedIds' => [1, 3, 5]]);
 
         /** @var EntityList $component */
         $component = $testComponent->component();
+        $this->assertEqualsCanonicalizing([2, 4], $component->selectedIds);
+    }
+
+    public function testOnActionCompletedWithEmptyAffectedIdsPreservesSelection(): void
+    {
+        $testComponent = $this->entityListComponent(['selectedIds' => [1, 2, 3]]);
+        $testComponent->call('onActionCompleted', ['affectedIds' => []]);
+
+        /** @var EntityList $component */
+        $component = $testComponent->component();
+        $this->assertSame([1, 2, 3], $component->selectedIds);
+    }
+
+    public function testOnActionCompletedInvalidatesQueryCache(): void
+    {
+        $em = $this->em();
+        $entity = new TestEntity();
+        $entity->setName('Cached');
+        $em->persist($entity);
+        $em->flush();
+        $id = $entity->getId();
+
+        $testComponent = $this->entityListComponent(['selectedIds' => [$id]]);
+
+        // Prime the cache by fetching entities
+        /** @var EntityList $component */
+        $component = $testComponent->component();
+        $before = count($component->getEntities());
+
+        // Simulate another process deleting the entity
+        $subj = $em->find(TestEntity::class, $id);
+        $this->assertNotNull($subj);
+        $em->remove($subj);
+        $em->flush();
+        $em->clear();
+
+        // Fire the listener — should invalidate cache
+        $testComponent->call('onActionCompleted', ['affectedIds' => [$id]]);
+
+        $component = $testComponent->component();
+        $after = count($component->getEntities());
+
+        $this->assertLessThan($before, $after, 'Cache should be invalidated after action completed');
+    }
+
+    // ── canBatchDelete / isBatchActionsEnabled ────────────────────────────────
+
+    public function testCanBatchDeleteReturnsTrueWhenPermitted(): void
+    {
+        /** @var EntityList $component */
+        $component = $this->entityListComponent()->component();
         $this->assertTrue($component->canBatchDelete());
     }
 
     public function testIsBatchActionsEnabledReturnsFalseByDefault(): void
     {
-        // Use EntityWithoutBatchActions which doesn't have enableBatchActions set (defaults to false)
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => EntityWithoutBatchActions::class, 'entityShortClass' => 'EntityWithoutBatchActions'],
+            data: [
+                'entityClass'      => EntityWithoutBatchActions::class,
+                'entityShortClass' => 'EntityWithoutBatchActions',
+            ],
         );
 
         /** @var EntityList $component */
         $component = $testComponent->component();
-        $this->assertFalse($component->permissionService->isBatchActionsEnabled($component->entityClass));
+        $this->assertFalse(
+            $component->permissionService->isBatchActionsEnabled($component->entityClass)
+        );
     }
 
     public function testCheckboxesHaveProperDataModelBinding(): void
     {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entity
+        $em = $this->em();
         $entity = new TestEntity();
-        $entity->setName('Test Entity');
+        $entity->setName('Test');
         $em->persist($entity);
         $em->flush();
 
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
-        );
+        $rendered = (string) $this->entityListComponent()->render();
 
-        $rendered = (string) $testComponent->render();
-
-        // Verify checkboxes have data-model="selectedIds[]" for proper array binding
         $this->assertStringContainsString('data-model="selectedIds[]"', $rendered);
     }
 
-    public function testDeleteButtonRendersAsStandardLiveAction(): void
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function em(): EntityManagerInterface
     {
-        $container = static::getContainer();
         /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
+        $doctrine = static::getContainer()->get('doctrine');
         /** @var EntityManagerInterface $em */
         $em = $doctrine->getManager();
-
-        // Create test entity
-        $entity = new TestEntity();
-        $entity->setName('Test Entity');
-        $em->persist($entity);
-        $em->flush();
-
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
-        );
-
-        $rendered = (string) $testComponent->render();
-
-        // Verify delete button uses standard LiveComponent action binding
-        $this->assertStringContainsString('data-action="live#action"', $rendered);
-        $this->assertStringContainsString('data-live-action-param="batchDelete"', $rendered);
+        return $em;
     }
 
-    public function testSelectedIdsPersistedViaDataModelBinding(): void
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function entityListComponent(array $data = []): TestLiveComponent
     {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
-        $entityIds = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $entity = new TestEntity();
-            $entity->setName('Entity ' . $i);
-            $em->persist($entity);
-            $em->flush();
-            $entityIds[] = $entity->getId();
-        }
-
-        $testComponent = $this->createLiveComponent(
+        return $this->createLiveComponent(
             name: 'K:Admin:EntityList',
-            data: ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
+            data: array_merge(
+                ['entityClass' => TestEntity::class, 'entityShortClass' => 'TestEntity'],
+                $data,
+            ),
         );
-
-        // Simulate selecting checkboxes via LiveProp set (mimics data-model binding)
-        $testComponent->set('selectedIds', [$entityIds[0], $entityIds[1]]);
-
-        /** @var EntityList $component */
-        $component = $testComponent->component();
-        $this->assertCount(2, $component->selectedIds);
-        $this->assertContains($entityIds[0], $component->selectedIds);
-        $this->assertContains($entityIds[1], $component->selectedIds);
-
-        // Now call batchDelete - it should use the persisted selectedIds
-        $testComponent->call('batchDelete');
-
-        $em->clear();
-
-        // Verify selected entities were deleted
-        $this->assertNull($em->find(TestEntity::class, $entityIds[0]));
-        $this->assertNull($em->find(TestEntity::class, $entityIds[1]));
-        // Unselected entity should still exist
-        $this->assertNotNull($em->find(TestEntity::class, $entityIds[2]));
-    }
-
-    public function testSelectedCheckboxesArePreservedAfterRerender(): void
-    {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
-        $entityIds = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $entity = new TestEntity();
-            $entity->setName('Entity ' . $i);
-            $em->persist($entity);
-            $em->flush();
-            $entityIds[] = $entity->getId();
-        }
-
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-                'selectedIds' => [$entityIds[0], $entityIds[1]],
-            ],
-        );
-
-        $rendered = (string) $testComponent->render();
-
-        // Verify the selected checkboxes have the 'checked' attribute
-        $this->assertStringContainsString('value="' . $entityIds[0] . '"', $rendered);
-        // The checkboxes with IDs in selectedIds should be checked
-        $this->assertMatchesRegularExpression(
-            '/value="' . $entityIds[0] . '"[^>]*checked/',
-            $rendered
-        );
-        $this->assertMatchesRegularExpression(
-            '/value="' . $entityIds[1] . '"[^>]*checked/',
-            $rendered
-        );
-    }
-
-    public function testDeleteSelectedCountReflectsSelectedIds(): void
-    {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
-        for ($i = 1; $i <= 5; $i++) {
-            $entity = new TestEntity();
-            $entity->setName('Entity ' . $i);
-            $em->persist($entity);
-        }
-        $em->flush();
-
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-                'selectedIds' => [1, 2, 3],
-            ],
-        );
-
-        $rendered = (string) $testComponent->render();
-
-        // Verify the count in the button reflects selectedIds.length
-        $this->assertStringContainsString('Delete Selected (3)', $rendered);
-    }
-
-    public function testBatchDeleteUpdatesTotalItemsCount(): void
-    {
-        $container = static::getContainer();
-        /** @var ManagerRegistry $doctrine */
-        $doctrine = $container->get('doctrine');
-        /** @var EntityManagerInterface $em */
-        $em = $doctrine->getManager();
-
-        // Create test entities
-        $entityIds = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $entity = new TestEntity();
-            $entity->setName('Entity ' . $i);
-            $em->persist($entity);
-            $em->flush();
-            $entityIds[] = $entity->getId();
-        }
-
-        $testComponent = $this->createLiveComponent(
-            name: 'K:Admin:EntityList',
-            data: [
-                'entityClass' => TestEntity::class,
-                'entityShortClass' => 'TestEntity',
-                'selectedIds' => [$entityIds[0], $entityIds[1]],
-            ],
-        );
-
-        /** @var EntityList $component */
-        $component = $testComponent->component();
-        $this->assertSame(5, $component->getPaginationInfo()->totalItems);
-
-        // Execute batch delete
-        $testComponent->call('batchDelete');
-
-        /** @var EntityList $component */
-        $component = $testComponent->component();
-        $this->assertSame(3, $component->getPaginationInfo()->totalItems);
     }
 }
