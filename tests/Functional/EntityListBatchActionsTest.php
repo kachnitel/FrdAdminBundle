@@ -122,8 +122,8 @@ class EntityListBatchActionsTest extends ComponentTestCase
         /** @var EntityList $component */
         $component = $testComponent->component();
         $this->assertCount(2, $component->selectedIds);
-        $this->assertContains($ids[0], $component->selectedIds);
-        $this->assertContains($ids[1], $component->selectedIds);
+        $this->assertContains((string) $ids[0], $component->selectedIds);
+        $this->assertContains((string) $ids[1], $component->selectedIds);
     }
 
     // ── selectAll / deselectAll ───────────────────────────────────────────────
@@ -147,7 +147,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
         $component = $testComponent->component();
         $this->assertCount(5, $component->selectedIds);
         foreach ($ids as $id) {
-            $this->assertContains($id, $component->selectedIds);
+            $this->assertContains((string) $id, $component->selectedIds);
         }
     }
 

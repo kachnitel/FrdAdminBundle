@@ -516,7 +516,7 @@ class EntityListInlineEditTest extends ComponentTestCase
 
         $component = $list->component();
 
-        $this->assertContains($e1->getId(), $component->selectedIds);
+        $this->assertContains((string) $e1->getId(), $component->selectedIds);
         $this->assertSame($e2->getId(), $component->editingRowId);
         $this->assertTrue($component->isRowEditing($e2));
         $this->assertFalse($component->isRowEditing($e1));
