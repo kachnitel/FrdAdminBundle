@@ -46,7 +46,7 @@ trait BatchActionTrait
      *
      * @var array<int|string>
      */
-    #[LiveProp]
+    #[LiveProp(updateFromParent: true)]
     public array $selectedIds = [];
 
     /**

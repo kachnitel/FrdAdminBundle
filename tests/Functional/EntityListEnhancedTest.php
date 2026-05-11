@@ -152,7 +152,7 @@ class EntityListEnhancedTest extends ComponentTestCase
         /** @var EntityList $inner */
 
         $inner = $component->component();
-        $this->assertSame([1, 2, 3], $inner->selectedIds);
+        $this->assertSame(["1", "2", "3"], $inner->selectedIds);
     }
 
     /**
@@ -184,7 +184,7 @@ class EntityListEnhancedTest extends ComponentTestCase
         $this->assertSame(['status' => 'active'], $inner->columnFilters);
         $this->assertSame(1, $inner->page);
         $this->assertSame(15, $inner->itemsPerPage);
-        $this->assertSame([1], $inner->selectedIds);
+        $this->assertSame(["1"], $inner->selectedIds);
 
         $rendered = (string) $component->render();
         $this->assertStringContainsString('<table', $rendered);

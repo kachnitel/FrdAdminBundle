@@ -66,7 +66,7 @@ class EntityList
     #[LiveProp(writable: true, url: true)]
     public int $itemsPerPage;
 
-    /** @var array<int|string> */
+    /** @var array<string> Stored as strings to match browser form values from data-model */
     #[LiveProp(writable: true)]
     public array $selectedIds = [];
 
@@ -133,6 +133,20 @@ class EntityList
         if (!$this->permissionService->canViewList($identifier)) {
             throw new AccessDeniedException(sprintf('Access denied to view %s.', $identifier));
         }
+    }
+
+    /**
+     * Normalize selectedIds to strings after hydration.
+     *
+     * Browser form values from data-model="selectedIds[]" are always strings.
+     * Doctrine entity IDs returned by getEntityId() are ints. Without normalization,
+     * Twig's strict `in` check fails (5 in ["5"] = false), checkboxes never render
+     * as checked, and the selection is wiped on every LiveComponent re-render.
+     */
+    #[PostHydrate]
+    public function normalizeSelectedIds(): void
+    {
+        $this->selectedIds = array_map('strval', $this->selectedIds);
     }
 
     // ── Data Source Resolution ─────────────────────────────────────────────────
@@ -385,7 +399,7 @@ class EntityList
     {
         if (!empty($affectedIds)) {
             $this->selectedIds = array_values(
-                array_diff($this->selectedIds, $affectedIds)
+                array_diff($this->selectedIds, array_map('strval', $affectedIds))
             );
         }
         unset($this->cache['queryResult']);
@@ -396,7 +410,10 @@ class EntityList
     #[LiveAction]
     public function selectAll(): void
     {
-        $newIds = $this->batchService->getEntityIds($this->getEntities(), $this->getDataSource());
+        $newIds = array_map(
+            'strval',
+            $this->batchService->getEntityIds($this->getEntities(), $this->getDataSource())
+        );
         $this->selectedIds = array_values(array_unique(array_merge($this->selectedIds, $newIds)));
     }
 

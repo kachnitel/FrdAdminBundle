@@ -101,7 +101,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
 
         /** @var EntityList $component */
         $component = $testComponent->component();
-        $this->assertSame([1, 2, 3], $component->selectedIds);
+        $this->assertSame(["1", "2", "3"], $component->selectedIds);
     }
 
     public function testSelectedIdsPersistedViaDataModelBinding(): void
@@ -180,7 +180,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
 
         /** @var EntityList $component */
         $component = $testComponent->component();
-        $this->assertSame([1, 2, 3], $component->selectedIds);
+        $this->assertSame(["1", "2", "3"], $component->selectedIds);
     }
 
     public function testOnActionCompletedInvalidatesQueryCache(): void
