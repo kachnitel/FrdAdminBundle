@@ -7,6 +7,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.11.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.10.0...v0.11.0) (2026-05-11)
+
+### Features
+
+* Add custom batch action support ([ba2f73](https://github.com/kachnitel/FrdAdminBundle/commit/ba2f739b62df7faad34804515606197b2cabdf4c))
+
+### Bug Fixes
+
+* Sync batch action button state w/ parent list ([dee015](https://github.com/kachnitel/FrdAdminBundle/commit/dee015c3544d802a1a126bd9552e0a04306f5bbe))
+
+##### Tests
+
+* Evaluate string IDs in tests ([036ce4](https://github.com/kachnitel/FrdAdminBundle/commit/036ce45e93a5fc9a83d33e7143a1960fd7d762a8))
+
+### Code Refactoring
+
+* Isolate Actions from EntityList ([a76cdb](https://github.com/kachnitel/FrdAdminBundle/commit/a76cdb4c6bc43aa5c1e24a5a2ab27e0137ede7ad))
+
+##### Twig
+
+* Separate button logic from _BatchActionsBar template ([96915b](https://github.com/kachnitel/FrdAdminBundle/commit/96915b35103f87c9e07f3f9fbc75d1535883c748))
+
+### Tests
+
+
+##### Coverage
+
+* Improve entity twig runtimes coverage ([3cf785](https://github.com/kachnitel/FrdAdminBundle/commit/3cf785855d3c9928f9847c852c798f08e95270e7))
+
+### Documentation
+
+* Update Batch actions docs ([d24e54](https://github.com/kachnitel/FrdAdminBundle/commit/d24e542eb8a87d6a274b4232ee0a269259e67d0d))
+
+
+---
+
 ## [0.10.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.9.1...v0.10.0) (2026-05-05)
 
 ### Features
