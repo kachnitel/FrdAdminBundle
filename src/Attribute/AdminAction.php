@@ -19,7 +19,7 @@ use Kachnitel\AdminBundle\ValueObject\RowAction;
  *   - `ACTION_TYPE_BOTH`  — appears in both positions
  *
  * Batch action rendering in the batch actions bar (checked in order):
- *   1. liveComponent — renders a LiveComponent, receiving selectedIds / entityClass / entityShortClass as LiveProps
+ *   1. liveComponent — renders a {@link \Symfony\UX\LiveComponent\LiveComponent}, receiving selectedIds / entityClass / entityShortClass as LiveProps
  *   2. route         — form POST with selected IDs as `ids[]`
  *   3. url           — form POST to static URL with selected IDs as `ids[]`
  *
@@ -27,10 +27,11 @@ use Kachnitel\AdminBundle\ValueObject\RowAction;
  *
  *   #[AdminAction(name: 'approve', label: 'Approve', icon: '✅', route: 'app_approve',
  *                 condition: 'entity.status == "pending"')]
+ *   #[AdminAction(name: 'quick-edit', liveComponent: App\Twig\Components\QuickEditButton::class)]
  *   #[AdminAction(name: 'bulk-archive', label: 'Archive Selected', icon: '📦',
  *                 route: 'app_bulk_archive', actionType: AdminAction::ACTION_TYPE_BATCH,
  *                 confirmMessage: 'Archive %count% items?')]
- *    #[AdminAction(name: 'export', liveComponent: App\Twig\Components\ExportButton::class, actionType: AdminAction::ACTION_TYPE_BATCH)]
+ *   #[AdminAction(name: 'export', liveComponent: App\Twig\Components\ExportButton::class, actionType: AdminAction::ACTION_TYPE_BATCH)]
  *   class Order { }
  *
  * @SuppressWarnings(PHPMD.ExcessiveParameterList) PHP attributes must declare all configuration

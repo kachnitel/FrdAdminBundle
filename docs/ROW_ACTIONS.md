@@ -88,8 +88,8 @@ class Product
 | `method`         | `?string`                                | `null`       | HTTP method for form-based actions (`'POST'`, `'DELETE'`) |
 | `template`       | `?string`                                | `null`       | Custom Twig template to render this button |
 | `liveComponent`  | `?string`                                | `null`       | TwigComponent/LiveComponent name; receives `{entity}` as prop |
-| `listOnly`       | `bool`                                   | `false`      | If `true`, suppress this action on show/edit pages — see [List-Only Actions](#list-only-actions) |
 | `override`       | `bool`                                   | `false`      | If `true`, fully replaces an existing action with the same name instead of merging |
+| `contexts`       | `array`                                  | `[]`         | Restrict to specific contexts (e.g., `[RowAction::CONTEXT_INDEX]` for list-only) |
 
 ## Conditions (Visibility)
 
@@ -268,7 +268,7 @@ Some actions only make sense inside an `EntityList` — specifically, liveCompon
 interact with the list's own LiveComponent state (e.g. the inline-edit entry button, which fires
 `editRow` on the parent `EntityList` via a Stimulus data-action attribute).
 
-Set `listOnly: true` to restrict an action to list rows. It will be **automatically suppressed**
+Set `contexts: [RowAction::CONTEXT_INDEX]` to restrict an action to list rows. It will be **automatically suppressed**
 on show and edit page headers.
 
 ```php
@@ -277,7 +277,7 @@ on show and edit page headers.
     name: 'quick_edit',
     label: 'Quick Edit',
     liveComponent: 'App:Admin:RowAction:QuickEdit',
-    listOnly: true,
+    contexts: [RowAction::CONTEXT_INDEX],
 )]
 class Product { }
 
@@ -286,26 +286,26 @@ new RowAction(
     name: 'quick_edit',
     label: 'Quick Edit',
     liveComponent: 'App:Admin:RowAction:QuickEdit',
-    listOnly: true,
+    contexts: [RowAction::CONTEXT_INDEX],
 )
 ```
 
-Actions **without** `listOnly` — including liveComponent actions — render in all three contexts:
+Actions **without** `contexts: [RowAction::CONTEXT_INDEX]` — including liveComponent actions — render in all three contexts:
 list rows, show page header, and edit page header. This allows components like status-change
 modals or confirmation dialogs to appear wherever the entity is displayed.
 
-### How the Bundle Uses `listOnly`
+### How the Bundle Uses `contexts: [RowAction::CONTEXT_INDEX]`
 
-The `InlineEditButton` component is registered with `listOnly: true` by `InlineEditRowActionProvider`
+The `InlineEditButton` component is registered with `contexts: [RowAction::CONTEXT_INDEX]` by `InlineEditRowActionProvider`
 because it fires `editRow` on the parent `EntityList` LiveComponent via Stimulus — a parent that
 does not exist on show/edit pages. The plain-link Edit action from `DefaultRowActionProvider`
-(with `listOnly: false`) is preserved and continues to appear on show/edit page headers.
+(with `contexts: [RowAction::CONTEXT_INDEX, RowAction::CONTEXT_SHOW, RowAction::CONTEXT_EDIT]`) is preserved and continues to appear on show/edit page headers.
 
 ### merge() semantics
 
 When two providers register actions with the same name, they are merged (unless `override: true`).
-`listOnly` uses OR semantics: if either action in the merge marks it as `listOnly: true`, the result
-is list-only. Use `override: true` to fully replace an action and reset `listOnly` to `false`.
+context uses OR semantics: if either action in the merge marks it as `contexts: [RowAction::CONTEXT_INDEX]`, the result
+is list-only. Use `override: true` to fully replace an action and reset contexts.
 
 ## Twig Functions
 
@@ -325,7 +325,7 @@ Three functions are available in templates:
 ```
 
 `admin_visible_row_actions` is what the default `_RowActions.html.twig` partial and the
-show/edit page header loops use. The show/edit templates additionally filter `action.listOnly`.
+show/edit page header loops use. The show/edit templates additionally filter `by context`.
 
 ## Examples
 
@@ -357,7 +357,7 @@ class Ticket { }
 
 ### Custom liveComponent action (renders everywhere)
 
-A liveComponent action without `listOnly` renders in list rows **and** on show/edit page headers.
+A liveComponent action without `contexts` option renders in list rows **and** on show/edit page headers.
 Use this for self-contained components like modal dialogs that don't interact with the list state:
 
 ```php
@@ -366,14 +366,14 @@ Use this for self-contained components like modal dialogs that don't interact wi
     label: 'Reassign',
     icon: '👤',
     liveComponent: 'App:Admin:RowAction:ReassignModal',
-    // listOnly not set (defaults to false) — modal appears on show/edit pages too
+    // contexts not set — modal appears on show/edit pages too
 )]
 class Task { }
 ```
 
 ### List-only liveComponent action
 
-Set `listOnly: true` when the component depends on the parent `EntityList` LiveComponent:
+Set `contexts: [RowAction::CONTEXT_INDEX]` when the component depends on the parent `EntityList` LiveComponent:
 
 ```php
 #[AdminAction(
@@ -381,7 +381,7 @@ Set `listOnly: true` when the component depends on the parent `EntityList` LiveC
     label: 'Preview',
     icon: '👁',
     liveComponent: 'App:Admin:RowAction:QuickPreview',
-    listOnly: true,  // fires live actions on parent EntityList — suppress on show/edit
+    contexts: [RowAction::CONTEXT_INDEX]
 )]
 class Product { }
 ```

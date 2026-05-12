@@ -388,10 +388,18 @@ use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
     name: 'approve',
     label: 'Approve',
     icon: '✅',
-    route: 'app_order_approve',
+    route: 'app_order_approve', // passes array of IDs to configured route
     method: 'POST',
     condition: 'entity.status == "pending"',
     priority: 30,
+)]
+#[AdminAction(
+    name: 'cancel',
+    label: 'Cancel',
+    icon: '❌',
+    liveComponent: OrderCancelButton::class, // Custom LiveComponent for complex interactions
+    condition: 'entity.status in ["pending", "approved"]',
+    priority: 40,
 )]
 class Order { }
 ```
