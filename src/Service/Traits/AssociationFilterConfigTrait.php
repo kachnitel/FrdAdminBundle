@@ -84,6 +84,9 @@ trait AssociationFilterConfigTrait
     /**
      * Resolve and validate search fields for an association target.
      *
+     * Supports dot-notation for nested relations, e.g. 'deep.label' means
+     * join through the 'deep' association on the target entity and search on 'label'.
+     *
      * @param ClassMetadata<object> $targetMetadata
      * @return list<string>
      */
@@ -113,7 +116,11 @@ trait AssociationFilterConfigTrait
     }
 
     /**
-     * Validate that search fields exist in target metadata.
+     * Validate that search fields exist in the target metadata.
+     *
+     * Accepts both direct fields ('name') and dot-notation nested paths ('deep.label').
+     * For dot-notation, the first segment must be a valid association on the target entity
+     * and the remaining path must be valid on the associated entity (recursively).
      *
      * @param array<string> $fields
      * @param ClassMetadata<object> $targetMetadata
@@ -123,12 +130,43 @@ trait AssociationFilterConfigTrait
     {
         return array_values(array_filter(
             $fields,
-            fn(string $field): bool => $targetMetadata->hasField($field)
+            fn (string $field): bool => $this->isValidSearchField($field, $targetMetadata)
         ));
     }
 
     /**
+     * Recursively validate a search field path against Doctrine metadata.
+     *
+     * Direct field:     'name'        — must exist as a field on targetMetadata
+     * Nested path:      'deep.label'  — 'deep' must be an association; 'label' validated
+     *                                   recursively on the nested entity's metadata
+     * Deeper nesting:   'a.b.c'       — each segment validated recursively
+     *
+     * @param ClassMetadata<object> $targetMetadata
+     */
+    private function isValidSearchField(string $field, ClassMetadata $targetMetadata): bool
+    {
+        if (!str_contains($field, '.')) {
+            return $targetMetadata->hasField($field);
+        }
+
+        [$assocPart, $remainingPath] = explode('.', $field, 2);
+
+        if (!$targetMetadata->hasAssociation($assocPart)) {
+            return false;
+        }
+
+        $nestedTargetClass = $targetMetadata->getAssociationTargetClass($assocPart);
+        $nestedMetadata = $this->getEntityManager()->getClassMetadata($nestedTargetClass);
+
+        return $this->isValidSearchField($remainingPath, $nestedMetadata);
+    }
+
+    /**
      * Auto-detect searchable fields based on display field priority.
+     *
+     * Note: auto-detection only returns direct fields — dot-notation paths
+     * are never auto-detected and must be specified explicitly in searchFields.
      *
      * @param ClassMetadata<object> $targetMetadata
      * @return list<string>

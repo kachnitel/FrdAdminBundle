@@ -115,6 +115,59 @@ FilterMetadata::collection(
 );
 ```
 
+## Nested Search Fields (Dot Notation)
+
+Both relation and collection filters support **dot-notation paths** in `searchFields`, allowing you to search through chained associations rather than just direct fields on the related entity.
+
+```php
+// Relation: search Order by customer name OR customer's company name
+#[ColumnFilter(searchFields: ['name', 'company.name'])]
+private Customer $customer;
+
+// Collection: search Order by item name OR item's category label
+#[ORM\ManyToMany(targetEntity: OrderItem::class)]
+#[ColumnFilter(searchFields: ['name', 'category.label'])]
+private Collection $items;
+```
+
+Typing `"acme"` in the filter above matches orders that have at least one item whose `name` or whose related `category.label` contains `"acme"`.
+
+Paths can be arbitrarily deep (`a.b.c`) — intermediate associations are resolved automatically:
+
+```php
+// Three levels deep: order → items → product → brand name
+#[ORM\ManyToMany(targetEntity: OrderItem::class)]
+#[ColumnFilter(searchFields: ['sku', 'product.brand.name'])]
+private Collection $items;
+```
+
+<details>
+<summary><strong>How It Works</strong></summary>
+
+**Relation filters** emit LEFT JOINs directly in the outer query, so intermediate aliases are available to the WHERE clause:
+
+```sql
+-- searchFields: ['title', 'deep.label']
+LEFT JOIN e.middle rel_middle
+LEFT JOIN rel_middle.deep rel_middle_deep
+WHERE rel_middle.title LIKE :p
+   OR rel_middle_deep.label LIKE :p
+```
+
+**Collection filters** embed the LEFT JOINs *inside* the EXISTS subquery. This is intentional — keeping them scoped to the subquery avoids row multiplication and keeps pagination correct:
+
+```sql
+-- searchFields: ['name', 'category.label']
+EXISTS (
+    SELECT 1 FROM App\Entity\OrderItem sub_items
+    LEFT JOIN sub_items.category sub_items_category
+    WHERE sub_items MEMBER OF e.items
+      AND (sub_items.name LIKE :p OR sub_items_category.label LIKE :p)
+)
+```
+
+Shared intermediate associations are never joined twice. If two search fields reference the same path segment (e.g. `category.name` and `category.code`), only one JOIN to `category` is emitted.
+
 ## Custom Configuration
 
 Use the `#[ColumnFilter]` attribute to customize filters:
@@ -148,7 +201,7 @@ class Product
     type: 'text',                    // Override auto-detected type
     enabled: true,                   // Enable/disable
     label: 'Custom Label',           // Override label
-    searchFields: ['field'],         // For relations/collections: fields to search
+    searchFields: ['field'],         // For relations/collections: properties to search (dot-notation supported for nested properties)
     operator: 'LIKE',                // SQL operator
     placeholder: 'Search...',        // Input placeholder
     priority: 10,                    // Display order
@@ -175,6 +228,8 @@ This means a relation like `#[ColumnFilter] private Customer $customer;` will au
 #[ColumnFilter(searchFields: ['email', 'phone'])]
 private Customer $customer;
 ```
+
+Dot-notation paths also work here — see [Nested Search Fields](#nested-search-fields-dot-notation) above.
 
 This auto-detection matches the display logic used in preview templates, ensuring consistent behavior between filtering and displaying related entities.
 
