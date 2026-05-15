@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\ArchivableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\SoftDeleteEntity;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 
 /**
  * Tests that archive and unarchive row action buttons appear correctly
@@ -19,9 +21,9 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
     public function testArchiveButtonAppearsForNonArchivedEntity(): void
     {
         $container = static::getContainer();
-        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        /** @var ManagerRegistry $doctrine */
         $doctrine = $container->get('doctrine');
-        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        /** @var EntityManagerInterface $em */
         $em = $doctrine->getManager();
 
         $entity = new ArchivableEntity();
@@ -41,17 +43,17 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
         $rendered = (string) $testComponent->render();
 
         // Archive button should appear for non-archived entity
-        $this->assertStringContainsString('🗃', $rendered);
+        $this->assertActionRendered('🗃', $rendered);
         // Unarchive button should NOT appear
-        $this->assertStringNotContainsString('📤', $rendered);
+        $this->assertActionNotRendered('📤', $rendered);
     }
 
     public function testUnarchiveButtonAppearsForArchivedEntity(): void
     {
         $container = static::getContainer();
-        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        /** @var ManagerRegistry $doctrine */
         $doctrine = $container->get('doctrine');
-        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        /** @var EntityManagerInterface $em */
         $em = $doctrine->getManager();
 
         $entity = new ArchivableEntity();
@@ -72,17 +74,17 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
         $rendered = (string) $testComponent->render();
 
         // Unarchive button should appear for archived entity
-        $this->assertStringContainsString('📤', $rendered);
+        $this->assertActionRendered('📤', $rendered);
         // Archive button should NOT appear
-        $this->assertStringNotContainsString('🗃', $rendered);
+        $this->assertActionNotRendered('🗃', $rendered);
     }
 
     public function testMixedArchiveStateShowsCorrectButtonsPerRow(): void
     {
         $container = static::getContainer();
-        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        /** @var ManagerRegistry $doctrine */
         $doctrine = $container->get('doctrine');
-        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        /** @var EntityManagerInterface $em */
         $em = $doctrine->getManager();
 
         $active = new ArchivableEntity();
@@ -108,20 +110,20 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
         $rendered = (string) $testComponent->render();
 
         // Both icons should appear (one row for each state)
-        $this->assertStringContainsString('🗃', $rendered);
-        $this->assertStringContainsString('📤', $rendered);
+        $this->assertActionRendered('🗃', $rendered);
+        $this->assertActionRendered('📤', $rendered);
     }
 
     public function testEntityWithoutArchiveConfigHasNoArchiveButtons(): void
     {
         $container = static::getContainer();
-        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        /** @var ManagerRegistry $doctrine */
         $doctrine = $container->get('doctrine');
-        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        /** @var EntityManagerInterface $em */
         $em = $doctrine->getManager();
 
         // TestEntity has no archiveExpression configured
-        $entity = new \Kachnitel\AdminBundle\Tests\Fixtures\TestEntity();
+        $entity = new TestEntity();
         $entity->setName('No archive');
         $em->persist($entity);
         $em->flush();
@@ -129,23 +131,23 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
             data: [
-                'entityClass'      => \Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class,
+                'entityClass'      => TestEntity::class,
                 'entityShortClass' => 'TestEntity',
             ],
         );
 
         $rendered = (string) $testComponent->render();
 
-        $this->assertStringNotContainsString('🗃', $rendered);
-        $this->assertStringNotContainsString('📤', $rendered);
+        $this->assertActionNotRendered('🗃', $rendered);
+        $this->assertActionNotRendered('📤', $rendered);
     }
 
     public function testSoftDeleteEntityShowsArchiveButton(): void
     {
         $container = static::getContainer();
-        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        /** @var ManagerRegistry $doctrine */
         $doctrine = $container->get('doctrine');
-        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        /** @var EntityManagerInterface $em */
         $em = $doctrine->getManager();
 
         $entity = new SoftDeleteEntity();
@@ -164,16 +166,16 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
 
         $rendered = (string) $testComponent->render();
 
-        $this->assertStringContainsString('🗃', $rendered);
-        $this->assertStringNotContainsString('📤', $rendered);
+        $this->assertActionRendered('🗃', $rendered);
+        $this->assertActionNotRendered('📤', $rendered);
     }
 
     public function testSoftDeleteEntityShowsUnarchiveButtonWhenDeleted(): void
     {
         $container = static::getContainer();
-        /** @var \Doctrine\Persistence\ManagerRegistry $doctrine */
+        /** @var ManagerRegistry $doctrine */
         $doctrine = $container->get('doctrine');
-        /** @var \Doctrine\ORM\EntityManagerInterface $em */
+        /** @var EntityManagerInterface $em */
         $em = $doctrine->getManager();
 
         $entity = new SoftDeleteEntity();
@@ -193,7 +195,7 @@ class EntityListArchiveRowActionTest extends ComponentTestCase
 
         $rendered = (string) $testComponent->render();
 
-        $this->assertStringContainsString('📤', $rendered);
-        $this->assertStringNotContainsString('🗃', $rendered);
+        $this->assertActionRendered('📤', $rendered);
+        $this->assertActionNotRendered('🗃', $rendered);
     }
 }

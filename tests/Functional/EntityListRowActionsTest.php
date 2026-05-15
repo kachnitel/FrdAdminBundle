@@ -40,8 +40,8 @@ class EntityListRowActionsTest extends ComponentTestCase
         $rendered = (string) $component->render();
 
         // Both default buttons should appear (ComponentTestKernel grants all access)
-        $this->assertStringContainsString('👀', $rendered);
-        $this->assertStringContainsString('✏️', $rendered);
+        $this->assertActionRendered('👀', $rendered);
+        $this->assertActionRendered('✏️', $rendered);
     }
 
     // -------------------------------------------------------------------------
@@ -66,7 +66,7 @@ class EntityListRowActionsTest extends ComponentTestCase
 
         $rendered = (string) $component->render();
 
-        $this->assertStringContainsString('✅', $rendered);
+        $this->assertActionRendered('✅', $rendered);
         $this->assertStringContainsString('Approve', $rendered);
     }
 
@@ -88,7 +88,7 @@ class EntityListRowActionsTest extends ComponentTestCase
 
         $rendered = (string) $component->render();
 
-        $this->assertStringContainsString('📦', $rendered);
+        $this->assertActionRendered('📦', $rendered);
         $this->assertStringContainsString('Archive', $rendered);
     }
 
@@ -115,7 +115,7 @@ class EntityListRowActionsTest extends ComponentTestCase
         $rendered = (string) $component->render();
 
         // Assert on the icon, not the label — entity names can contain the label text
-        $this->assertStringNotContainsString('✅', $rendered);
+        $this->assertActionNotRendered('✅', $rendered);
     }
 
     public function testArchiveButtonIsHiddenWhenAlreadyArchived(): void
@@ -136,7 +136,7 @@ class EntityListRowActionsTest extends ComponentTestCase
 
         $rendered = (string) $component->render();
 
-        $this->assertStringNotContainsString('📦', $rendered);
+        $this->assertActionNotRendered('📦', $rendered);
     }
 
     // -------------------------------------------------------------------------
@@ -161,7 +161,7 @@ class EntityListRowActionsTest extends ComponentTestCase
 
         $rendered = (string) $component->render();
 
-        $this->assertStringNotContainsString('✏️', $rendered);
+        $this->assertActionNotRendered('✏️', $rendered);
     }
 
     public function testShowButtonIsStillPresentDespiteExcludingEdit(): void
@@ -182,7 +182,7 @@ class EntityListRowActionsTest extends ComponentTestCase
 
         $rendered = (string) $component->render();
 
-        $this->assertStringContainsString('👀', $rendered);
+        $this->assertActionRendered('👀', $rendered);
     }
 
     // -------------------------------------------------------------------------
@@ -243,7 +243,6 @@ class EntityListRowActionsTest extends ComponentTestCase
         $rendered = (string) $component->render();
 
         // Approve button should appear exactly once (only for the pending row)
-        $approveCount = substr_count($rendered, '✅');
-        $this->assertSame(1, $approveCount, 'Approve button should render only for the pending row');
+        $this->assertActionRenderedCount('✅', 1, $rendered, 'Approve button should render only for the pending row');
     }
 }

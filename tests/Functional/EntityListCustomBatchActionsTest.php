@@ -47,7 +47,7 @@ class EntityListCustomBatchActionsTest extends ComponentTestCase
         $rendered = (string) $component->render();
 
         $this->assertStringContainsString('Activate Selected', $rendered);
-        $this->assertStringContainsString('✅', $rendered);
+        $this->assertActionRendered('✅', $rendered);
     }
 
     public function testBatchArchiveButtonRendersInBatchBar(): void
@@ -65,7 +65,7 @@ class EntityListCustomBatchActionsTest extends ComponentTestCase
         $rendered = (string) $component->render();
 
         $this->assertStringContainsString('Archive', $rendered);
-        $this->assertStringContainsString('📦', $rendered);
+        $this->assertActionRendered('📦', $rendered);
     }
 
     // ── Default delete button still present ──────────────────────────────────
@@ -154,7 +154,7 @@ class EntityListCustomBatchActionsTest extends ComponentTestCase
 
         // bulk-archive is ACTION_TYPE_BOTH — must appear as a row action link in <td class="actions">
         $this->assertStringContainsString('href="/admin/test/batch/archive"', $rendered);
-        $this->assertStringContainsString('📦', $rendered);
+        $this->assertActionRendered('📦', $rendered);
     }
 
     // ── Both-type action also appears in batch bar ────────────────────────────
