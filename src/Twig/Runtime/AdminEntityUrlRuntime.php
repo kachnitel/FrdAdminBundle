@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Extension\RuntimeExtensionInterface;
@@ -20,9 +21,10 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
     public function __construct(
         private RouterInterface $router,
         private AdminRouteRuntime $adminRouteRuntime,
+        private FilterMetadataProvider $filterMetadataProvider,
         private ?EntityDiscoveryService $entityDiscovery = null,
         private ?EntityManagerInterface $em = null,
-        private bool $debug = false,   // ← inject %kernel.debug%
+        private bool $debug = false,
     ) {}
 
     /**
@@ -167,6 +169,15 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
     /**
      * Build route parameters for a collection admin URL.
      *
+     * Includes a columnFilter when FilterMetadataProvider confirms the inverse field
+     * is filterable (auto-detected or explicit #[ColumnFilter]). Silently omits the
+     * filter when the field is not filterable (e.g. explicitly disabled, collection
+     * without opt-in, or field does not exist).
+     *
+     * In debug mode a LogicException is thrown when the field exists but filtering
+     * is explicitly disabled via #[ColumnFilter(enabled: false)], since that is a
+     * clear configuration mistake.
+     *
      * @param ClassMetadata<object> $metadata
      * @param class-string $targetClass
      * @return array<string, mixed>
@@ -189,23 +200,21 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
             return $parameters;
         }
 
-        if (!$this->targetFieldHasColumnFilter($targetClass, $filterField)) {
-            if ($this->debug) {
+        $filterConfig = $this->filterMetadataProvider->getFilterForProperty($targetClass, $filterField);
+
+        if ($filterConfig === null) {
+            if ($this->debug && $this->isFilteringExplicitlyDisabled($targetClass, $filterField)) {
                 throw new \LogicException(sprintf(
                     'admin_collection_url() on "%s::$%s" wants to filter the target list by "%s::$%s", '
-                    . 'but that property has no #[ColumnFilter] attribute. '
-                    . 'Add #[ColumnFilter] to %s::$%s (and optionally set searchFields) '
-                    . 'so the generated link actually filters the list.',
+                    . 'but that property has #[ColumnFilter(enabled: false)]. '
+                    . 'Remove the enabled: false or add a filterable #[ColumnFilter] attribute.',
                     $metadata->getName(),
                     $property,
-                    $targetClass,
-                    $filterField,
                     $targetClass,
                     $filterField,
                 ));
             }
 
-            // Production: silently omit the filter rather than linking to the wrong thing.
             return $parameters;
         }
 
@@ -215,10 +224,12 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
     }
 
     /**
+     * Return true when the field has an explicit #[ColumnFilter(enabled: false)].
+     * Used only to produce a helpful debug message.
+     *
      * @param class-string $targetClass
-     * @return bool
      */
-    private function targetFieldHasColumnFilter(string $targetClass, string $fieldName): bool
+    private function isFilteringExplicitlyDisabled(string $targetClass, string $fieldName): bool
     {
         try {
             $reflection = new \ReflectionClass($targetClass);
@@ -230,7 +241,14 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
             return false;
         }
 
-        return !empty($reflection->getProperty($fieldName)->getAttributes(ColumnFilter::class));
+        $attributes = $reflection->getProperty($fieldName)->getAttributes(ColumnFilter::class);
+        if (empty($attributes)) {
+            return false;
+        }
+
+        /** @var ColumnFilter $filter */
+        $filter = $attributes[0]->newInstance();
+        return !$filter->enabled;
     }
 
     /**

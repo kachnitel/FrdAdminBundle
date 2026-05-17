@@ -68,6 +68,43 @@ class FilterMetadataProvider
     }
 
     /**
+     * Get filter config for a single property of an entity.
+     *
+     * Returns null when the property does not exist, is not a Doctrine field/association,
+     * or has filtering explicitly disabled via #[ColumnFilter(enabled: false)].
+     * Returns a filter config array otherwise (using auto-detection when no attribute is present).
+     *
+     * Collection associations without an explicit #[ColumnFilter] attribute also return null
+     * because they are opt-in only (same rule as getFilters()).
+     *
+     * @param class-string $entityClass
+     * @return array<string, mixed>|null
+     */
+    public function getFilterForProperty(string $entityClass, string $property): ?array
+    {
+        $metadata = $this->em->getClassMetadata($entityClass);
+
+        try {
+            $propertyReflection = new ReflectionProperty($entityClass, $property);
+        } catch (\ReflectionException) {
+            return null;
+        }
+
+        if (!$metadata->hasField($property) && !$metadata->hasAssociation($property)) {
+            return null;
+        }
+
+        // Collection associations are opt-in only — require explicit #[ColumnFilter]
+        if ($metadata->isCollectionValuedAssociation($property)) {
+            if (empty($propertyReflection->getAttributes(ColumnFilter::class))) {
+                return null;
+            }
+        }
+
+        return $this->getFilterConfig($propertyReflection, $metadata, $property);
+    }
+
+    /**
      * Add filter config to the filters array if enabled.
      *
      * @param array<string, array<string, mixed>> $filters

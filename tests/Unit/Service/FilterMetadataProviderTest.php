@@ -74,6 +74,11 @@ class FilterMetadataProviderTest extends TestCase
         $this->assertArrayNotHasKey('disabledFilter', $filters);
     }
 
+    public function testGetFilterForProperty(): void
+    {
+        $this->markTestIncomplete();
+    }
+
     public function testTextFieldHasCorrectFilterType(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['name']);

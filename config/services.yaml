@@ -73,6 +73,7 @@ services:
         arguments:
             $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
             $debug: '%kernel.debug%'
+            $filterMetadataProvider: '@Kachnitel\AdminBundle\Service\FilterMetadataProvider'
         tags: ['twig.runtime']
 
     # ActionAccessibilityChecker — checks voter + form availability for admin actions
