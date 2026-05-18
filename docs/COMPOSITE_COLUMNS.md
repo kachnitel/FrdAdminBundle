@@ -206,8 +206,6 @@ public function getColumnGroups(): array
 | Parameter    | Type     | Default | Description |
 |--------------|----------|---------|-------------|
 | `id`         | `string` | **required** | Unique group identifier |
-| `label`      | `?string`| `null`  | Group label (humanised from `id` when null) |
-| `columns`    | `array<string, ColumnMetadata>` | **required** | Array of column keys and their metadata (label, sortable, filterable) |
 | `subLabels`  | `string` | `'show'` | How to display sub-labels: `'show'`, `'icon'`, or `'hidden'` |
 | `header`     | `string` | `'text'` | Header style: `'text'`, `'collapsible'`, or `'full'` |
 

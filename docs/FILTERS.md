@@ -168,6 +168,8 @@ EXISTS (
 
 Shared intermediate associations are never joined twice. If two search fields reference the same path segment (e.g. `category.name` and `category.code`), only one JOIN to `category` is emitted.
 
+</details>
+
 ## Custom Configuration
 
 Use the `#[ColumnFilter]` attribute to customize filters:

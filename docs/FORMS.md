@@ -7,12 +7,12 @@ The admin bundle uses Symfony UX LiveComponents for edit and new entity forms, p
 1. The controller renders `edit.html.twig` / `new.html.twig`, passing `entityClass`, `entityId`, `formTypeClass`, and `formComponentName` as template variables.
 2. The template mounts the LiveComponent via `{{ component(formComponentName, ...) }}`.
 3. As the user changes fields, LiveComponent sends Ajax requests, re-submits values into the Symfony form, and re-renders — showing validation errors inline.
-4. The **Save** button in the page header dispatches a `CustomEvent('admin:save')` directly on the component's root element (`[data-admin-form]`). The component listens via `#[LiveListener('admin:save')]`.
+4. The **Save** button in the page header calls a `save` `#[LiveAction]` on `document.querySelector('[data-admin-form]')`
 5. On success, a `toast.show` browser event is dispatched. On failure the form re-renders with inline errors.
 
 ### Why the event is dispatched on the element, not `window`
 
-LiveComponent's `#[LiveListener]` receives events dispatched on the component's root DOM element or that bubble **up** to it. DOM events bubble upward (child → parent → document → window), never downward. A `window.dispatchEvent(...)` call cannot reach a component element, no matter how many `bubbles: true` flags you add. The button therefore queries `[data-admin-form]` — a data attribute on the component root — and dispatches there directly.
+LiveComponent's `#[LiveAction]` listeners are scoped to the component's root element. The header Save button is outside the component, so it can't dispatch to `this` (the component instance) directly. Instead it targets the component root via `[data-admin-form]` — a data attribute on the component root — and dispatches there directly.
 
 Custom form components must include `data-admin-form` on their root element to receive the save event.
 
