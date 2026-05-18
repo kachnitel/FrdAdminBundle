@@ -62,7 +62,7 @@ final class RowAction
      * @param string|null                                   $url            Static URL (alternative to route)
      * @param string|null                                   $permission     Required role (e.g. 'ROLE_ADMIN')
      * @param string|null                                   $voterAttribute Admin voter attribute (e.g. 'ADMIN_EDIT')
-     * @param string|array{class-string, string}|null $condition      Expression string OR [ServiceClass::class, 'method'] DI tuple
+     * @param string|array{class-string, string}|null       $condition      Expression string OR [ServiceClass::class, 'method'] DI tuple
      * @param string|null                                   $cssClass       Additional CSS classes for the button
      * @param string|null                                   $confirmMessage Confirmation message (shows confirm dialog before action)
      * @param bool                                          $openInNewTab   Whether to open link in new tab
@@ -111,7 +111,26 @@ final class RowAction
      * Create a modified copy with overridden properties.
      * Only provided keys will replace existing values; array_key_exists allows explicit null overrides.
      *
-     * @param array<string, mixed> $overrides
+     * @param array{
+     *     name?: string,
+     *     label?: string,
+     *     icon?: string|null,
+     *     route?: string|null,
+     *     routeParams?: array<string, string>,
+     *     url?: string|null,
+     *     permission?: string|null,
+     *     voterAttribute?: string|null,
+     *     condition?: string|array{class-string, string}|null,
+     *     cssClass?: string|null,
+     *     confirmMessage?: string|null,
+     *     openInNewTab?: bool,
+     *     priority?: int,
+     *     method?: string|null,
+     *     template?: string|null,
+     *     liveComponent?: string|null,
+     *     contexts?: list<string>
+     * } $overrides
+     * @return self New instance with overrides applied
      */
     public function with(array $overrides): self
     {
@@ -207,7 +226,10 @@ final class RowAction
     /**
      * Pick a value from overrides array, supporting explicit null overrides.
      *
+     * @template T
      * @param array<string, mixed> $overrides
+     * @param T $default
+     * @return T
      */
     private function pick(array $overrides, string $key, mixed $default): mixed
     {
