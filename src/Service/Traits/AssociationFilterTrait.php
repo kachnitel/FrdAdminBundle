@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Service\Traits;
 
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\Expr\Orx;
 use Doctrine\ORM\QueryBuilder;
 
@@ -37,6 +38,7 @@ trait AssociationFilterTrait
     {
         [, $paramName] = $this->getFilterContext($column, $metadata);
 
+        /** @var array<string> $searchFields */
         $searchFields = $metadata['searchFields'] ?? ['id'];
 
         if (empty($searchFields)) {
@@ -64,7 +66,7 @@ trait AssociationFilterTrait
         }
 
         $qb->andWhere($orX)
-            ->setParameter($paramName, '%' . $value . '%');
+            ->setParameter($paramName, '%' . (string) $value . '%');
     }
 
     /**
@@ -115,7 +117,10 @@ trait AssociationFilterTrait
      */
     private function hasJoin(QueryBuilder $qb, string $alias): bool
     {
-        foreach ($qb->getDQLPart('join') as $joins) {
+        /** @var array<string, array<Join>> $joinParts */
+        $joinParts = $qb->getDQLPart('join');
+
+        foreach ($joinParts as $joins) {
             foreach ($joins as $join) {
                 if ($join->getAlias() === $alias) {
                     return true;
@@ -150,8 +155,11 @@ trait AssociationFilterTrait
     {
         [, $paramName] = $this->getFilterContext($column, $metadata);
 
+        /** @var array<string> $searchFields */
         $searchFields = $metadata['searchFields'] ?? [];
-        $targetClass  = $metadata['targetClass'] ?? null;
+
+        /** @var string|null $targetClass */
+        $targetClass = $metadata['targetClass'] ?? null;
 
         if ($targetClass === null) {
             return;
@@ -170,7 +178,7 @@ trait AssociationFilterTrait
                 );
 
                 // Merge joins, deduplicating by alias (same key = same JOIN string)
-                $subqueryJoins      = array_merge($subqueryJoins, $joins);
+                $subqueryJoins        = array_merge($subqueryJoins, $joins);
                 $subqueryConditions[] = $condition;
             } else {
                 $subqueryConditions[] = sprintf('%s.%s LIKE :%s', $subAlias, $field, $paramName);
@@ -202,7 +210,7 @@ trait AssociationFilterTrait
             $subqueryWhere,
         ));
 
-        $qb->setParameter($paramName, '%' . $value . '%');
+        $qb->setParameter($paramName, '%' . (string) $value . '%');
     }
 
     /**
