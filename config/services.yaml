@@ -42,6 +42,11 @@ services:
         arguments:
             $propertyAccessor: '@property_accessor'
 
+    # PropertyFilterabilityService — answers "can this property be filtered?" for URL generation
+    Kachnitel\AdminBundle\Service\PropertyFilterabilityService:
+        arguments:
+            $debug: '%kernel.debug%'
+
     # Field editability resolver — admin implementation overrides the permissive default
     # from kachnitel/entity-components-bundle
     Kachnitel\AdminBundle\Field\:
@@ -68,12 +73,11 @@ services:
         resource: '../src/Twig/Runtime'
         tags: ['twig.runtime']
 
-    # AdminEntityUrlRuntime with entity discovery and entity manager
+    # AdminEntityUrlRuntime with entity discovery, entity manager, and filterability service
     Kachnitel\AdminBundle\Twig\Runtime\AdminEntityUrlRuntime:
         arguments:
             $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
-            $debug: '%kernel.debug%'
-            $filterMetadataProvider: '@Kachnitel\AdminBundle\Service\FilterMetadataProvider'
+            $filterabilityService: '@Kachnitel\AdminBundle\Service\PropertyFilterabilityService'
         tags: ['twig.runtime']
 
     # ActionAccessibilityChecker — checks voter + form availability for admin actions

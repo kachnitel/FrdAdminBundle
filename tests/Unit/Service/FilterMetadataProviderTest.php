@@ -76,7 +76,17 @@ class FilterMetadataProviderTest extends TestCase
 
     public function testGetFilterForProperty(): void
     {
-        $this->markTestIncomplete();
+        $this->metadata->method('getFieldNames')->willReturn(['name']);
+        $this->metadata->method('getAssociationNames')->willReturn([]);
+        $this->metadata->method('hasField')->willReturn(true);
+        $this->metadata->method('hasAssociation')->willReturn(false);
+        $this->metadata->method('getTypeOfField')->willReturn('string');
+
+        $filter = $this->provider->getFilterForProperty(TestEntity::class, 'name');
+
+        $this->assertNotNull($filter);
+        $this->assertEquals(ColumnFilter::TYPE_TEXT, $filter['type']);
+        $this->assertEquals('LIKE', $filter['operator']);
     }
 
     public function testTextFieldHasCorrectFilterType(): void

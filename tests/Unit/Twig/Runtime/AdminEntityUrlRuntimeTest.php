@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
 use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
-use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use Kachnitel\AdminBundle\Service\PropertyFilterabilityService;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityUrlRuntime;
@@ -35,44 +35,54 @@ class AdminEntityUrlRuntimeTest extends TestCase
     }
 
     private function createRuntime(
-        FilterMetadataProvider $filterMetadataProvider,
+        PropertyFilterabilityService $filterabilityService,
         ?EntityDiscoveryService $entityDiscovery = null,
         ?EntityManagerInterface $em = null,
-        bool $debug = false,
     ): AdminEntityUrlRuntime {
         return new AdminEntityUrlRuntime(
             router: $this->router,
             adminRouteRuntime: $this->adminRouteRuntime,
-            filterMetadataProvider: $filterMetadataProvider,
             entityDiscovery: $entityDiscovery,
+            filterabilityService: $filterabilityService,
             em: $em,
-            debug: $debug,
         );
     }
 
     /**
-     * Returns a FilterMetadataProvider mock that approves any field as filterable.
+     * Returns a PropertyFilterabilityService mock that approves any field as filterable.
      * Use for tests where the field filterability is not what's under test.
      *
-     * @return FilterMetadataProvider&MockObject
+     * @return PropertyFilterabilityService&MockObject
      */
-    private function filterableProvider(): FilterMetadataProvider
+    private function filterableProvider(): PropertyFilterabilityService
     {
-        $provider = $this->createMock(FilterMetadataProvider::class);
-        $provider->method('getFilterForProperty')
-            ->willReturn(['type' => 'text', 'operator' => 'LIKE', 'enabled' => true]);
+        $provider = $this->createMock(PropertyFilterabilityService::class);
+        $provider->method('buildCollectionFilterEntry')
+            ->willReturnCallback(function (object $entity, string $field, string $class): ?array {
+                if (method_exists($entity, 'getId') && $entity->getId() !== null) {
+                    return [$field => (string) $entity->getId()];
+                }
+                return null;
+            });
         return $provider;
     }
 
     /**
-     * Returns a FilterMetadataProvider mock that rejects all fields as not filterable.
+     * Returns a PropertyFilterabilityService mock that rejects all fields as not filterable.
      *
-     * @return FilterMetadataProvider&MockObject
+     * @return PropertyFilterabilityService&MockObject
      */
-    private function unfilteredProvider(): FilterMetadataProvider
+    private function unfilteredProvider(): PropertyFilterabilityService
     {
-        $provider = $this->createMock(FilterMetadataProvider::class);
-        $provider->method('getFilterForProperty')->willReturn(null);
+        $provider = $this->createMock(PropertyFilterabilityService::class);
+        $provider->method('buildCollectionFilterEntry')
+            ->willReturnCallback(function (object $entity, string $field, string $class): never {
+                throw new \LogicException(sprintf(
+                    'A collection link targets "%s::$%s", but that property has #[ColumnFilter(enabled: false)].',
+                    $class,
+                    $field,
+                ));
+            });
         return $provider;
     }
 
@@ -356,7 +366,6 @@ class AdminEntityUrlRuntimeTest extends TestCase
             $this->unfilteredProvider(),
             $this->entityDiscovery,
             $this->em,
-            debug: true,
         );
 
         $entity = new class { public function getId(): int { return 1; } };
