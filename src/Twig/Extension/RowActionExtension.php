@@ -21,6 +21,10 @@ class RowActionExtension extends AbstractExtension
                 'admin_visible_row_actions',
                 [RowActionRuntime::class, 'getVisibleRowActions'],
             ),
+            new TwigFunction(
+                'admin_is_action_visible',
+                [RowActionRuntime::class, 'isActionVisible'],
+            )
         ];
     }
 }
