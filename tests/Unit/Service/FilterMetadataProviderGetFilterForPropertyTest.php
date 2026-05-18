@@ -8,6 +8,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use Kachnitel\AdminBundle\Service\Traits\FieldFilterConfigTrait;
+use Kachnitel\AdminBundle\Utils\Text;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -15,6 +18,9 @@ use PHPUnit\Framework\TestCase;
  * @covers \Kachnitel\AdminBundle\Service\FilterMetadataProvider::getFilterForProperty
  * @group collection-url
  */
+#[UsesClass(FilterMetadataProvider::class)]
+#[UsesClass(Text::class)]
+#[UsesClass(FieldFilterConfigTrait::class)]
 class FilterMetadataProviderGetFilterForPropertyTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */

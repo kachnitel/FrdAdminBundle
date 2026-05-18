@@ -11,10 +11,12 @@ use Kachnitel\AdminBundle\Service\PropertyFilterabilityService;
 // use Kachnitel\AdminBundle\Tests\Service\Fixtures\EntityWithFilterEnabled;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(PropertyFilterabilityService::class)]
+#[UsesClass(ColumnFilter::class)]
 #[Group('property-filterability')]
 final class PropertyFilterabilityServiceTest extends TestCase
 {
