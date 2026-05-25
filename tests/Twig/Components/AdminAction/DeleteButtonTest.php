@@ -9,7 +9,6 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\AdminAction\DeleteButton;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * @group batch-actions

@@ -119,6 +119,7 @@ services:
             $formNamespace: '%kachnitel_admin.form_namespace%'
             $formSuffix: '%kachnitel_admin.form_suffix%'
             $dataSourceRegistry: '@Kachnitel\AdminBundle\DataSource\DataSourceRegistry'
+            $formRegistry: '@form.registry'
             $routePrefix: '%kachnitel_admin.route_prefix%'
             $dashboardRoute: '%kachnitel_admin.dashboard_route%'
             $requiredRole: '%kachnitel_admin.required_role%'

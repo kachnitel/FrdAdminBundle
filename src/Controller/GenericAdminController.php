@@ -11,6 +11,7 @@ use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -42,6 +43,7 @@ class GenericAdminController extends AbstractAdminController
         private readonly string $formNamespace,
         private readonly string $formSuffix,
         private readonly DataSourceRegistry $dataSourceRegistry,
+        private readonly FormRegistryInterface $formRegistry,
         private readonly string $routePrefix = 'app_admin_entity',
         private readonly string $dashboardRoute = 'app_admin_dashboard',
         private readonly ?string $requiredRole = 'ROLE_ADMIN',
@@ -170,9 +172,6 @@ class GenericAdminController extends AbstractAdminController
 
     // ── Archive / Unarchive ────────────────────────────────────────────────────
 
-    /**
-     * Archive an entity (set the configured archive field).
-     */
     #[Route('/admin/{entitySlug}/{id}/archive', name: 'app_admin_entity_archive', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function archive(
         Request $request,
@@ -211,9 +210,6 @@ class GenericAdminController extends AbstractAdminController
         return $this->redirectToRefererOrIndex($request, $entitySlug);
     }
 
-    /**
-     * Unarchive an entity (clear the configured archive field).
-     */
     #[Route('/admin/{entitySlug}/{id}/unarchive', name: 'app_admin_entity_unarchive', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function unarchive(
         Request $request,
@@ -353,30 +349,80 @@ class GenericAdminController extends AbstractAdminController
         return $entityName;
     }
 
+    /**
+     * Resolve the LiveComponent name for the edit/new form.
+     *
+     * Priority:
+     *   1. #[Admin(formComponent: '...')] explicit override
+     *   2. Manual FormType exists → K:Admin:EntityForm (standard live form)
+     *   3. Entity has inline-edit attributes → K:Admin:AutoEntityForm (auto-generated form)
+     *   4. Fallback → K:Admin:EntityForm (will render correctly or show no-form state)
+     */
     protected function getFormComponentName(string $class): string
     {
+        /** @var null|class-string $entityClass */
         $entityClass = $this->entityDiscovery->resolveEntityClass($class, $this->entityNamespace);
-        $adminAttr = $entityClass ? $this->entityDiscovery->getAdminAttribute($entityClass) : null;
-        return $adminAttr?->getFormComponent() ?? 'K:Admin:EntityForm';
+        $adminAttr   = $entityClass ? $this->entityDiscovery->getAdminAttribute($entityClass) : null;
+
+        // 1. Explicit override on the entity
+        if ($adminAttr?->getFormComponent() !== null) {
+            return $adminAttr->getFormComponent();
+        }
+
+        // 2. Manual FormType registered
+        $formType = $adminAttr?->getFormType() ?: $this->formNamespace . $class . $this->formSuffix;
+        if ($this->formRegistry->hasType($formType)) {
+            return 'K:Admin:EntityForm';
+        }
+
+        // 3. Auto-form: entity opts in via enableInlineEdit or per-column editable attributes
+        if ($entityClass !== null && $this->entityHasAutoFormFields($entityClass)) {
+            return 'K:Admin:AutoEntityForm';
+        }
+
+        // 4. Fallback
+        return 'K:Admin:EntityForm';
     }
 
     /**
-     * Validate the CSRF token for archive/unarchive actions.
-     * The token key matches what _RowActionButton.html.twig generates:
-     * "{{ csrf_token(action.name ~ '_' ~ entityId) }}"
+     * @param class-string $entityClass
      */
+    private function entityHasAutoFormFields(string $entityClass): bool
+    {
+        try {
+            $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
+
+            if ($adminAttr !== null && $adminAttr->isEnableInlineEdit()) {
+                return true;
+            }
+
+            $reflection = new \ReflectionClass($entityClass);
+            foreach ($reflection->getProperties() as $property) {
+                $attributes = $property->getAttributes(\Kachnitel\AdminBundle\Attribute\AdminColumn::class);
+                if (!empty($attributes)) {
+                    /** @var \Kachnitel\AdminBundle\Attribute\AdminColumn $col */
+                    $col = $attributes[0]->newInstance();
+                    if ($col->editable === true) {
+                        return true;
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return false;
+    }
+
     private function validateArchiveCsrf(Request $request, string $actionName, int $entityId): void
     {
         $csrfKey = $actionName . '_' . $entityId;
-        $token = $request->request->get('_token');
+        $token   = $request->request->get('_token');
         if (!$this->isCsrfTokenValid($csrfKey, is_string($token) ? $token : null)) {
             throw new \InvalidArgumentException('Invalid CSRF token for ' . $csrfKey);
         }
     }
 
-    /**
-     * Redirect to the HTTP referer if available and safe, otherwise to the entity index.
-     */
     private function redirectToRefererOrIndex(Request $request, string $entitySlug): Response
     {
         $referer = $request->headers->get('referer');

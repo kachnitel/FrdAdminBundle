@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
