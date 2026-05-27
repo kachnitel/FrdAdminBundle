@@ -35,9 +35,6 @@ class ActionAccessibilityCheckerAutoFormTest extends TestCase
         $this->authChecker     = $this->createMock(AuthorizationCheckerInterface::class);
         $this->entityDiscovery = $this->createMock(EntityDiscoveryService::class);
         $this->formRegistry    = $this->createMock(FormRegistryInterface::class);
-
-        // Grant all voter checks by default.
-        // $this->authChecker->method('isGranted')->willReturn(true);
     }
 
     private function makeChecker(): ActionAccessibilityChecker
@@ -52,152 +49,155 @@ class ActionAccessibilityCheckerAutoFormTest extends TestCase
         );
     }
 
-    // ── new action requires FormType ───────────────────────────────────────────
+    // ── No form, no inline edit → both new and edit blocked ───────────────────
 
-    public function testNewRequiresFormTypeEvenWhenEnableInlineEditIsTrue(): void
+    public function testNewBlockedWhenNoFormTypeAndNoInlineEdit(): void
     {
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithInlineEdit::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(enableInlineEdit: true));
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerNoEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
         $this->formRegistry->method('hasType')->willReturn(false);
 
-        $checker = $this->makeChecker();
-
-        $this->assertFalse($checker->isActionAccessible('EntityWithInlineEdit', 'new', true));
+        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', 'new', true));
     }
+
+    public function testEditBlockedWhenNoFormTypeAndNoInlineEdit(): void
+    {
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerNoEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
+        $this->formRegistry->method('hasType')->willReturn(false);
+
+        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', 'edit', true));
+    }
+
+    // ── FormType satisfies both new and edit ───────────────────────────────────
 
     public function testNewAccessibleWhenFormTypeExists(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
 
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithInlineEdit::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(enableInlineEdit: true));
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerNoEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
         $this->formRegistry->method('hasType')->willReturn(true);
 
-        $checker = $this->makeChecker();
-
-        $this->assertTrue($checker->isActionAccessible('EntityWithInlineEdit', 'new', true));
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', 'new', true));
     }
-
-    // ── edit action: FormType path ─────────────────────────────────────────────
 
     public function testEditAccessibleWhenFormTypeExists(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
 
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithNoInlineEdit::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin());
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerNoEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
         $this->formRegistry->method('hasType')->willReturn(true);
 
-        $checker = $this->makeChecker();
-
-        $this->assertTrue($checker->isActionAccessible('EntityWithNoInlineEdit', 'edit', true));
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', 'edit', true));
     }
 
-    public function testEditInaccessibleWhenNoFormTypeAndNoInlineEdit(): void
+    // ── enableInlineEdit satisfies both new and edit ───────────────────────────
+
+    public function testNewAccessibleWhenNoFormTypeButEnableInlineEditTrue(): void
     {
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithNoInlineEdit::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin());
+        $this->authChecker->method('isGranted')->willReturn(true);
+
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerInlineEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableInlineEdit: true));
         $this->formRegistry->method('hasType')->willReturn(false);
 
-        $checker = $this->makeChecker();
-
-        $this->assertFalse($checker->isActionAccessible('EntityWithNoInlineEdit', 'edit', true));
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerInlineEditEntity', 'new', true));
     }
-
-    // ── edit action: auto-form path ────────────────────────────────────────────
 
     public function testEditAccessibleWhenNoFormTypeButEnableInlineEditTrue(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
 
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithInlineEdit::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(enableInlineEdit: true));
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerInlineEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableInlineEdit: true));
         $this->formRegistry->method('hasType')->willReturn(false);
 
-        $checker = $this->makeChecker();
-
-        $this->assertTrue($checker->isActionAccessible('EntityWithInlineEdit', 'edit', true));
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerInlineEditEntity', 'edit', true));
     }
 
-    public function testEditAccessibleWhenNoFormTypeButPropertyHasEditableTrue(): void
+    // ── Per-property editable:true satisfies both new and edit ────────────────
+
+    public function testNewAccessibleWhenPropertyHasEditableTrue(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
 
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithEditableColumn::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin());  // enableInlineEdit: false
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerEditableColEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
         $this->formRegistry->method('hasType')->willReturn(false);
 
-        $checker = $this->makeChecker();
-
-        $this->assertTrue($checker->isActionAccessible('EntityWithEditableColumn', 'edit', true));
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerEditableColEntity', 'new', true));
     }
 
-    public function testEditInaccessibleWhenPropertyHasEditableFalseOnly(): void
+    public function testEditAccessibleWhenPropertyHasEditableTrue(): void
     {
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithEditableFalse::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin());
+        $this->authChecker->method('isGranted')->willReturn(true);
+
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerEditableColEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
         $this->formRegistry->method('hasType')->willReturn(false);
 
-        $checker = $this->makeChecker();
-
-        $this->assertFalse($checker->isActionAccessible('EntityWithEditableFalse', 'edit', true));
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerEditableColEntity', 'edit', true));
     }
 
-    // ── route not existing ─────────────────────────────────────────────────────
+    // ── editable:false only → still no auto-form ──────────────────────────────
+
+    public function testNewBlockedWhenOnlyEditableFalseProperties(): void
+    {
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerEditableFalseEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
+        $this->formRegistry->method('hasType')->willReturn(false);
+
+        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerEditableFalseEntity', 'new', true));
+    }
+
+    public function testEditBlockedWhenOnlyEditableFalseProperties(): void
+    {
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerEditableFalseEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
+        $this->formRegistry->method('hasType')->willReturn(false);
+
+        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerEditableFalseEntity', 'edit', true));
+    }
+
+    // ── Route missing blocks regardless of form ────────────────────────────────
 
     public function testReturnsFalseWhenRouteDoesNotExist(): void
     {
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithInlineEdit::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(enableInlineEdit: true));
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerInlineEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableInlineEdit: true));
         $this->formRegistry->method('hasType')->willReturn(false);
 
-        $checker = $this->makeChecker();
-
-        $this->assertFalse($checker->isActionAccessible('EntityWithInlineEdit', 'edit', false));
+        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerInlineEditEntity', 'new', false));
+        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerInlineEditEntity', 'edit', false));
     }
 
-    // ── voter denied ──────────────────────────────────────────────────────────
+    // ── Voter denied blocks regardless of form ─────────────────────────────────
 
     public function testReturnsFalseWhenVoterDenies(): void
     {
-        $this->authChecker->method('isGranted')
-            ->with(AdminEntityVoter::ADMIN_EDIT, 'EntityWithInlineEdit')
-            ->willReturn(false);
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithInlineEdit::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(enableInlineEdit: true));
+        $this->authChecker->method('isGranted')->willReturn(false);
+
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerInlineEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableInlineEdit: true));
         $this->formRegistry->method('hasType')->willReturn(false);
 
-        $checker = $this->makeChecker();
-
-        self::assertFalse($checker->isActionAccessible('EntityWithInlineEdit', 'edit', true));
+        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerInlineEditEntity', 'new', true));
+        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerInlineEditEntity', 'edit', true));
     }
 
-    // ── non-edit/new actions unaffected ───────────────────────────────────────
+    // ── Non-form actions unaffected ───────────────────────────────────────────
 
-    /**
-     * @param string $action
-     */
     #[DataProvider('nonFormActionsProvider')]
     public function testNonFormActionsUnaffectedByFormAvailability(string $action): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
-
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(EntityWithNoInlineEdit::class);
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerNoEditEntity::class);
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
         $this->formRegistry->method('hasType')->willReturn(false);
 
-        $checker = $this->makeChecker();
-
-        $this->assertTrue($checker->isActionAccessible('EntityWithNoInlineEdit', $action, true));
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', $action, true));
     }
 
     /** @return array<string, array{string}> */
@@ -211,29 +211,29 @@ class ActionAccessibilityCheckerAutoFormTest extends TestCase
     }
 }
 
-// ── Fixture classes ────────────────────────────────────────────────────────────
+// ── Fixtures ───────────────────────────────────────────────────────────────────
 
-#[Admin(label: 'With Inline Edit', enableInlineEdit: true)]
-class EntityWithInlineEdit
+#[Admin(label: 'No Edit')]
+class AcCheckerNoEditEntity
 {
     private string $title = '';
 }
 
-#[Admin(label: 'No Inline Edit')]
-class EntityWithNoInlineEdit
+#[Admin(label: 'Inline Edit', enableInlineEdit: true)]
+class AcCheckerInlineEditEntity
 {
     private string $title = '';
 }
 
-#[Admin(label: 'Editable Column')]
-class EntityWithEditableColumn
+#[Admin(label: 'Editable Col')]
+class AcCheckerEditableColEntity
 {
     #[AdminColumn(editable: true)]
     private string $title = '';
 }
 
 #[Admin(label: 'Editable False')]
-class EntityWithEditableFalse
+class AcCheckerEditableFalseEntity
 {
     #[AdminColumn(editable: false)]
     private string $title = '';

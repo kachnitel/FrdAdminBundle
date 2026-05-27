@@ -4,6 +4,7 @@ namespace Kachnitel\AdminBundle\Controller\Trait;
 
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -52,6 +53,6 @@ trait DeleteEntityTrait
 
     // Abstract methods that must be implemented by the controller
     abstract protected function addFlash(string $type, mixed $message): void;
-    abstract protected function redirect(string $url, int $status = 302): Response;
+    abstract protected function redirect(string $url, int $status = 302): RedirectResponse;
     abstract protected function isCsrfTokenValid(string $id, ?string $token): bool;
 }

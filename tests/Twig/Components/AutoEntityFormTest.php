@@ -8,16 +8,25 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
+use Kachnitel\AdminBundle\Service\DoctrineValueCoercer;
 use Kachnitel\AdminBundle\Twig\Components\AutoEntityForm;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityInfoRuntime;
 use Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\ConstraintViolationList;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\UX\LiveComponent\LiveResponder;
 
 /**
  * @covers \Kachnitel\AdminBundle\Twig\Components\AutoEntityForm
  * @group auto-form
  */
+#[UsesClass(Admin::class)]
+#[UsesClass(AdminColumn::class)]
 class AutoEntityFormTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -29,123 +38,215 @@ class AutoEntityFormTest extends TestCase
     /** @var AdminEntityInfoRuntime&MockObject */
     private AdminEntityInfoRuntime $entityInfoRuntime;
 
+    /** @var DoctrineValueCoercer&MockObject */
+    private DoctrineValueCoercer $coercer;
+
+    /** @var PropertyAccessorInterface&MockObject */
+    private PropertyAccessorInterface $propertyAccessor;
+
+    /** @var ValidatorInterface&MockObject */
+    private ValidatorInterface $validator;
+
+    /** @var LiveResponder */
+    private LiveResponder $liveResponder;
+
     protected function setUp(): void
     {
         $this->em                  = $this->createMock(EntityManagerInterface::class);
         $this->editabilityResolver = $this->createMock(EditabilityResolverInterface::class);
         $this->entityInfoRuntime   = $this->createMock(AdminEntityInfoRuntime::class);
+        $this->coercer             = $this->createMock(DoctrineValueCoercer::class);
+        $this->propertyAccessor    = $this->createMock(PropertyAccessorInterface::class);
+        $this->validator           = $this->createMock(ValidatorInterface::class);
+        $this->liveResponder       = new LiveResponder;
     }
 
     private function makeComponent(): AutoEntityForm
     {
-        return new AutoEntityForm(
+        $component = new AutoEntityForm(
             $this->em,
             $this->editabilityResolver,
             $this->entityInfoRuntime,
+            $this->coercer,
+            $this->propertyAccessor,
+            $this->validator,
         );
+
+        $component->setLiveResponder($this->liveResponder);
+
+        return $component;
     }
 
     /**
-     * @param class-string $entityClass
+     * @param ClassMetadata<object>&MockObject $metadata
      * @param array<string> $fields
-     * @param array<string, mixed> $associations
+     * @param array<string, mixed> $singleAssociations
+     * @param array<string, mixed> $collectionAssociations
      */
-    private function stubMetadata(string $entityClass, string $idField, array $fields, array $associations = []): void
-    {
-        /** @var ClassMetadata<object>&MockObject $metadata */
-        $metadata = $this->createMock(ClassMetadata::class);
+    private function stubMetadata(
+        MockObject $metadata,
+        string $idField,
+        array $fields,
+        array $singleAssociations = [],
+        array $collectionAssociations = [],
+    ): void {
         $metadata->method('getSingleIdentifierFieldName')->willReturn($idField);
         $metadata->method('getFieldNames')->willReturn($fields);
-        $metadata->method('getAssociationNames')->willReturn(array_keys($associations));
 
-        foreach (array_keys($associations) as $assoc) {
-            $metadata->method('isSingleValuedAssociation')
-                ->with($assoc)
-                ->willReturn($associations[$assoc]);
-        }
+        $allAssocs = array_merge(
+            array_keys($singleAssociations),
+            array_keys($collectionAssociations),
+        );
+        $metadata->method('getAssociationNames')->willReturn($allAssocs);
 
-        $this->em->method('getClassMetadata')
-            ->with($entityClass)
-            ->willReturn($metadata);
+        $metadata->method('isSingleValuedAssociation')->willReturnCallback(
+            fn (string $a) => isset($singleAssociations[$a])
+        );
+    }
+
+    // ── isNew() ────────────────────────────────────────────────────────────────
+
+    public function testIsNewTrueWhenEntityIdNull(): void
+    {
+        $component = $this->makeComponent();
+        $this->assertTrue($component->isNew());
+    }
+
+    public function testIsNewFalseWhenEntityIdSet(): void
+    {
+        $component           = $this->makeComponent();
+        $component->entityId = 1;
+        $this->assertFalse($component->isNew());
     }
 
     // ── getEntity() ────────────────────────────────────────────────────────────
 
-    public function testGetEntityReturnsNullWhenEntityClassEmpty(): void
+    public function testGetEntityReturnsNullWhenNew(): void
     {
-        $component = $this->makeComponent();
-
+        $component              = $this->makeComponent();
+        $component->entityClass = AutoFormFixtureEntity::class;
         $this->assertNull($component->getEntity());
     }
 
-    public function testGetEntityReturnsNullWhenEntityIdNull(): void
+    public function testGetEntityLoadsFromEm(): void
     {
-        $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = null;
+        $entity              = new AutoFormFixtureEntity();
+        $component                   = $this->makeComponent();
+        $component->entityClass      = AutoFormFixtureEntity::class;
+        $component->entityId         = 1;
 
-        $this->assertNull($component->getEntity());
-    }
-
-    public function testGetEntityLoadsFromEntityManager(): void
-    {
-        $entity                 = new AutoFormTestEntity();
-        $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')
-            ->with(AutoFormTestEntity::class, 1)
-            ->willReturn($entity);
+        $this->em->method('find')->with(AutoFormFixtureEntity::class, 1)->willReturn($entity);
 
         $this->assertSame($entity, $component->getEntity());
     }
 
-    // ── getEditableFields() ────────────────────────────────────────────────────
+    // ── getEditableFields() new mode ───────────────────────────────────────────
 
-    public function testGetEditableFieldsReturnsEmptyWhenEntityNull(): void
+    public function testNewModeFieldsBasedOnEnableInlineEdit(): void
     {
-        $component = $this->makeComponent();
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'title', 'score']);
+        $this->em->method('getClassMetadata')->willReturn($metadata);
 
-        $this->assertSame([], $component->getEditableFields());
-    }
-
-    public function testGetEditableFieldsExcludesIdField(): void
-    {
-        $entity                 = new AutoFormTestEntity();
         $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')->willReturn($entity);
-        $this->stubMetadata(AutoFormTestEntity::class, 'id', ['id', 'title', 'score']);
-
-        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
-        $this->editabilityResolver->method('canEdit')->willReturn(true);
+        $component->entityClass = AutoFormFixtureEntity::class; // has enableInlineEdit: true
 
         $fields = $component->getEditableFields();
 
-        $this->assertNotContains('id', $fields);
         $this->assertContains('title', $fields);
         $this->assertContains('score', $fields);
+        $this->assertNotContains('id', $fields);
     }
 
-    public function testGetEditableFieldsExcludesFieldsWithNoComponent(): void
+    public function testNewModeFieldsBasedOnEditableTrueColumn(): void
     {
-        $entity                 = new AutoFormTestEntity();
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'name', 'locked']);
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+
         $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
+        $component->entityClass = AutoFormPartialEntity::class; // only 'name' has editable:true
+
+        $fields = $component->getEditableFields();
+
+        $this->assertContains('name', $fields);
+        $this->assertNotContains('locked', $fields);
+        $this->assertNotContains('id', $fields);
+    }
+
+    public function testNewModeExcludesCollectionAssociations(): void
+    {
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata(
+            $metadata,
+            'id',
+            ['id', 'title'],
+            ['owner' => true],       // single — included
+            ['tags'  => false],      // collection — excluded
+        );
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+
+        $component              = $this->makeComponent();
+        $component->entityClass = AutoFormFixtureEntity::class;
+
+        $fields = $component->getEditableFields();
+
+        $this->assertContains('owner', $fields);
+        $this->assertNotContains('tags', $fields);
+    }
+
+    // ── getEditableFields() edit mode ──────────────────────────────────────────
+
+    public function testEditModeUsesEditabilityResolver(): void
+    {
+        $entity              = new AutoFormFixtureEntity();
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'title', 'score']);
 
         $this->em->method('find')->willReturn($entity);
-        $this->stubMetadata(AutoFormTestEntity::class, 'id', ['id', 'title', 'rawJson']);
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
+
+        $this->editabilityResolver->method('canEdit')
+            ->willReturnMap([
+                [$entity, 'title', true],
+                [$entity, 'score', false],
+            ]);
+
+        $component              = $this->makeComponent();
+        $component->entityClass = AutoFormFixtureEntity::class;
+        $component->entityId    = 1;
+
+        $fields = $component->getEditableFields();
+
+        $this->assertContains('title', $fields);
+        $this->assertNotContains('score', $fields);
+    }
+
+    public function testEditModeExcludesFieldsWithNoComponent(): void
+    {
+        $entity = new AutoFormFixtureEntity();
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'title', 'rawJson']);
+
+        $this->em->method('find')->willReturn($entity);
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->editabilityResolver->method('canEdit')->willReturn(true);
 
         $this->entityInfoRuntime->method('getFieldComponentName')
             ->willReturnMap([
                 [$entity, 'title',   'K:Entity:Field:String'],
-                [$entity, 'rawJson', null],               // no component for json
+                [$entity, 'rawJson', null],
             ]);
-        $this->editabilityResolver->method('canEdit')->willReturn(true);
+
+        $component              = $this->makeComponent();
+        $component->entityClass = AutoFormFixtureEntity::class;
+        $component->entityId    = 1;
 
         $fields = $component->getEditableFields();
 
@@ -153,195 +254,173 @@ class AutoEntityFormTest extends TestCase
         $this->assertNotContains('rawJson', $fields);
     }
 
-    public function testGetEditableFieldsExcludesFieldsEditabilityResolverDenies(): void
+    // ── save() new mode ────────────────────────────────────────────────────────
+
+    public function testSaveNewPersistsAndFlushesOnSuccess(): void
     {
-        $entity                 = new AutoFormTestEntity();
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'title']);
+        $metadata->method('getIdentifierValues')->willReturn(['id' => 99]);
+
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->coercer->method('coerceAll')->willReturn(['title' => 'New item']);
+        $this->propertyAccessor->method('setValue');
+        $this->validator->method('validate')->willReturn(new ConstraintViolationList());
+        $this->em->expects($this->once())->method('persist');
+        $this->em->expects($this->once())->method('flush');
+
         $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')->willReturn($entity);
-        $this->stubMetadata(AutoFormTestEntity::class, 'id', ['id', 'title', 'locked']);
-
-        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
-
-        $this->editabilityResolver->method('canEdit')
-            ->willReturnMap([
-                [$entity, 'title',  true],
-                [$entity, 'locked', false],
-            ]);
-
-        $fields = $component->getEditableFields();
-
-        $this->assertContains('title', $fields);
-        $this->assertNotContains('locked', $fields);
-    }
-
-    public function testGetEditableFieldsIncludesSingleValuedAssociations(): void
-    {
-        $entity                 = new AutoFormTestEntity();
-        $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')->willReturn($entity);
-        $this->stubMetadata(
-            AutoFormTestEntity::class,
-            'id',
-            ['id', 'title'],
-            ['category' => true],  // single-valued → included
-        );
-
-        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
-        $this->editabilityResolver->method('canEdit')->willReturn(true);
-
-        $fields = $component->getEditableFields();
-
-        $this->assertContains('category', $fields);
-    }
-
-    public function testGetEditableFieldsExcludesCollectionAssociations(): void
-    {
-        $entity                 = new AutoFormTestEntity();
-        $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')->willReturn($entity);
-        $this->stubMetadata(
-            AutoFormTestEntity::class,
-            'id',
-            ['id', 'title'],
-            ['tags' => false],  // collection-valued → excluded
-        );
-
-        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
-        $this->editabilityResolver->method('canEdit')->willReturn(true);
-
-        $fields = $component->getEditableFields();
-
-        $this->assertNotContains('tags', $fields);
-    }
-
-    public function testGetEditableFieldsIsCached(): void
-    {
-        $entity                 = new AutoFormTestEntity();
-        $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')->willReturn($entity);
-        $this->stubMetadata(AutoFormTestEntity::class, 'id', ['id', 'title']);
-        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
-        $this->editabilityResolver->method('canEdit')->willReturn(true);
-
-        // Two calls — entity manager should only be asked for metadata once.
-        $this->em->expects($this->once())->method('getClassMetadata');
-
-        $component->getEditableFields();
-        $component->getEditableFields();
-    }
-
-    // ── getFieldComponent() ────────────────────────────────────────────────────
-
-    public function testGetFieldComponentReturnsNullWhenEntityNull(): void
-    {
-        $component = $this->makeComponent();
-
-        $this->assertNull($component->getFieldComponent('title'));
-    }
-
-    public function testGetFieldComponentDelegatesToRuntime(): void
-    {
-        $entity                 = new AutoFormTestEntity();
-        $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')->willReturn($entity);
-        $this->entityInfoRuntime->method('getFieldComponentName')
-            ->with($entity, 'title')
-            ->willReturn('K:Entity:Field:String');
-
-        $this->assertSame('K:Entity:Field:String', $component->getFieldComponent('title'));
-    }
-
-    // ── save() state management ────────────────────────────────────────────────
-
-    public function testSaveSetsSaveSuccessTrueWhenNoEditableFields(): void
-    {
-        $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')->willReturn(new AutoFormTestEntity());
-        $this->stubMetadata(AutoFormTestEntity::class, 'id', ['id']);
-
-        // No editable fields after id excluded.
-        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
-        $this->editabilityResolver->method('canEdit')->willReturn(false);
+        $component->entityClass = AutoFormFixtureEntity::class;
+        $component->formValues  = ['title' => 'New item'];
 
         $component->save();
 
         $this->assertTrue($component->saveSuccess);
         $this->assertFalse($component->hasErrors);
+        $this->assertSame(99, $component->entityId, 'entityId set after persist so next render is edit mode');
     }
 
-    public function testSaveResetsPreviousState(): void
+    public function testSaveNewSetsFormErrorsOnValidationFailure(): void
     {
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'title']);
+
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->coercer->method('coerceAll')->willReturn(['title' => '']);
+        $this->propertyAccessor->method('setValue');
+
+        $violation = $this->createMock(ConstraintViolation::class);
+        $violation->method('getPropertyPath')->willReturn('title');
+        $violation->method('getMessage')->willReturn('Title must not be blank.');
+
+        $violations = new ConstraintViolationList([$violation]);
+        $this->validator->method('validate')->willReturn($violations);
+
+        $this->em->expects($this->never())->method('persist');
+        $this->em->expects($this->never())->method('flush');
+
         $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-        $component->saveSuccess = true;
-        $component->hasErrors   = true;
+        $component->entityClass = AutoFormFixtureEntity::class;
+        $component->formValues  = ['title' => ''];
 
-        $this->em->method('find')->willReturn(new AutoFormTestEntity());
-        $this->stubMetadata(AutoFormTestEntity::class, 'id', ['id']);
-        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
-        $this->editabilityResolver->method('canEdit')->willReturn(false);
-
-        $component->save();
-
-        $this->assertFalse($component->hasErrors);
-    }
-
-    // ── field event listeners ──────────────────────────────────────────────────
-
-    public function testOnFieldSavedMarksSaveSuccessWhenAllResponded(): void
-    {
-        $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')->willReturn(new AutoFormTestEntity());
-        $this->stubMetadata(AutoFormTestEntity::class, 'id', ['id', 'title']);
-        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
-        $this->editabilityResolver->method('canEdit')->willReturn(true);
-
-        // Trigger save so expectedCount = 1.
         $component->save();
 
         $this->assertFalse($component->saveSuccess);
-
-        // Simulate the one field responding.
-        $component->onFieldSaved();
-
-        $this->assertTrue($component->saveSuccess);
-        $this->assertFalse($component->hasErrors);
+        $this->assertTrue($component->hasErrors);
+        $this->assertArrayHasKey('title', $component->formErrors);
+        $this->assertSame('Title must not be blank.', $component->formErrors['title']);
+        $this->assertNull($component->entityId, 'entityId must stay null when validation fails');
     }
 
-    public function testOnFieldSaveErrorSetsHasErrorsAndDoesNotSetSaveSuccess(): void
+    public function testSaveNewResetsStateBeforeAttempt(): void
     {
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'title']);
+        $metadata->method('getIdentifierValues')->willReturn(['id' => 1]);
+
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->coercer->method('coerceAll')->willReturn([]);
+        $this->validator->method('validate')->willReturn(new ConstraintViolationList());
+
         $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
+        $component->entityClass = AutoFormFixtureEntity::class;
+        $component->hasErrors   = true;
+        $component->formErrors  = ['title' => 'previous error'];
+
+        $component->save();
+
+        $this->assertFalse($component->hasErrors);
+        $this->assertSame([], $component->formErrors);
+    }
+
+    public function testSaveNewClearsFormValuesOnSuccess(): void
+    {
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'title']);
+        $metadata->method('getIdentifierValues')->willReturn(['id' => 1]);
+
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->coercer->method('coerceAll')->willReturn(['title' => 'Test']);
+        $this->validator->method('validate')->willReturn(new ConstraintViolationList());
+
+        $component              = $this->makeComponent();
+        $component->entityClass = AutoFormFixtureEntity::class;
+        $component->formValues  = ['title' => 'Test'];
+
+        $component->save();
+
+        $this->assertSame([], $component->formValues, 'formValues cleared after successful persist');
+    }
+
+    // ── save() edit mode ───────────────────────────────────────────────────────
+
+    public function testSaveEditSetsSaveSuccessWhenNoFields(): void
+    {
+        $entity = new AutoFormFixtureEntity();
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id']);
+
+        $this->em->method('find')->willReturn($entity);
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->editabilityResolver->method('canEdit')->willReturn(false);
+        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
+
+        $component              = $this->makeComponent();
+        $component->entityClass = AutoFormFixtureEntity::class;
         $component->entityId    = 1;
 
-        $this->em->method('find')->willReturn(new AutoFormTestEntity());
-        $this->stubMetadata(AutoFormTestEntity::class, 'id', ['id', 'title']);
-        $this->entityInfoRuntime->method('getFieldComponentName')
-            ->willReturn('K:Entity:Field:String');
-        $this->editabilityResolver->method('canEdit')
-            ->willReturn(true);
+        $component->save();
+
+        $this->assertTrue($component->saveSuccess);
+    }
+
+    public function testSaveEditTracksFieldResponses(): void
+    {
+        $entity = new AutoFormFixtureEntity();
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'title', 'score']);
+
+        $this->em->method('find')->willReturn($entity);
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->editabilityResolver->method('canEdit')->willReturn(true);
+        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
+
+        $component              = $this->makeComponent();
+        $component->entityClass = AutoFormFixtureEntity::class;
+        $component->entityId    = 1;
+
+        $component->save(); // expectedCount = 2
+
+        $this->assertFalse($component->saveSuccess);
+
+        $component->onFieldSaved();
+        $this->assertFalse($component->saveSuccess, 'Only 1 of 2 responded');
+
+        $component->onFieldSaved();
+        $this->assertTrue($component->saveSuccess, '2 of 2 responded — should be successful');
+    }
+
+    public function testSaveEditSetsHasErrorsWhenFieldErrors(): void
+    {
+        $entity = new AutoFormFixtureEntity();
+        /** @var ClassMetadata<object>&MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $this->stubMetadata($metadata, 'id', ['id', 'title']);
+
+        $this->em->method('find')->willReturn($entity);
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->editabilityResolver->method('canEdit')->willReturn(true);
+        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
+
+        $component              = $this->makeComponent();
+        $component->entityClass = AutoFormFixtureEntity::class;
+        $component->entityId    = 1;
 
         $component->save();
         $component->onFieldSaveError();
@@ -349,34 +428,12 @@ class AutoEntityFormTest extends TestCase
         $this->assertTrue($component->hasErrors);
         $this->assertFalse($component->saveSuccess);
     }
-
-    public function testSaveSuccessRequiresAllFieldsToRespond(): void
-    {
-        $component              = $this->makeComponent();
-        $component->entityClass = AutoFormTestEntity::class;
-        $component->entityId    = 1;
-
-        $this->em->method('find')->willReturn(new AutoFormTestEntity());
-        $this->stubMetadata(AutoFormTestEntity::class, 'id', ['id', 'title', 'score']);
-        $this->entityInfoRuntime->method('getFieldComponentName')->willReturn('K:Entity:Field:String');
-        $this->editabilityResolver->method('canEdit')->willReturn(true);
-
-        $component->save(); // expectedCount = 2 (title + score)
-
-        $component->onFieldSaved(); // 1 of 2 responded
-
-        $this->assertFalse($component->saveSuccess, 'Should not be successful until both fields respond.');
-
-        $component->onFieldSaved(); // 2 of 2 responded
-
-        $this->assertTrue($component->saveSuccess);
-    }
 }
 
-// ── Fixture ────────────────────────────────────────────────────────────────────
+// ── Fixtures ───────────────────────────────────────────────────────────────────
 
-#[Admin(label: 'Auto Form Test', enableInlineEdit: true)]
-class AutoFormTestEntity
+#[Admin(label: 'Auto Form Fixture', enableInlineEdit: true)]
+class AutoFormFixtureEntity
 {
     private ?int $id = null; // @phpstan-ignore property.unusedType
 
@@ -385,6 +442,25 @@ class AutoFormTestEntity
 
     #[AdminColumn(editable: true)]
     private float $score = 0.0;
+
+    public function getId(): ?int { return $this->id; }
+    public function getTitle(): string { return $this->title; }
+    public function setTitle(string $v): void { $this->title = $v; }
+    public function getScore(): float { return $this->score; }
+    public function setScore(float $v): void { $this->score = $v; }
+}
+
+#[Admin(label: 'Auto Form Partial')]
+class AutoFormPartialEntity
+{
+    private ?int $id = null; // @phpstan-ignore property.unusedType
+
+    #[AdminColumn(editable: true)]
+    private string $name = '';
+
+    // editable: false — should never appear
+    #[AdminColumn(editable: false)]
+    private string $locked = '';
 
     public function getId(): ?int { return $this->id; }
 }

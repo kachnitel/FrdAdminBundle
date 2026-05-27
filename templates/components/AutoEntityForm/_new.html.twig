@@ -1,0 +1,151 @@
+{#
+ # New mode partial: renders plain HTML inputs synced to the parent's formValues
+ # LiveProp. No child Field LiveComponents — they require an integer entity ID.
+ #
+ # Input type is derived from the Doctrine field type via this.getFieldType().
+ # Validation errors (formErrors) are shown per-field after a failed save attempt.
+ #
+ # Variables:
+ # @var array<string>          fields      - Editable property names
+ # @var array<string, mixed>   formValues  - Current raw form values
+ # @var array<string, string>  formErrors  - Validation error messages per property
+ #}
+
+<table class="table">
+    <tbody>
+        {% for property in fields %}
+            {% set fieldType  = this.getFieldType(property) %}
+            {% set fieldError = formErrors[property] ?? null %}
+            {% set value      = formValues[property] ?? '' %}
+
+            <tr>
+                <th scope="row" style="width: 30%; vertical-align: top; padding-top: 0.6rem;">
+                    <label for="auto_form_{{ property }}" class="form-label mb-0">
+                        {{ property|humanize }}
+                        {% if not this.isNullable(property) %}
+                            <span class="text-danger" aria-hidden="true">*</span>
+                        {% endif %}
+                    </label>
+                </th>
+                <td>
+                    {# ── Boolean ──────────────────────────────────────────── #}
+                    {% if fieldType == 'boolean' %}
+                        <div class="form-check">
+                            <input
+                                type="checkbox"
+                                id="auto_form_{{ property }}"
+                                class="form-check-input{% if fieldError %} is-invalid{% endif %}"
+                                data-model="formValues[{{ property }}]"
+                                value="1"
+                                {% if value %}checked{% endif %}
+                            />
+                            {% if fieldError %}
+                                <div class="invalid-feedback">{{ fieldError }}</div>
+                            {% endif %}
+                        </div>
+
+                    {# ── Date ─────────────────────────────────────────────── #}
+                    {% elseif fieldType in ['date', 'date_immutable'] %}
+                        <input
+                            type="date"
+                            id="auto_form_{{ property }}"
+                            class="form-control{% if fieldError %} is-invalid{% endif %}"
+                            data-model="formValues[{{ property }}]"
+                            value="{{ value }}"
+                        />
+                        {% if fieldError %}
+                            <div class="invalid-feedback d-block">{{ fieldError }}</div>
+                        {% endif %}
+
+                    {# ── Datetime ─────────────────────────────────────────── #}
+                    {% elseif fieldType in ['datetime', 'datetime_immutable', 'datetimetz', 'datetimetz_immutable'] %}
+                        <input
+                            type="datetime-local"
+                            id="auto_form_{{ property }}"
+                            class="form-control{% if fieldError %} is-invalid{% endif %}"
+                            data-model="formValues[{{ property }}]"
+                            value="{{ value }}"
+                        />
+                        {% if fieldError %}
+                            <div class="invalid-feedback d-block">{{ fieldError }}</div>
+                        {% endif %}
+
+                    {# ── Time ─────────────────────────────────────────────── #}
+                    {% elseif fieldType in ['time', 'time_immutable'] %}
+                        <input
+                            type="time"
+                            id="auto_form_{{ property }}"
+                            class="form-control{% if fieldError %} is-invalid{% endif %}"
+                            data-model="formValues[{{ property }}]"
+                            value="{{ value }}"
+                        />
+                        {% if fieldError %}
+                            <div class="invalid-feedback d-block">{{ fieldError }}</div>
+                        {% endif %}
+
+                    {# ── Integer ──────────────────────────────────────────── #}
+                    {% elseif fieldType in ['integer', 'smallint', 'bigint'] %}
+                        <input
+                            type="number"
+                            step="1"
+                            id="auto_form_{{ property }}"
+                            class="form-control{% if fieldError %} is-invalid{% endif %}"
+                            data-model="formValues[{{ property }}]"
+                            value="{{ value }}"
+                        />
+                        {% if fieldError %}
+                            <div class="invalid-feedback d-block">{{ fieldError }}</div>
+                        {% endif %}
+
+                    {# ── Float / Decimal ──────────────────────────────────── #}
+                    {% elseif fieldType in ['decimal', 'float'] %}
+                        <input
+                            type="number"
+                            step="any"
+                            id="auto_form_{{ property }}"
+                            class="form-control{% if fieldError %} is-invalid{% endif %}"
+                            data-model="formValues[{{ property }}]"
+                            value="{{ value }}"
+                        />
+                        {% if fieldError %}
+                            <div class="invalid-feedback d-block">{{ fieldError }}</div>
+                        {% endif %}
+
+                    {# ── Relation (ManyToOne / OneToOne) ──────────────────── #}
+                    {% elseif fieldType == 'relation' %}
+                        {#
+                         # Relations in new mode: plain text input for the related entity ID.
+                         # For a better UX, add a manual FormType with EntityType.
+                         # The ID is coerced to getReference() by DoctrineValueCoercer.
+                         #}
+                        <input
+                            type="number"
+                            step="1"
+                            id="auto_form_{{ property }}"
+                            class="form-control{% if fieldError %} is-invalid{% endif %}"
+                            data-model="formValues[{{ property }}]"
+                            value="{{ value }}"
+                            placeholder="Enter related entity ID"
+                        />
+                        {% if fieldError %}
+                            <div class="invalid-feedback d-block">{{ fieldError }}</div>
+                        {% endif %}
+
+                    {# ── String / Text / default ──────────────────────────── #}
+                    {% else %}
+                        <input
+                            type="text"
+                            id="auto_form_{{ property }}"
+                            class="form-control{% if fieldError %} is-invalid{% endif %}"
+                            data-model="formValues[{{ property }}]"
+                            value="{{ value }}"
+                        />
+                        {% if fieldError %}
+                            <div class="invalid-feedback d-block">{{ fieldError }}</div>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

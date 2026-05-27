@@ -102,6 +102,12 @@ services:
         resource: '../src/Twig/Components'
         tags: ['twig.component']
 
+    # AutoEntityForm needs PropertyAccessor explicitly (same pattern as ArchiveEntityService)
+    Kachnitel\AdminBundle\Twig\Components\AutoEntityForm:
+        arguments:
+            $propertyAccessor: '@property_accessor'
+        tags: ['twig.component']
+
     # EntityList configuration
     Kachnitel\AdminBundle\Config\EntityListConfig:
         arguments:

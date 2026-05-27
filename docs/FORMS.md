@@ -8,17 +8,32 @@ The admin bundle uses Symfony UX LiveComponents for edit and new entity forms, p
 2. The template mounts the LiveComponent via `{{ component(formComponentName, ...) }}`.
 3. As the user changes fields, LiveComponent sends Ajax requests, re-submits values into the Symfony form, and re-renders — showing validation errors inline.
 4. The **Save** button in the page header calls a `save` `#[LiveAction]` on `document.querySelector('[data-admin-form]')`
-5. On success, a `toast.show` browser event is dispatched. On failure the form re-renders with inline errors.
+5. On success, a `toast.show` browser event is dispatched. On failure the form re-renders with inline validation errors.
 
 ### Why the event is dispatched on the element, not `window`
 
 LiveComponent's `#[LiveAction]` listeners are scoped to the component's root element. The header Save button is outside the component, so it can't dispatch to `this` (the component instance) directly. Instead it targets the component root via `[data-admin-form]` — a data attribute on the component root — and dispatches there directly.
 
-Custom form components must include `data-admin-form` on their root element to receive the save event.
+Custom form components that extend `AdminEntityForm` must include this attribute on their root element too.
+
+---
+
+## Form component resolution
+
+`GenericAdminController::getFormComponentName()` follows this priority chain:
+
+| Priority | Condition | Component used |
+|---|---|---|
+| 1 | `#[Admin(formComponent: '...')]` on the entity | Custom component |
+| 2 | Symfony FormType registered (conventional name or `#[Admin(formType:)]`) | `K:Admin:EntityForm` |
+| 3 | Entity has `enableInlineEdit: true` OR any `#[AdminColumn(editable: true)]` | `K:Admin:AutoEntityForm` |
+| 4 | Fallback | `K:Admin:EntityForm` (may render empty) |
 
 ---
 
 ## Enabling forms for an entity
+
+### Option A — Symfony FormType (recommended when you need full control)
 
 Add a form type following the `{EntityShortName}FormType` convention:
 
@@ -44,7 +59,7 @@ class ProductFormType extends AbstractType
 > which causes a `TypeError` when the value is written to the entity. `empty_data: ''`
 > keeps it as an empty string so `NotBlank` can report the error properly.
 
-The admin auto-discovers the form type. Edit/New links only appear when a matching form type exists.
+The admin auto-discovers the form type. New and Edit links appear when a matching form type exists.
 
 Pin the form type explicitly if you use a non-conventional name:
 
@@ -52,6 +67,78 @@ Pin the form type explicitly if you use a non-conventional name:
 #[Admin(formType: ProductSpecialFormType::class)]
 class Product {}
 ```
+
+### Option B — Auto-form (zero-config)
+
+When no FormType exists, the bundle generates a form automatically using the same
+field components as inline editing. Enable it by opting your entity into inline editing:
+
+```php
+// All writable properties become form fields
+#[Admin(label: 'Products', enableInlineEdit: true)]
+class Product
+{
+    #[ORM\Column]
+    private string $name = '';
+
+    #[ORM\Column]
+    private float $price = 0.0;
+}
+```
+
+Or opt in per-column without enabling inline editing globally:
+
+```php
+#[Admin(label: 'Products')]
+class Product
+{
+    #[ORM\Column]
+    #[AdminColumn(editable: true)]
+    private string $name = '';
+
+    #[ORM\Column]
+    #[AdminColumn(editable: false)]   // never editable, even in the form
+    private string $internalCode = '';
+}
+```
+
+#### How the auto-form works
+
+**Edit mode** (`entityId` provided) — renders each editable property as its
+`K:Entity:Field:*` LiveComponent in `formMode=true`. The header Save button
+emits `form:save` down to all field children, each of which validates and flushes
+independently. The parent tracks responses and shows a success banner when all
+complete.
+
+**New mode** (`entityId` is null) — cannot use Field LiveComponents because they
+require an existing entity ID. Instead renders plain HTML inputs synced to a
+`formValues` LiveProp. The parent's `save()` coerces all raw values to proper PHP
+types via `DoctrineValueCoercer`, validates the whole entity, persists once, then
+switches to edit mode by setting `entityId` — consistent with `AdminEntityForm`
+behaviour.
+
+#### Auto-form field type mapping
+
+| Doctrine type | New-mode input | Edit-mode component |
+|---|---|---|
+| `string`, `text` | `<input type="text">` | `K:Entity:Field:String` |
+| `integer`, `smallint`, `bigint` | `<input type="number" step="1">` | `K:Entity:Field:Int` |
+| `decimal`, `float` | `<input type="number" step="any">` | `K:Entity:Field:Float` |
+| `boolean` | `<input type="checkbox">` | `K:Entity:Field:Bool` |
+| `date`, `date_immutable` | `<input type="date">` | `K:Entity:Field:Date` |
+| `datetime`, `datetime_immutable`, `datetimetz`, `datetimetz_immutable` | `<input type="datetime-local">` | `K:Entity:Field:Date` |
+| `time`, `time_immutable` | `<input type="time">` | `K:Entity:Field:Date` |
+| Backed enum | — (requires FormType) | `K:Entity:Field:Enum` |
+| ManyToOne / OneToOne | `<input type="number">` (ID) | `K:Entity:Field:Relationship` |
+
+> **Relations in new mode** render as a plain integer input for the related entity ID.
+> For a typeahead search widget on new, add a manual `FormType` with `EntityType`.
+
+#### Limitations
+
+- JSON, array, and other complex Doctrine types are excluded — no field component exists for them.
+- Entity-level cross-field validation is not performed in new mode; add a FormType for that.
+- Relations in new mode accept raw integer IDs only (no search widget).
 
 ---
 
@@ -69,7 +156,6 @@ use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
 final class PurchaseOrderForm extends AdminEntityForm
 {
     // Override instantiateForm() only if you need custom form options.
-    // Omit it entirely to use the default (formTypeClass LiveProp) behaviour.
     protected function instantiateForm(): FormInterface
     {
         $entity = $this->entityId !== null
@@ -79,14 +165,11 @@ final class PurchaseOrderForm extends AdminEntityForm
         return $this->createForm(PurchaseOrderFormType::class, $entity);
     }
 
-    // Add any extra LiveActions you need.
     #[LiveAction]
     public function addLineItem(): void
     {
         $this->formValues['lineItems'][] = [];
     }
-
-    // save() and the admin:save listener are inherited — no need to redeclare.
 }
 ```
 
@@ -96,8 +179,7 @@ The component's root template **must** include `data-admin-form` so the header S
 {# templates/components/Form/PurchaseOrderForm.html.twig #}
 <div data-admin-form {{ attributes }}>
   {{ form_start(form) }}
-    {# custom layout here #}
-    <p>Total: {{ this.getTotalCost() }}</p>
+    {{ form_widget(form) }}
   {{ form_end(form) }}
 </div>
 ```
@@ -114,7 +196,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 class PurchaseOrder {}
 ```
 
-That's it. The admin will mount your component instead of the default one for this entity's edit and new pages.
+The admin will now mount your component instead of the default one for this entity's edit and new pages.
 
 ### What you inherit for free
 
@@ -162,7 +244,7 @@ Per-component theme in your template override:
 
 ## After-save behaviour
 
-On a successful save the component dispatches `toast.show` with `message: 'Saved successfully!'`. Wire this to your toast library in your base layout:
+On a successful save the component dispatches `toast.show` with `message: 'Saved successfully!'` (or `'Created successfully!'` for new entities). Wire this to your toast library in your base layout:
 
 ```javascript
 window.addEventListener('toast.show', (event) => {
@@ -178,5 +260,5 @@ The page stays open. For new entities the component records the new ID internall
 ## Running feature tests
 
 ```bash
-php bin/phpunit --group admin-entity-form
+php vendor/bin/phpunit --group auto-form,admin-entity-form
 ```

@@ -1,0 +1,31 @@
+{#
+ # Edit mode partial: renders each property as its K:Entity:Field:* LiveComponent
+ # in formMode=true so the header Save button coordinates a single flush.
+ #
+ # Variables:
+ # @var array<string> fields  - Editable property names
+ # @var object        entity  - The loaded entity instance
+ #}
+
+<table class="table">
+    <tbody>
+        {% for property in fields %}
+            {% set fieldComponent = this.getFieldComponent(property) %}
+            {% if fieldComponent %}
+                <tr>
+                    <th scope="row" style="width: 30%; vertical-align: top; padding-top: 0.6rem;">
+                        {{ property|humanize }}
+                    </th>
+                    <td>
+                        {{ component(fieldComponent, {
+                            entity: entity,
+                            property: property,
+                            formMode: true,
+                            editMode: true
+                        }) }}
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
