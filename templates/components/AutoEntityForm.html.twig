@@ -1,13 +1,12 @@
 {#
  # Auto-generated form for entities without a manual FormType.
  #
- # Renders each editable field as its K:Entity:Field:* LiveComponent in formMode=true.
- # The header Save button targets this component via `data-admin-form`, matching the
- # same contract as AdminEntityForm.html.twig.
+ # New mode (entityId null):  renders plain HTML inputs via _new.html.twig.
+ # Edit mode (entityId set):  renders K:Entity:Field:* LiveComponents via _edit.html.twig.
  #
  # Variables:
  # @var string       entityClass  - Fully-qualified entity class name
- # @var int|null     entityId     - Entity primary key
+ # @var int|null     entityId     - Entity primary key (null for new)
  # @var bool         saveSuccess  - True after all fields have saved successfully
  # @var bool         hasErrors    - True if any field failed validation in last save
  #}
@@ -15,55 +14,42 @@
 {% import kachnitel_admin_theme as css %}
 
 <div data-admin-form {{ attributes }}>
-    {% set entity = this.entity %}
+    {% set fields = this.editableFields %}
 
-    {% if entity is null %}
-        <div class="{{ css.alert_warning() }}">Entity not found.</div>
+    {% if saveSuccess %}
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-3" role="alert">
+            <span>✓</span>
+            <span>All changes saved successfully.</span>
+        </div>
+    {% endif %}
+
+    {% if hasErrors %}
+        <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
+            <span>⚠</span>
+            <span>Some fields could not be saved. Please review the errors below.</span>
+        </div>
+    {% endif %}
+
+    {% if fields is empty %}
+        <div class="{{ css.alert_warning() }}">
+            No editable fields found. Add <code>#[Admin(enableInlineEdit: true)]</code>
+            or <code>#[AdminColumn(editable: true)]</code> to your entity.
+        </div>
+    {% elseif this.isNew() %}
+        {% include '@KachnitelAdmin/components/AutoEntityForm/_new.html.twig' with {
+            fields: fields,
+            formValues: formValues,
+            formErrors: formErrors
+        } %}
     {% else %}
-        {% if saveSuccess %}
-            <div class="alert alert-success d-flex align-items-center gap-2 mb-3" role="alert">
-                <span>✓</span>
-                <span>All changes saved successfully.</span>
-            </div>
-        {% endif %}
-
-        {% if hasErrors %}
-            <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
-                <span>⚠</span>
-                <span>Some fields could not be saved. Please review the errors below.</span>
-            </div>
-        {% endif %}
-
-        {% set fields = this.editableFields %}
-
-        {% if fields is empty %}
-            <div class="{{ css.alert_warning() }}">
-                No editable fields found. Add <code>#[Admin(enableInlineEdit: true)]</code>
-                or <code>#[AdminColumn(editable: true)]</code> to your entity.
-            </div>
+        {% set entity = this.entity %}
+        {% if entity is null %}
+            <div class="{{ css.alert_warning() }}">Entity not found.</div>
         {% else %}
-            <table class="{{ css.table_simple() }}">
-                <tbody>
-                    {% for property in fields %}
-                        {% set fieldComponent = this.getFieldComponent(property) %}
-                        {% if fieldComponent %}
-                            <tr>
-                                <th style="width: 30%; vertical-align: top; padding-top: 0.5rem;">
-                                    {{ property|humanize }}
-                                </th>
-                                <td>
-                                    {{ component(fieldComponent, {
-                                        entity: entity,
-                                        property: property,
-                                        formMode: true,
-                                        editMode: true
-                                    }) }}
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
+            {% include '@KachnitelAdmin/components/AutoEntityForm/_edit.html.twig' with {
+                fields: fields,
+                entity: entity
+            } %}
         {% endif %}
     {% endif %}
 </div>
