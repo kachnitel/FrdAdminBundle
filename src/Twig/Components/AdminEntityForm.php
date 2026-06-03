@@ -89,11 +89,9 @@ class AdminEntityForm extends AbstractController
         /** @var class-string $entityClassName */
         $entityClassName = $this->entityClass;
 
-        if ($this->entityId !== null) {
-            $entity = $this->em->find($entityClassName, $this->entityId);
-        } else {
-            $entity = new $entityClassName();
-        }
+        $entity = $this->entityId !== null
+            ? $this->em->find($entityClassName, $this->entityId)
+            : null;
 
         /** @var class-string<\Symfony\Component\Form\FormTypeInterface<object|null>> $formTypeClass */
         $formTypeClass = $this->formTypeClass;
