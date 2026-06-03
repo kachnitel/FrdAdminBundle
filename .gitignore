@@ -30,3 +30,7 @@ tests/templates/bundles/KachnitelAdminBundle/types/_preview.html.twig
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md
 .codacy/
+
+
+#Ignore windsurf AI rules
+.windsurfrules

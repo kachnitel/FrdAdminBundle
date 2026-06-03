@@ -6,7 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Twig\Runtime;
 
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
-use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -49,9 +49,13 @@ class ActionAccessibilityCheckerAutoFormTest extends TestCase
         );
     }
 
-    // ── No form, no inline edit → both new and edit blocked ───────────────────
+    // ── No form at all (DynamicEntityFormType also not registered) ────────────
 
-    public function testNewBlockedWhenNoFormTypeAndNoInlineEdit(): void
+    /**
+     * Edge case: no form available and DynamicEntityFormType itself is not registered.
+     * In practice this can't happen in the bundle, but verifies the fallback logic.
+     */
+    public function testNewBlockedWhenNoFormTypeAndNoInlineEditAndNoDynamicType(): void
     {
         $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerNoEditEntity::class);
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
@@ -60,13 +64,53 @@ class ActionAccessibilityCheckerAutoFormTest extends TestCase
         $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', 'new', true));
     }
 
-    public function testEditBlockedWhenNoFormTypeAndNoInlineEdit(): void
+    public function testEditBlockedWhenNoFormTypeAndNoInlineEditAndNoDynamicType(): void
     {
         $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerNoEditEntity::class);
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
         $this->formRegistry->method('hasType')->willReturn(false);
 
         $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', 'edit', true));
+    }
+
+    // ── DynamicEntityFormType as universal Doctrine fallback ──────────────────
+
+    /**
+     * With DynamicEntityFormType registered and a resolvable Doctrine entity,
+     * new/edit are accessible even without a hand-written FormType or inline-edit config.
+     */
+    public function testNewAccessibleViaDynamicFormTypeWhenNoCustomFormType(): void
+    {
+        $this->authChecker->method('isGranted')->willReturn(true);
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerNoEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
+        $this->formRegistry->method('hasType')
+            ->willReturnCallback(fn (string $type): bool => $type === DynamicEntityFormType::class);
+
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', 'new', true));
+    }
+
+    public function testEditAccessibleViaDynamicFormTypeWhenNoCustomFormType(): void
+    {
+        $this->authChecker->method('isGranted')->willReturn(true);
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerNoEditEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
+        $this->formRegistry->method('hasType')
+            ->willReturnCallback(fn (string $type): bool => $type === DynamicEntityFormType::class);
+
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', 'edit', true));
+    }
+
+    public function testDynamicFormTypeNotUsedWhenEntityDoesNotResolve(): void
+    {
+        // Non-Doctrine / unknown entity — entity class doesn't resolve
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(null);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
+        // DynamicEntityFormType IS registered, but entity doesn't resolve
+        $this->formRegistry->method('hasType')
+            ->willReturnCallback(fn (string $type): bool => $type === DynamicEntityFormType::class);
+
+        $this->assertFalse($this->makeChecker()->isActionAccessible('Unknown', 'new', true));
     }
 
     // ── FormType satisfies both new and edit ───────────────────────────────────
@@ -93,72 +137,18 @@ class ActionAccessibilityCheckerAutoFormTest extends TestCase
         $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', 'edit', true));
     }
 
-    // ── enableInlineEdit satisfies both new and edit ───────────────────────────
+    // ── editable:false only → AutoForm doesn't activate; DynamicEntityFormType still covers it ──
 
-    public function testNewAccessibleWhenNoFormTypeButEnableInlineEditTrue(): void
+    public function testNewAccessibleViaDynamicFormTypeWhenOnlyEditableFalseProperties(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
-
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerInlineEditEntity::class);
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableInlineEdit: true));
-        $this->formRegistry->method('hasType')->willReturn(false);
-
-        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerInlineEditEntity', 'new', true));
-    }
-
-    public function testEditAccessibleWhenNoFormTypeButEnableInlineEditTrue(): void
-    {
-        $this->authChecker->method('isGranted')->willReturn(true);
-
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerInlineEditEntity::class);
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableInlineEdit: true));
-        $this->formRegistry->method('hasType')->willReturn(false);
-
-        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerInlineEditEntity', 'edit', true));
-    }
-
-    // ── Per-property editable:true satisfies both new and edit ────────────────
-
-    public function testNewAccessibleWhenPropertyHasEditableTrue(): void
-    {
-        $this->authChecker->method('isGranted')->willReturn(true);
-
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerEditableColEntity::class);
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
-        $this->formRegistry->method('hasType')->willReturn(false);
-
-        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerEditableColEntity', 'new', true));
-    }
-
-    public function testEditAccessibleWhenPropertyHasEditableTrue(): void
-    {
-        $this->authChecker->method('isGranted')->willReturn(true);
-
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerEditableColEntity::class);
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
-        $this->formRegistry->method('hasType')->willReturn(false);
-
-        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerEditableColEntity', 'edit', true));
-    }
-
-    // ── editable:false only → still no auto-form ──────────────────────────────
-
-    public function testNewBlockedWhenOnlyEditableFalseProperties(): void
-    {
         $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerEditableFalseEntity::class);
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
-        $this->formRegistry->method('hasType')->willReturn(false);
+        $this->formRegistry->method('hasType')
+            ->willReturnCallback(fn (string $type): bool => $type === DynamicEntityFormType::class);
 
-        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerEditableFalseEntity', 'new', true));
-    }
-
-    public function testEditBlockedWhenOnlyEditableFalseProperties(): void
-    {
-        $this->entityDiscovery->method('resolveEntityClass')->willReturn(AcCheckerEditableFalseEntity::class);
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
-        $this->formRegistry->method('hasType')->willReturn(false);
-
-        $this->assertFalse($this->makeChecker()->isActionAccessible('AcCheckerEditableFalseEntity', 'edit', true));
+        // AutoForm says no (editable:false), but DynamicEntityFormType covers the entity.
+        $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerEditableFalseEntity', 'new', true));
     }
 
     // ── Route missing blocks regardless of form ────────────────────────────────

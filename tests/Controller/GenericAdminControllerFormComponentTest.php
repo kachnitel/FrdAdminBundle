@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
+use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -48,6 +49,8 @@ class GenericAdminControllerFormComponentTest extends TestCase
         );
     }
 
+    // ── getFormComponentName() ─────────────────────────────────────────────────
+
     // ── Priority 1: explicit formComponent ────────────────────────────────────
 
     public function testExplicitFormComponentTakesPriority(): void
@@ -80,35 +83,35 @@ class GenericAdminControllerFormComponentTest extends TestCase
 
     // ── Priority 3: auto-form via enableInlineEdit ────────────────────────────
 
-    public function testAutoFormUsedWhenNoFormTypeButEnableInlineEdit(): void
-    {
-        $this->entityDiscovery->method('resolveEntityClass')
-            ->willReturn(CtrlFixtureInlineEdit::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(enableInlineEdit: true));
-        $this->formRegistry->method('hasType')->willReturn(false);
+    // public function testAutoFormUsedWhenNoFormTypeButEnableInlineEditTrue(): void
+    // {
+    //     $this->entityDiscovery->method('resolveEntityClass')
+    //         ->willReturn(CtrlFixtureInlineEdit::class);
+    //     $this->entityDiscovery->method('getAdminAttribute')
+    //         ->willReturn(new Admin(enableInlineEdit: true));
+    //     $this->formRegistry->method('hasType')->willReturn(false);
 
-        $component = $this->callGetFormComponentName('CtrlFixtureInlineEdit');
+    //     $component = $this->callGetFormComponentName('CtrlFixtureInlineEdit');
 
-        $this->assertSame('K:Admin:AutoEntityForm', $component);
-    }
+    //     $this->assertSame('K:Admin:AutoEntityForm', $component);
+    // }
 
     // ── Priority 3: auto-form via per-column editable:true ───────────────────
 
-    public function testAutoFormUsedWhenNoFormTypeButEditableColumn(): void
-    {
-        $this->entityDiscovery->method('resolveEntityClass')
-            ->willReturn(CtrlFixtureEditableCol::class);
-        $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin());
-        $this->formRegistry->method('hasType')->willReturn(false);
+    // public function testAutoFormUsedWhenNoFormTypeButEditableColumn(): void
+    // {
+    //     $this->entityDiscovery->method('resolveEntityClass')
+    //         ->willReturn(CtrlFixtureEditableCol::class);
+    //     $this->entityDiscovery->method('getAdminAttribute')
+    //         ->willReturn(new Admin());
+    //     $this->formRegistry->method('hasType')->willReturn(false);
 
-        $component = $this->callGetFormComponentName('CtrlFixtureEditableCol');
+    //     $component = $this->callGetFormComponentName('CtrlFixtureEditableCol');
 
-        $this->assertSame('K:Admin:AutoEntityForm', $component);
-    }
+        // $this->assertSame('K:Admin:AutoEntityForm', $component);
+    // }
 
-    // ── Priority 4: fallback ──────────────────────────────────────────────────
+    // ── Priority 4: DynamicEntityFormType / fallback → still EntityForm component ──
 
     public function testFallsBackToEntityFormWhenNoFormTypeAndNoEditableFields(): void
     {
@@ -120,6 +123,7 @@ class GenericAdminControllerFormComponentTest extends TestCase
 
         $component = $this->callGetFormComponentName('CtrlFixtureNoEdit');
 
+        // Component is always EntityForm — what differs is the formTypeClass
         $this->assertSame('K:Admin:EntityForm', $component);
     }
 
@@ -151,15 +155,88 @@ class GenericAdminControllerFormComponentTest extends TestCase
         $this->assertSame('K:Admin:EntityForm', $component);
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
+    // ── getFormType() ──────────────────────────────────────────────────────────
+
+    public function testGetFormTypeReturnsExplicitFormTypeFromAdminAttribute(): void
+    {
+        $this->entityDiscovery->method('resolveEntityClass')
+            ->willReturn(CtrlFixtureNoEdit::class);
+        $this->entityDiscovery->method('getAdminAttribute')
+            ->willReturn(new Admin(formType: 'App\\Form\\CustomType'));
+        $this->formRegistry->method('hasType')->willReturn(false);
+
+        $formType = $this->callGetFormType('CtrlFixtureNoEdit');
+
+        $this->assertSame('App\\Form\\CustomType', $formType);
+    }
+
+    public function testGetFormTypeReturnsCustomFormTypeWhenRegistered(): void
+    {
+        $this->entityDiscovery->method('resolveEntityClass')
+            ->willReturn(CtrlFixtureNoEdit::class);
+        $this->entityDiscovery->method('getAdminAttribute')
+            ->willReturn(new Admin());
+        $this->formRegistry->method('hasType')
+            ->willReturnCallback(fn (string $type): bool => $type === 'App\\Form\\CtrlFixtureNoEditFormType');
+
+        $formType = $this->callGetFormType('CtrlFixtureNoEdit');
+
+        $this->assertSame('App\\Form\\CtrlFixtureNoEditFormType', $formType);
+    }
+
+    public function testGetFormTypeFallsBackToDynamicEntityFormTypeForDoctrineEntity(): void
+    {
+        $this->entityDiscovery->method('resolveEntityClass')
+            ->willReturn(CtrlFixtureNoEdit::class);
+        $this->entityDiscovery->method('getAdminAttribute')
+            ->willReturn(new Admin());
+        // Custom type not registered
+        $this->formRegistry->method('hasType')->willReturn(false);
+
+        $formType = $this->callGetFormType('CtrlFixtureNoEdit');
+
+        $this->assertSame(DynamicEntityFormType::class, $formType);
+    }
+
+    public function testGetFormTypeReturnsCustomTypeStringWhenEntityDoesNotResolve(): void
+    {
+        // Non-Doctrine / unknown entity
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(null);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
+        $this->formRegistry->method('hasType')->willReturn(false);
+
+        $formType = $this->callGetFormType('Unknown');
+
+        // Falls back to the default convention string (caller handles missing type)
+        $this->assertSame('App\\Form\\UnknownFormType', $formType);
+    }
+
+    public function testExplicitFormTypeAttributeTakesPriorityOverCustomTypeInRegistry(): void
+    {
+        $this->entityDiscovery->method('resolveEntityClass')
+            ->willReturn(CtrlFixtureNoEdit::class);
+        $this->entityDiscovery->method('getAdminAttribute')
+            ->willReturn(new Admin(formType: 'App\\Form\\OverrideType'));
+        // Even if the convention type is registered, the attribute wins
+        $this->formRegistry->method('hasType')->willReturn(true);
+
+        $formType = $this->callGetFormType('CtrlFixtureNoEdit');
+
+        $this->assertSame('App\\Form\\OverrideType', $formType);
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
 
     private function callGetFormComponentName(string $class): string
     {
-        $controller = $this->makeController();
+        $method = new \ReflectionMethod($this->makeController(), 'getFormComponentName');
+        return $method->invoke($this->makeController(), $class);
+    }
 
-        $method = new \ReflectionMethod($controller, 'getFormComponentName');
-
-        return $method->invoke($controller, $class);
+    private function callGetFormType(string $class): string
+    {
+        $method = new \ReflectionMethod($this->makeController(), 'getFormType');
+        return $method->invoke($this->makeController(), $class);
     }
 }
 

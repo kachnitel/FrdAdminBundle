@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
-use Kachnitel\AdminBundle\Attribute\AdminColumn;
+use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\Form\FormRegistryInterface;
@@ -17,8 +17,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *  1. Route existence (delegated to AdminRouteRuntime)
  *  2. Voter-based permission via AuthorizationCheckerInterface
  *  3. Form availability for new/edit actions:
- *     - Satisfied by a registered Symfony FormType, OR
- *     - Satisfied by AutoEntityForm (entity has inline-edit attributes)
+ *     - Satisfied by a registered hand-written Symfony FormType, OR
+ *     - Satisfied by DynamicEntityFormType (available for any resolvable Doctrine entity)
  *
  * Extracted from AdminRouteRuntime to keep that class below the cyclomatic
  * complexity threshold.
@@ -64,10 +64,8 @@ final class ActionAccessibilityChecker
             return false;
         }
 
-        if (in_array($action, ['new', 'edit'], true)) {
-            if (!$this->hasFormType($entityShortName) && !$this->hasAutoForm($entityShortName)) {
-                return false;
-            }
+        if (in_array($action, ['new', 'edit'], true) && !$this->hasForm($entityShortName)) {
+            return false;
         }
 
         return true;
@@ -107,9 +105,15 @@ final class ActionAccessibilityChecker
     }
 
     /**
-     * Whether a Symfony FormType is registered for this entity.
+     * Whether a form is available for this entity.
+     *
+     * Returns true when any of the following is true:
+     *   - A hand-written Symfony FormType is registered in the form registry
+     *   - DynamicEntityFormType is registered AND the entity class resolves
+     *     (i.e. it is a known Doctrine entity) — DynamicEntityFormType works for
+     *     any Doctrine entity without configuration
      */
-    private function hasFormType(string $entityShortName): bool
+    private function hasForm(string $entityShortName): bool
     {
         if ($this->formRegistry === null || $this->entityDiscovery === null) {
             return true;
@@ -117,67 +121,24 @@ final class ActionAccessibilityChecker
 
         try {
             $entityClass = $this->entityDiscovery->resolveEntityClass($entityShortName, $this->entityNamespace);
+
             if ($entityClass !== null) {
                 $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
                 $formType  = $adminAttr?->getFormType()
                     ?: $this->formNamespace . $entityShortName . $this->formSuffix;
-                return $this->formRegistry->hasType($formType);
+
+                if ($this->formRegistry->hasType($formType)) {
+                    return true;
+                }
+
+                // DynamicEntityFormType is always available as a fallback for any
+                // resolvable Doctrine entity — no hand-written FormType required.
+                return $this->formRegistry->hasType(DynamicEntityFormType::class);
             }
         } catch (\Exception) {
-            // Fall through to default behaviour
+            // Fall through to default check below.
         }
 
         return $this->formRegistry->hasType($this->formNamespace . $entityShortName . $this->formSuffix);
-    }
-
-    /**
-     * Whether AutoEntityForm can render a form for this entity (new or edit).
-     *
-     * Uses pure attribute inspection — no entity instantiation, no Doctrine query.
-     * Returns true when the entity opts in to inline editing at class or property level.
-     *
-     * Voter and setter checks are skipped here; they are evaluated per-field at
-     * render time inside AutoEntityForm. This method only determines whether the
-     * New/Edit button should appear at all.
-     */
-    private function hasAutoForm(string $entityShortName): bool
-    {
-        if ($this->entityDiscovery === null) {
-            return false;
-        }
-
-        try {
-            /** @var null|class-string $entityClass */
-            $entityClass = $this->entityDiscovery->resolveEntityClass($entityShortName, $this->entityNamespace);
-            if ($entityClass === null) {
-                return false;
-            }
-
-            $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
-
-            // Entity-level opt-in.
-            if ($adminAttr !== null && $adminAttr->isEnableInlineEdit()) {
-                return true;
-            }
-
-            // Per-property explicit opt-in.
-            $reflection = new \ReflectionClass($entityClass);
-            foreach ($reflection->getProperties() as $property) {
-                $attributes = $property->getAttributes(AdminColumn::class);
-                if (empty($attributes)) {
-                    continue;
-                }
-
-                /** @var AdminColumn $col */
-                $col = $attributes[0]->newInstance();
-                if ($col->editable === true) {
-                    return true;
-                }
-            }
-        } catch (\Throwable) {
-            return false;
-        }
-
-        return false;
     }
 }

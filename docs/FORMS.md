@@ -5,7 +5,7 @@ The admin bundle uses Symfony UX LiveComponents for edit and new entity forms, p
 ## How it works
 
 1. The controller renders `edit.html.twig` / `new.html.twig`, passing `entityClass`, `entityId`, `formTypeClass`, and `formComponentName` as template variables.
-2. The template mounts the LiveComponent via `{{ component(formComponentName, ...) }}`.
+2. The template mounts the `K:Admin:EntityForm` LiveComponent.
 3. As the user changes fields, LiveComponent sends Ajax requests, re-submits values into the Symfony form, and re-renders — showing validation errors inline.
 4. The **Save** button in the page header calls a `save` `#[LiveAction]` on `document.querySelector('[data-admin-form]')`
 5. On success, a `toast.show` browser event is dispatched. On failure the form re-renders with inline validation errors.
@@ -18,16 +18,17 @@ Custom form components that extend `AdminEntityForm` must include this attribute
 
 ---
 
-## Form component resolution
+## Form type resolution
 
-`GenericAdminController::getFormComponentName()` follows this priority chain:
+`GenericAdminController::getFormType()` follows this priority chain:
 
-| Priority | Condition | Component used |
+| Priority | Condition | Form type used |
 |---|---|---|
-| 1 | `#[Admin(formComponent: '...')]` on the entity | Custom component |
-| 2 | Symfony FormType registered (conventional name or `#[Admin(formType:)]`) | `K:Admin:EntityForm` |
-| 3 | Entity has `enableInlineEdit: true` OR any `#[AdminColumn(editable: true)]` | `K:Admin:AutoEntityForm` |
-| 4 | Fallback | `K:Admin:EntityForm` (may render empty) |
+| 1 | `#[Admin(formType: '...')]` on the entity | Custom form type class |
+| 2 | Symfony FormType registered (conventional name `{Entity}FormType`) | Hand-written FormType |
+| 3 | Everything else (any Doctrine entity) | `DynamicEntityFormType` |
+
+The form component is always `K:Admin:EntityForm` unless `#[Admin(formComponent: '...')]` overrides it.
 
 ---
 
@@ -59,7 +60,7 @@ class ProductFormType extends AbstractType
 > which causes a `TypeError` when the value is written to the entity. `empty_data: ''`
 > keeps it as an empty string so `NotBlank` can report the error properly.
 
-The admin auto-discovers the form type. New and Edit links appear when a matching form type exists.
+The admin auto-discovers the form type. New and Edit links appear automatically.
 
 Pin the form type explicitly if you use a non-conventional name:
 
@@ -68,77 +69,51 @@ Pin the form type explicitly if you use a non-conventional name:
 class Product {}
 ```
 
-### Option B — Auto-form (zero-config)
+### Option B — DynamicEntityFormType (zero-config)
 
-When no FormType exists, the bundle generates a form automatically using the same
-field components as inline editing. Enable it by opting your entity into inline editing:
+When no hand-written FormType exists, the bundle automatically generates one from
+Doctrine metadata. **No configuration required** — the New and Edit buttons appear
+for every `#[Admin]` entity without any extra code.
+
+#### Field inclusion rules
+
+| Condition | Included |
+|---|---|
+| Regular Doctrine fields (string, int, float, bool, date, datetime, time, enum) | ✅ Yes |
+| `#[AdminColumn(editable: false)]` on the property | ❌ Excluded |
+| The primary identifier field (`id`) | ❌ Always excluded |
+| JSON, array, blob, binary fields | ❌ Skipped (no sensible widget) |
+| Single-valued associations (ManyToOne, OneToOne) | ✅ As `EntityType` select |
+| Collection associations (OneToMany, ManyToMany) | ❌ Deferred (future iteration) |
+
+#### Excluding a field
 
 ```php
-// All writable properties become form fields
-#[Admin(label: 'Products', enableInlineEdit: true)]
-class Product
+#[Admin(label: 'Users', enableInlineEdit: true)]
+class User
 {
     #[ORM\Column]
-    private string $name = '';
+    private string $email = '';          // included
 
     #[ORM\Column]
-    private float $price = 0.0;
+    #[AdminColumn(editable: false)]
+    private string $passwordHash = '';   // excluded from the auto-form
 }
 ```
 
-Or opt in per-column without enabling inline editing globally:
+#### Doctrine → Symfony form type mapping
 
-```php
-#[Admin(label: 'Products')]
-class Product
-{
-    #[ORM\Column]
-    #[AdminColumn(editable: true)]
-    private string $name = '';
-
-    #[ORM\Column]
-    #[AdminColumn(editable: false)]   // never editable, even in the form
-    private string $internalCode = '';
-}
-```
-
-#### How the auto-form works
-
-**Edit mode** (`entityId` provided) — renders each editable property as its
-`K:Entity:Field:*` LiveComponent in `formMode=true`. The header Save button
-emits `form:save` down to all field children, each of which validates and flushes
-independently. The parent tracks responses and shows a success banner when all
-complete.
-
-**New mode** (`entityId` is null) — cannot use Field LiveComponents because they
-require an existing entity ID. Instead renders plain HTML inputs synced to a
-`formValues` LiveProp. The parent's `save()` coerces all raw values to proper PHP
-types via `DoctrineValueCoercer`, validates the whole entity, persists once, then
-switches to edit mode by setting `entityId` — consistent with `AdminEntityForm`
-behaviour.
-
-#### Auto-form field type mapping
-
-| Doctrine type | New-mode input | Edit-mode component |
-|---|---|---|
-| `string`, `text` | `<input type="text">` | `K:Entity:Field:String` |
-| `integer`, `smallint`, `bigint` | `<input type="number" step="1">` | `K:Entity:Field:Int` |
-| `decimal`, `float` | `<input type="number" step="any">` | `K:Entity:Field:Float` |
-| `boolean` | `<input type="checkbox">` | `K:Entity:Field:Bool` |
-| `date`, `date_immutable` | `<input type="date">` | `K:Entity:Field:Date` |
-| `datetime`, `datetime_immutable`, `datetimetz`, `datetimetz_immutable` | `<input type="datetime-local">` | `K:Entity:Field:Date` |
-| `time`, `time_immutable` | `<input type="time">` | `K:Entity:Field:Date` |
-| Backed enum | — (requires FormType) | `K:Entity:Field:Enum` |
-| ManyToOne / OneToOne | `<input type="number">` (ID) | `K:Entity:Field:Relationship` |
-
-> **Relations in new mode** render as a plain integer input for the related entity ID.
-> For a typeahead search widget on new, add a manual `FormType` with `EntityType`.
-
-#### Limitations
-
-- JSON, array, and other complex Doctrine types are excluded — no field component exists for them.
-- Entity-level cross-field validation is not performed in new mode; add a FormType for that.
-- Relations in new mode accept raw integer IDs only (no search widget).
+| Doctrine type | Symfony form type |
+|---|---|
+| `string`, `text` | `TextType` |
+| `integer`, `smallint`, `bigint` | `IntegerType` |
+| `decimal`, `float` | `NumberType` |
+| `boolean` | `CheckboxType` |
+| `date`, `date_immutable` | `DateType` (single_text widget) |
+| `datetime`, `datetime_immutable`, `datetimetz`, `datetimetz_immutable` | `DateTimeType` (single_text widget) |
+| `time`, `time_immutable` | `TimeType` (single_text widget) |
+| Backed PHP enum (via `enumType` mapping) | `EnumType` |
+| ManyToOne, OneToOne | `EntityType` with `autocomplete: true` |
 
 ---
 
@@ -212,7 +187,7 @@ The admin will now mount your component instead of the default one for this enti
 
 | Method/prop | Purpose |
 |-------------|---------|
-| `instantiateForm()` | Custom form options, e.g. `action` URL |
+| `instantiateForm()` | Custom form options, e.g. `action` URL or `DynamicEntityFormType` |
 | `save()` | Full save lifecycle (call `parent::save()` to keep the standard flow, or replace entirely) |
 | Component template | Custom field layout, computed values |
 
@@ -220,7 +195,9 @@ The admin will now mount your component instead of the default one for this enti
 
 ## Form themes
 
-The component uses `form_widget(form)` by default. Standard Symfony form themes apply — see the [Symfony form themes documentation](https://symfony.com/doc/current/form/form_themes.html).
+The component renders each field individually using `form_label`, `form_widget`, and
+`form_errors`. Standard Symfony form themes apply — see the
+[Symfony form themes documentation](https://symfony.com/doc/current/form/form_themes.html).
 
 Global theme via `twig.yaml`:
 
@@ -235,7 +212,7 @@ Per-component theme in your template override:
 {% form_theme form 'my_custom_form_theme.html.twig' %}
 <div data-admin-form {{ attributes }}>
   {{ form_start(form) }}
-    {{ form_widget(form) }}
+    {# ... #}
   {{ form_end(form) }}
 </div>
 ```
@@ -244,11 +221,10 @@ Per-component theme in your template override:
 
 ## After-save behaviour
 
-On a successful save the component dispatches `toast.show` with `message: 'Saved successfully!'` (or `'Created successfully!'` for new entities). Wire this to your toast library in your base layout:
+On a successful save the component dispatches `toast.show` with `message: 'Saved successfully!'`. Wire this to your toast library in your base layout:
 
 ```javascript
 window.addEventListener('toast.show', (event) => {
-    // your toast implementation
     console.log(event.detail.message);
 });
 ```

@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\Archive\ArchiveEntityService;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
+use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\Form\FormRegistryInterface;
@@ -27,6 +28,12 @@ use Symfony\Component\Routing\Attribute\Route;
  *     class Product {}
  *
  * URLs are automatically kebab-cased: /admin/work-station
+ *
+ * ## Form type resolution (getFormType priority)
+ *
+ *   1. #[Admin(formType: ...)]  — explicit override on the entity attribute
+ *   2. App\Form\{Class}FormType — hand-written Symfony FormType (if registered)
+ *   3. DynamicEntityFormType   — auto-generated from Doctrine metadata (fallback)
  *
  * Permissions are checked using the AdminEntityVoter which respects:
  * 1. Entity-specific permissions from #[Admin(permissions: [...])]
@@ -77,6 +84,44 @@ class GenericAdminController extends AbstractAdminController
     protected function getFormSuffix(): string
     {
         return $this->formSuffix;
+    }
+
+    /**
+     * Resolve the Symfony FormType class to use for new/edit pages.
+     *
+     * Priority:
+     *   1. #[Admin(formType: '...')] explicit override
+     *   2. Hand-written App\Form\{Class}FormType (if registered in the form registry)
+     *   3. DynamicEntityFormType — auto-generated from Doctrine metadata
+     *
+     * Falling back to DynamicEntityFormType means every Doctrine entity is
+     * editable without requiring a hand-written FormType.
+     */
+    protected function getFormType(string $class): string
+    {
+        // 1. Explicit formType on the #[Admin] attribute
+        $entityClass = $this->entityDiscovery->resolveEntityClass($class, $this->entityNamespace);
+        if ($entityClass !== null) {
+            $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
+            if ($adminAttr?->getFormType() !== null) {
+                return $adminAttr->getFormType();
+            }
+        }
+
+        // 2. Hand-written FormType in the configured namespace
+        $customType = parent::getFormType($class);
+        if ($this->formRegistry->hasType($customType)) {
+            return $customType;
+        }
+
+        // 3. DynamicEntityFormType — auto-generated fallback for Doctrine entities
+        if ($entityClass !== null) {
+            return DynamicEntityFormType::class;
+        }
+
+        // Non-Doctrine data source — return the custom type string as-is.
+        // AdminEntityForm will surface a clear error if the type is not registered.
+        return $customType;
     }
 
     /**
@@ -350,68 +395,23 @@ class GenericAdminController extends AbstractAdminController
     }
 
     /**
-     * Resolve the LiveComponent name for the edit/new form.
+     * Resolve the LiveComponent name for the form.
      *
      * Priority:
-     *   1. #[Admin(formComponent: '...')] explicit override
-     *   2. Manual FormType exists → K:Admin:EntityForm (standard live form)
-     *   3. Entity has inline-edit attributes → K:Admin:AutoEntityForm (auto-generated form)
-     *   4. Fallback → K:Admin:EntityForm (will render correctly or show no-form state)
+     *   1. #[Admin(formComponent: '...')] — explicit override on the entity
+     *   2. K:Admin:EntityForm — handles all other cases via getFormType()
+     *      (hand-written FormType or DynamicEntityFormType fallback)
      */
     protected function getFormComponentName(string $class): string
     {
-        /** @var null|class-string $entityClass */
         $entityClass = $this->entityDiscovery->resolveEntityClass($class, $this->entityNamespace);
         $adminAttr   = $entityClass ? $this->entityDiscovery->getAdminAttribute($entityClass) : null;
 
-        // 1. Explicit override on the entity
         if ($adminAttr?->getFormComponent() !== null) {
             return $adminAttr->getFormComponent();
         }
 
-        // 2. Manual FormType registered
-        $formType = $adminAttr?->getFormType() ?: $this->formNamespace . $class . $this->formSuffix;
-        if ($this->formRegistry->hasType($formType)) {
-            return 'K:Admin:EntityForm';
-        }
-
-        // 3. Auto-form: entity opts in via enableInlineEdit or per-column editable attributes
-        if ($entityClass !== null && $this->entityHasAutoFormFields($entityClass)) {
-            return 'K:Admin:AutoEntityForm';
-        }
-
-        // 4. Fallback
         return 'K:Admin:EntityForm';
-    }
-
-    /**
-     * @param class-string $entityClass
-     */
-    private function entityHasAutoFormFields(string $entityClass): bool
-    {
-        try {
-            $adminAttr = $this->entityDiscovery->getAdminAttribute($entityClass);
-
-            if ($adminAttr !== null && $adminAttr->isEnableInlineEdit()) {
-                return true;
-            }
-
-            $reflection = new \ReflectionClass($entityClass);
-            foreach ($reflection->getProperties() as $property) {
-                $attributes = $property->getAttributes(\Kachnitel\AdminBundle\Attribute\AdminColumn::class);
-                if (!empty($attributes)) {
-                    /** @var \Kachnitel\AdminBundle\Attribute\AdminColumn $col */
-                    $col = $attributes[0]->newInstance();
-                    if ($col->editable === true) {
-                        return true;
-                    }
-                }
-            }
-        } catch (\Throwable) {
-            return false;
-        }
-
-        return false;
     }
 
     private function validateArchiveCsrf(Request $request, string $actionName, int $entityId): void

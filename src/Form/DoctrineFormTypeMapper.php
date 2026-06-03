@@ -1,0 +1,154 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Kachnitel\AdminBundle\Form;
+
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\EnumType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TimeType;
+use Symfony\Component\Form\FormTypeInterface;
+
+/**
+ * Maps Doctrine field and association metadata to Symfony form field configurations.
+ *
+ * Returns a config array of the form:
+ *   ['type' => FormTypeClass::class, 'options' => [...]]
+ *
+ * Returns null for field types that have no sensible Symfony form equivalent
+ * (e.g. json, array, object) — callers should skip these silently.
+ *
+ * For backed enum fields, an EnumType (choice type) is returned when the enum
+ * class is discoverable via the Doctrine field mapping's enumType property.
+ */
+class DoctrineFormTypeMapper
+{
+    /**
+     * Get the Symfony form field config for a Doctrine scalar field.
+     *
+     * @param ClassMetadata<object> $metadata
+     * @return array{type: class-string<FormTypeInterface<object>>, options: array<string, mixed>}|null
+     *   Null when the field type has no supported form equivalent.
+     */
+    public function getFieldConfig(ClassMetadata $metadata, string $fieldName): ?array
+    {
+        if (!$metadata->hasField($fieldName)) {
+            return null;
+        }
+
+        $mapping  = $metadata->getFieldMapping($fieldName);
+        $nullable = $mapping->nullable ?? false;
+
+        // Backed enum — use a ChoiceType built from the enum cases
+        $enumType = $mapping->enumType ?? null;
+        if ($enumType !== null && enum_exists($enumType)) {
+            return $this->buildEnumConfig($enumType, $nullable);
+        }
+
+        return match ($mapping->type) {
+            'string'                                                                => [
+                'type'    => TextType::class,
+                'options' => ['required' => !$nullable, 'empty_data' => $nullable ? null : ''],
+            ],
+            'text'                                                                  => [
+                'type'    => TextareaType::class,
+                'options' => ['required' => !$nullable, 'empty_data' => $nullable ? null : ''],
+            ],
+            'integer', 'smallint', 'bigint'                                         => [
+                'type'    => IntegerType::class,
+                'options' => ['required' => !$nullable],
+            ],
+            'decimal', 'float'                                                      => [
+                'type'    => NumberType::class,
+                'options' => ['required' => !$nullable, 'html5' => true],
+            ],
+            'boolean'                                                               => [
+                'type'    => CheckboxType::class,
+                'options' => ['required' => false],
+            ],
+            'date', 'date_immutable'                                                => [
+                'type'    => DateType::class,
+                'options' => ['required' => !$nullable, 'widget' => 'single_text'],
+            ],
+            'datetime', 'datetime_immutable', 'datetimetz', 'datetimetz_immutable' => [
+                'type'    => DateTimeType::class,
+                'options' => ['required' => !$nullable, 'widget' => 'single_text'],
+            ],
+            'time', 'time_immutable'                                                => [
+                'type'    => TimeType::class,
+                'options' => ['required' => !$nullable, 'widget' => 'single_text'],
+            ],
+            // json, array, object, simple_array — no supported form equivalent
+            default => null,
+        };
+    }
+
+    /**
+     * Get the Symfony form field config for a single-valued Doctrine association.
+     *
+     * @param ClassMetadata<object> $metadata
+     * @return array{type: class-string<FormTypeInterface<object>>, options: array<string, mixed>}|null
+     *   Null when the association is collection-valued (caller should skip).
+     */
+    public function getAssociationConfig(ClassMetadata $metadata, string $associationName): ?array
+    {
+        if (!$metadata->hasAssociation($associationName)) {
+            return null;
+        }
+
+        if (!$metadata->isSingleValuedAssociation($associationName)) {
+            return null;
+        }
+
+        /** @var class-string $targetClass */
+        $targetClass = $metadata->getAssociationTargetClass($associationName);
+
+        return [
+            'type'    => EntityType::class,
+            'options' => [
+                'class'    => $targetClass,
+                'required' => false,
+            ],
+        ];
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    /**
+     * Build a ChoiceType config from a backed enum class.
+     *
+     * @param class-string $enumClass<\BackedEnum>
+     * @return array{type: class-string<FormTypeInterface<object>>, options: array<string, mixed>}
+     */
+    private function buildEnumConfig(string $enumClass, bool $nullable): array
+    {
+        $choices = [];
+
+        /** @var \BackedEnum $case */
+        foreach ($enumClass::cases() as $case) {
+            $label = method_exists($case, 'displayValue')
+                ? $case->displayValue()
+                : $case->name;
+
+            $choices[$label] = $case;
+        }
+
+        return [
+            'type'    => EnumType::class,
+            'options' => [
+                'class'       => $enumClass,
+                'choices'     => $choices,
+                'required'    => !$nullable,
+                'placeholder' => $nullable ? '' : false,
+            ],
+        ];
+    }
+}

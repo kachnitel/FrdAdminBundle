@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
@@ -23,6 +24,10 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  *
  * Provides real-time validation as-you-type and inline save feedback
  * without full-page reloads.
+ *
+ * When `formTypeClass` is `DynamicEntityFormType::class`, the component
+ * automatically passes the required `entity_class` option so the form type
+ * can introspect Doctrine metadata without any additional configuration.
  *
  * @see \Kachnitel\AdminBundle\Controller\AbstractAdminController
  */
@@ -48,7 +53,8 @@ class AdminEntityForm extends AbstractController
     public ?int $entityId = null;
 
     /**
-     * Fully-qualified form type class name (e.g. App\Form\ProductFormType).
+     * Fully-qualified form type class name.
+     * May be a hand-written FormType or DynamicEntityFormType::class.
      */
     #[LiveProp]
     public string $formTypeClass = '';
@@ -68,8 +74,10 @@ class AdminEntityForm extends AbstractController
     }
 
     /**
-     * Build the Symfony form bound to the entity loaded from the database
-     * (or a freshly-instantiated entity for the "new" action).
+     * Build the Symfony form bound to the entity.
+     *
+     * When formTypeClass is DynamicEntityFormType, the required `entity_class` option
+     * is added automatically — the caller does not need to supply it.
      *
      * CSRF protection is disabled at the form level — LiveComponent handles
      * its own request-level CSRF separately.
@@ -90,10 +98,19 @@ class AdminEntityForm extends AbstractController
         /** @var class-string<\Symfony\Component\Form\FormTypeInterface<object|null>> $formTypeClass */
         $formTypeClass = $this->formTypeClass;
 
+        $options = ['csrf_protection' => false];
+
+        /** @phpstan-ignore identical.alwaysFalse (REVIEW:) */
+        if ($formTypeClass === DynamicEntityFormType::class) {
+            $options['entity_class'] = $entityClassName;
+            // data_class must be passed explicitly — DynamicEntityFormType cannot derive
+            // it from entity_class via a lazy closure because Symfony validates data_class
+            // against allowedTypes(['null', 'string']) before OptionsResolver fires closures.
+            $options['data_class'] = $entityClassName;
+        }
+
         /** @phpstan-ignore-next-line argument.templateType */
-        return $this->createForm($formTypeClass, $entity, [
-            'csrf_protection' => false,
-        ]);
+        return $this->createForm($formTypeClass, $entity, $options);
     }
 
     /**

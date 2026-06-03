@@ -1,8 +1,9 @@
 {#
  # Live form component for admin edit and new pages.
  #
- # Renders the Symfony form using standard form helpers. Validation errors appear
- # inline on re-render without a full-page reload.
+ # Renders the Symfony form (hand-written FormType or DynamicEntityFormType) in a
+ # two-column table layout — label on the left, input on the right — consistent
+ # with the show page. Hidden fields (e.g. CSRF token) are rendered by form_end.
  #
  # The `data-admin-form` attribute is a stable selector used by `_save_button.html.twig`
  # to dispatch the `admin:save` event directly on this element, which is required for
@@ -16,7 +17,31 @@
 {% import kachnitel_admin_theme as css %}
 
 <div data-admin-form {{ attributes }}>
-  {{ form_start(form, { attr: { class: 'admin-form', id: 'admin_entity_form' } }) }}
-    {{ form_widget(form) }}
-  {{ form_end(form) }}
+  {# {{ form_start(form, { attr: { class: 'admin-form', id: 'admin_entity_form' } }) }}
+
+  {{ form_errors(form) }}
+
+  <table class="{{ css.table_simple() }}">
+    <tbody>
+      {% for child in form %}
+        {% if 'hidden' not in child.vars.block_prefixes %}
+          <tr>
+            <th
+              class="{{ css.form_label() }}"
+              style="width: 30%; vertical-align: top; padding-top: 0.6rem; font-weight: normal;"
+            >
+              {{ form_label(child) }}
+            </th>
+            <td>
+              {{ form_widget(child) }}
+              {{ form_errors(child) }}
+            </td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ form_end(form) }} #}
+   {{ form(form) }}
 </div>

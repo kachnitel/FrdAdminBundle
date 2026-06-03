@@ -55,6 +55,10 @@ services:
     Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface:
         alias: Kachnitel\AdminBundle\Field\AdminEditabilityResolver
 
+    # Form services
+    Kachnitel\AdminBundle\Form\:
+        resource: '../src/Form'
+
     # Twig Extensions
     Kachnitel\AdminBundle\Twig\Extension\:
         resource: '../src/Twig/Extension'
@@ -100,12 +104,6 @@ services:
     # LiveComponents
     Kachnitel\AdminBundle\Twig\Components\:
         resource: '../src/Twig/Components'
-        tags: ['twig.component']
-
-    # AutoEntityForm needs PropertyAccessor explicitly (same pattern as ArchiveEntityService)
-    Kachnitel\AdminBundle\Twig\Components\AutoEntityForm:
-        arguments:
-            $propertyAccessor: '@property_accessor'
         tags: ['twig.component']
 
     # EntityList configuration
