@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -23,7 +24,7 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  * Generic live form component for admin edit and new entity pages.
  *
  * Provides real-time validation as-you-type and inline save feedback
- * without full-page reloads.
+ * without full page reloads.
  *
  * When `formTypeClass` is `DynamicEntityFormType::class`, the component
  * automatically passes the required `entity_class` option so the form type
@@ -77,7 +78,9 @@ class AdminEntityForm extends AbstractController
      * Build the Symfony form bound to the entity.
      *
      * When formTypeClass is DynamicEntityFormType, the required `entity_class` option
-     * is added automatically — the caller does not need to supply it.
+     * is added automatically — the caller does not need to supply it. `is_root: true`
+     * is passed explicitly so that DynamicEntityFormType includes collection associations
+     * (ManyToMany multi-selects and OneToMany LiveCollectionType fields).
      *
      * CSRF protection is disabled at the form level — LiveComponent handles
      * its own request-level CSRF separately.
@@ -93,18 +96,21 @@ class AdminEntityForm extends AbstractController
             ? $this->em->find($entityClassName, $this->entityId)
             : null;
 
-        /** @var class-string<\Symfony\Component\Form\FormTypeInterface<object|null>> $formTypeClass */
+        /** @var class-string<FormTypeInterface<object>> $formTypeClass */
         $formTypeClass = $this->formTypeClass;
 
         $options = ['csrf_protection' => false];
 
-        /** @phpstan-ignore identical.alwaysFalse (REVIEW:) */
         if ($formTypeClass === DynamicEntityFormType::class) {
             $options['entity_class'] = $entityClassName;
             // data_class must be passed explicitly — DynamicEntityFormType cannot derive
             // it from entity_class via a lazy closure because Symfony validates data_class
             // against allowedTypes(['null', 'string']) before OptionsResolver fires closures.
             $options['data_class'] = $entityClassName;
+            // is_root: true ensures collection associations (ManyToMany, OneToMany) are included
+            // at the top level. Child forms created by LiveCollectionType receive is_root: false
+            // via entry_options, preventing infinite recursion in bidirectional relationships.
+            $options['is_root'] = true;
         }
 
         /** @phpstan-ignore-next-line argument.templateType */

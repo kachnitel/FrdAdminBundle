@@ -16,9 +16,20 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * Field inclusion rules:
  *   - The identifier field (single PK) is always excluded
  *   - Fields/associations with #[AdminColumn(editable: false)] are excluded
- *   - Collection-valued associations are excluded for now
  *   - Fields whose Doctrine type has no Symfony form equivalent (e.g. json) are silently skipped
- *   - All other scalar fields and single-valued associations are included
+ *   - All scalar fields and single-valued associations are always included
+ *   - Collection-valued associations (ManyToMany, OneToMany) are included by default
+ *     when is_root is true; skipped when is_root is false to prevent infinite recursion
+ *
+ * Collection mapping:
+ *   - ManyToMany → EntityType with multiple: true (multi-select)
+ *   - OneToMany  → LiveCollectionType with recursive DynamicEntityFormType as entry_type
+ *
+ * @see docs/DYNAMIC_FORM_COLLECTIONS.md for requirements (cascade, orphanRemoval, inverse side hiding)
+ *
+ * The is_root option (default: true) controls whether this is a top-level form or a
+ * child entry inside a LiveCollectionType. Child forms skip collection associations
+ * to prevent infinite recursion in bidirectional relationships.
  *
  * The form type does NOT set `data_class` — that is the caller's responsibility.
  * AdminEntityForm passes `data_class` explicitly via form options so that the form
@@ -26,7 +37,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * Required option:
  *   entity_class (string) — fully-qualified class name of the entity to build for
-
+ *
+ * Optional option:
+ *   is_root (bool, default: true) — set to false for child forms inside LiveCollectionType
+ *
  * @extends AbstractType<object>
  */
 class DynamicEntityFormType extends AbstractType
@@ -40,6 +54,7 @@ class DynamicEntityFormType extends AbstractType
     {
         /** @var class-string $entityClass */
         $entityClass = $options['entity_class'];
+        $isRoot      = (bool) ($options['is_root'] ?? true);
         $metadata    = $this->em->getClassMetadata($entityClass);
         $idField     = $metadata->getSingleIdentifierFieldName();
 
@@ -62,14 +77,18 @@ class DynamicEntityFormType extends AbstractType
             $builder->add($fieldName, $config['type'], $config['options']);
         }
 
-        // Single-valued associations (ManyToOne / OneToOne).
-        // Collection associations are intentionally deferred.
+        // ── Associations ───────────────────────────────────────────────────────
+
         foreach ($metadata->getAssociationNames() as $assocName) {
-            if (!$metadata->isSingleValuedAssociation($assocName)) {
+            if ($this->isEditableBlocked($entityClass, $assocName)) {
                 continue;
             }
 
-            if ($this->isEditableBlocked($entityClass, $assocName)) {
+            $isCollection = $metadata->isCollectionValuedAssociation($assocName);
+
+            // Skip collection associations in child forms to prevent infinite recursion.
+            // Single-valued associations (ManyToOne, OneToOne) are always included.
+            if ($isCollection && !$isRoot) {
                 continue;
             }
 
@@ -86,6 +105,10 @@ class DynamicEntityFormType extends AbstractType
     {
         $resolver->setRequired('entity_class');
         $resolver->setAllowedTypes('entity_class', 'string');
+
+        $resolver->setDefault('is_root', true);
+        $resolver->setAllowedTypes('is_root', 'bool');
+
         // data_class is intentionally NOT set here — the caller sets it
     }
 

@@ -13,6 +13,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -192,13 +193,48 @@ class DynamicEntityFormTypeTest extends TestCase
         $this->assertContains('category', $addedFields, 'Single-valued associations must be included');
     }
 
-    public function testCollectionAssociationIsExcluded(): void
+    /**
+     * Collections are included by default in a root form (is_root: true / missing).
+     * Opt out with #[AdminColumn(editable: false)].
+     */
+    public function testCollectionAssociationIsIncludedInRootFormByDefault(): void
     {
         $metadata = $this->makeMetadata(
-            idField:    'id',
-            fields:     ['id'],
-            assocNames: ['tags'],
-            singleValuedAssocs: [], // 'tags' is collection-valued
+            idField:              'id',
+            fields:               ['id'],
+            assocNames:           ['tags'],
+            singleValuedAssocs:   [],
+            collectionValuedAssocs: ['tags'],
+        );
+        $this->em->method('getClassMetadata')->willReturn($metadata);
+
+        $this->mapper->method('getAssociationConfig')
+            ->with($metadata, 'tags')
+            ->willReturn([
+                'type'    => EntityType::class,
+                'options' => ['class' => 'App\Entity\Tag', 'multiple' => true, 'required' => false],
+            ]);
+
+        [$addedFields, $builder] = $this->makeBuilder();
+
+        // Default (no is_root key) → treated as root
+        $this->formType->buildForm($builder, ['entity_class' => DynFormFixtureEntity::class]);
+
+        $this->assertContains('tags', $addedFields, 'Collection associations are included by default in root forms');
+    }
+
+    /**
+     * Collections are skipped in child forms (is_root: false) to prevent infinite
+     * recursion in bidirectional relationships.
+     */
+    public function testCollectionAssociationIsExcludedInChildForm(): void
+    {
+        $metadata = $this->makeMetadata(
+            idField:              'id',
+            fields:               ['id'],
+            assocNames:           ['tags'],
+            singleValuedAssocs:   [],
+            collectionValuedAssocs: ['tags'],
         );
         $this->em->method('getClassMetadata')->willReturn($metadata);
 
@@ -206,9 +242,12 @@ class DynamicEntityFormTypeTest extends TestCase
 
         [$addedFields, $builder] = $this->makeBuilder();
 
-        $this->formType->buildForm($builder, ['entity_class' => DynFormFixtureEntity::class]);
+        $this->formType->buildForm($builder, [
+            'entity_class' => DynFormFixtureEntity::class,
+            'is_root'      => false,
+        ]);
 
-        $this->assertNotContains('tags', $addedFields, 'Collection associations must be excluded');
+        $this->assertNotContains('tags', $addedFields, 'Collections must be skipped in child forms');
     }
 
     public function testAssociationWithEditableFalseIsExcluded(): void
@@ -294,9 +333,10 @@ class DynamicEntityFormTypeTest extends TestCase
     /**
      * Build a ClassMetadata stub with the given configuration.
      *
-     * @param array<string>                      $fields
-     * @param array<string>                      $assocNames
-     * @param array<string>                      $singleValuedAssocs
+     * @param array<string> $fields
+     * @param array<string> $assocNames
+     * @param array<string> $singleValuedAssocs
+     * @param array<string> $collectionValuedAssocs
      * @return ClassMetadata<object>&MockObject
      */
     private function makeMetadata(
@@ -304,6 +344,7 @@ class DynamicEntityFormTypeTest extends TestCase
         array $fields = [],
         array $assocNames = [],
         array $singleValuedAssocs = [],
+        array $collectionValuedAssocs = [],
     ): ClassMetadata {
         /** @var ClassMetadata<object>&MockObject $metadata */
         $metadata = $this->createMock(ClassMetadata::class);
@@ -313,6 +354,8 @@ class DynamicEntityFormTypeTest extends TestCase
         $metadata->method('getAssociationNames')->willReturn($assocNames);
         $metadata->method('isSingleValuedAssociation')
             ->willReturnCallback(fn (string $name): bool => in_array($name, $singleValuedAssocs, true));
+        $metadata->method('isCollectionValuedAssociation')
+            ->willReturnCallback(fn (string $name): bool => in_array($name, $collectionValuedAssocs, true));
 
         return $metadata;
     }

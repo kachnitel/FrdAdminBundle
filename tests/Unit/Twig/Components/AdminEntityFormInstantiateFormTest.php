@@ -18,9 +18,11 @@ use Symfony\Component\Form\FormInterface;
  * to createForm() when using DynamicEntityFormType vs a custom FormType.
  *
  * @group auto-form
+ * @group collections
  */
 #[CoversClass(AdminEntityForm::class)]
 #[Group('auto-form')]
+#[Group('collections')]
 class AdminEntityFormInstantiateFormTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -91,6 +93,24 @@ class AdminEntityFormInstantiateFormTest extends TestCase
         $this->assertFalse($capturedOptions['csrf_protection']);
     }
 
+    /**
+     * is_root: true must be passed to DynamicEntityFormType so that collection
+     * associations (ManyToMany, OneToMany) are included in the top-level form.
+     */
+    public function testDynamicEntityFormTypeReceivesIsRootTrue(): void
+    {
+        $capturedOptions = [];
+        $component = $this->makeComponent($capturedOptions);
+
+        $component->entityClass   = AdminFormFixtureEntity::class;
+        $component->formTypeClass = DynamicEntityFormType::class;
+
+        $component->exposeInstantiateForm();
+
+        $this->assertArrayHasKey('is_root', $capturedOptions);
+        $this->assertTrue($capturedOptions['is_root']);
+    }
+
     // ── Custom / other FormType path ───────────────────────────────────────────
 
     public function testCustomFormTypeDoesNotReceiveEntityClassOption(): void
@@ -124,6 +144,23 @@ class AdminEntityFormInstantiateFormTest extends TestCase
             'data_class',
             $capturedOptions,
             'data_class must only be passed for DynamicEntityFormType'
+        );
+    }
+
+    public function testCustomFormTypeDoesNotReceiveIsRootOption(): void
+    {
+        $capturedOptions = [];
+        $component = $this->makeComponent($capturedOptions);
+
+        $component->entityClass   = AdminFormFixtureEntity::class;
+        $component->formTypeClass = 'App\\Form\\CustomFormType';
+
+        $component->exposeInstantiateForm();
+
+        $this->assertArrayNotHasKey(
+            'is_root',
+            $capturedOptions,
+            'is_root must only be passed for DynamicEntityFormType'
         );
     }
 
