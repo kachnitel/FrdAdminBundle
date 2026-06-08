@@ -1,9 +1,9 @@
 {
-    "generated_at": "2026-06-08 07:41:51",
+    "generated_at": "2026-06-08 19:04:27",
     "tests": {
-        "count": 1510,
-        "assertions": 2988,
-        "status": "failing(risky)"
+        "count": 1513,
+        "assertions": 2989,
+        "status": "failing(errors)"
     },
     "coverage": {
         "lines": 85.31,

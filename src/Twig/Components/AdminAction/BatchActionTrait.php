@@ -35,6 +35,8 @@ use Symfony\UX\LiveComponent\ComponentToolsTrait;
  *
  * EntityList listens for 'admin:action:completed' and refreshes the list,
  * clearing affected IDs from its own selectedIds LiveProp.
+ *
+ * @phpstan-require-implements \Kachnitel\AdminBundle\BatchAction\BatchActionComponentInterface
  */
 trait BatchActionTrait
 {
