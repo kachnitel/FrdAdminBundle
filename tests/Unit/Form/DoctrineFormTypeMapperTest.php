@@ -309,17 +309,6 @@ class DoctrineFormTypeMapperTest extends TestCase
         $this->assertFalse($config['options']['placeholder']);
     }
 
-    // ── Label humanisation ─────────────────────────────────────────────────────
-
-    // public function testLabelIsHumanised(): void
-    // {
-    //     $metadata = $this->makeMetadata(['firstName' => ['type' => 'string', 'nullable' => false]]);
-    //     $config = $this->mapper->getFieldConfig($metadata, 'firstName');
-
-    //     $this->assertNotNull($config);
-    //     $this->assertSame('First name', $config['options']['label']);
-    // }
-
     // ── Associations ───────────────────────────────────────────────────────────
 
     public function testAssociationConfigReturnsEntityType(): void
@@ -349,6 +338,27 @@ class DoctrineFormTypeMapperTest extends TestCase
 
         $this->assertNotNull($config);
         $this->assertFalse($config['options']['required']);
+    }
+
+    /**
+     * Single-valued associations (ManyToOne / OneToOne) must use UX Autocomplete.
+     * The bundle is a hard dependency, so this is always available.
+     */
+    public function testSingleValuedAssociationHasAutocompleteEnabled(): void
+    {
+        /** @var ClassMetadata<object>&\PHPUnit\Framework\MockObject\MockObject $metadata */
+        $metadata = $this->createMock(ClassMetadata::class);
+        $metadata->method('getAssociationTargetClass')->with('category')->willReturn('App\Entity\Category');
+        $metadata->method('hasAssociation')->with('category')->willReturn(true);
+        $metadata->method('isSingleValuedAssociation')->with('category')->willReturn(true);
+
+        $config = $this->mapper->getAssociationConfig($metadata, 'category');
+
+        $this->assertNotNull($config);
+        $this->assertTrue(
+            $config['options']['autocomplete'],
+            'Single-valued association must use autocomplete: true (symfony/ux-autocomplete is required)'
+        );
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────

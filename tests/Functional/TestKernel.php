@@ -20,6 +20,7 @@ use Symfony\UX\StimulusBundle\StimulusBundle;
 use Symfony\UX\TwigComponent\TwigComponentBundle;
 use Symfony\WebpackEncoreBundle\WebpackEncoreBundle;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symfony\UX\Autocomplete\AutocompleteBundle;
 
 class TestKernel extends Kernel
 {
@@ -39,6 +40,7 @@ class TestKernel extends Kernel
             new LiveComponentBundle(),
             new StimulusBundle(),
             new WebpackEncoreBundle(),
+            new AutocompleteBundle(),
 
             new KachnitelAdminBundle(),
             new KachnitelEntityComponentsBundle()
@@ -88,6 +90,7 @@ class TestKernel extends Kernel
 
         // Doctrine-bundle 3.x removed proxy/ghost config options (they're no longer needed with ORM 3)
         // Detect doctrine-bundle 3.x by checking for EventListenerInterface which was removed in 3.0
+        /** @disregard P1009 */
         $isDoctrineBundle3 = !interface_exists(\Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface::class);
 
         if (!$isDoctrineBundle3) {

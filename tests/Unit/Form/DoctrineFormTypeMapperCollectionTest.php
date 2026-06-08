@@ -75,6 +75,31 @@ class DoctrineFormTypeMapperCollectionTest extends TestCase
         $this->assertFalse($config['options']['required']);
     }
 
+    /**
+     * ManyToMany associations must use UX Autocomplete for search-as-you-type.
+     * symfony/ux-autocomplete is a hard bundle dependency, so this is always available.
+     *
+     * @test
+     */
+    public function manyToManyAssociationHasAutocompleteEnabled(): void
+    {
+        $mapping = new ManyToManyOwningSideMapping('tags', 'App\Entity\Product', 'App\Entity\Tag');
+
+        $this->metadata->method('hasAssociation')->with('tags')->willReturn(true);
+        $this->metadata->method('isSingleValuedAssociation')->with('tags')->willReturn(false);
+        $this->metadata->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
+        $this->metadata->method('getAssociationMapping')->with('tags')->willReturn($mapping);
+        $this->metadata->method('getAssociationTargetClass')->with('tags')->willReturn('App\Entity\Tag');
+
+        $config = $this->mapper->getAssociationConfig($this->metadata, 'tags');
+
+        $this->assertNotNull($config);
+        $this->assertTrue(
+            $config['options']['autocomplete'],
+            'ManyToMany association must use autocomplete: true (symfony/ux-autocomplete is required)'
+        );
+    }
+
     // ── OneToMany → LiveCollectionType ─────────────────────────────────────────
 
     /** @test */
@@ -171,7 +196,7 @@ class DoctrineFormTypeMapperCollectionTest extends TestCase
         $this->assertTrue($config['options']['allow_delete']);
     }
 
-    // ── Existing single-valued associations still work ─────────────────────────
+    // ── Single-valued associations — autocomplete ──────────────────────────────
 
     /** @test */
     public function singleValuedAssociationStillReturnsEntityType(): void
@@ -186,6 +211,27 @@ class DoctrineFormTypeMapperCollectionTest extends TestCase
         $this->assertNotNull($config);
         $this->assertSame(EntityType::class, $config['type']);
         $this->assertArrayNotHasKey('multiple', $config['options']);
+    }
+
+    /**
+     * Single-valued associations (ManyToOne / OneToOne) must use UX Autocomplete.
+     *
+     * @test
+     */
+    public function singleValuedAssociationHasAutocompleteEnabled(): void
+    {
+        $this->metadata->method('hasAssociation')->with('category')->willReturn(true);
+        $this->metadata->method('isSingleValuedAssociation')->with('category')->willReturn(true);
+        $this->metadata->method('isCollectionValuedAssociation')->with('category')->willReturn(false);
+        $this->metadata->method('getAssociationTargetClass')->with('category')->willReturn('App\Entity\Category');
+
+        $config = $this->mapper->getAssociationConfig($this->metadata, 'category');
+
+        $this->assertNotNull($config);
+        $this->assertTrue(
+            $config['options']['autocomplete'],
+            'Single-valued association must use autocomplete: true (symfony/ux-autocomplete is required)'
+        );
     }
 
     /** @test */

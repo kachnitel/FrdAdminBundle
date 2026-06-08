@@ -16,8 +16,8 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\ComponentToolsTrait;
-use Symfony\UX\LiveComponent\ComponentWithFormTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
+use Symfony\UX\LiveComponent\LiveCollectionTrait;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 
 /**
@@ -36,7 +36,7 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 class AdminEntityForm extends AbstractController
 {
     use DefaultActionTrait;
-    use ComponentWithFormTrait {
+    use LiveCollectionTrait {
         getFormView as private getFormViewFromTrait;
     }
     use ComponentToolsTrait;

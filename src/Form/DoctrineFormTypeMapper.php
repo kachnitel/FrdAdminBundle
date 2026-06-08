@@ -154,6 +154,7 @@ class DoctrineFormTypeMapper
             'options' => [
                 'class'    => $targetClass,
                 'required' => false,
+                'autocomplete' => true,
             ],
         ];
     }
@@ -175,6 +176,7 @@ class DoctrineFormTypeMapper
                 'class'    => $targetClass,
                 'multiple' => true,
                 'required' => false,
+                'autocomplete' => true,
             ],
         ];
     }
