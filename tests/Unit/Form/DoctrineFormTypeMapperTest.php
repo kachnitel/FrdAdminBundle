@@ -109,7 +109,7 @@ class DoctrineFormTypeMapperTest extends TestCase
         $this->assertNull($config['options']['empty_data']);
     }
 
-    public function testTextFieldMapsToTextType(): void
+    public function testTextFieldMapsToTextareaType(): void
     {
         $metadata = $this->makeMetadata(['body' => ['type' => 'text', 'nullable' => false]]);
         $config = $this->mapper->getFieldConfig($metadata, 'body');
@@ -145,6 +145,24 @@ class DoctrineFormTypeMapperTest extends TestCase
         ];
     }
 
+    public function testIntegerNonNullableHasZeroEmptyData(): void
+    {
+        $metadata = $this->makeMetadata(['qty' => ['type' => 'integer', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'qty');
+
+        $this->assertNotNull($config);
+        $this->assertSame(0, $config['options']['empty_data']);
+    }
+
+    public function testIntegerNullableHasNullEmptyData(): void
+    {
+        $metadata = $this->makeMetadata(['qty' => ['type' => 'integer', 'nullable' => true]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'qty');
+
+        $this->assertNotNull($config);
+        $this->assertNull($config['options']['empty_data']);
+    }
+
     // ── Float / Decimal ────────────────────────────────────────────────────────
 
     /**
@@ -171,6 +189,33 @@ class DoctrineFormTypeMapperTest extends TestCase
         ];
     }
 
+    public function testDecimalNonNullableHasZeroEmptyData(): void
+    {
+        $metadata = $this->makeMetadata(['price' => ['type' => 'decimal', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'price');
+
+        $this->assertNotNull($config);
+        $this->assertSame(0, $config['options']['empty_data']);
+    }
+
+    public function testDecimalNullableHasNullEmptyData(): void
+    {
+        $metadata = $this->makeMetadata(['price' => ['type' => 'decimal', 'nullable' => true]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'price');
+
+        $this->assertNotNull($config);
+        $this->assertNull($config['options']['empty_data']);
+    }
+
+    public function testFloatNonNullableHasZeroEmptyData(): void
+    {
+        $metadata = $this->makeMetadata(['score' => ['type' => 'float', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'score');
+
+        $this->assertNotNull($config);
+        $this->assertSame(0, $config['options']['empty_data']);
+    }
+
     // ── Boolean ────────────────────────────────────────────────────────────────
 
     public function testBooleanFieldMapsToCheckboxType(): void
@@ -191,7 +236,7 @@ class DoctrineFormTypeMapperTest extends TestCase
         $this->assertFalse($config['options']['required']);
     }
 
-    // ── Date / DateTime / Time ─────────────────────────────────────────────────
+    // ── Date ──────────────────────────────────────────────────────────────────
 
     /**
      * @param non-empty-string $doctrineType
@@ -217,6 +262,44 @@ class DoctrineFormTypeMapperTest extends TestCase
             'date_immutable' => ['date_immutable'],
         ];
     }
+
+    public function testDateMutableUsesDatetimeInput(): void
+    {
+        $metadata = $this->makeMetadata(['dob' => ['type' => 'date', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'dob');
+
+        $this->assertNotNull($config);
+        $this->assertSame('datetime', $config['options']['input']);
+    }
+
+    public function testDateImmutableUsesDatetimeImmutableInput(): void
+    {
+        $metadata = $this->makeMetadata(['dob' => ['type' => 'date_immutable', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'dob');
+
+        $this->assertNotNull($config);
+        $this->assertSame('datetime_immutable', $config['options']['input']);
+    }
+
+    public function testDateNonNullableHasIsoDateFallback(): void
+    {
+        $metadata = $this->makeMetadata(['dob' => ['type' => 'date', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'dob');
+
+        $this->assertNotNull($config);
+        $this->assertSame('1970-01-01', $config['options']['empty_data']);
+    }
+
+    public function testDateNullableHasNullEmptyData(): void
+    {
+        $metadata = $this->makeMetadata(['dob' => ['type' => 'date', 'nullable' => true]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'dob');
+
+        $this->assertNotNull($config);
+        $this->assertNull($config['options']['empty_data']);
+    }
+
+    // ── DateTime ──────────────────────────────────────────────────────────────
 
     /**
      * @param non-empty-string $doctrineType
@@ -245,6 +328,71 @@ class DoctrineFormTypeMapperTest extends TestCase
         ];
     }
 
+    public function testDatetimeMutableUsesDatetimeInput(): void
+    {
+        $metadata = $this->makeMetadata(['createdAt' => ['type' => 'datetime', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'createdAt');
+
+        $this->assertNotNull($config);
+        $this->assertSame('datetime', $config['options']['input']);
+    }
+
+    public function testDatetimeImmutableUsesDatetimeImmutableInput(): void
+    {
+        $metadata = $this->makeMetadata(['createdAt' => ['type' => 'datetime_immutable', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'createdAt');
+
+        $this->assertNotNull($config);
+        $this->assertSame('datetime_immutable', $config['options']['input']);
+    }
+
+    public function testDatetimetzImmutableUsesDatetimeImmutableInput(): void
+    {
+        $metadata = $this->makeMetadata(['createdAt' => ['type' => 'datetimetz_immutable', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'createdAt');
+
+        $this->assertNotNull($config);
+        $this->assertSame('datetime_immutable', $config['options']['input']);
+    }
+
+    public function testDatetimeNonNullableHasIsoDatetimeFallback(): void
+    {
+        $metadata = $this->makeMetadata(['createdAt' => ['type' => 'datetime', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'createdAt');
+
+        $this->assertNotNull($config);
+        $this->assertSame('1970-01-01T00:00:00', $config['options']['empty_data']);
+    }
+
+    public function testDatetimeImmutableNonNullableHasIsoDatetimeFallback(): void
+    {
+        $metadata = $this->makeMetadata(['createdAt' => ['type' => 'datetime_immutable', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'createdAt');
+
+        $this->assertNotNull($config);
+        $this->assertSame('1970-01-01T00:00:00', $config['options']['empty_data']);
+    }
+
+    public function testDatetimeNullableHasNullEmptyData(): void
+    {
+        $metadata = $this->makeMetadata(['createdAt' => ['type' => 'datetime', 'nullable' => true]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'createdAt');
+
+        $this->assertNotNull($config);
+        $this->assertNull($config['options']['empty_data']);
+    }
+
+    public function testDatetimeImmutableNullableHasNullEmptyData(): void
+    {
+        $metadata = $this->makeMetadata(['deletedAt' => ['type' => 'datetime_immutable', 'nullable' => true]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'deletedAt');
+
+        $this->assertNotNull($config);
+        $this->assertNull($config['options']['empty_data']);
+    }
+
+    // ── Time ──────────────────────────────────────────────────────────────────
+
     /**
      * @param non-empty-string $doctrineType
      */
@@ -268,6 +416,42 @@ class DoctrineFormTypeMapperTest extends TestCase
             'time'           => ['time'],
             'time_immutable' => ['time_immutable'],
         ];
+    }
+
+    public function testTimeMutableUsesDatetimeInput(): void
+    {
+        $metadata = $this->makeMetadata(['startsAt' => ['type' => 'time', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'startsAt');
+
+        $this->assertNotNull($config);
+        $this->assertSame('datetime', $config['options']['input']);
+    }
+
+    public function testTimeImmutableUsesDatetimeImmutableInput(): void
+    {
+        $metadata = $this->makeMetadata(['startsAt' => ['type' => 'time_immutable', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'startsAt');
+
+        $this->assertNotNull($config);
+        $this->assertSame('datetime_immutable', $config['options']['input']);
+    }
+
+    public function testTimeNonNullableHasZeroTimeFallback(): void
+    {
+        $metadata = $this->makeMetadata(['startsAt' => ['type' => 'time', 'nullable' => false]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'startsAt');
+
+        $this->assertNotNull($config);
+        $this->assertSame('00:00:00', $config['options']['empty_data']);
+    }
+
+    public function testTimeNullableHasNullEmptyData(): void
+    {
+        $metadata = $this->makeMetadata(['startsAt' => ['type' => 'time', 'nullable' => true]]);
+        $config = $this->mapper->getFieldConfig($metadata, 'startsAt');
+
+        $this->assertNotNull($config);
+        $this->assertNull($config['options']['empty_data']);
     }
 
     // ── Enum ───────────────────────────────────────────────────────────────────
@@ -297,7 +481,7 @@ class DoctrineFormTypeMapperTest extends TestCase
         $this->assertSame('', $config['options']['placeholder']);
     }
 
-    public function testNonNullableEnumHasNullPlaceholder(): void
+    public function testNonNullableEnumHasFalsePlaceholder(): void
     {
         $metadata = $this->makeMetadata(
             ['status' => ['type' => 'string', 'nullable' => false]],
@@ -340,10 +524,6 @@ class DoctrineFormTypeMapperTest extends TestCase
         $this->assertFalse($config['options']['required']);
     }
 
-    /**
-     * Single-valued associations (ManyToOne / OneToOne) must use UX Autocomplete.
-     * The bundle is a hard dependency, so this is always available.
-     */
     public function testSingleValuedAssociationHasAutocompleteEnabled(): void
     {
         /** @var ClassMetadata<object>&\PHPUnit\Framework\MockObject\MockObject $metadata */
@@ -355,10 +535,7 @@ class DoctrineFormTypeMapperTest extends TestCase
         $config = $this->mapper->getAssociationConfig($metadata, 'category');
 
         $this->assertNotNull($config);
-        $this->assertTrue(
-            $config['options']['autocomplete'],
-            'Single-valued association must use autocomplete: true (symfony/ux-autocomplete is required)'
-        );
+        $this->assertTrue($config['options']['autocomplete']);
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
@@ -383,8 +560,8 @@ class DoctrineFormTypeMapperTest extends TestCase
                     fieldName: $field,
                     columnName: $field,
                 );
-                $mapping->nullable  = $data['nullable'];
-                $mapping->enumType  = $enumTypes[$field] ?? null;
+                $mapping->nullable = $data['nullable'];
+                $mapping->enumType = $enumTypes[$field] ?? null;
 
                 return $mapping;
             });

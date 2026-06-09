@@ -35,6 +35,22 @@ use Symfony\UX\LiveComponent\Form\Type\LiveCollectionType;
  *
  * For backed enum fields, an EnumType (choice type) is returned when the enum
  * class is discoverable via the Doctrine field mapping's enumType property.
+ *
+ * empty_data rules (mirrors the string/integer pattern):
+ *   - nullable field    → null  (PropertyAccessor accepts null on ?Type properties)
+ *   - non-nullable int  → 0     (prevents null TypeError before validation fires)
+ *   - non-nullable num  → 0     (idem)
+ *   - non-nullable date → ISO sentinel string that the view transformer can parse.
+ *     The transformer (DateTimeToLocalizedStringTransformer with html5 format) uses
+ *     DateTime::createFromFormat('Y-m-d\TH:i:s', ...) for datetime types,
+ *     'Y-m-d' for date types, and 'H:i:s' for time types.
+ *     Sentinel values: '1970-01-01T00:00:00', '1970-01-01', '00:00:00'.
+ *
+ * input option:
+ *   Symfony's DateType/DateTimeType/TimeType 'input' controls the PHP object type
+ *   returned by reverseTransform().  Without it, the default 'datetime' causes a
+ *   TypeError when writing a \DateTime onto a \DateTimeImmutable property.
+ *   We derive 'input' from the Doctrine type suffix ('_immutable' → 'datetime_immutable').
  */
 class DoctrineFormTypeMapper
 {
@@ -61,37 +77,49 @@ class DoctrineFormTypeMapper
         }
 
         return match ($mapping->type) {
-            'string'                                                                => [
+            'string'                                => [
                 'type'    => TextType::class,
                 'options' => ['required' => !$nullable, 'empty_data' => $nullable ? null : ''],
             ],
-            'text'                                                                  => [
+            'text'                                  => [
                 'type'    => TextareaType::class,
                 'options' => ['required' => !$nullable, 'empty_data' => $nullable ? null : ''],
             ],
-            'integer', 'smallint', 'bigint'                                         => [
+            'integer', 'smallint', 'bigint'         => [
                 'type'    => IntegerType::class,
-                'options' => ['required' => !$nullable],
+                'options' => ['required' => !$nullable, 'empty_data' => $nullable ? null : 0],
             ],
-            'decimal', 'float'                                                      => [
+            'decimal', 'float'                      => [
                 'type'    => NumberType::class,
-                'options' => ['required' => !$nullable, 'html5' => true],
+                'options' => ['required' => !$nullable, 'html5' => true, 'empty_data' => $nullable ? null : 0],
             ],
-            'boolean'                                                               => [
+            'boolean'                               => [
                 'type'    => CheckboxType::class,
                 'options' => ['required' => false],
             ],
-            'date', 'date_immutable'                                                => [
+            'date'                                  => [
                 'type'    => DateType::class,
-                'options' => ['required' => !$nullable, 'widget' => 'single_text'],
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime', 'empty_data' => $nullable ? null : '1970-01-01'],
             ],
-            'datetime', 'datetime_immutable', 'datetimetz', 'datetimetz_immutable' => [
+            'date_immutable'                        => [
+                'type'    => DateType::class,
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'empty_data' => $nullable ? null : '1970-01-01'],
+            ],
+            'datetime', 'datetimetz'                => [
                 'type'    => DateTimeType::class,
-                'options' => ['required' => !$nullable, 'widget' => 'single_text'],
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime', 'empty_data' => $nullable ? null : '1970-01-01T00:00:00'],
             ],
-            'time', 'time_immutable'                                                => [
+            'datetime_immutable', 'datetimetz_immutable' => [
+                'type'    => DateTimeType::class,
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'empty_data' => $nullable ? null : '1970-01-01T00:00:00'],
+            ],
+            'time'                                  => [
                 'type'    => TimeType::class,
-                'options' => ['required' => !$nullable, 'widget' => 'single_text'],
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime', 'empty_data' => $nullable ? null : '00:00:00'],
+            ],
+            'time_immutable'                        => [
+                'type'    => TimeType::class,
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'empty_data' => $nullable ? null : '00:00:00'],
             ],
             // json, array, object, simple_array — no supported form equivalent
             default => null,
@@ -152,8 +180,8 @@ class DoctrineFormTypeMapper
         return [
             'type'    => EntityType::class,
             'options' => [
-                'class'    => $targetClass,
-                'required' => false,
+                'class'        => $targetClass,
+                'required'     => false,
                 'autocomplete' => true,
             ],
         ];
@@ -173,9 +201,9 @@ class DoctrineFormTypeMapper
         return [
             'type'    => EntityType::class,
             'options' => [
-                'class'    => $targetClass,
-                'multiple' => true,
-                'required' => false,
+                'class'        => $targetClass,
+                'multiple'     => true,
+                'required'     => false,
                 'autocomplete' => true,
             ],
         ];
