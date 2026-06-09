@@ -23,21 +23,23 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 /**
  * Generic live form component for admin edit and new entity pages.
  *
- * Provides real-time validation as-you-type and inline save feedback
- * without full page reloads.
+ * Uses LiveCollectionTrait (which itself uses ComponentWithFormTrait) to provide
+ * addCollectionItem() and removeCollectionItem() LiveActions required by
+ * LiveCollectionType when DynamicEntityFormType renders OneToMany collections.
  *
  * When `formTypeClass` is `DynamicEntityFormType::class`, the component
- * automatically passes the required `entity_class` option so the form type
- * can introspect Doctrine metadata without any additional configuration.
+ * automatically passes the required `entity_class` and `is_root: true` options
+ * so that collection associations are included in the top-level form.
  *
  * @see \Kachnitel\AdminBundle\Controller\AbstractAdminController
+ * @see docs/DYNAMIC_FORM_COLLECTIONS.md
  */
 #[AsLiveComponent(name: 'K:Admin:EntityForm', template: '@KachnitelAdmin/components/AdminEntityForm.html.twig')]
 class AdminEntityForm extends AbstractController
 {
     use DefaultActionTrait;
     use LiveCollectionTrait {
-        getFormView as private getFormViewFromTrait;
+        LiveCollectionTrait::getFormView as private getFormViewFromTrait;
     }
     use ComponentToolsTrait;
 
@@ -65,8 +67,10 @@ class AdminEntityForm extends AbstractController
     /**
      * REVIEW: only here because private method in trait with #[ExposeInTemplate] doesn't propagate to
      * components extending this AdminEntityForm
+     * Expose getFormView() to Twig templates.
      *
-     * @return FormView
+     * Re-exposed here because #[ExposeInTemplate] on a private aliased method
+     * in a trait does not propagate automatically to the component class.
      */
     #[ExposeInTemplate('form')]
     public function getFormView(): FormView
@@ -107,9 +111,10 @@ class AdminEntityForm extends AbstractController
             // it from entity_class via a lazy closure because Symfony validates data_class
             // against allowedTypes(['null', 'string']) before OptionsResolver fires closures.
             $options['data_class'] = $entityClassName;
-            // is_root: true ensures collection associations (ManyToMany, OneToMany) are included
-            // at the top level. Child forms created by LiveCollectionType receive is_root: false
-            // via entry_options, preventing infinite recursion in bidirectional relationships.
+            // is_root: true ensures collection associations (ManyToMany, OneToMany) are
+            // included at the top level. Child forms created by LiveCollectionType receive
+            // is_root: false via entry_options, preventing infinite recursion in
+            // bidirectional relationships.
             $options['is_root'] = true;
         }
 

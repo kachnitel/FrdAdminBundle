@@ -461,6 +461,45 @@ class DynamicFormCollectionTest extends KernelTestCase
         $this->assertContains('New item', $descriptions);
     }
 
+    /**
+     * The $order property on OrderLineItem is the inverse side of a OneToMany —
+     * Doctrine sets mappedBy on it, so DynamicEntityFormType detects and skips it
+     * automatically. No #[AdminColumn(editable: false)] is required.
+     *
+     * Tested both as a standalone child form (is_root: false) and a root form,
+     * because the skip is driven by mappedBy detection, not by the is_root flag.
+     */
+    public function testInverseSideIsHiddenAutomaticallyWithoutAnyAttribute(): void
+    {
+        // Root form (is_root: true) — inverse side still skipped via mappedBy detection
+        $rootForm = $this->getFormFactory()->create(DynamicEntityFormType::class, new OrderLineItem(), [
+            'entity_class'    => OrderLineItem::class,
+            'data_class'      => OrderLineItem::class,
+            'csrf_protection' => false,
+            'is_root'         => true,
+        ]);
+
+        $this->assertTrue($rootForm->has('description'), 'Scalar field must be present');
+        $this->assertTrue($rootForm->has('quantity'), 'Scalar field must be present');
+        $this->assertFalse(
+            $rootForm->has('order'),
+            'Inverse side (mappedBy set) must be skipped automatically in root form'
+        );
+
+        // Child form (is_root: false) — same result
+        $childForm = $this->getFormFactory()->create(DynamicEntityFormType::class, new OrderLineItem(), [
+            'entity_class'    => OrderLineItem::class,
+            'data_class'      => OrderLineItem::class,
+            'csrf_protection' => false,
+            'is_root'         => false,
+        ]);
+
+        $this->assertFalse(
+            $childForm->has('order'),
+            'Inverse side (mappedBy set) must be skipped automatically in child form too'
+        );
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function getFormFactory(): FormFactoryInterface
