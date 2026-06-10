@@ -6,8 +6,6 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Form;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Mapping\ManyToOneAssociationMapping;
-use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper;
 use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
@@ -276,6 +274,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->metadata->method('hasAssociation')->with('profile')->willReturn(true);
 
         // OneToOne inverse side: mappedBy is set
+        // $mapping = new \Doctrine\ORM\Mapping\OneToOneAssociationMapping(
         $mapping = new \Doctrine\ORM\Mapping\OneToOneInverseSideMapping(
             'profile',
             'App\Entity\User',
@@ -466,25 +465,21 @@ class DynFormEntityWithBlockedCollection
     #[AdminColumn(editable: false)]
     private array $hiddenTags = [];
 }
-
-class DynFormOrderLineItemEntity
-{
-    private ?object $order = null; // @phpstan-ignore property.unusedType (inverse side — no #[AdminColumn] needed)
-}
-
-class DynFormEntityWithExplicitInverse
-{
-    #[\Kachnitel\AdminBundle\Attribute\AdminColumn(editable: true)]
-    private ?object $explicitOrder = null; // @phpstan-ignore property.unusedType (inverse side but explicitly opted in)
-}
+// ── Additional fixtures for inverse-side tests ─────────────────────────────────
 
 class DynFormUserEntity
 {
-    private ?object $profile = null; //  @phpstan-ignore property.unusedType (OneToOne inverse side — skipped automatically)
+    private ?object $profile = null; // @phpstan-ignore property.unusedType (OneToOne inverse side — skipped automatically)
 }
 
 class DynFormTagEntity
 {
     /** @var array<int, mixed> */
     private array $products = []; // ManyToMany inverse side — skipped automatically
+}
+
+class DynFormEntityWithExplicitInverse
+{
+    #[\Kachnitel\AdminBundle\Attribute\AdminColumn(editable: true)]
+    private ?object $userInverse = null; // @phpstan-ignore property.unusedType (inverse side but explicitly opted in)
 }

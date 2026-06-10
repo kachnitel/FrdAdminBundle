@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional\Form;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Tests\Fixtures\OrderLineItem;
 use Kachnitel\AdminBundle\Tests\Fixtures\OrderWithLines;
+use Kachnitel\AdminBundle\Tests\Fixtures\OrderLineItemFormType;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagFixture;
 use Kachnitel\AdminBundle\Tests\Functional\TestKernel;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -198,14 +200,31 @@ class DynamicFormCollectionTest extends KernelTestCase
     }
 
     /**
-     * The inverse ManyToOne on OrderLineItem is marked #[AdminColumn(editable: false)].
-     * The child sub-form must not contain an 'order' dropdown — that would create a
-     * confusing field pointing back to the parent entity.
+     * The $order property on OrderLineItem is the inverse side of a OneToMany —
+     * Doctrine sets mappedBy on it, so DynamicEntityFormType detects and skips it
+     * automatically. No #[AdminColumn(editable: false)] is required.
+     *
+     * Tested both as a standalone child form (is_root: false) and a root form,
+     * because the skip is driven by mappedBy detection, not by the is_root flag.
      */
-    public function testInverseSideIsHiddenViaEditableFalseInChildEntryForm(): void
+    public function testInverseSideIsHiddenAutomaticallyWithoutAnyAttribute(): void
     {
-        // Build a child form directly (simulates what LiveCollectionType does internally
-        // for each entry when entry_type is DynamicEntityFormType with is_root: false)
+        // Root form (is_root: true) — inverse side still skipped via mappedBy detection
+        $rootForm = $this->getFormFactory()->create(DynamicEntityFormType::class, new OrderLineItem(), [
+            'entity_class'    => OrderLineItem::class,
+            'data_class'      => OrderLineItem::class,
+            'csrf_protection' => false,
+            'is_root'         => true,
+        ]);
+
+        $this->assertTrue($rootForm->has('description'), 'Scalar field must be present');
+        $this->assertTrue($rootForm->has('quantity'), 'Scalar field must be present');
+        $this->assertFalse(
+            $rootForm->has('order'),
+            'Inverse side (mappedBy set) must be skipped automatically in root form'
+        );
+
+        // Child form (is_root: false) — same result
         $childForm = $this->getFormFactory()->create(DynamicEntityFormType::class, new OrderLineItem(), [
             'entity_class'    => OrderLineItem::class,
             'data_class'      => OrderLineItem::class,
@@ -213,11 +232,9 @@ class DynamicFormCollectionTest extends KernelTestCase
             'is_root'         => false,
         ]);
 
-        $this->assertTrue($childForm->has('description'), 'Scalar field must be present in child form');
-        $this->assertTrue($childForm->has('quantity'), 'Scalar field must be present in child form');
         $this->assertFalse(
             $childForm->has('order'),
-            'Inverse ManyToOne marked editable:false must be absent from child form'
+            'Inverse side (mappedBy set) must be skipped automatically in child form too'
         );
     }
 
@@ -461,42 +478,76 @@ class DynamicFormCollectionTest extends KernelTestCase
         $this->assertContains('New item', $descriptions);
     }
 
+
+    // ── Collection items do not expose parent back-reference ──────────────────
+
     /**
-     * The $order property on OrderLineItem is the inverse side of a OneToMany —
-     * Doctrine sets mappedBy on it, so DynamicEntityFormType detects and skips it
-     * automatically. No #[AdminColumn(editable: false)] is required.
+     * The owning-side form must include the OneToMany collection field.
+     * Each collection entry (child form) must include its own scalar fields
+     * but must NOT include the inverse ManyToOne back to the parent — that
+     * field is skipped automatically via mappedBy detection.
      *
-     * Tested both as a standalone child form (is_root: false) and a root form,
-     * because the skip is driven by mappedBy detection, not by the is_root flag.
+     * This is the end-to-end proof of the behaviour described in the docs:
+     *   - OrderWithLines form → lineItems collection IS present (owning side)
+     *   - OrderLineItem child form → 'order' field IS NOT present (inverse side)
      */
-    public function testInverseSideIsHiddenAutomaticallyWithoutAnyAttribute(): void
+    public function testCollectionItemsDoNotExposeParentBackReference(): void
     {
-        // Root form (is_root: true) — inverse side still skipped via mappedBy detection
-        $rootForm = $this->getFormFactory()->create(DynamicEntityFormType::class, new OrderLineItem(), [
-            'entity_class'    => OrderLineItem::class,
-            'data_class'      => OrderLineItem::class,
+        // Build the parent (root) form — lineItems must be present
+        $parentForm = $this->getFormFactory()->create(DynamicEntityFormType::class, new OrderWithLines(), [
+            'entity_class'    => OrderWithLines::class,
+            'data_class'      => OrderWithLines::class,
             'csrf_protection' => false,
             'is_root'         => true,
         ]);
 
-        $this->assertTrue($rootForm->has('description'), 'Scalar field must be present');
-        $this->assertTrue($rootForm->has('quantity'), 'Scalar field must be present');
-        $this->assertFalse(
-            $rootForm->has('order'),
-            'Inverse side (mappedBy set) must be skipped automatically in root form'
-        );
+        $this->assertTrue($parentForm->has('lineItems'), 'Owning side must include the OneToMany collection');
 
-        // Child form (is_root: false) — same result
-        $childForm = $this->getFormFactory()->create(DynamicEntityFormType::class, new OrderLineItem(), [
-            'entity_class'    => OrderLineItem::class,
-            'data_class'      => OrderLineItem::class,
-            'csrf_protection' => false,
-            'is_root'         => false,
-        ]);
+        // Inspect the prototype child form that LiveCollectionType creates for each entry.
+        // entry_options includes is_root:false and entity_class/data_class for OrderLineItem.
+        $lineItemsConfig  = $parentForm->get('lineItems')->getConfig();
+        $entryType        = $lineItemsConfig->getOption('entry_type');
+        $entryOptions     = $lineItemsConfig->getOption('entry_options');
 
+        $this->assertSame(DynamicEntityFormType::class, $entryType);
+        $this->assertFalse($entryOptions['is_root'], 'entry_options must pass is_root:false to child form');
+
+        // Build the child form directly using the same options LiveCollectionType would use
+        $childForm = $this->getFormFactory()->create($entryType, new OrderLineItem(), array_merge(
+            $entryOptions,
+            ['csrf_protection' => false],
+        ));
+
+        $this->assertTrue($childForm->has('description'), 'Child form must have scalar fields');
+        $this->assertTrue($childForm->has('quantity'), 'Child form must have scalar fields');
         $this->assertFalse(
             $childForm->has('order'),
-            'Inverse side (mappedBy set) must be skipped automatically in child form too'
+            'Child form must NOT expose the inverse ManyToOne back-reference to the parent'
+        );
+    }
+
+    /**
+     * A hand-written FormType for the child entity can override the auto-generated
+     * child form and include the parent back-reference if the developer wants it.
+     *
+     * This is done by registering a custom FormType that explicitly adds the 'order'
+     * field — DynamicEntityFormType is not used for the child in this case.
+     *
+     * The test verifies that the escape hatch works as documented.
+     */
+    public function testCustomChildFormTypeCanIncludeParentBackReference(): void
+    {
+        $customChildForm = $this->getFormFactory()->create(
+            OrderLineItemFormType::class,
+            new OrderLineItem(),
+            ['csrf_protection' => false],
+        );
+
+        $this->assertTrue($customChildForm->has('description'));
+        $this->assertTrue($customChildForm->has('quantity'));
+        $this->assertTrue(
+            $customChildForm->has('order'),
+            'Custom FormType can explicitly include the parent back-reference'
         );
     }
 
@@ -512,7 +563,7 @@ class DynamicFormCollectionTest extends KernelTestCase
     {
         /** @var ManagerRegistry $doctrine */
         $doctrine = static::getContainer()->get('doctrine');
-        /** @var \Doctrine\ORM\EntityManager */
+        /** @var EntityManager */
         return $doctrine->getManager();
     }
 

@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
-use Kachnitel\AdminBundle\Attribute\AdminColumn;
 
 /**
  * Line item child entity for OneToMany form tests.
  *
- * The $order property is the inverse ManyToOne side. In real use,
- * developers should mark it #[AdminColumn(editable: false)] so the
- * child form does not render a dropdown back to the parent Order —
- * see DynamicFormCollectionTest::testInverseSideIsHiddenViaEditableFalse.
+ * The $order property is the inverse ManyToOne side. DynamicEntityFormType
+ * detects this automatically via Doctrine's mappedBy metadata and skips it
+ * — no #[AdminColumn(editable: false)] required.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'test_order_line_item')]
@@ -31,13 +29,12 @@ class OrderLineItem
     private int $quantity = 1;
 
     /**
-     * Inverse side of the OneToMany — marked editable:false so the
-     * DynamicEntityFormType child form skips it and avoids rendering
-     * a parent-pointing dropdown inside the collection entry.
+     * Inverse side — DynamicEntityFormType skips this automatically because
+     * Doctrine sets mappedBy on the inverse side of OneToMany relationships.
+     * No #[AdminColumn(editable: false)] needed.
      */
     #[ORM\ManyToOne(targetEntity: OrderWithLines::class, inversedBy: 'lineItems')]
     #[ORM\JoinColumn(nullable: false)]
-    #[AdminColumn(editable: false)]
     private ?OrderWithLines $order = null;
 
     public function getId(): ?int

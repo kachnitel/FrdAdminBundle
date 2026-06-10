@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Form;
 
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Symfony\Component\Form\AbstractType;
@@ -16,8 +17,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * Field inclusion rules:
  *   - The identifier field (single PK) is always excluded
  *   - Fields/associations with #[AdminColumn(editable: false)] are excluded
+ *   - Inverse-side associations (mappedBy set) are skipped by default — they are managed
+ *     by the owning side. Opt back in with #[AdminColumn(editable: true)].
  *   - Fields whose Doctrine type has no Symfony form equivalent (e.g. json) are silently skipped
- *   - All scalar fields and single-valued associations are always included
+ *   - All scalar fields and owning-side associations are always included
  *   - Collection-valued associations (ManyToMany, OneToMany) are included by default
  *     when is_root is true; skipped when is_root is false to prevent infinite recursion
  *
@@ -80,6 +83,7 @@ class DynamicEntityFormType extends AbstractType
         // ── Associations ───────────────────────────────────────────────────────
 
         foreach ($metadata->getAssociationNames() as $assocName) {
+            // Explicit editable:false → always skip
             if ($this->isEditableBlocked($entityClass, $assocName)) {
                 continue;
             }
@@ -89,6 +93,13 @@ class DynamicEntityFormType extends AbstractType
             // Skip collection associations in child forms to prevent infinite recursion.
             // Single-valued associations (ManyToOne, OneToOne) are always included.
             if ($isCollection && !$isRoot) {
+                continue;
+            }
+
+            // Skip inverse-side associations by default — they are managed by the owning
+            // side and rendering a field for them creates a confusing back-reference.
+            // Override with #[AdminColumn(editable: true)] to force inclusion.
+            if ($this->isInverseSide($metadata, $assocName, $entityClass)) {
                 continue;
             }
 
@@ -113,6 +124,72 @@ class DynamicEntityFormType extends AbstractType
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────
+
+    /**
+     * Returns true when an association is the inverse side of a bidirectional
+     * relationship, meaning it is managed by the other side and should not be
+     * rendered as a form field by default.
+     *
+     * Detection: Doctrine sets `mappedBy` on the inverse side of:
+     *   - OneToMany  (always inverse)
+     *   - ManyToMany (inverse side only; owning side has inversedBy instead)
+     *   - OneToOne   (inverse side only)
+     *
+     * If the property carries #[AdminColumn(editable: true)], this check is
+     * bypassed by the caller and the field is included regardless.
+     *
+     * @param ClassMetadata<object> $metadata
+     * @param class-string $entityClass
+     */
+    private function isInverseSide(ClassMetadata $metadata, string $assocName, string $entityClass): bool
+    {
+        if (!$metadata->hasAssociation($assocName)) {
+            return false;
+        }
+
+        $mapping = $metadata->getAssociationMapping($assocName);
+
+        // mappedBy is only set on the inverse side
+        $mappedBy = $mapping->mappedBy ?? null;
+
+        if ($mappedBy === null || $mappedBy === '') {
+            return false;
+        }
+
+        // Even if this is an inverse side, an explicit editable:true opt-in overrides the skip
+        return !$this->isEditableExplicitlyEnabled($entityClass, $assocName);
+    }
+
+    /**
+     * Returns true when a property carries #[AdminColumn(editable: true)],
+     * meaning the developer explicitly wants this field included even if it
+     * would otherwise be skipped (e.g. inverse side of a bidirectional association).
+     *
+     * @param class-string $entityClass
+     */
+    private function isEditableExplicitlyEnabled(string $entityClass, string $property): bool
+    {
+        try {
+            $reflection = new \ReflectionClass($entityClass);
+
+            if (!$reflection->hasProperty($property)) {
+                return false;
+            }
+
+            $attributes = $reflection->getProperty($property)->getAttributes(AdminColumn::class);
+
+            if (empty($attributes)) {
+                return false;
+            }
+
+            /** @var AdminColumn $col */
+            $col = $attributes[0]->newInstance();
+
+            return $col->editable === true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
 
     /**
      * Returns true when a property carries #[AdminColumn(editable: false)],
