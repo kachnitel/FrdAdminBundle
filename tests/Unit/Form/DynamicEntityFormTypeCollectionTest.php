@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper;
 use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -17,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\UX\LiveComponent\Form\Type\LiveCollectionType;
 
 /**
@@ -41,6 +43,12 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
     /** @var DoctrineFormTypeMapper&MockObject */
     private DoctrineFormTypeMapper $mapper;
 
+    /** @var RowActionExpressionLanguage&MockObject */
+    private RowActionExpressionLanguage $expressionLanguage;
+
+    /** @var AuthorizationCheckerInterface&MockObject */
+    private AuthorizationCheckerInterface $authorizationChecker;
+
     /** @var FormBuilderInterface<mixed>&MockObject */
     private FormBuilderInterface $builder;
 
@@ -49,10 +57,22 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->em       = $this->createMock(EntityManagerInterface::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
         $this->mapper   = $this->createMock(DoctrineFormTypeMapper::class);
+        $this->expressionLanguage = $this->createMock(RowActionExpressionLanguage::class);
+        $this->authorizationChecker = $this->createMock(AuthorizationCheckerInterface::class);
         $this->builder  = $this->createMock(FormBuilderInterface::class);
 
         $this->em->method('getClassMetadata')->willReturn($this->metadata);
         $this->metadata->method('getSingleIdentifierFieldName')->willReturn('id');
+    }
+
+    private function createFormType(): DynamicEntityFormType
+    {
+        return new DynamicEntityFormType(
+            $this->em,
+            $this->mapper,
+            $this->expressionLanguage,
+            $this->authorizationChecker,
+        );
     }
 
     // ── is_root: true (default) — collections ARE included ────────────────────
@@ -77,7 +97,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
             ->method('add')
             ->with('tags', EntityType::class, $this->anything());
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormTaggableEntity::class,
             'is_root'      => true,
@@ -109,7 +129,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
             ->method('add')
             ->with('items', LiveCollectionType::class, $this->anything());
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormOrderEntity::class,
             'is_root'      => true,
@@ -130,7 +150,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->mapper->expects($this->never())->method('getAssociationConfig');
         $this->builder->expects($this->never())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormTaggableEntity::class,
             'is_root'      => false,
@@ -148,7 +168,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->mapper->expects($this->never())->method('getAssociationConfig');
         $this->builder->expects($this->never())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormOrderEntity::class,
             'is_root'      => false,
@@ -175,7 +195,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
             ->method('add')
             ->with('category', EntityType::class, $this->anything());
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormProductEntity::class,
             'is_root'      => false,
@@ -196,7 +216,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->mapper->expects($this->never())->method('getAssociationConfig');
         $this->builder->expects($this->never())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormEntityWithBlockedCollection::class,
             'is_root'      => true,
@@ -221,7 +241,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
 
         $this->builder->expects($this->once())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormTaggableEntity::class,
             'is_root'      => true,
@@ -235,7 +255,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
     {
         $resolver = new OptionsResolver();
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->configureOptions($resolver);
 
         $resolved = $resolver->resolve(['entity_class' => 'App\Entity\Product']);
@@ -248,7 +268,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
     {
         $resolver = new OptionsResolver();
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->configureOptions($resolver);
 
         $resolved = $resolver->resolve(['entity_class' => 'App\Entity\Product', 'is_root' => false]);
@@ -282,7 +302,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->mapper->expects($this->never())->method('getAssociationConfig');
         $this->builder->expects($this->never())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormUserEntity::class,
             'is_root'      => true,
@@ -313,7 +333,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->mapper->expects($this->never())->method('getAssociationConfig');
         $this->builder->expects($this->never())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormTagEntity::class,
             'is_root'      => true,
@@ -352,7 +372,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
 
         $this->builder->expects($this->once())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormProductEntity::class,
             'is_root'      => true,
@@ -389,7 +409,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
 
         $this->builder->expects($this->once())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormTaggableEntity::class,
             'is_root'      => true,
@@ -428,7 +448,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
 
         $this->builder->expects($this->once())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormEntityWithExplicitInverse::class,
             'is_root'      => true,
@@ -468,7 +488,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->mapper->expects($this->never())->method('getAssociationConfig');
         $this->builder->expects($this->never())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormLineItemEntity::class,
             'is_root'      => true, // even in root form, back-reference is hidden
@@ -506,7 +526,7 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
 
         $this->builder->expects($this->once())->method('add');
 
-        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType = $this->createFormType();
         $formType->buildForm($this->builder, [
             'entity_class' => DynFormLineItemWithOptIn::class,
             'is_root'      => true,

@@ -8,9 +8,12 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
  * Auto-generates a Symfony form for any Doctrine entity without requiring a hand-written FormType.
@@ -44,6 +47,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * Optional option:
  *   is_root (bool, default: true) — set to false for child forms inside LiveCollectionType
+ *   entity_instance (object|null, default: null) — the actual entity being edited/created. If provided,
+ *     expressions in #[AdminColumn(editable: ...)] will be evaluated against this entity to determine
+ *     field inclusion. For new entities, pass a fresh instance. For child forms in LiveCollectionType,
+ *     the entity_instance is typically passed from the parent.
  *
  * @extends AbstractType<object>
  */
@@ -52,6 +59,8 @@ class DynamicEntityFormType extends AbstractType
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly DoctrineFormTypeMapper $mapper,
+        private readonly RowActionExpressionLanguage $expressionLanguage,
+        private readonly AuthorizationCheckerInterface $authorizationChecker,
     ) {}
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -59,20 +68,40 @@ class DynamicEntityFormType extends AbstractType
         /** @var class-string $entityClass */
         $entityClass = $options['entity_class'];
         $isRoot      = (bool) ($options['is_root'] ?? true);
+        $entity      = $options['entity_instance'] ?? null;
         $metadata    = $this->em->getClassMetadata($entityClass);
         $idField     = $metadata->getSingleIdentifierFieldName();
 
         // ── Scalar fields ──────────────────────────────────────────────────────
 
         foreach ($metadata->getFieldNames() as $fieldName) {
-            $this->addScalarField($builder, $metadata, $entityClass, $fieldName, $idField);
+            $this->addScalarField($builder, $metadata, $entityClass, $fieldName, $idField, $entity);
         }
 
         // ── Associations ───────────────────────────────────────────────────────
 
         foreach ($metadata->getAssociationNames() as $assocName) {
-            $this->addAssociationField($builder, $metadata, $entityClass, $assocName, $isRoot);
+            $this->addAssociationField($builder, $metadata, $entityClass, $assocName, $isRoot, $entity);
         }
+
+        // ── Expression evaluation listener ──────────────────────────────────────
+        // Attach a listener that evaluates expression-based editability rules
+        // after form data is bound. This is essential for child forms created by
+        // LiveCollectionType, where the entity instance is only available after
+        // the form structure is built.
+        //
+        // For directly-passed entity_instance options, this listener handles
+        // expressions evaluated during form building. For child forms bound
+        // later, this listener catches expressions that depend on runtime data.
+        $listener = new DynamicFormEditabilityListener(
+            $this->expressionLanguage,
+            $this->authorizationChecker,
+            $entityClass,
+        );
+        $builder->addEventListener(
+            FormEvents::PRE_SET_DATA,
+            [$listener, 'onPreSetData'],
+        );
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -82,6 +111,9 @@ class DynamicEntityFormType extends AbstractType
 
         $resolver->setDefault('is_root', true);
         $resolver->setAllowedTypes('is_root', 'bool');
+
+        $resolver->setDefault('entity_instance', null);
+        $resolver->setAllowedTypes('entity_instance', ['object', 'null']);
 
         // data_class is intentionally NOT set here — the caller sets it
     }
@@ -93,13 +125,13 @@ class DynamicEntityFormType extends AbstractType
      * @param ClassMetadata<object> $metadata
      * @param class-string $entityClass
      */
-    private function addScalarField(FormBuilderInterface $builder, ClassMetadata $metadata, string $entityClass, string $fieldName, ?string $idField): void
+    private function addScalarField(FormBuilderInterface $builder, ClassMetadata $metadata, string $entityClass, string $fieldName, ?string $idField, ?object $entity): void
     {
         if ($fieldName === $idField) {
             return;
         }
 
-        if ($this->isEditableBlocked($entityClass, $fieldName)) {
+        if ($this->isEditableBlocked($entityClass, $fieldName, $entity)) {
             return;
         }
 
@@ -116,9 +148,9 @@ class DynamicEntityFormType extends AbstractType
      * @param ClassMetadata<object> $metadata
      * @param class-string $entityClass
      */
-    private function addAssociationField(FormBuilderInterface $builder, ClassMetadata $metadata, string $entityClass, string $assocName, bool $isRoot): void
+    private function addAssociationField(FormBuilderInterface $builder, ClassMetadata $metadata, string $entityClass, string $assocName, bool $isRoot, ?object $entity): void
     {
-        if ($this->isEditableBlocked($entityClass, $assocName)) {
+        if ($this->isEditableBlocked($entityClass, $assocName, $entity)) {
             return;
         }
 
@@ -128,11 +160,11 @@ class DynamicEntityFormType extends AbstractType
             return;
         }
 
-        if ($this->shouldSkipInverseSide($metadata, $assocName, $entityClass, $isCollection, $isRoot)) {
+        if ($this->shouldSkipInverseSide($metadata, $assocName, $entityClass, $isCollection, $isRoot, $entity)) {
             return;
         }
 
-        if ($this->isBackReferenceToParent($metadata, $assocName, $entityClass) && !$isCollection) {
+        if ($this->isBackReferenceToParent($metadata, $assocName, $entityClass, $entity) && !$isCollection) {
             return;
         }
 
@@ -153,7 +185,7 @@ class DynamicEntityFormType extends AbstractType
      * @param ClassMetadata<object> $metadata
      * @param class-string $entityClass
      */
-    private function shouldSkipInverseSide(ClassMetadata $metadata, string $assocName, string $entityClass, bool $isCollection, bool $isRoot): bool
+    private function shouldSkipInverseSide(ClassMetadata $metadata, string $assocName, string $entityClass, bool $isCollection, bool $isRoot, ?object $entity): bool
     {
         if (!$metadata->hasAssociation($assocName)) {
             return false;
@@ -175,7 +207,7 @@ class DynamicEntityFormType extends AbstractType
 
         // For anything else (OneToOne inverse, ManyToMany inverse, collections in child forms),
         // check for explicit opt-in
-        return !$this->isEditableExplicitlyEnabled($entityClass, $assocName);
+        return !$this->isEditableExplicitlyEnabled($entityClass, $assocName, $entity);
     }
 
     /**
@@ -191,7 +223,7 @@ class DynamicEntityFormType extends AbstractType
      * @param ClassMetadata<object> $metadata
      * @param class-string $entityClass
      */
-    private function isBackReferenceToParent(ClassMetadata $metadata, string $assocName, string $entityClass): bool
+    private function isBackReferenceToParent(ClassMetadata $metadata, string $assocName, string $entityClass, ?object $entity): bool
     {
         if (!$metadata->hasAssociation($assocName)) {
             return false;
@@ -202,7 +234,7 @@ class DynamicEntityFormType extends AbstractType
         // Check for inversedBy (ManyToOne pointing to a parent's OneToMany collection)
         $inversedBy = $mapping->inversedBy ?? null;
         if ($inversedBy !== null && $inversedBy !== '') {
-            return !$this->isEditableExplicitlyEnabled($entityClass, $assocName);
+            return !$this->isEditableExplicitlyEnabled($entityClass, $assocName, $entity);
         }
 
         return false;
@@ -213,9 +245,12 @@ class DynamicEntityFormType extends AbstractType
      * meaning the developer explicitly wants this field included even if it
      * would otherwise be skipped (e.g. inverse side of a bidirectional association).
      *
+     * If editable is an expression string and entity is provided, the expression is evaluated.
+     * If entity is not provided, expressions are treated as "unresolved" and return false (include).
+     *
      * @param class-string $entityClass
      */
-    private function isEditableExplicitlyEnabled(string $entityClass, string $property): bool
+    private function isEditableExplicitlyEnabled(string $entityClass, string $property, ?object $entity = null): bool
     {
         try {
             $reflection = new \ReflectionClass($entityClass);
@@ -233,7 +268,21 @@ class DynamicEntityFormType extends AbstractType
             /** @var AdminColumn $col */
             $col = $attributes[0]->newInstance();
 
-            return $col->editable === true;
+            // Explicit true — bypass entity default; enabled
+            if ($col->editable === true) {
+                return true;
+            }
+
+            // Expression string — evaluate if entity is available
+            if (is_string($col->editable) && $entity !== null) {
+                return $this->expressionLanguage->evaluate(
+                    $col->editable,
+                    $entity,
+                    $this->authorizationChecker,
+                );
+            }
+
+            return false;
         } catch (\Throwable) {
             return false;
         }
@@ -243,11 +292,13 @@ class DynamicEntityFormType extends AbstractType
      * Returns true when a property carries #[AdminColumn(editable: false)],
      * meaning it must be excluded from the generated form.
      *
-     * No attribute, or editable: null/true/'expression', all return false (include).
+     * If editable is an expression string and entity is provided, the expression is evaluated.
+     * An expression evaluating to false means the field should be blocked (excluded).
+     * If entity is not provided, expressions are treated as "unresolved" and return false (include).
      *
      * @param class-string $entityClass
      */
-    private function isEditableBlocked(string $entityClass, string $property): bool
+    private function isEditableBlocked(string $entityClass, string $property, ?object $entity = null): bool
     {
         try {
             $reflection = new \ReflectionClass($entityClass);
@@ -265,7 +316,22 @@ class DynamicEntityFormType extends AbstractType
             /** @var AdminColumn $col */
             $col = $attributes[0]->newInstance();
 
-            return $col->editable === false;
+            // Explicit false — always blocked (excluded)
+            if ($col->editable === false) {
+                return true;
+            }
+
+            // Expression string — evaluate if entity is available
+            if (is_string($col->editable) && $entity !== null) {
+                // When an expression evaluates to false, the field is blocked (excluded)
+                return !$this->expressionLanguage->evaluate(
+                    $col->editable,
+                    $entity,
+                    $this->authorizationChecker,
+                );
+            }
+
+            return false;
         } catch (\Throwable) {
             return false;
         }

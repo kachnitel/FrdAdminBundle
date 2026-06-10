@@ -58,6 +58,7 @@ services:
     # Form services
     Kachnitel\AdminBundle\Form\:
         resource: '../src/Form'
+        exclude: '../src/Form/DynamicFormEditabilityListener.php'
 
     # Twig Extensions
     Kachnitel\AdminBundle\Twig\Extension\:

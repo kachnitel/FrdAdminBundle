@@ -264,7 +264,7 @@ class TestableAdminEntityForm extends AdminEntityForm
         return $this->dummyForm; // @phpstan-ignore return.type
     }
 
-    /** @return FormInterface<object> */
+    /** @return FormInterface<object|null> */
     public function exposeInstantiateForm(): FormInterface
     {
         return $this->instantiateForm();

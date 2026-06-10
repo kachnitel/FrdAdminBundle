@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper;
 use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
+use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -18,6 +19,7 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
  * @group auto-form
@@ -33,13 +35,26 @@ class DynamicEntityFormTypeTest extends TestCase
     /** @var DoctrineFormTypeMapper&MockObject */
     private DoctrineFormTypeMapper $mapper;
 
+    /** @var RowActionExpressionLanguage&MockObject */
+    private RowActionExpressionLanguage $expressionLanguage;
+
+    /** @var AuthorizationCheckerInterface&MockObject */
+    private AuthorizationCheckerInterface $authorizationChecker;
+
     private DynamicEntityFormType $formType;
 
     protected function setUp(): void
     {
         $this->em      = $this->createMock(EntityManagerInterface::class);
         $this->mapper  = $this->createMock(DoctrineFormTypeMapper::class);
-        $this->formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $this->expressionLanguage = $this->createMock(RowActionExpressionLanguage::class);
+        $this->authorizationChecker = $this->createMock(AuthorizationCheckerInterface::class);
+        $this->formType = new DynamicEntityFormType(
+            $this->em,
+            $this->mapper,
+            $this->expressionLanguage,
+            $this->authorizationChecker,
+        );
     }
 
     // ── configureOptions ───────────────────────────────────────────────────────

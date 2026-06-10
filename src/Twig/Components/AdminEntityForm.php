@@ -89,7 +89,7 @@ class AdminEntityForm extends AbstractController
      * CSRF protection is disabled at the form level — LiveComponent handles
      * its own request-level CSRF separately.
      *
-     * @return FormInterface<object>
+     * @return FormInterface<object|null>
      */
     protected function instantiateForm(): FormInterface
     {
@@ -116,9 +116,12 @@ class AdminEntityForm extends AbstractController
             // is_root: false via entry_options, preventing infinite recursion in
             // bidirectional relationships.
             $options['is_root'] = true;
+            // entity_instance: pass the actual entity so expressions in #[AdminColumn(editable: ...)]
+            // can be evaluated during form building. For existing entities, this is the loaded instance.
+            // For new entities, this is a fresh instance. Enables expression-based editability rules.
+            $options['entity_instance'] = $entity;
         }
 
-        /** @phpstan-ignore-next-line argument.templateType */
         return $this->createForm($formTypeClass, $entity, $options);
     }
 
