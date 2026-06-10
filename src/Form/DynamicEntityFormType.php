@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Form;
 
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -96,10 +97,16 @@ class DynamicEntityFormType extends AbstractType
                 continue;
             }
 
-            // Skip inverse-side associations by default — they are managed by the owning
-            // side and rendering a field for them creates a confusing back-reference.
-            // Override with #[AdminColumn(editable: true)] to force inclusion.
-            if ($this->isInverseSide($metadata, $assocName, $entityClass)) {
+            // Skip inverse-side associations (those with mappedBy set), EXCEPT:
+            //   - OneToMany in root forms (collections are included when is_root is true)
+            //   - Any inverse-side with explicit editable:true opt-in
+            if ($this->shouldSkipInverseSide($metadata, $assocName, $entityClass, $isCollection, $isRoot)) {
+                continue;
+            }
+
+            // Skip single-valued associations that are back-references to parent (ManyToOne with inversedBy)
+            // unless explicitly opted in with editable:true
+            if ($this->isBackReferenceToParent($metadata, $assocName, $entityClass) && !$isCollection) {
                 continue;
             }
 
@@ -126,22 +133,53 @@ class DynamicEntityFormType extends AbstractType
     // ── Private helpers ────────────────────────────────────────────────────────
 
     /**
-     * Returns true when an association is the inverse side of a bidirectional
-     * relationship, meaning it is managed by the other side and should not be
-     * rendered as a form field by default.
+     * Returns true when an inverse-side association should be skipped.
      *
-     * Detection: Doctrine sets `mappedBy` on the inverse side of:
-     *   - OneToMany  (always inverse)
-     *   - ManyToMany (inverse side only; owning side has inversedBy instead)
-     *   - OneToOne   (inverse side only)
-     *
-     * If the property carries #[AdminColumn(editable: true)], this check is
-     * bypassed by the caller and the field is included regardless.
+     * Inverse-side associations (mappedBy set) are skipped by default to avoid
+     * redundant controls, EXCEPT OneToMany collections in root forms are kept.
      *
      * @param ClassMetadata<object> $metadata
      * @param class-string $entityClass
      */
-    private function isInverseSide(ClassMetadata $metadata, string $assocName, string $entityClass): bool
+    private function shouldSkipInverseSide(ClassMetadata $metadata, string $assocName, string $entityClass, bool $isCollection, bool $isRoot): bool
+    {
+        if (!$metadata->hasAssociation($assocName)) {
+            return false;
+        }
+
+        $mapping = $metadata->getAssociationMapping($assocName);
+        $mappedBy = $mapping->mappedBy ?? null;
+
+        // No mappedBy → this is an owning-side association, don't skip
+        if ($mappedBy === null || $mappedBy === '') {
+            return false;
+        }
+
+        // This is an inverse-side association (has mappedBy)
+        // Keep OneToMany collections in root forms; skip everything else
+        if ($isCollection && $isRoot && $mapping instanceof OneToManyAssociationMapping) {
+            return false; // OneToMany in root form: include
+        }
+
+        // For anything else (OneToOne inverse, ManyToMany inverse, collections in child forms),
+        // check for explicit opt-in
+        return !$this->isEditableExplicitlyEnabled($entityClass, $assocName);
+    }
+
+    /**
+     * Returns true when a single-valued association is a back-reference to a parent entity.
+     *
+     * A back-reference occurs when:
+     *   - The association is single-valued (ManyToOne, OneToOne inverse)
+     *   - It has `inversedBy` set (ManyToOne pointing to a parent's OneToMany collection)
+     *
+     * Such associations are managed by the parent form and should not be included
+     * in child forms to avoid confusing UI. Opt back in with #[AdminColumn(editable: true)].
+     *
+     * @param ClassMetadata<object> $metadata
+     * @param class-string $entityClass
+     */
+    private function isBackReferenceToParent(ClassMetadata $metadata, string $assocName, string $entityClass): bool
     {
         if (!$metadata->hasAssociation($assocName)) {
             return false;
@@ -149,15 +187,13 @@ class DynamicEntityFormType extends AbstractType
 
         $mapping = $metadata->getAssociationMapping($assocName);
 
-        // mappedBy is only set on the inverse side
-        $mappedBy = $mapping->mappedBy ?? null;
-
-        if ($mappedBy === null || $mappedBy === '') {
-            return false;
+        // Check for inversedBy (ManyToOne pointing to a parent's OneToMany collection)
+        $inversedBy = $mapping->inversedBy ?? null;
+        if ($inversedBy !== null && $inversedBy !== '') {
+            return !$this->isEditableExplicitlyEnabled($entityClass, $assocName);
         }
 
-        // Even if this is an inverse side, an explicit editable:true opt-in overrides the skip
-        return !$this->isEditableExplicitlyEnabled($entityClass, $assocName);
+        return false;
     }
 
     /**

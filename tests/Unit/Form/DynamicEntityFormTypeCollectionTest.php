@@ -260,8 +260,6 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
 
     /**
      * OneToOne inverse-side associations (mappedBy set) must be skipped automatically.
-     * ManyToOne is always the owning side in Doctrine — the realistic inverse-side
-     * single-valued case is OneToOne.
      *
      * @test
      */
@@ -273,8 +271,6 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->metadata->method('isCollectionValuedAssociation')->with('profile')->willReturn(false);
         $this->metadata->method('hasAssociation')->with('profile')->willReturn(true);
 
-        // OneToOne inverse side: mappedBy is set
-        // $mapping = new \Doctrine\ORM\Mapping\OneToOneAssociationMapping(
         $mapping = new \Doctrine\ORM\Mapping\OneToOneInverseSideMapping(
             'profile',
             'App\Entity\User',
@@ -306,7 +302,6 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->metadata->method('isCollectionValuedAssociation')->with('products')->willReturn(true);
         $this->metadata->method('hasAssociation')->with('products')->willReturn(true);
 
-        // ManyToMany inverse side: mappedBy is set
         $mapping = new \Doctrine\ORM\Mapping\ManyToManyInverseSideMapping(
             'products',
             'App\Entity\Tag',
@@ -326,7 +321,8 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
     }
 
     /**
-     * ManyToOne (always owning side — mappedBy never set) must be included.
+     * ManyToOne without inversedBy (standalone relationship, e.g. Product → Category)
+     * must always be included — it is not a parent back-reference.
      *
      * @test
      */
@@ -338,13 +334,13 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
         $this->metadata->method('isCollectionValuedAssociation')->with('category')->willReturn(false);
         $this->metadata->method('hasAssociation')->with('category')->willReturn(true);
 
-        // ManyToOne: mappedBy is never set — always owning side
+        // ManyToOne without inversedBy — standalone, always owning side
         $mapping = new \Doctrine\ORM\Mapping\ManyToOneAssociationMapping(
             'category',
             'App\Entity\Product',
             'App\Entity\Category',
         );
-        // mappedBy intentionally absent
+        // inversedBy intentionally absent
         $this->metadata->method('getAssociationMapping')->with('category')->willReturn($mapping);
 
         $this->mapper->expects($this->once())
@@ -438,6 +434,84 @@ class DynamicEntityFormTypeCollectionTest extends TestCase
             'is_root'      => true,
         ]);
     }
+
+    // ── ManyToOne with inversedBy — parent back-reference detection ───────────
+
+    /**
+     * ManyToOne with inversedBy set is a back-reference to a parent entity's OneToMany
+     * collection. It must be skipped in all forms (root and child alike) to avoid
+     * exposing a confusing parent-selector widget.
+     *
+     * Concrete example: OrderLineItem::$order (ManyToOne, inversedBy: 'lineItems')
+     * should never appear on the OrderLineItem form — the parent form manages the
+     * relationship.
+     *
+     * @test
+     */
+    public function manyToOneWithInversedByIsSkippedAutomatically(): void
+    {
+        $this->metadata->method('getFieldNames')->willReturn([]);
+        $this->metadata->method('getAssociationNames')->willReturn(['order']);
+        $this->metadata->method('isSingleValuedAssociation')->with('order')->willReturn(true);
+        $this->metadata->method('isCollectionValuedAssociation')->with('order')->willReturn(false);
+        $this->metadata->method('hasAssociation')->with('order')->willReturn(true);
+
+        // ManyToOne with inversedBy — back-reference to parent's OneToMany
+        $mapping = new \Doctrine\ORM\Mapping\ManyToOneAssociationMapping(
+            'order',
+            DynFormLineItemEntity::class,
+            'App\Entity\OrderWithLines',
+        );
+        $mapping->inversedBy = 'lineItems';
+        $this->metadata->method('getAssociationMapping')->with('order')->willReturn($mapping);
+
+        $this->mapper->expects($this->never())->method('getAssociationConfig');
+        $this->builder->expects($this->never())->method('add');
+
+        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType->buildForm($this->builder, [
+            'entity_class' => DynFormLineItemEntity::class,
+            'is_root'      => true, // even in root form, back-reference is hidden
+        ]);
+    }
+
+    /**
+     * ManyToOne with inversedBy AND #[AdminColumn(editable: true)] must be included —
+     * explicit opt-in overrides the automatic back-reference detection.
+     *
+     * @test
+     */
+    public function manyToOneWithInversedByAndEditableTrueIsIncluded(): void
+    {
+        $this->metadata->method('getFieldNames')->willReturn([]);
+        $this->metadata->method('getAssociationNames')->willReturn(['orderExplicit']);
+        $this->metadata->method('isSingleValuedAssociation')->with('orderExplicit')->willReturn(true);
+        $this->metadata->method('isCollectionValuedAssociation')->with('orderExplicit')->willReturn(false);
+        $this->metadata->method('hasAssociation')->with('orderExplicit')->willReturn(true);
+
+        $mapping = new \Doctrine\ORM\Mapping\ManyToOneAssociationMapping(
+            'orderExplicit',
+            DynFormLineItemWithOptIn::class,
+            'App\Entity\OrderWithLines',
+        );
+        $mapping->inversedBy = 'lineItems';
+        $this->metadata->method('getAssociationMapping')->with('orderExplicit')->willReturn($mapping);
+
+        $this->mapper->expects($this->once())
+            ->method('getAssociationConfig')
+            ->willReturn([
+                'type'    => \Symfony\Bridge\Doctrine\Form\Type\EntityType::class,
+                'options' => ['class' => 'App\Entity\OrderWithLines', 'required' => false],
+            ]);
+
+        $this->builder->expects($this->once())->method('add');
+
+        $formType = new DynamicEntityFormType($this->em, $this->mapper);
+        $formType->buildForm($this->builder, [
+            'entity_class' => DynFormLineItemWithOptIn::class,
+            'is_root'      => true,
+        ]);
+    }
 }
 
 // ── Inline fixtures ────────────────────────────────────────────────────────────
@@ -465,6 +539,7 @@ class DynFormEntityWithBlockedCollection
     #[AdminColumn(editable: false)]
     private array $hiddenTags = [];
 }
+
 // ── Additional fixtures for inverse-side tests ─────────────────────────────────
 
 class DynFormUserEntity
@@ -482,4 +557,19 @@ class DynFormEntityWithExplicitInverse
 {
     #[\Kachnitel\AdminBundle\Attribute\AdminColumn(editable: true)]
     private ?object $userInverse = null; // @phpstan-ignore property.unusedType (inverse side but explicitly opted in)
+}
+
+// ── Fixtures for ManyToOne inversedBy tests ───────────────────────────────────
+
+/** OrderLineItem analogue — has a ManyToOne back-reference to the parent. */
+class DynFormLineItemEntity
+{
+    private ?object $order = null; // @phpstan-ignore property.unusedType (ManyToOne with inversedBy — skipped automatically)
+}
+
+/** Line item with explicit opt-in so the parent back-reference IS shown. */
+class DynFormLineItemWithOptIn
+{
+    #[\Kachnitel\AdminBundle\Attribute\AdminColumn(editable: true)]
+    private ?object $orderExplicit = null; // @phpstan-ignore property.unusedType (explicitly opted in)
 }
