@@ -9,16 +9,18 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-/**
- * @covers \Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker
- * @group auto-form
- */
+#[CoversClass(ActionAccessibilityChecker::class)]
+#[UsesClass(Admin::class)]
+#[Group('auto-form')]
 class ActionAccessibilityCheckerAutoFormTest extends TestCase
 {
     /** @var AuthorizationCheckerInterface&MockObject */

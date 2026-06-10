@@ -65,57 +65,13 @@ class DynamicEntityFormType extends AbstractType
         // ── Scalar fields ──────────────────────────────────────────────────────
 
         foreach ($metadata->getFieldNames() as $fieldName) {
-            if ($fieldName === $idField) {
-                continue;
-            }
-
-            if ($this->isEditableBlocked($entityClass, $fieldName)) {
-                continue;
-            }
-
-            $config = $this->mapper->getFieldConfig($metadata, $fieldName);
-            if ($config === null) {
-                continue; // unsupported type — skip silently
-            }
-
-            $builder->add($fieldName, $config['type'], $config['options']);
+            $this->addScalarField($builder, $metadata, $entityClass, $fieldName, $idField);
         }
 
         // ── Associations ───────────────────────────────────────────────────────
 
         foreach ($metadata->getAssociationNames() as $assocName) {
-            // Explicit editable:false → always skip
-            if ($this->isEditableBlocked($entityClass, $assocName)) {
-                continue;
-            }
-
-            $isCollection = $metadata->isCollectionValuedAssociation($assocName);
-
-            // Skip collection associations in child forms to prevent infinite recursion.
-            // Single-valued associations (ManyToOne, OneToOne) are always included.
-            if ($isCollection && !$isRoot) {
-                continue;
-            }
-
-            // Skip inverse-side associations (those with mappedBy set), EXCEPT:
-            //   - OneToMany in root forms (collections are included when is_root is true)
-            //   - Any inverse-side with explicit editable:true opt-in
-            if ($this->shouldSkipInverseSide($metadata, $assocName, $entityClass, $isCollection, $isRoot)) {
-                continue;
-            }
-
-            // Skip single-valued associations that are back-references to parent (ManyToOne with inversedBy)
-            // unless explicitly opted in with editable:true
-            if ($this->isBackReferenceToParent($metadata, $assocName, $entityClass) && !$isCollection) {
-                continue;
-            }
-
-            $config = $this->mapper->getAssociationConfig($metadata, $assocName);
-            if ($config === null) {
-                continue;
-            }
-
-            $builder->add($assocName, $config['type'], $config['options']);
+            $this->addAssociationField($builder, $metadata, $entityClass, $assocName, $isRoot);
         }
     }
 
@@ -131,6 +87,62 @@ class DynamicEntityFormType extends AbstractType
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────
+
+    /**
+     * @param FormBuilderInterface<object|null> $builder
+     * @param ClassMetadata<object> $metadata
+     * @param class-string $entityClass
+     */
+    private function addScalarField(FormBuilderInterface $builder, ClassMetadata $metadata, string $entityClass, string $fieldName, ?string $idField): void
+    {
+        if ($fieldName === $idField) {
+            return;
+        }
+
+        if ($this->isEditableBlocked($entityClass, $fieldName)) {
+            return;
+        }
+
+        $config = $this->mapper->getFieldConfig($metadata, $fieldName);
+        if ($config === null) {
+            return; // unsupported type — skip silently
+        }
+
+        $builder->add($fieldName, $config['type'], $config['options']);
+    }
+
+    /**
+     * @param FormBuilderInterface<object|null> $builder
+     * @param ClassMetadata<object> $metadata
+     * @param class-string $entityClass
+     */
+    private function addAssociationField(FormBuilderInterface $builder, ClassMetadata $metadata, string $entityClass, string $assocName, bool $isRoot): void
+    {
+        if ($this->isEditableBlocked($entityClass, $assocName)) {
+            return;
+        }
+
+        $isCollection = $metadata->isCollectionValuedAssociation($assocName);
+
+        if ($isCollection && !$isRoot) {
+            return;
+        }
+
+        if ($this->shouldSkipInverseSide($metadata, $assocName, $entityClass, $isCollection, $isRoot)) {
+            return;
+        }
+
+        if ($this->isBackReferenceToParent($metadata, $assocName, $entityClass) && !$isCollection) {
+            return;
+        }
+
+        $config = $this->mapper->getAssociationConfig($metadata, $assocName);
+        if ($config === null) {
+            return;
+        }
+
+        $builder->add($assocName, $config['type'], $config['options']);
+    }
 
     /**
      * Returns true when an inverse-side association should be skipped.

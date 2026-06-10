@@ -1,4 +1,4 @@
-![Tests](<https://img.shields.io/badge/tests-1542%20passed-red>)
+![Tests](<https://img.shields.io/badge/tests-1542%20passed-brightgreen>)
 ![Coverage](<https://img.shields.io/badge/coverage-85%25-brightgreen>)
 ![Assertions](<https://img.shields.io/badge/assertions-3058-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-8-brightgreen>)

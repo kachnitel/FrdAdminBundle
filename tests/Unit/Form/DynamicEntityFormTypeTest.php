@@ -11,6 +11,7 @@ use Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper;
 use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -22,6 +23,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * @group auto-form
  */
 #[CoversClass(DynamicEntityFormType::class)]
+#[UsesClass(AdminColumn::class)]
 #[Group('auto-form')]
 class DynamicEntityFormTypeTest extends TestCase
 {
