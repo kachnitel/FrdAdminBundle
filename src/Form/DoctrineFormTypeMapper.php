@@ -241,29 +241,19 @@ class DoctrineFormTypeMapper
     /**
      * Build a ChoiceType config from a backed enum class.
      *
-     * @param class-string $enumClass
+     * @param class-string<\BackedEnum> $enumClass
      * @return array{type: class-string<FormTypeInterface<object>>, options: array<string, mixed>}
      */
     private function buildEnumConfig(string $enumClass, bool $nullable): array
     {
-        $choices = [];
-
-        /** @var \BackedEnum $case */
-        foreach ($enumClass::cases() as $case) {
-            $label = method_exists($case, 'displayValue')
-                ? $case->displayValue()
-                : $case->name;
-
-            $choices[$label] = $case;
-        }
-
         return [
             'type'    => EnumType::class,
             'options' => [
                 'class'       => $enumClass,
-                'choices'     => $choices,
                 'required'    => !$nullable,
                 'placeholder' => $nullable ? '' : false,
+                'choice_label' => fn(\BackedEnum $case): string => method_exists($case, 'displayValue') ? $case->displayValue() : $case->name,
+                'empty_data' => $nullable ? null : $enumClass::cases()[0]->value, // Default to first case if non-nullable
             ],
         ];
     }
