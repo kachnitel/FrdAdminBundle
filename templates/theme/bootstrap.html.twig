@@ -33,6 +33,23 @@
 {% macro form_label() %}form-label{% endmacro %}
 {% macro form_label_sm() %}form-label mb-1{% endmacro %}
 
+{# Compact form layout — used by @KachnitelAdmin/form/admin_compact.html.twig.
+ #
+ # form_row_compact     — Bootstrap grid row wrapping one label + one input column.
+ # form_label_compact   — Applied via label_attr directly on the <label> element;
+ #                        col-form-label aligns the label baseline with the adjacent input.
+ # form_col_compact     — Input column wrapper div.
+ # form_check_compact   — Inline wrapper for a checkbox and its descriptive label.
+ # form_check_label     — Applied via label_attr on checkbox <label> elements.
+ # form_section_heading — Full-width section title for compound / collection fields.
+ #}
+{% macro form_row_compact() %}row mb-2 align-items-baseline{% endmacro %}
+{% macro form_label_compact() %}col-sm-3 col-form-label text-sm-end fw-normal{% endmacro %}
+{% macro form_col_compact() %}col-sm-9{% endmacro %}
+{% macro form_check_compact() %}form-check mb-0{% endmacro %}
+{% macro form_check_label() %}form-check-label fw-normal{% endmacro %}
+{% macro form_section_heading() %}fw-semibold small text-body-secondary d-block mt-3 mb-1 pb-1 border-bottom{% endmacro %}
+
 {# Tables #}
 {% macro table() %}table table-hover{% endmacro %}
 {% macro table_simple() %}table{% endmacro %}

@@ -1,0 +1,90 @@
+{#
+ # Compact two-column form theme for AdminEntityForm.
+ #
+ # Applied automatically by AdminEntityForm.html.twig via `{% form_theme %}`.
+ # Provides a compact horizontal layout driven by the active CSS theme macros
+ # (bootstrap.html.twig or tailwind.html.twig).
+ #
+ # OVERRIDING THE LAYOUT
+ # ─────────────────────
+ # Per-field: define a named row block in your own Twig form theme file:
+ #
+ #   {% block product_name_row %}
+ #     {% your_custom_layout %}
+ #   {% endblock %}
+ #
+ # Per-form: supply a custom form theme in your component template:
+ #
+ #   {% form_theme form 'my_form/theme.html.twig' %}
+ #   {{ form(form) }}
+ #
+ # Per-block override (extend this theme): use Twig's `{% use %}` to inherit
+ # all blocks and only override what you need:
+ #
+ #   {% use '@KachnitelAdmin/form/admin_compact.html.twig' %}
+ #   {% block checkbox_row %}...{% endblock %}
+ #
+ # NOTE: the `{% import kachnitel_admin_theme as css %}` is placed inside the
+ # block rather than at the template level. Symfony's FormRenderer calls
+ # displayBlock() directly, bypassing template-level code, so top-level imports
+ # would not be available inside blocks when rendered by the form engine.
+ #}
+
+{#-
+  Hidden inputs need no layout wrapper — just the widget itself.
+  Defined as its own block so form_row never has to handle this case,
+  which avoids any need for parent() in a non-extending theme.
+-#}
+{%- block hidden_row -%}
+  {{- form_widget(form) -}}
+{%- endblock hidden_row -%}
+
+{%- block form_row -%}
+  {%- import kachnitel_admin_theme as css -%}
+
+  {%- if compound -%}
+    {#-
+      Compound field (LiveCollectionType, date-with-choice widget, …).
+      Render a full-width section heading so the complex widget has enough
+      horizontal space without being squeezed into the 75%-wide input column.
+    -#}
+    {{- form_label(form, null, {label_attr: {class: css.form_section_heading()}}) -}}
+    {{- form_widget(form) -}}
+    {{- form_errors(form) -}}
+
+  {%- elseif 'checkbox' in block_prefixes -%}
+    {#-
+      Checkbox: leave the label column empty so the checkbox aligns with the
+      input column of all other rows, then render the native checkbox and its
+      descriptive label side-by-side inside that column.
+    -#}
+    <div class="{{ css.form_row_compact() }}">
+      <span class="{{ css.form_label_compact() }}"></span>
+      <div class="{{ css.form_col_compact() }}">
+        <div class="{{ css.form_check_compact() }}">
+          {{- form_widget(form) -}}
+          {{- form_label(form, null, {label_attr: {class: css.form_check_label()}}) -}}
+        </div>
+        {{- form_errors(form) -}}
+        {{- form_help(form) -}}
+      </div>
+    </div>
+
+  {%- else -%}
+    {#-
+      Standard field: label on the left (~25%), widget on the right (~75%).
+      Layout classes are applied directly to the <label> element via label_attr
+      so no extra wrapper div is needed — this matches Bootstrap 5's native
+      horizontal-form pattern and Tailwind's grid-cols-12 span approach.
+    -#}
+    <div class="{{ css.form_row_compact() }}">
+      {{- form_label(form, null, {label_attr: {class: css.form_label_compact()}}) -}}
+      <div class="{{ css.form_col_compact() }}">
+        {{- form_widget(form) -}}
+        {{- form_errors(form) -}}
+        {{- form_help(form) -}}
+      </div>
+    </div>
+
+  {%- endif -%}
+{%- endblock form_row -%}
