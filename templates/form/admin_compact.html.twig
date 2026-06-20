@@ -48,9 +48,11 @@
       Render a full-width section heading so the complex widget has enough
       horizontal space without being squeezed into the 75%-wide input column.
     -#}
-    {{- form_label(form, null, {label_attr: {class: css.form_section_heading()}}) -}}
-    {{- form_widget(form) -}}
-    {{- form_errors(form) -}}
+    <div id="{{ form.vars.id }}">
+      {{- form_label(form, null, {label_attr: {class: css.form_section_heading()}}) -}}
+      {{- form_widget(form) -}}
+      {{- form_errors(form) -}}
+    </div>
 
   {%- elseif 'checkbox' in block_prefixes -%}
     {#-
@@ -58,7 +60,7 @@
       input column of all other rows, then render the native checkbox and its
       descriptive label side-by-side inside that column.
     -#}
-    <div class="{{ css.form_row_compact() }}">
+    <div id="{{ form.vars.id }}" class="{{ css.form_row_compact() }}">
       <span class="{{ css.form_label_compact() }}"></span>
       <div class="{{ css.form_col_compact() }}">
         <div class="{{ css.form_check_compact() }}">
@@ -77,7 +79,7 @@
       so no extra wrapper div is needed — this matches Bootstrap 5's native
       horizontal-form pattern and Tailwind's grid-cols-12 span approach.
     -#}
-    <div class="{{ css.form_row_compact() }}">
+    <div id="{{ form.vars.id }}" class="{{ css.form_row_compact() }}">
       {{- form_label(form, null, {label_attr: {class: css.form_label_compact()}}) -}}
       <div class="{{ css.form_col_compact() }}">
         {{- form_widget(form) -}}

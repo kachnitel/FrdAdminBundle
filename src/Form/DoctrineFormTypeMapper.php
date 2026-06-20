@@ -87,11 +87,11 @@ class DoctrineFormTypeMapper
             ],
             'integer', 'smallint', 'bigint'         => [
                 'type'    => IntegerType::class,
-                'options' => ['required' => !$nullable, 'empty_data' => $nullable ? null : 0],
+                'options' => ['required' => !$nullable, 'empty_data' => $nullable ? '' : 0],
             ],
             'decimal', 'float'                      => [
                 'type'    => NumberType::class,
-                'options' => ['required' => !$nullable, 'html5' => true, 'empty_data' => $nullable ? null : 0],
+                'options' => ['required' => !$nullable, 'html5' => true, 'empty_data' => $nullable ? '' : 0],
             ],
             'boolean'                               => [
                 'type'    => CheckboxType::class,
@@ -99,27 +99,27 @@ class DoctrineFormTypeMapper
             ],
             'date'                                  => [
                 'type'    => DateType::class,
-                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime', 'empty_data' => $nullable ? null : '1970-01-01'],
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime', 'empty_data' => $nullable ? '' : '1970-01-01'],
             ],
             'date_immutable'                        => [
                 'type'    => DateType::class,
-                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'empty_data' => $nullable ? null : '1970-01-01'],
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'empty_data' => $nullable ? '' : '1970-01-01'],
             ],
             'datetime', 'datetimetz'                => [
                 'type'    => DateTimeType::class,
-                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime', 'empty_data' => $nullable ? null : '1970-01-01T00:00:00'],
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime', 'empty_data' => $nullable ? '' : '1970-01-01T00:00:00'],
             ],
             'datetime_immutable', 'datetimetz_immutable' => [
                 'type'    => DateTimeType::class,
-                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'empty_data' => $nullable ? null : '1970-01-01T00:00:00'],
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'empty_data' => $nullable ? '' : '1970-01-01T00:00:00'],
             ],
             'time'                                  => [
                 'type'    => TimeType::class,
-                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime', 'empty_data' => $nullable ? null : '00:00:00'],
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime', 'empty_data' => $nullable ? '' : '00:00:00'],
             ],
             'time_immutable'                        => [
                 'type'    => TimeType::class,
-                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'empty_data' => $nullable ? null : '00:00:00'],
+                'options' => ['required' => !$nullable, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'empty_data' => $nullable ? '' : '00:00:00'],
             ],
             // json, array, object, simple_array — no supported form equivalent
             default => null,
@@ -234,6 +234,7 @@ class DoctrineFormTypeMapper
                 ],
                 'allow_add'    => true,
                 'allow_delete' => true,
+                'by_reference' => false,
             ],
         ];
     }
