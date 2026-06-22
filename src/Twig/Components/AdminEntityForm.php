@@ -31,6 +31,10 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  * automatically passes the required `entity_class` and `is_root: true` options
  * so that collection associations are included in the top-level form.
  *
+ * Coordinates with the K:Admin:Action:Save button (rendered separately in the
+ * page header, not a child of this component) purely through the LiveComponent
+ * broadcast event system — see broadcastFormState().
+ *
  * @see \Kachnitel\AdminBundle\Controller\AbstractAdminController
  * @see docs/DYNAMIC_FORM_COLLECTIONS.md
  */
@@ -126,6 +130,37 @@ class AdminEntityForm extends AbstractController
     }
 
     /**
+     * Broadcasts the form's current validity to any listening
+     * K:Admin:Action:Save button, purely for a non-blocking visual hint (see
+     * SaveButton's docblock for why this doesn't gate its disabled state).
+     *
+     * K:Admin:Action:Save is a sibling, not a child (rendered in the page
+     * header block vs. this component's content block — see admin/edit.html.twig,
+     * admin/new.html.twig), so LiveProp parent/child binding isn't available;
+     * broadcast events are the only channel between the two.
+     */
+    public function broadcastFormState(): void
+    {
+        $this->emit(
+            'admin:form:state',
+            [ 'valid' => $this->isFormValid() ? 1 : 0 ],
+            'K:Admin:Action:Save'
+        );
+    }
+
+    /**
+     * Whether the form is currently valid. True for an untouched form (not
+     * yet submitted), since FormInterface::isValid() cannot be called before
+     * submission.
+     */
+    public function isFormValid(): bool
+    {
+        $form = $this->getForm();
+
+        return !$form->isSubmitted() || $form->isValid();
+    }
+
+    /**
      * Persist the form data.
      */
     #[LiveAction]
@@ -135,7 +170,10 @@ class AdminEntityForm extends AbstractController
         try {
             $this->submitForm();
         } catch (UnprocessableEntityHttpException) {
+            $this->dispatchBrowserEvent('toast.show', ['message' => 'Please correct the errors below and try again.']);
+
             // Form is invalid — re-render with inline validation errors.
+            $this->broadcastFormState();
             return;
         }
 
@@ -158,6 +196,7 @@ class AdminEntityForm extends AbstractController
             }
         }
 
+        $this->broadcastFormState();
         $this->dispatchBrowserEvent('toast.show', ['message' => 'Saved successfully!']);
     }
 }

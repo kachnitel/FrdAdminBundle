@@ -1,8 +1,17 @@
 {% import kachnitel_admin_theme as css %}
 
-{# TODO: visual feedback #}
-<button type="button"
-        class="{{ css.btn_primary() }}"
-        onclick="var el = document.querySelector('[data-admin-form]'); if (el && el.__component) el.__component.action('save');">
-  Save
-</button>
+{#
+ # Save button for the entity edit/new page header.
+ #
+ # Delegates entirely to the K:Admin:Action:Save LiveComponent, which
+ # communicates with K:Admin:EntityForm via the LiveComponent broadcast
+ # event system instead of
+ # a direct DOM/JS component reference.
+ #
+ # Override this template (standard bundle template-override mechanism) if
+ # you need a different trigger element; override SaveButton.html.twig
+ # directly if you just want to restyle the button itself.
+ #
+ # @see Twig/Components/AdminAction/SaveButton.php
+ #}
+{{ component('K:Admin:Action:Save') }}

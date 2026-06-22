@@ -1,0 +1,21 @@
+{# templates/components/AdminAction/SaveButton.html.twig #}
+{#
+ # Save button for the entity edit/new page header.
+ #
+ # Communicates with K:Admin:EntityForm purely through LiveComponent's
+ # broadcast event system — see SaveButton.php for the 'save' /
+ # 'admin:form:state' event contract and why only $saving gates `disabled`.
+ #}
+{% import kachnitel_admin_theme as css %}
+
+<button {{ attributes }}
+        type="button"
+        class="{{ css.btn_primary() }}"
+        data-action="live#action"
+        data-live-action-param="triggerSave"
+        aria-busy="{{ this.saving ? 'true' : 'false' }}"
+        {% if not this.valid %}aria-invalid="true"{% endif %}
+        {% if this.saving %}disabled{% endif %}
+>
+    {{ this.saving ? 'Saving…' : 'Save' }}
+</button>

@@ -5,10 +5,12 @@
  # Symfony's form engine. The theme handles layout; custom form types override
  # it per-field (named row blocks) or per-form (custom `{% form_theme %}`).
  #
- # The `data-admin-form` attribute is a stable selector used by `_save_button.html.twig`
- # to dispatch the `admin:save` event directly on this element, which is required for
- # LiveComponent's #[LiveListener] to receive it. Custom form components that extend
- # AdminEntityForm must include this attribute on their root element too.
+ # The `data-admin-form` attribute is a stable selector for the form's root
+ # element, kept for custom styling/JS hooks. It is no longer required by the
+ # Save button — saving is now triggered via the LiveComponent broadcast
+ # event system (K:Admin:Action:Save emits 'save'; this component listens
+ # via #[LiveListener('save')] regardless of DOM position). Custom form
+ # components extending AdminEntityForm may keep or drop this attribute freely.
  #
  # Variables (injected by ComponentWithFormTrait):
  # @var \Symfony\Component\Form\FormView form - The current form view
