@@ -47,8 +47,15 @@
       Compound field (LiveCollectionType, date-with-choice widget, …).
       Render a full-width section heading so the complex widget has enough
       horizontal space without being squeezed into the 75%-wide input column.
+
+      key="{{ form.vars.id }}" mirrors the id and gives LiveComponent's morph
+      algorithm a stable anchor per element. This is essential for collection
+      entries rendered in a {% for %} loop inside live_collection_widget — without
+      it the morph cannot match old vs. new DOM nodes and shows entries twice
+      when addCollectionItem() triggers a re-render.
+      See: https://symfony.com/bundles/ux-live-component/current/index.html#rendering-quirks-with-list-of-elements
     -#}
-    <div id="{{ form.vars.id }}">
+    <div id="{{ form.vars.id }}" key="{{ form.vars.id }}">
       {{- form_label(form, null, {label_attr: {class: css.form_section_heading()}}) -}}
       {{- form_widget(form) -}}
       {{- form_errors(form) -}}
