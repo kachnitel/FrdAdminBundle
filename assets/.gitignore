@@ -3,5 +3,9 @@
 /dist/*.css
 /dist/*.map
 
+# Dependencies (installed via `npm install` inside assets/)
+/node_modules
+package-lock.json
+
 # Keep the directory
 !.gitignore

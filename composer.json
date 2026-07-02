@@ -75,7 +75,12 @@
             "@phpstan",
             "@phpcs",
             "@phpunit",
-            "@phpmd"
+            "@phpmd",
+            "@vitest"
+        ],
+        "setup": [
+            "@install-hooks",
+            "npm --prefix assets install"
         ],
         "phpstan": "phpstan analyse --memory-limit=1G",
         "phpunit": "phpunit",
@@ -87,6 +92,7 @@
         "phpmd:text": "vendor/bin/phpmd . text ./phpmd.ruleset.xml --exclude 'tests/*,vendor/*,var/*,.phpstan/*,.coverage/*'",
         "phpcs": "vendor/bin/php-cs-fixer fix --dry-run --diff",
         "phpcs:fix": "vendor/bin/php-cs-fixer fix",
+        "vitest": "npm --prefix assets test",
         "metrics": ".metrics/update-metrics.sh",
         "install-hooks": ".githooks/install-hooks.sh",
         "release": ".scripts/release.sh"
