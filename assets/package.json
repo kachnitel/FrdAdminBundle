@@ -21,11 +21,19 @@
                 "webpackMode": "eager",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "admin-inline-add": {
+                "main": "controllers/admin-inline-add_controller.js",
+                "name": "admin-inline-add",
+                "webpackMode": "eager",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {
             "@hotwired/stimulus": "^3.0.0",
-            "@kachnitel/admin-bundle/batch-select_controller.js": "path:%PACKAGE%/controllers/batch-select_controller.js"
+            "@kachnitel/admin-bundle/batch-select_controller.js": "path:%PACKAGE%/controllers/batch-select_controller.js",
+            "@kachnitel/admin-bundle/admin-inline-add_controller.js": "path:%PACKAGE%/controllers/admin-inline-add_controller.js"
         }
     },
     "peerDependencies": {

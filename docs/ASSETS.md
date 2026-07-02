@@ -38,6 +38,7 @@ php bin/console debug:asset-map | grep kachnitel
 You should see:
 ```
 @kachnitel/admin-bundle/batch-select_controller.js
+@kachnitel/admin-bundle/admin-inline-add_controller.js
 ```
 
 ### Manual Configuration (Optional)

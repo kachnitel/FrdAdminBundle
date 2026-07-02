@@ -51,6 +51,12 @@ use Symfony\UX\LiveComponent\Form\Type\LiveCollectionType;
  *   returned by reverseTransform().  Without it, the default 'datetime' causes a
  *   TypeError when writing a \DateTime onto a \DateTimeImmutable property.
  *   We derive 'input' from the Doctrine type suffix ('_immutable' → 'datetime_immutable').
+ *
+ * data-admin-entity-class attr:
+ *   Added to all EntityType-backed association configs (single-valued and ManyToMany).
+ *   Consumed by the admin_compact form theme to render the EntityTypeAddButton inline-add
+ *   widget next to autocomplete fields. OneToMany (LiveCollectionType) is excluded because
+ *   it already has its own add/remove UI.
  */
 class DoctrineFormTypeMapper
 {
@@ -140,6 +146,11 @@ class DoctrineFormTypeMapper
      *     entry_options includes is_root: false to prevent infinite recursion —
      *     the child form will skip its own collection associations.
      *
+     * EntityType configs include `attr: ['data-admin-entity-class' => $targetClass]`
+     * so the admin_compact form theme can render the EntityTypeAddButton inline-add
+     * widget. OneToMany (LiveCollectionType) is intentionally excluded since it
+     * already provides its own add/remove row controls.
+     *
      * @param ClassMetadata<object> $metadata
      * @return array{type: class-string<FormTypeInterface<object>>, options: array<string, mixed>}|null
      *   Null when the association does not exist.
@@ -183,6 +194,9 @@ class DoctrineFormTypeMapper
                 'class'        => $targetClass,
                 'required'     => false,
                 'autocomplete' => true,
+                // Consumed by the admin_compact form theme to render the EntityTypeAddButton
+                // inline-add widget next to the autocomplete field.
+                'attr'         => ['data-admin-entity-class' => $targetClass],
             ],
         ];
     }
@@ -205,6 +219,9 @@ class DoctrineFormTypeMapper
                 'multiple'     => true,
                 'required'     => false,
                 'autocomplete' => true,
+                // Consumed by the admin_compact form theme to render the EntityTypeAddButton
+                // inline-add widget next to the autocomplete field.
+                'attr'         => ['data-admin-entity-class' => $targetClass],
             ],
         ];
     }
@@ -214,6 +231,9 @@ class DoctrineFormTypeMapper
      *
      * is_root: false in entry_options prevents infinite recursion — child forms
      * will skip their own collection associations.
+     *
+     * No `data-admin-entity-class` attr is added here because LiveCollectionType
+     * already provides add/remove row controls; the inline-add dialog is not applicable.
      *
      * @param ClassMetadata<object> $metadata
      * @return array{type: class-string<FormTypeInterface<object>>, options: array<string, mixed>}

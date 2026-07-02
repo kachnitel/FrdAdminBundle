@@ -76,6 +76,36 @@
 {# Alerts #}
 {% macro alert_warning() %}flex items-center p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700{% endmacro %}
 
+{# Dialog / Modal
+   See bootstrap.html.twig for the full explanation of how these macros style
+   the native <dialog> element used by the EntityTypeAddButton inline-add
+   component — no custom CSS is required.
+
+   dialog()        — applied to the <dialog> element itself. max-w-xl caps the
+                      width at a sensible size for a simple entity form;
+                      max-h-screen + overflow-auto let a tall form scroll
+                      within the dialog instead of overflowing the viewport.
+                      border-0/p-0 strip the dialog element's own UA-stylesheet
+                      border and padding.
+   dialog_header()  — header row: title + close button, bottom border.
+   dialog_title()   — header text styling.
+   dialog_body()    — content padding.
+
+   Note: native <dialog> exposes a `::backdrop` pseudo-element for the overlay.
+   Tailwind's core utility classes have no non-arbitrary way to target
+   ::backdrop. The browser's default backdrop dimming is used as-is. To darken
+   it, add to your own project CSS (e.g. app.css):
+
+       .admin-inline-dialog::backdrop { background: rgb(0 0 0 / .45); }
+
+   then apply that extra class via a template override of
+   EntityTypeAddButton.html.twig.
+#}
+{% macro dialog() %}w-full max-w-xl max-h-screen overflow-auto rounded-lg shadow-2xl border-0 p-0 bg-white{% endmacro %}
+{% macro dialog_header() %}flex items-center justify-between px-5 py-3.5 border-b border-gray-200{% endmacro %}
+{% macro dialog_title() %}font-semibold text-base{% endmacro %}
+{% macro dialog_body() %}p-5{% endmacro %}
+
 {# Text #}
 {% macro text_muted() %}text-gray-500{% endmacro %}
 {% macro text_center() %}text-center{% endmacro %}

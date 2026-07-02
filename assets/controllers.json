@@ -5,6 +5,11 @@
                 "enabled": true,
                 "fetch": "eager",
                 "autoimport": {}
+            },
+            "admin-inline-add": {
+                "enabled": true,
+                "fetch": "eager",
+                "autoimport": {}
             }
         }
     },

@@ -9,23 +9,20 @@ use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormTypeInterface;
-use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
-use Symfony\UX\LiveComponent\ComponentToolsTrait;
-use Symfony\UX\LiveComponent\DefaultActionTrait;
-use Symfony\UX\LiveComponent\LiveCollectionTrait;
-use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 
 /**
  * Generic live form component for admin edit and new entity pages.
  *
- * Uses LiveCollectionTrait (which itself uses ComponentWithFormTrait) to provide
- * addCollectionItem() and removeCollectionItem() LiveActions required by
- * LiveCollectionType when DynamicEntityFormType renders OneToMany collections.
+ * Composes AdminFormComponentTrait for plumbing shared with InlineEntityForm —
+ * deliberately via `use`, not class inheritance. See that trait's docblock for
+ * the full rationale (an inheritance relationship between two #[AsLiveComponent]
+ * classes previously caused a sibling component's own LiveAction button to
+ * silently fail to fire).
  *
  * When `formTypeClass` is `DynamicEntityFormType::class`, the component
  * automatically passes the required `entity_class` and `is_root: true` options
@@ -37,21 +34,12 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  *
  * @see \Kachnitel\AdminBundle\Controller\AbstractAdminController
  * @see docs/DYNAMIC_FORM_COLLECTIONS.md
+ * @see AdminFormComponentTrait
  */
 #[AsLiveComponent(name: 'K:Admin:EntityForm', template: '@KachnitelAdmin/components/AdminEntityForm.html.twig')]
 class AdminEntityForm extends AbstractController
 {
-    use DefaultActionTrait;
-    use LiveCollectionTrait {
-        LiveCollectionTrait::getFormView as private getFormViewFromTrait;
-    }
-    use ComponentToolsTrait;
-
-    /**
-     * Fully-qualified entity class name (e.g. App\Entity\Product).
-     */
-    #[LiveProp]
-    public string $entityClass = '';
+    use AdminFormComponentTrait;
 
     /**
      * Entity primary key. Null for new entities.
@@ -59,28 +47,7 @@ class AdminEntityForm extends AbstractController
     #[LiveProp]
     public ?int $entityId = null;
 
-    /**
-     * Fully-qualified form type class name.
-     * May be a hand-written FormType or DynamicEntityFormType::class.
-     */
-    #[LiveProp]
-    public string $formTypeClass = '';
-
     public function __construct(protected readonly EntityManagerInterface $em) {}
-
-    /**
-     * REVIEW: only here because private method in trait with #[ExposeInTemplate] doesn't propagate to
-     * components extending this AdminEntityForm
-     * Expose getFormView() to Twig templates.
-     *
-     * Re-exposed here because #[ExposeInTemplate] on a private aliased method
-     * in a trait does not propagate automatically to the component class.
-     */
-    #[ExposeInTemplate('form')]
-    public function getFormView(): FormView
-    {
-        return $this->getFormViewFromTrait();
-    }
 
     /**
      * Build the Symfony form bound to the entity.
@@ -155,7 +122,7 @@ class AdminEntityForm extends AbstractController
      */
     public function isFormValid(): bool
     {
-        $form = $this->getForm();
+        $form = $this->doGetForm();
 
         return !$form->isSubmitted() || $form->isValid();
     }
@@ -168,7 +135,7 @@ class AdminEntityForm extends AbstractController
     public function save(): void
     {
         try {
-            $this->submitForm();
+            $this->doSubmitForm();
         } catch (UnprocessableEntityHttpException) {
             $this->dispatchBrowserEvent('toast.show', ['message' => 'Please correct the errors below and try again.']);
 
@@ -178,7 +145,7 @@ class AdminEntityForm extends AbstractController
         }
 
         /** @var object $entity */
-        $entity = $this->getForm()->getData();
+        $entity = $this->doGetForm()->getData();
 
         $this->em->persist($entity);
         $this->em->flush();

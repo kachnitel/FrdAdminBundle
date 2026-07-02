@@ -1,0 +1,41 @@
+{#
+ # Inline entity creation form rendered inside the EntityTypeAddButton dialog.
+ #
+ # Uses the same compact two-column theme as the main admin form but intentionally
+ # does NOT include `data-admin-form` — this prevents the page-header
+ # K:Admin:Action:Save button from triggering saves on the inline dialog form.
+ #
+ # The "Save & Close" button is self-contained: it triggers the `save` LiveAction
+ # directly on this component via `data-action="live#action"`.
+ #
+ # On a successful save the PHP component dispatches the `admin:inline:entity:saved`
+ # browser event; the `admin-inline-add` Stimulus controller on the enclosing
+ # <dialog> receives it, closes the dialog, and auto-selects the new value.
+ #
+ # On validation failure the LiveComponent re-renders with inline errors and the
+ # dialog stays open so the user can correct the issues.
+ #
+ # Variables (injected by LiveCollectionTrait / ComponentWithFormTrait):
+ # @var \Symfony\Component\Form\FormView form - The current form view
+ #}
+{% import kachnitel_admin_theme as css %}
+
+<div {{ attributes }}>
+  {% form_theme form '@KachnitelAdmin/form/admin_compact.html.twig' %}
+  {{ form(form) }}
+
+  <div class="{{ css.mt_3() }} {{ css.flex_between() }}">
+    <button type="button"
+            data-action="live#action"
+            data-live-action-param="save"
+            class="{{ css.btn_primary() }}">
+      {{ 'Save & Close'|trans }}
+    </button>
+
+    <button type="button"
+            data-action="admin-inline-add#close"
+            class="{{ css.btn_secondary() }}">
+      {{ 'Cancel'|trans }}
+    </button>
+  </div>
+</div>

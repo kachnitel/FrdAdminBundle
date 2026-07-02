@@ -85,6 +85,12 @@
       Layout classes are applied directly to the <label> element via label_attr
       so no extra wrapper div is needed — this matches Bootstrap 5's native
       horizontal-form pattern and Tailwind's grid-cols-12 span approach.
+
+      EntityType autocomplete fields (ManyToOne, ManyToMany owning side) carry
+      `attr['data-admin-entity-class']` set by DoctrineFormTypeMapper. When that
+      attribute is present the EntityTypeAddButton component is rendered below the
+      widget, giving users a "+" shortcut to create the related entity inline
+      without leaving the current form.
     -#}
     <div id="{{ form.vars.id }}" class="{{ css.form_row_compact() }}">
       {{- form_label(form, null, {label_attr: {class: css.form_label_compact()}}) -}}
@@ -92,6 +98,12 @@
         {{- form_widget(form) -}}
         {{- form_errors(form) -}}
         {{- form_help(form) -}}
+        {%- if form.vars.attr['data-admin-entity-class'] is defined -%}
+          {{- component('K:Admin:EntityType:AddButton', {
+            targetEntityClass: form.vars.attr['data-admin-entity-class'],
+            fieldName: form.vars.full_name,
+          }) -}}
+        {%- endif -%}
       </div>
     </div>
 

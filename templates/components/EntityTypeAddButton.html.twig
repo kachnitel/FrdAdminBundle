@@ -1,0 +1,108 @@
+{#
+ # Inline-add button rendered next to EntityType autocomplete fields.
+ #
+ # The `admin-inline-add` Stimulus controller is attached to the root <span> via
+ # {{ attributes.defaults(...) }} rather than a hardcoded data-controller attribute.
+ # This is the standard Symfony UX TwigComponent mechanism for attaching a
+ # controller: ComponentAttributes merges data-controller / data-action values
+ # instead of overwriting them, so this component still composes correctly if
+ # the calling context ever stacks another controller onto the same element via
+ # component()'s second argument. Rendering {{ attributes }} somewhere on the
+ # root element is also expected by Symfony UX for every Twig component —
+ # omitting it silently drops any attributes forwarded by the caller.
+ #
+ # The controller:
+ #   - opens the <dialog> via showModal() on button click
+ #   - listens for the 'admin:inline:entity:saved' browser event dispatched by
+ #     K:Admin:EntityType:InlineForm after a successful save
+ #   - closes the dialog and auto-selects the new entity in the Tom Select widget
+ #
+ # Dialog styling comes entirely from the active CSS theme's dialog()/
+ # dialog_header()/dialog_title()/dialog_body() macros (see
+ # templates/theme/bootstrap.html.twig or tailwind.html.twig) — no custom CSS
+ # ships with this template.
+ #
+ # ## Shadcn dialog adaptation
+ # Replace the <dialog> block below with your shadcn Dialog component.
+ # The button (trigger) and the component() call can remain as-is. Keep the
+ # {{ attributes.defaults(...) }} call on whichever element should carry the
+ # `admin-inline-add` controller in your replacement markup.
+ # Your shadcn dialog must close when 'admin:inline:entity:saved' fires on window
+ # with a matching entityClass. See docs/INLINE_ADD.md for the full example.
+ #
+ # Variables (from EntityTypeAddButton PHP component):
+ # @var bool               canCreate         - whether the current user has ADMIN_NEW permission
+ # @var string             targetEntityClass - FQCN of the entity to create (e.g. App\Entity\Category)
+ # @var string             fieldName         - HTML name of the parent select field (e.g. order[category])
+ # @var string             entityLabel       - Human-readable label (from #[Admin(label:)] or short class name)
+ # @var string             formTypeClass     - Form type class to use in the dialog
+ # @var ComponentAttributes attributes       - Standard Twig Component attribute bag; carries the
+ #                                             Stimulus controller bindings (see note above)
+ #}
+{% import kachnitel_admin_theme as css %}
+
+{% if canCreate %}
+{#
+  Unique dialog id derived from the field name so multiple inline-add dialogs
+  on the same page (for different fields) never share the same id attribute.
+  We strip brackets so the id is valid HTML: "order[category]" → "order-category".
+#}
+{% set dialogId = 'inline-add-dialog-' ~ fieldName|replace({'[': '-', ']': '', '.': '-'}) %}
+
+<span {{ attributes.defaults({
+  'data-controller': 'admin-inline-add',
+  'data-admin-inline-add-entity-class-value': targetEntityClass,
+  'data-admin-inline-add-field-name-value': fieldName,
+  'data-admin-inline-add-dialog-id-value': dialogId,
+}) }}>
+
+  <button type="button"
+          class="{{ css.btn_outline_secondary() }} {{ css.btn_sm() }}"
+          data-action="admin-inline-add#open"
+          aria-haspopup="dialog"
+          aria-controls="{{ dialogId }}"
+          title="{{ 'Add new'|trans }} {{ entityLabel }}">
+    <span aria-hidden="true">+</span>
+    {{ entityLabel }}
+  </button>
+
+  {#
+    ── Native <dialog> implementation ─────────────────────────────────────────
+    Works without any CSS framework beyond the active theme's macros (Bootstrap
+    or Tailwind). The browser's ::backdrop pseudo-element provides the overlay
+    dimming using its own UA default — see the dialog() macro's docblock in
+    templates/theme/*.html.twig for how to customise it from your own app CSS.
+
+    To swap for a shadcn dialog, remove this <dialog> element, then wrap the
+    component() call in your shadcn <twig:ui:Dialog>.
+    See docs/INLINE_ADD.md → "Using the Shadcn Dialog".
+  #}
+  <dialog id="{{ dialogId }}"
+          data-admin-inline-add-target="dialog"
+          class="{{ css.dialog() }}"
+          aria-labelledby="{{ dialogId }}-title"
+          aria-modal="true">
+
+    <div class="{{ css.dialog_header() }}">
+      <span id="{{ dialogId }}-title" class="{{ css.dialog_title() }}">
+        {{ 'Add New'|trans }} {{ entityLabel }}
+      </span>
+      <button type="button"
+              class="{{ css.btn_close() }}"
+              data-action="admin-inline-add#close">
+        {{ 'Close'|trans }}
+      </button>
+    </div>
+
+    <div class="{{ css.dialog_body() }}">
+      {{ component('K:Admin:EntityType:InlineForm', {
+        entityClass: targetEntityClass,
+        formTypeClass: formTypeClass,
+      }) }}
+    </div>
+
+  </dialog>
+
+</span>
+
+{% endif %}
