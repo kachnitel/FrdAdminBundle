@@ -92,16 +92,12 @@
    dialog_body()    — content padding.
 
    Note: native <dialog> exposes a `::backdrop` pseudo-element for the overlay.
-   Tailwind's core utility classes have no non-arbitrary way to target
-   ::backdrop. The browser's default backdrop dimming is used as-is. To darken
-   it, add to your own project CSS (e.g. app.css):
-
-       .admin-inline-dialog::backdrop { background: rgb(0 0 0 / .45); }
-
-   then apply that extra class via a template override of
-   EntityTypeAddButton.html.twig.
+   Tailwind utility classes do not cover `::backdrop`, so this bundle relies on
+   the browser default backdrop. If you need to customize it, add a rule in your
+   app stylesheet and target `dialog.admin-inline-dialog::backdrop`.
+   See MDN for details: https://developer.mozilla.org/docs/Web/API/HTMLDialogElement/backdrop
 #}
-{% macro dialog() %}w-full max-w-xl max-h-screen overflow-auto rounded-lg shadow-2xl border-0 p-0 bg-white{% endmacro %}
+{% macro dialog() %}fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl max-h-screen overflow-auto rounded-lg shadow-2xl border-0 p-0 bg-white{% endmacro %}
 {% macro dialog_header() %}flex items-center justify-between px-5 py-3.5 border-b border-gray-200{% endmacro %}
 {% macro dialog_title() %}font-semibold text-base{% endmacro %}
 {% macro dialog_body() %}p-5{% endmacro %}

@@ -102,17 +102,12 @@
    dialog_body()    — content padding.
 
    Note: native <dialog> exposes a `::backdrop` pseudo-element for the overlay.
-   Bootstrap has no utility class targeting ::backdrop (its own modal backdrop
-   is a separate `.modal-backdrop` DIV, not the same mechanism). The browser's
-   default backdrop dimming is used as-is. To darken it, add to your own
-   project CSS (e.g. app.css):
-
-       .admin-inline-dialog::backdrop { background: rgba(0, 0, 0, .45); }
-
-   then apply that extra class via a template override of
-   EntityTypeAddButton.html.twig.
+   Bootstrap does not provide a utility class for `::backdrop`, so this bundle
+   uses the browser default backdrop. For custom styling, add a rule in your
+   app stylesheet targeting `dialog.admin-inline-dialog::backdrop`.
+   See MDN for details: https://developer.mozilla.org/docs/Web/API/HTMLDialogElement/backdrop
 #}
-{% macro dialog() %}modal-dialog modal-content border-0 p-0 overflow-auto{% endmacro %}
+{% macro dialog() %}position-fixed top-50 start-50 translate-middle modal-dialog modal-content border-0 p-0 overflow-auto{% endmacro %}
 {% macro dialog_header() %}modal-header{% endmacro %}
 {% macro dialog_title() %}modal-title fs-6{% endmacro %}
 {% macro dialog_body() %}modal-body{% endmacro %}
