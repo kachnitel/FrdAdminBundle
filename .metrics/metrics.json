@@ -1,18 +1,32 @@
 {
-    "generated_at": "2026-07-02 23:14:37",
+    "generated_at": "2026-07-03 04:23:10",
     "tests": {
-        "count": 0,
-        "assertions": 0,
-        "status": "failing()"
+        "count": 1595,
+        "assertions": 3148,
+        "status": "failing(risky)"
     },
     "coverage": {
-        "lines": 0,
-        "percentage": 0,
+        "lines": 87.4,
+        "percentage": 87,
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {
         "level": 8,
-        "status": "errors"
+        "status": "pass"
+    },
+    "phpmd": {
+        "ran": true,
+        "violations": 7,
+        "status": "violations"
+    },
+    "code_style": {
+        "ran": true,
+        "status": "clean"
+    },
+    "vitest": {
+        "ran": true,
+        "count": 30,
+        "status": "passing"
     },
     "requirements": {
         "php": ">=8.4",

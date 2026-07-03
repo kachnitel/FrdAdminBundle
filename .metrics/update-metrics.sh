@@ -2,6 +2,9 @@
 #
 # Update project metrics and README badges.
 #
+# Runs the full QA suite (PHPUnit+coverage, PHPStan, PHPMD, PHP-CS-Fixer,
+# Vitest) and regenerates the badges embedded in README.md.
+#
 # Usage: .metrics/update-metrics.sh
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
