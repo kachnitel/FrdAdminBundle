@@ -1,5 +1,4 @@
 <?php
-// src/Twig/Components/AdminAction/SaveButton.php
 
 declare(strict_types=1);
 
