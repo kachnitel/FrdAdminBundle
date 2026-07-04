@@ -3,6 +3,8 @@
 `DynamicEntityFormType` automatically generates form fields for all Doctrine associations,
 including collection-valued ones. No hand-written `FormType` is required.
 
+See [Inline Add](INLINE_ADD.md) for details on the inline-add button and dialog.
+
 ## Association Types
 
 | Doctrine type | Form field | UI |
