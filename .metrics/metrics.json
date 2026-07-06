@@ -1,18 +1,18 @@
 {
-    "generated_at": "2026-07-04 04:57:27",
+    "generated_at": "2026-07-06 19:19:05",
     "tests": {
-        "count": 1611,
-        "assertions": 3183,
-        "status": "failing(risky)"
+        "count": 1615,
+        "assertions": 3204,
+        "status": "passing"
     },
     "coverage": {
-        "lines": 84.38,
-        "percentage": 84,
+        "lines": 84.97,
+        "percentage": 85,
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {
         "level": 8,
-        "status": "errors"
+        "status": "pass"
     },
     "phpmd": {
         "ran": true,

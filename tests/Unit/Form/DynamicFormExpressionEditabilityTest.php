@@ -10,8 +10,10 @@ use Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Kachnitel\AdminBundle\Form\DynamicFormEditabilityListener;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -26,6 +28,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * @group expressions
  */
 #[CoversClass(DynamicEntityFormType::class)]
+#[UsesClass(AdminColumn::class)]
+#[UsesClass(DynamicFormEditabilityListener::class)]
 #[Group('dynamic-form')]
 #[Group('expressions')]
 class DynamicFormExpressionEditabilityTest extends TestCase

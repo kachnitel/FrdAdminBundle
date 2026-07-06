@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
+use Kachnitel\AdminBundle\Form\DataTransformer\RequiredValueTransformer;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -141,6 +142,10 @@ class DynamicEntityFormType extends AbstractType
         }
 
         $builder->add($fieldName, $config['type'], $config['options']);
+
+        if ($config['requiresValueGuard'] ?? false) {
+            $builder->get($fieldName)->addModelTransformer(new RequiredValueTransformer());
+        }
     }
 
     /**

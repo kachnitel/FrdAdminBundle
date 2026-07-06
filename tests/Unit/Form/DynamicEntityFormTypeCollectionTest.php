@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper;
 use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
+use Kachnitel\AdminBundle\Form\DynamicFormEditabilityListener;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -30,6 +31,7 @@ use Symfony\UX\LiveComponent\Form\Type\LiveCollectionType;
  */
 #[CoversClass(DynamicEntityFormType::class)]
 #[UsesClass(AdminColumn::class)]
+#[UsesClass(DynamicFormEditabilityListener::class)]
 #[Group('dynamic-form')]
 #[Group('collections')]
 class DynamicEntityFormTypeCollectionTest extends TestCase
