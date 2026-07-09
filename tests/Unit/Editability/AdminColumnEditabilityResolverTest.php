@@ -8,6 +8,7 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Editability\AdminColumnEditabilityResolver;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,6 +33,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 #[CoversClass(AdminColumnEditabilityResolver::class)]
 #[UsesClass(AdminColumn::class)]
 #[UsesClass(AttributeHelper::class)]
+#[UsesClass(ObjectHelper::class)]
 #[Group('dynamic-form')]
 #[Group('expressions')]
 class AdminColumnEditabilityResolverTest extends TestCase

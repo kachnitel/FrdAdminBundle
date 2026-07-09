@@ -24,7 +24,7 @@
         "doctrine/doctrine-bundle": "^3.0",
         "doctrine/orm": "^3.5",
         "kachnitel/datasource-contracts": "dev-master",
-        "kachnitel/dynamic-form-bundle": "^0.1",
+        "kachnitel/dynamic-form-bundle": "dev-master",
         "kachnitel/entity-components-bundle": "^0.0.3",
         "kachnitel/entity-expression-language": "dev-master",
         "symfony/expression-language": "^6.4|^7.0|^8.0",
