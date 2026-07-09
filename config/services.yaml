@@ -55,6 +55,16 @@ services:
     Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface:
         alias: Kachnitel\AdminBundle\Field\AdminEditabilityResolver
 
+    # Field editability resolver for kachnitel/dynamic-form-bundle's DynamicEntityFormType —
+    # admin implementation overrides that bundle's own permissive default. Deliberately a
+    # separate resolver from AdminEditabilityResolver above: same #[AdminColumn(editable:)]
+    # attribute, different defaults — see AdminColumnEditabilityResolver's own docblock.
+    Kachnitel\AdminBundle\Editability\:
+        resource: '../src/Editability'
+
+    Kachnitel\DynamicFormBundle\Editability\FieldEditabilityResolverInterface:
+        alias: Kachnitel\AdminBundle\Editability\AdminColumnEditabilityResolver
+
     # Form services
     Kachnitel\AdminBundle\Form\:
         resource: '../src/Form'

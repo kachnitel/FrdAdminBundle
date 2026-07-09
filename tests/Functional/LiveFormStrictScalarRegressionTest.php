@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
-use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
+use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Tests\Fixtures\RequiredFieldsStrictEntity;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
 use Symfony\Component\HttpFoundation\Request;

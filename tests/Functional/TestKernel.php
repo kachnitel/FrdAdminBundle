@@ -7,6 +7,7 @@ use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestDataSourceProvider;
 use Kachnitel\DataSourceContracts\DataSourceProviderInterface;
+use Kachnitel\DynamicFormBundle\KachnitelDynamicFormBundle;
 use Kachnitel\EntityComponentsBundle\KachnitelEntityComponentsBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
@@ -43,7 +44,8 @@ class TestKernel extends Kernel
             new AutocompleteBundle(),
 
             new KachnitelAdminBundle(),
-            new KachnitelEntityComponentsBundle()
+            new KachnitelEntityComponentsBundle(),
+            new KachnitelDynamicFormBundle()
         ];
     }
 

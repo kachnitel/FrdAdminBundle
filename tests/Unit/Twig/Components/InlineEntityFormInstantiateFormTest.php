@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
+use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;

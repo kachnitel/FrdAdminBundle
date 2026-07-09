@@ -79,7 +79,8 @@ trait AdminFormComponentTrait
 
     /**
      * Fully-qualified form type class name.
-     * May be a hand-written FormType or DynamicEntityFormType::class.
+     * May be a hand-written FormType or DynamicEntityFormType::class (from
+     * kachnitel/dynamic-form-bundle).
      */
     #[LiveProp]
     public string $formTypeClass = '';
