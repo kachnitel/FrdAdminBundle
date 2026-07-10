@@ -2,6 +2,7 @@
 
 namespace Kachnitel\AdminBundle;
 
+use Kachnitel\AdminBundle\DependencyInjection\Compiler\OverrideEditabilityResolversPass;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -9,10 +10,6 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 /**
- * Must be registered AFTER kachnitel/dynamic-form-bundle and
- * kachnitel/entity-components-bundle in config/bundles.php (or
- * registerBundles() in a custom Kernel).
- *
  * This bundle overrides an editability-resolver interface from each of those
  * two dependencies in its own config/services.yaml:
  *   EditabilityResolverInterface      -> AdminEditabilityResolver
@@ -20,15 +17,18 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
  *
  * Both dependency bundles ship their own permissive default alias for the
  * same interfaces, so consumers get sensible behaviour with zero config.
- * Bundle extensions load in registration order, and a later-loaded alias for
- * the same service id silently replaces an earlier one — so this bundle has
- * to load last for its overrides to actually take effect. Registering it
- * earlier doesn't error; #[AdminColumn(editable: false)] just silently stops
- * being enforced. See EditabilityResolverWiringTest in the test suite, which
- * asserts both resolve correctly and fails immediately if this ever regresses.
+ * Bundle extensions load in registration order, so we use a compiler pass
+ * to override those aliases with our own admin-aware resolvers.
  */
 class KachnitelAdminBundle extends AbstractBundle
 {
+    public function build(ContainerBuilder $container): void
+    {
+        parent::build($container);
+
+        $container->addCompilerPass(new OverrideEditabilityResolversPass());
+    }
+
     public function configure(DefinitionConfigurator $definition): void
     {
         $rootNode = $definition->rootNode();

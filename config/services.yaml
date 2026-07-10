@@ -52,8 +52,12 @@ services:
     Kachnitel\AdminBundle\Field\:
         resource: '../src/Field'
 
-    Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface:
-        alias: Kachnitel\AdminBundle\Field\AdminEditabilityResolver
+    # --- Registered by OverrideEditabilityResolversPass compiler pass, not here in services.yaml ---
+    # Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface:
+        # alias: Kachnitel\AdminBundle\Field\AdminEditabilityResolver
+
+    # Kachnitel\DynamicFormBundle\Editability\FieldEditabilityResolverInterface:
+        # alias: Kachnitel\AdminBundle\Editability\AdminColumnEditabilityResolver
 
     # Field editability resolver for kachnitel/dynamic-form-bundle's DynamicEntityFormType —
     # admin implementation overrides that bundle's own permissive default. Deliberately a
@@ -61,9 +65,6 @@ services:
     # attribute, different defaults — see AdminColumnEditabilityResolver's own docblock.
     Kachnitel\AdminBundle\Editability\:
         resource: '../src/Editability'
-
-    Kachnitel\DynamicFormBundle\Editability\FieldEditabilityResolverInterface:
-        alias: Kachnitel\AdminBundle\Editability\AdminColumnEditabilityResolver
 
     # Twig Extensions
     Kachnitel\AdminBundle\Twig\Extension\:

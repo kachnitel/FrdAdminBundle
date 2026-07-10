@@ -1,9 +1,9 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1586%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-85%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-3122-blue>)
+![Tests](<https://img.shields.io/badge/tests-1589%20passed-brightgreen>)
+![Coverage](<https://img.shields.io/badge/coverage-88%25-brightgreen>)
+![Assertions](<https://img.shields.io/badge/assertions-3126-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-8-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-6%20issues-red>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
@@ -52,18 +52,13 @@ Your entity appears with auto-detected columns, search, filters, and CRUD.
 <details>
 <summary><strong>Manual setup (if not using Symfony Flex)</strong></summary>
 
-1. Enable the bundle in `config/bundles.php`, **after** its two dependency bundles — order matters, see note below:
+1. Enable the bundle in `config/bundles.php`, along its two dependency bundles:
 
 ```php
 Kachnitel\DynamicFormBundle\KachnitelDynamicFormBundle::class => ['all' => true],
 Kachnitel\EntityComponentsBundle\KachnitelEntityComponentsBundle::class => ['all' => true],
 Kachnitel\AdminBundle\KachnitelAdminBundle::class => ['all' => true],
 ```
-
-`KachnitelAdminBundle` overrides an editability-resolver default that each of
-the other two ships. The last-registered bundle wins that override — register
-it earlier and `#[AdminColumn(editable: false)]` silently stops being
-+enforced, with no error.
 
 2. Import routes in `config/routes/kachnitel_admin.yaml`:
 ```yaml
