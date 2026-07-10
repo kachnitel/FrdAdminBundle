@@ -6,11 +6,12 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Form;
 
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\FieldMapping;
-use Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper;
-use Kachnitel\AdminBundle\Form\Exception\NullabilityMismatchException;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestStatus;
+use Kachnitel\DynamicFormBundle\Form\DoctrineFormTypeMapper;
+use Kachnitel\DynamicFormBundle\Form\Exception\NullabilityMismatchException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -26,11 +27,10 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TimeType;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
-/**
- * @group auto-form
- */
+/** @deprecated (DoctrineFormTypeMapper is now a part of dynamic-form-bundle) */
 #[CoversClass(DoctrineFormTypeMapper::class)]
 #[UsesClass(NullabilityMismatchException::class)]
+#[Group('auto-form')]
 class DoctrineFormTypeMapperTest extends TestCase
 {
     private DoctrineFormTypeMapper $mapper;

@@ -7,8 +7,8 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Form;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
 use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
-use Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper;
-use Kachnitel\AdminBundle\Form\DynamicEntityFormType;
+use Kachnitel\DynamicFormBundle\Form\DoctrineFormTypeMapper;
+use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -16,11 +16,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\UX\LiveComponent\Form\Type\LiveCollectionType;
 
-/**
- * @covers \Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper
- * @group dynamic-form
- * @group collections
- */
+/** @deprecated (DoctrineFormTypeMapper is now a part of dynamic-form-bundle) */
 #[CoversClass(DoctrineFormTypeMapper::class)]
 #[Group('dynamic-form')]
 #[Group('collections')]

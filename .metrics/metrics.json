@@ -1,12 +1,12 @@
 {
-    "generated_at": "2026-07-09 18:25:23",
+    "generated_at": "2026-07-10 20:42:34",
     "tests": {
-        "count": 1630,
-        "assertions": 3222,
+        "count": 1586,
+        "assertions": 3122,
         "status": "passing"
     },
     "coverage": {
-        "lines": 85.05,
+        "lines": 84.99,
         "percentage": 85,
         "html_report": ".coverage\/index.html"
     },
@@ -16,7 +16,7 @@
     },
     "phpmd": {
         "ran": true,
-        "violations": 9,
+        "violations": 6,
         "status": "violations"
     },
     "code_style": {

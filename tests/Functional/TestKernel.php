@@ -43,9 +43,22 @@ class TestKernel extends Kernel
             new WebpackEncoreBundle(),
             new AutocompleteBundle(),
 
-            new KachnitelAdminBundle(),
+            // KachnitelAdminBundle MUST be registered last among these three.
+            // Both KachnitelEntityComponentsBundle and KachnitelDynamicFormBundle
+            // ship their own permissive default alias for an interface
+            // KachnitelAdminBundle overrides in its own config/services.yaml
+            // (EditabilityResolverInterface -> AdminEditabilityResolver,
+            // FieldEditabilityResolverInterface -> AdminColumnEditabilityResolver).
+            // Bundle extensions load in registerBundles() order, and a
+            // later-loaded alias for the same service id silently replaces an
+            // earlier one — reordering this list wrong doesn't error, it just
+            // makes #[AdminColumn(editable: false)] stop being enforced.
+            // EditabilityResolverWiringTest asserts both resolve correctly, so
+            // getting this order wrong fails that test immediately instead of
+            // failing silently in production.
             new KachnitelEntityComponentsBundle(),
-            new KachnitelDynamicFormBundle()
+            new KachnitelDynamicFormBundle(),
+            new KachnitelAdminBundle(),
         ];
     }
 

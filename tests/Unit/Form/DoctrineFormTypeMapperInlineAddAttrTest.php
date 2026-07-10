@@ -7,7 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Form;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
 use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
-use Kachnitel\AdminBundle\Form\DoctrineFormTypeMapper;
+use Kachnitel\DynamicFormBundle\Form\DoctrineFormTypeMapper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -20,6 +20,7 @@ use Symfony\UX\LiveComponent\Form\Type\LiveCollectionType;
  * EntityTypeAddButton Twig component can be rendered from the form theme.
  *
  * @group inline-add
+ * @deprecated (DoctrineFormTypeMapper is now a part of dynamic-form-bundle)
  */
 #[CoversClass(DoctrineFormTypeMapper::class)]
 #[Group('inline-add')]

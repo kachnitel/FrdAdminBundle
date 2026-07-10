@@ -1,11 +1,11 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1630%20passed-brightgreen>)
+![Tests](<https://img.shields.io/badge/tests-1586%20passed-brightgreen>)
 ![Coverage](<https://img.shields.io/badge/coverage-85%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-3222-blue>)
+![Assertions](<https://img.shields.io/badge/assertions-3122-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-8-brightgreen>)
-![PHPMD](<https://img.shields.io/badge/PHPMD-9%20issues-red>)
+![PHPMD](<https://img.shields.io/badge/PHPMD-6%20issues-red>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
 ![Vitest](<https://img.shields.io/badge/vitest-30%20passed-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
@@ -52,10 +52,18 @@ Your entity appears with auto-detected columns, search, filters, and CRUD.
 <details>
 <summary><strong>Manual setup (if not using Symfony Flex)</strong></summary>
 
-1. Enable the bundle in `config/bundles.php`:
+1. Enable the bundle in `config/bundles.php`, **after** its two dependency bundles — order matters, see note below:
+
 ```php
+Kachnitel\DynamicFormBundle\KachnitelDynamicFormBundle::class => ['all' => true],
+Kachnitel\EntityComponentsBundle\KachnitelEntityComponentsBundle::class => ['all' => true],
 Kachnitel\AdminBundle\KachnitelAdminBundle::class => ['all' => true],
 ```
+
+`KachnitelAdminBundle` overrides an editability-resolver default that each of
+the other two ships. The last-registered bundle wins that override — register
+it earlier and `#[AdminColumn(editable: false)]` silently stops being
++enforced, with no error.
 
 2. Import routes in `config/routes/kachnitel_admin.yaml`:
 ```yaml
@@ -248,6 +256,7 @@ EasyAdmin and SonataAdmin use PHP configuration, while this bundle leans heavily
 - Doctrine ORM 3.5+
 - [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts) (pulled automatically by Composer)
 - [`kachnitel/entity-expression-language`](https://github.com/kachnitel/entity-expression-language) (pulled automatically by Composer)
+- [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle) (pulled automatically by Composer)
 
 ## License
 

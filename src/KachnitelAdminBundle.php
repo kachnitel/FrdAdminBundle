@@ -8,6 +8,25 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
+/**
+ * Must be registered AFTER kachnitel/dynamic-form-bundle and
+ * kachnitel/entity-components-bundle in config/bundles.php (or
+ * registerBundles() in a custom Kernel).
+ *
+ * This bundle overrides an editability-resolver interface from each of those
+ * two dependencies in its own config/services.yaml:
+ *   EditabilityResolverInterface      -> AdminEditabilityResolver
+ *   FieldEditabilityResolverInterface -> AdminColumnEditabilityResolver
+ *
+ * Both dependency bundles ship their own permissive default alias for the
+ * same interfaces, so consumers get sensible behaviour with zero config.
+ * Bundle extensions load in registration order, and a later-loaded alias for
+ * the same service id silently replaces an earlier one — so this bundle has
+ * to load last for its overrides to actually take effect. Registering it
+ * earlier doesn't error; #[AdminColumn(editable: false)] just silently stops
+ * being enforced. See EditabilityResolverWiringTest in the test suite, which
+ * asserts both resolve correctly and fails immediately if this ever regresses.
+ */
 class KachnitelAdminBundle extends AbstractBundle
 {
     public function configure(DefinitionConfigurator $definition): void
