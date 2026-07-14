@@ -17,7 +17,7 @@ echo "Running tests with coverage...\n";
 $coverageDir = $projectRoot . '/.coverage';
 @mkdir($coverageDir, 0755, true);
 
-exec('cd ' . escapeshellarg($projectRoot) . ' && XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-html=' . escapeshellarg($coverageDir) . ' 2>&1', $output, $exitCode);
+exec('cd ' . escapeshellarg($projectRoot) . ' && XDEBUG_MODE=coverage vendor/bin/paratest --coverage-text --coverage-html=' . escapeshellarg($coverageDir) . ' 2>&1', $output, $exitCode);
 $phpunitOutput = implode("\n", $output);
 
 // Parse test results
