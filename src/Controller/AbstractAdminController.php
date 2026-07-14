@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Controller;
 
 use Kachnitel\AdminBundle\Controller\Trait\DeleteEntityTrait;

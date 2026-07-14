@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Service;
 
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
@@ -13,7 +15,6 @@ class AttributeHelper
      * Get an attribute from an entity class.
      *
      * @template T
-     * @param object|string $entity
      * @param class-string<T> $attributeClass
      * @return T|null
      */

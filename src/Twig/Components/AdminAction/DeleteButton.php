@@ -26,6 +26,7 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
  *
  * The button renders disabled when selectedIds is empty to prevent accidental
  * empty-selection submissions.
+ * @see \Kachnitel\AdminBundle\Tests\Twig\Components\AdminAction\DeleteButtonTest
  */
 #[AsLiveComponent('K:Admin:Action:Delete', template: '@KachnitelAdmin/components/AdminAction/DeleteButton.html.twig')]
 class DeleteButton implements BatchActionComponentInterface

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -153,11 +155,11 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
         // Fallbacks
         if (method_exists($entity, 'getId')) {
-            return '#' . (string) $entity->getId();
+            return '#' . $entity->getId();
         }
 
         if (isset($entity->id)) {
-            return '#' . (string) $entity->id;
+            return '#' . $entity->id;
         }
 
         return (new \ReflectionClass($entity))->getShortName();

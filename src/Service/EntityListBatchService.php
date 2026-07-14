@@ -70,6 +70,6 @@ class EntityListBatchService
         array $entities,
         DataSourceInterface $dataSource,
     ): array {
-        return array_map(fn($entity) => $dataSource->getItemId($entity), $entities);
+        return array_map(fn(object $entity): string|int => $dataSource->getItemId($entity), $entities);
     }
 }

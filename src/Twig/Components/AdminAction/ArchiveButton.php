@@ -30,6 +30,7 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
  *
  * ArchiveEntityService handles the actual field mutation (boolean → true,
  * datetime → now) and flushes; see its docblock for supported field types.
+ * @see \Kachnitel\AdminBundle\Tests\Twig\Components\AdminAction\ArchiveButtonTest
  */
 #[AsLiveComponent('K:Admin:Action:Archive', template: '@KachnitelAdmin/components/AdminAction/ArchiveButton.html.twig')]
 class ArchiveButton implements BatchActionComponentInterface

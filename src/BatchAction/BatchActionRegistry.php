@@ -58,7 +58,7 @@ class BatchActionRegistry
             }
         }
 
-        usort($actions, fn (BatchAction $a, BatchAction $b) => $a->priority <=> $b->priority);
+        usort($actions, fn (BatchAction $a, BatchAction $b): int => $a->priority <=> $b->priority);
 
         $this->cache[$entityClass] = $actions;
         return $actions;
@@ -80,7 +80,7 @@ class BatchActionRegistry
         }
 
         $providers = iterator_to_array($this->providers);
-        usort($providers, fn ($a, $b) => $a->getPriority() <=> $b->getPriority());
+        usort($providers, fn ($a, $b): int => $a->getPriority() <=> $b->getPriority());
         $this->sortedProviders = $providers;
     }
 }

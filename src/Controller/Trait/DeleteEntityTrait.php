@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Controller\Trait;
 
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
@@ -31,7 +33,7 @@ trait DeleteEntityTrait
             $this->addFlash('error', 'Cannot delete ' . $shortName . ' because it is in use.');
 
             if ($request->headers->get('referer')) {
-                return $this->redirect((string) $request->headers->get('referer'));
+                return $this->redirect($request->headers->get('referer'));
             }
         }
 

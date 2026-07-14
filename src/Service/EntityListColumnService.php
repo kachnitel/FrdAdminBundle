@@ -44,7 +44,7 @@ class EntityListColumnService
 
         return array_values(array_filter(
             $allColumns,
-            fn(string $col) => !in_array($col, $denied, true)
+            fn(string $col): bool => !in_array($col, $denied, true)
         ));
     }
 

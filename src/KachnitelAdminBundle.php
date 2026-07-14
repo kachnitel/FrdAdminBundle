@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle;
 
 use Kachnitel\AdminBundle\DependencyInjection\Compiler\OverrideEditabilityResolversPass;

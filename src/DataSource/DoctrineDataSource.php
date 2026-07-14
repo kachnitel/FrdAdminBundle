@@ -316,13 +316,13 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         if ($this->adminAttribute->getExcludeColumns() !== null) {
             $excludeColumns     = $this->adminAttribute->getExcludeColumns();
             $allDoctrineColumns = array_values(
-                array_filter($allDoctrineColumns, fn ($col) => !in_array($col, $excludeColumns))
+                array_filter($allDoctrineColumns, fn (string $col): bool => !in_array($col, $excludeColumns))
             );
         }
 
         $customNames = array_keys($customColumns);
         $extraCustom = array_values(
-            array_filter($customNames, fn ($name) => !in_array($name, $allDoctrineColumns))
+            array_filter($customNames, fn (string $name): bool => !in_array($name, $allDoctrineColumns))
         );
 
         return array_merge($allDoctrineColumns, $extraCustom);

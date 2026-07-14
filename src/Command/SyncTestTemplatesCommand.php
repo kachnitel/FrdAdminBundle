@@ -108,7 +108,7 @@ class SyncTestTemplatesCommand extends Command
             if (!empty($templateErrors)) {
                 $errors = array_merge($errors, $templateErrors);
             } else {
-                $synced++;
+                ++$synced;
             }
         }
 

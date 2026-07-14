@@ -97,7 +97,6 @@ class ColumnPermissionService
      * - User has at least one of the required roles
      *
      * @param class-string $entityClass
-     * @param string $columnName
      * @param string $action One of AdminEntityVoter::ADMIN_* constants
      */
     public function canPerformAction(
@@ -128,7 +127,6 @@ class ColumnPermissionService
      * Check if the current user can perform a specific action on a column of an entity instance.
      *
      * @param object $entity Entity instance
-     * @param string $columnName
      * @param string $action One of AdminEntityVoter::ADMIN_* constants
      */
     public function canPerformActionOnEntity(
@@ -158,7 +156,7 @@ class ColumnPermissionService
     ): array {
         return array_values(array_filter(
             $allColumns,
-            fn(string $column) => $this->canPerformAction($entityClass, $column, $action)
+            fn(string $column): bool => $this->canPerformAction($entityClass, $column, $action)
         ));
     }
 

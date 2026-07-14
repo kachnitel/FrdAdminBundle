@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Service\Filter;
 
 use Doctrine\ORM\QueryBuilder;

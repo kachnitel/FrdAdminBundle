@@ -16,6 +16,7 @@ use Kachnitel\AdminBundle\Attribute\ColumnFilter;
  * Consumers (e.g. AdminEntityUrlRuntime) delegate to this service rather than
  * depending directly on FilterMetadataProvider and PHP reflection, keeping their
  * coupling count within PHPMD thresholds.
+ * @see \Kachnitel\AdminBundle\Tests\Service\PropertyFilterabilityServiceTest
  */
 class PropertyFilterabilityService
 {

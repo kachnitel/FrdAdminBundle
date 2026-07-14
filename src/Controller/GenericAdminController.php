@@ -134,7 +134,7 @@ class GenericAdminController extends AbstractAdminController
 
         $supportedEntities = $this->getSupportedEntities();
 
-        usort($supportedEntities, function ($a, $b) {
+        usort($supportedEntities, function ($a, $b): int {
             $entityClassA = $this->entityDiscovery->resolveEntityClass($a, $this->entityNamespace);
             $entityClassB = $this->entityDiscovery->resolveEntityClass($b, $this->entityNamespace);
             $labelA = $entityClassA ? ($this->entityDiscovery->getAdminAttribute($entityClassA)?->getLabel() ?? $a) : $a;
@@ -144,7 +144,7 @@ class GenericAdminController extends AbstractAdminController
 
         $supportedEntities = $this->filterAccessibleEntities($supportedEntities);
 
-        $entities = array_map(function ($entityName) {
+        $entities = array_map(function (string $entityName): array {
             $entityClass = $this->entityDiscovery->resolveEntityClass($entityName, $this->entityNamespace);
             $adminAttr = $entityClass ? $this->entityDiscovery->getAdminAttribute($entityClass) : null;
 
@@ -362,7 +362,7 @@ class GenericAdminController extends AbstractAdminController
 
         return array_values(array_filter(
             $entityNames,
-            fn (string $name) => $this->isGranted(AdminEntityVoter::ADMIN_INDEX, $name)
+            fn (string $name): bool => $this->isGranted(AdminEntityVoter::ADMIN_INDEX, $name)
         ));
     }
 
@@ -383,7 +383,7 @@ class GenericAdminController extends AbstractAdminController
     private function resolveEntityName(string $slug): string
     {
         $entityName = implode('', array_map(
-            fn ($part) => ucfirst($part),
+            fn ($part): string => ucfirst($part),
             explode('-', $slug)
         ));
 

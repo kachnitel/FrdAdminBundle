@@ -66,7 +66,7 @@ trait AssociationFilterTrait
         }
 
         $qb->andWhere($orX)
-            ->setParameter($paramName, '%' . (string) $value . '%');
+            ->setParameter($paramName, '%' . $value . '%');
     }
 
     /**
@@ -210,7 +210,7 @@ trait AssociationFilterTrait
             $subqueryWhere,
         ));
 
-        $qb->setParameter($paramName, '%' . (string) $value . '%');
+        $qb->setParameter($paramName, '%' . $value . '%');
     }
 
     /**

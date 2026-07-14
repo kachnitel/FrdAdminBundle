@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Twig\Extension;
 
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;

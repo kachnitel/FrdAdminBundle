@@ -63,12 +63,7 @@ final class ActionAccessibilityChecker
         if (!$this->isGrantedForAction($entityShortName, $action)) {
             return false;
         }
-
-        if (in_array($action, ['new', 'edit'], true) && !$this->hasForm($entityShortName)) {
-            return false;
-        }
-
-        return true;
+        return !in_array($action, ['new', 'edit'], true) || $this->hasForm($entityShortName);
     }
 
     /**

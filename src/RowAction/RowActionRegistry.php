@@ -82,7 +82,7 @@ class RowActionRegistry
         $config = $this->attributeProvider->getActionsConfig($entityClass);
         $actions = $this->applyConfig($actionsByName, $config);
 
-        usort($actions, fn (RowAction $a, RowAction $b) => $a->priority <=> $b->priority);
+        usort($actions, fn (RowAction $a, RowAction $b): int => $a->priority <=> $b->priority);
 
         $this->cache[$cacheKey] = $actions;
         return $actions;
@@ -143,7 +143,7 @@ class RowActionRegistry
         }
 
         $providers = iterator_to_array($this->providers);
-        usort($providers, fn ($a, $b) => $a->getPriority() <=> $b->getPriority());
+        usort($providers, fn ($a, $b): int => $a->getPriority() <=> $b->getPriority());
         $this->sortedProviders = $providers;
     }
 
@@ -170,7 +170,7 @@ class RowActionRegistry
         if ($config->include !== null) {
             $actionsByName = array_filter(
                 $actionsByName,
-                fn (string $name) => in_array($name, $config->include, true),
+                fn (string $name): bool => in_array($name, $config->include, true),
                 ARRAY_FILTER_USE_KEY,
             );
         }

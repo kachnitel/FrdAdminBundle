@@ -128,13 +128,6 @@ class AdminEntityVoter extends Voter
         if (null !== $this->decisionManager) {
             return $this->decisionManager->decide($token, [$role]);
         }
-
-        foreach ($token->getRoleNames() as $tokenRole) {
-            if ($tokenRole === $role) {
-                return true;
-            }
-        }
-
-        return false;
+        return in_array($role, $token->getRoleNames(), true);
     }
 }

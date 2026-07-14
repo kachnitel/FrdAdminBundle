@@ -30,6 +30,7 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
  * The default implementation uses the native HTML <dialog> element. If you have the
  * Symfony UX Toolkit shadcn kit installed you can swap the dialog markup in your
  * template override — see docs/INLINE_ADD.md.
+ * @see \Kachnitel\AdminBundle\Tests\Twig\Components\EntityTypeAddButtonTest
  */
 #[AsTwigComponent(name: 'K:Admin:EntityType:AddButton', template: '@KachnitelAdmin/components/EntityTypeAddButton.html.twig')]
 class EntityTypeAddButton

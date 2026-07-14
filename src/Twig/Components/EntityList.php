@@ -347,7 +347,7 @@ class EntityList
     public function nextPage(): void
     {
         if ($this->page < $this->getPaginationInfo()->getTotalPages()) {
-            $this->page++;
+            ++$this->page;
             unset($this->cache['queryResult']);
         }
     }
@@ -356,7 +356,7 @@ class EntityList
     public function previousPage(): void
     {
         if ($this->page > 1) {
-            $this->page--;
+            --$this->page;
             unset($this->cache['queryResult']);
         }
     }
@@ -499,7 +499,7 @@ class EntityList
 
         return array_values(array_filter(
             $allColumns,
-            fn (string $col) => !in_array($col, $this->hiddenColumns, true)
+            fn (string $col): bool => !in_array($col, $this->hiddenColumns, true)
         ));
     }
 
@@ -522,7 +522,7 @@ class EntityList
             } else {
                 $visibleSubColumns = array_filter(
                     $slot->columns,
-                    fn (ColumnMetadata $col) => in_array($col->name, $visibleColumns, true)
+                    fn (ColumnMetadata $col): bool => in_array($col->name, $visibleColumns, true)
                 );
 
                 if (count($visibleSubColumns) > 0) {
