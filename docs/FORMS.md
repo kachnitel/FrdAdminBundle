@@ -2,6 +2,10 @@
 
 The admin bundle uses Symfony UX LiveComponents for edit and new entity forms, providing real-time validation feedback as the user types — no full-page reloads.
 
+The zero-config generation engine itself — `DynamicEntityFormType`, the Doctrine → Symfony type mapping, association handling — lives in [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle), a standalone dependency with no knowledge of this bundle. This page covers how forms work in the admin UI and how this bundle plugs into that engine; see dynamic-form-bundle's own docs for the generation rules themselves.
+
+> **License note:** `kachnitel/dynamic-form-bundle` is **MPL-2.0** — a file-level copyleft, not the same as this bundle's MIT license, but compatible with closed-source use. See its [README](https://github.com/kachnitel/dynamic-form-bundle#license) for what it actually requires.
+
 ## How it works
 
 1. The controller renders `edit.html.twig` / `new.html.twig`, passing `entityClass`, `entityId`, `formTypeClass`, and `formComponentName` as template variables.
@@ -26,7 +30,7 @@ Custom form components that extend `AdminEntityForm` must include this attribute
 |---|---|---|
 | 1 | `#[Admin(formType: '...')]` on the entity | Custom form type class |
 | 2 | Symfony FormType registered (conventional name `{Entity}FormType`) | Hand-written FormType |
-| 3 | Everything else (any Doctrine entity) | `DynamicEntityFormType` |
+| 3 | Everything else (any Doctrine entity) | `Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType` |
 
 The form component is always `K:Admin:EntityForm` unless `#[Admin(formComponent: '...')]` overrides it.
 
@@ -59,6 +63,10 @@ class ProductFormType extends AbstractType
 > properties. Symfony normalises empty submissions to `null` before validation runs,
 > which causes a `TypeError` when the value is written to the entity. `empty_data: ''`
 > keeps it as an empty string so `NotBlank` can report the error properly.
+>
+> The auto-generated form handles this for you already — see dynamic-form-bundle's
+> [Field Mapping](https://github.com/kachnitel/dynamic-form-bundle/blob/master/docs/FIELD_MAPPING.md#why-empty_data-is-always-)
+> guide if you want the full reasoning (it applies more broadly than just strings).
 
 The admin auto-discovers the form type. New and Edit links appear automatically.
 
@@ -71,9 +79,9 @@ class Product {}
 
 ### Option B — DynamicEntityFormType (zero-config)
 
-When no hand-written FormType exists, the bundle automatically generates one from
-Doctrine metadata. **No configuration required** — the New and Edit buttons appear
-for every `#[Admin]` entity without any extra code.
+When no hand-written FormType exists, [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle)
+automatically generates one from Doctrine metadata. **No configuration required** —
+the New and Edit buttons appear for every `#[Admin]` entity without any extra code.
 
 #### Field inclusion rules
 
@@ -84,7 +92,13 @@ for every `#[Admin]` entity without any extra code.
 | The primary identifier field (`id`) | ❌ Always excluded |
 | JSON, array, blob, binary fields | ❌ Skipped (no sensible widget) |
 | Single-valued associations (ManyToOne, OneToOne) | ✅ As `EntityType` select |
-| Collection associations (OneToMany, ManyToMany) | ❌ Deferred (future iteration) |
+| `ManyToMany` associations | ✅ As multi-select `EntityType` |
+| `OneToMany` associations | ✅ As `LiveCollectionType` (add/remove rows) |
+
+Collection handling — `cascade`/`orphanRemoval` requirements, adder/remover methods,
+recursion prevention — is covered in dynamic-form-bundle's own
+[Associations](https://github.com/kachnitel/dynamic-form-bundle/blob/master/docs/ASSOCIATIONS.md)
+guide, and in this bundle's [inline-add integration notes](DYNAMIC_FORM_COLLECTIONS.md).
 
 #### Excluding a field
 
@@ -101,6 +115,22 @@ class User
 }
 ```
 
+`#[AdminColumn(editable: ...)]` is read by `AdminColumnEditabilityResolver` — this
+bundle's implementation of dynamic-form-bundle's
+[`FieldEditabilityResolverInterface`](https://github.com/kachnitel/dynamic-form-bundle/blob/master/docs/EDITABILITY.md),
+the one extension point `DynamicEntityFormType` uses to decide field inclusion. It's
+bound via a compiler pass (`OverrideEditabilityResolversPass`) rather than a plain
+service alias, because dynamic-form-bundle ships its own permissive default alias for
+that same interface — the compiler pass guarantees this bundle's resolver wins no
+matter what order bundles are registered in.
+
+**This resolver deliberately never reads `#[Admin(enableInlineEdit: ...)]`.** That flag
+gates the separate list-view inline-edit feature (see [Inline Editing](INLINE_EDIT.md))
+and has no bearing on the New/Edit form — a property with no `#[AdminColumn]` attribute
+at all is included on the form regardless of whether `enableInlineEdit` is set anywhere.
+To keep a field off the form specifically, use `#[AdminColumn(editable: false)]`;
+`enableInlineEdit: false` (or omitting it) won't remove it there.
+
 #### Doctrine → Symfony form type mapping
 
 | Doctrine type | Symfony form type |
@@ -114,6 +144,13 @@ class User
 | `time`, `time_immutable` | `TimeType` (single_text widget) |
 | Backed PHP enum (via `enumType` mapping) | `EnumType` |
 | ManyToOne, OneToOne | `EntityType` with `autocomplete: true` |
+| ManyToMany | `EntityType` with `multiple: true` |
+| OneToMany | `LiveCollectionType` |
+
+Nullability handling, `empty_data` rules, and required-field validation quirks are
+dynamic-form-bundle's territory now — see its
+[Field Mapping](https://github.com/kachnitel/dynamic-form-bundle/blob/master/docs/FIELD_MAPPING.md)
+guide for the full detail, including why `empty_data` is always `''` and never `null`.
 
 ---
 
@@ -236,5 +273,13 @@ The page stays open. For new entities the component records the new ID internall
 ## Running feature tests
 
 ```bash
-php vendor/bin/phpunit --group auto-form,admin-entity-form
+# LiveComponent integration: AdminEntityForm, InlineEntityForm, AdminColumnEditabilityResolver
+php vendor/bin/phpunit --group admin-entity-form
+
+# This bundle's own regression coverage of what it expects from dynamic-form-bundle
+# (field mapping, collections, the inline-add attribute contract)
+php vendor/bin/phpunit --group auto-form,dynamic-form,collections,inline-add
 ```
+
+The generation engine's primary test suite lives in
+[`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle) itself.
