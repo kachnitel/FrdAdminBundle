@@ -20,6 +20,9 @@ $coverageDir = $projectRoot . '/.coverage';
 exec('cd ' . escapeshellarg($projectRoot) . ' && XDEBUG_MODE=coverage vendor/bin/paratest --coverage-text --coverage-html=' . escapeshellarg($coverageDir) . ' 2>&1', $output, $exitCode);
 $phpunitOutput = implode("\n", $output);
 
+// Strip ANSI color codes to allow regex parsing (fixes ParaTest color output)
+$phpunitOutput = preg_replace('/\x1b\[[\d;]*m/', '', $phpunitOutput);
+
 // Parse test results
 $testCount = 0;
 $assertionCount = 0;
