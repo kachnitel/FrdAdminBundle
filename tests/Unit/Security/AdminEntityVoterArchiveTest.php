@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \Kachnitel\AdminBundle\Security\AdminEntityVoter
  */
 #[UsesClass(Admin::class)]
-class AdminEntityVoterArchiveTest extends TestCase
+final class AdminEntityVoterArchiveTest extends TestCase
 {
     public function testAllSixAttributesAreDistinct(): void
     {

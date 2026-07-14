@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\RowAction;
 
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-/**
- * @group row-actions
- */
-class RowActionExpressionLanguageTest extends TestCase
+#[Group('row-action')]
+#[AllowMockObjectsWithoutExpectations]
+final class RowActionExpressionLanguageTest extends TestCase
 {
     /** @var AuthorizationCheckerInterface&MockObject */
     private AuthorizationCheckerInterface $authChecker;
@@ -65,7 +67,7 @@ class RowActionExpressionLanguageTest extends TestCase
     // PropertyAccess proxy — private properties via getters (key regression tests)
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function propertyAccessProxyCallsGetterForPrivateProperty(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -75,7 +77,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertTrue($lang->evaluate('entity.status == "pending"', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function propertyAccessProxyCallsIsGetterForPrivateBooleanProperty(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -84,7 +86,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('entity.active', $this->privateEntity(active: false)));
     }
 
-    /** @test */
+    #[Test]
     public function propertyAccessProxyWorksWithInequalityOnPrivateProperty(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -93,7 +95,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertTrue($lang->evaluate('entity.status != "archived"', $this->privateEntity(status: 'pending')));
     }
 
-    /** @test */
+    #[Test]
     public function explicitMethodCallSyntaxStillWorks(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -107,7 +109,7 @@ class RowActionExpressionLanguageTest extends TestCase
     // Simple property expressions (public properties — baseline)
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function equalityCheckReturnsTrueWhenMatch(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -116,7 +118,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertTrue($lang->evaluate('entity.status == "pending"', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function equalityCheckReturnsFalseWhenNoMatch(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -125,7 +127,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('entity.status == "pending"', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function inequalityCheck(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -134,7 +136,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('entity.status != "archived"', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function booleanPropertyCheck(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -143,7 +145,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('entity.active', $this->entity(active: false)));
     }
 
-    /** @test */
+    #[Test]
     public function negationWithNotOperator(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -152,7 +154,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('not entity.active', $this->entity(active: true)));
     }
 
-    /** @test */
+    #[Test]
     public function exclamationNegation(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -161,7 +163,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('!entity.active', $this->entity(active: true)));
     }
 
-    /** @test */
+    #[Test]
     public function numericGreaterThanCheck(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -170,7 +172,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('entity.stock > 0', $this->entity(stock: 0)));
     }
 
-    /** @test */
+    #[Test]
     public function itemPrefixWorksAsAliasForEntity(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -183,7 +185,7 @@ class RowActionExpressionLanguageTest extends TestCase
     // Combining conditions (&&, ||, and, or)
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function andOperatorRequiresBothTrue(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -193,7 +195,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('entity.status == "pending" && !entity.active', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function orOperatorRequiresAtLeastOneTrue(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -203,7 +205,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('entity.status == "pending" || !entity.active', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function complexCombinedExpression(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -221,27 +223,27 @@ class RowActionExpressionLanguageTest extends TestCase
     // is_granted() function
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function isGrantedReturnsTrueWhenRoleGranted(): void
     {
-        $this->authChecker->method('isGranted')->with('ROLE_ADMIN', null)->willReturn(true);
+        $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_ADMIN', null)->willReturn(true);
         $lang = new RowActionExpressionLanguage();
         $entity = $this->entity();
 
         $this->assertTrue($lang->evaluate('is_granted("ROLE_ADMIN")', $entity, $this->authChecker));
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedReturnsFalseWhenRoleNotGranted(): void
     {
-        $this->authChecker->method('isGranted')->with('ROLE_SUPER_ADMIN', null)->willReturn(false);
+        $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_SUPER_ADMIN', null)->willReturn(false);
         $lang = new RowActionExpressionLanguage();
         $entity = $this->entity();
 
         $this->assertFalse($lang->evaluate('is_granted("ROLE_SUPER_ADMIN")', $entity, $this->authChecker));
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedReturnsFalseWhenAuthCheckerNotProvided(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -250,10 +252,10 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('is_granted("ROLE_ADMIN")', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedCombinedWithPropertyCondition(): void
     {
-        $this->authChecker->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
+        $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
         $lang = new RowActionExpressionLanguage();
         $entity = $this->entity(status: 'pending');
 
@@ -266,10 +268,10 @@ class RowActionExpressionLanguageTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedCombinedWithPropertyConditionFalseWhenRoleMissing(): void
     {
-        $this->authChecker->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(false);
+        $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(false);
         $lang = new RowActionExpressionLanguage();
         $entity = $this->entity(status: 'pending');
 
@@ -282,7 +284,7 @@ class RowActionExpressionLanguageTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedWithEntitySubjectUnwrapsProxy(): void
     {
         // When is_granted("ATTR", entity) is used, voters must receive the real object,
@@ -290,7 +292,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $realEntity = $this->entity(status: 'pending');
 
         $this->authChecker
-            ->method('isGranted')
+            ->expects($this->once())->method('isGranted')
             ->with(
                 'ADMIN_EDIT',
                 $this->callback(fn (mixed $subject) => !($subject instanceof \Kachnitel\EntityExpressionLanguage\PropertyAccessProxy)),
@@ -302,10 +304,10 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertTrue($lang->evaluate('is_granted("ADMIN_EDIT", entity)', $realEntity, $this->authChecker));
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedWithSingleQuotes(): void
     {
-        $this->authChecker->method('isGranted')->with('ROLE_ADMIN', null)->willReturn(true);
+        $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_ADMIN', null)->willReturn(true);
         $lang = new RowActionExpressionLanguage();
 
         $this->assertTrue($lang->evaluate("is_granted('ROLE_ADMIN')", $this->entity(), $this->authChecker));
@@ -315,7 +317,7 @@ class RowActionExpressionLanguageTest extends TestCase
     // Error / safe-default behaviour
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function invalidExpressionReturnsFalse(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -325,7 +327,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('entity.nonExistentProperty == true', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function malformedExpressionReturnsFalse(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -334,7 +336,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('&&& invalid expression', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function nullComparisonReturnsTrueWhenNull(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -347,7 +349,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertTrue($lang->evaluate('entity.verifiedAt == null', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function nullComparisonReturnsFalseWhenNotNull(): void
     {
         $lang = new RowActionExpressionLanguage();
@@ -360,7 +362,7 @@ class RowActionExpressionLanguageTest extends TestCase
         $this->assertFalse($lang->evaluate('entity.verifiedAt == null', $entity));
     }
 
-    /** @test */
+    #[Test]
     public function notNullComparisonReturnsTrueWhenNotNull(): void
     {
         $lang = new RowActionExpressionLanguage();

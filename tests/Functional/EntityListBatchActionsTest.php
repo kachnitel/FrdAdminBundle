@@ -21,7 +21,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  *
  * @group batch-actions
  */
-class EntityListBatchActionsTest extends ComponentTestCase
+final class EntityListBatchActionsTest extends ComponentTestCase
 {
     // ── UI rendering ──────────────────────────────────────────────────────────
 
@@ -201,7 +201,7 @@ class EntityListBatchActionsTest extends ComponentTestCase
 
         // Simulate another process deleting the entity
         $subj = $em->find(TestEntity::class, $id);
-        $this->assertNotNull($subj);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $subj);
         $em->remove($subj);
         $em->flush();
         $em->clear();

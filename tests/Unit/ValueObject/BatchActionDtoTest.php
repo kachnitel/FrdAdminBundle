@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 
 use Kachnitel\AdminBundle\ValueObject\BatchActionDto;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group batch-actions
  */
-class BatchActionDtoTest extends TestCase
+final class BatchActionDtoTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function itStoresRequiredProperties(): void
     {
         $dto = new BatchActionDto(
@@ -28,7 +29,7 @@ class BatchActionDtoTest extends TestCase
         $this->assertSame('Product', $dto->entityShortClass);
     }
 
-    /** @test */
+    #[Test]
     public function getCountReturnsNumberOfSelectedEntities(): void
     {
         $dto = new BatchActionDto(
@@ -41,7 +42,7 @@ class BatchActionDtoTest extends TestCase
         $this->assertSame(5, $dto->getCount());
     }
 
-    /** @test */
+    #[Test]
     public function getCountReturnsZeroForEmptySelection(): void
     {
         $dto = new BatchActionDto(
@@ -54,7 +55,7 @@ class BatchActionDtoTest extends TestCase
         $this->assertSame(0, $dto->getCount());
     }
 
-    /** @test */
+    #[Test]
     public function isReadonly(): void
     {
         $reflection = new \ReflectionClass(BatchActionDto::class);

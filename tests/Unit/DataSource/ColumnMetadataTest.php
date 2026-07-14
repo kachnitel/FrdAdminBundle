@@ -7,7 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use PHPUnit\Framework\TestCase;
 
-class ColumnMetadataTest extends TestCase
+final class ColumnMetadataTest extends TestCase
 {
     public function testConstructorSetsAllProperties(): void
     {

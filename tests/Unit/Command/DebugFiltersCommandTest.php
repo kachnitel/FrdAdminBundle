@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
 use Kachnitel\AdminBundle\Command\DebugFiltersCommand;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -20,14 +21,9 @@ use Symfony\Component\Console\Tester\CommandTester;
  *
  * @see \Kachnitel\AdminBundle\Tests\Functional\DebugFiltersCommandTest
  */
-class DebugFiltersCommandTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class DebugFiltersCommandTest extends TestCase
 {
-    /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $em;
-
-    /** @var FilterMetadataProvider&MockObject */
-    private FilterMetadataProvider $filterMetadataProvider;
-
     /** @var ClassMetadataFactory&MockObject */
     private ClassMetadataFactory $metadataFactory;
 
@@ -36,35 +32,29 @@ class DebugFiltersCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->filterMetadataProvider = $this->createMock(FilterMetadataProvider::class);
+        $em = $this->createMock(EntityManagerInterface::class);
+        $filterMetadataProvider = $this->createStub(FilterMetadataProvider::class);
         $this->metadataFactory = $this->createMock(ClassMetadataFactory::class);
 
-        $this->em->method('getMetadataFactory')->willReturn($this->metadataFactory);
+        $em->method('getMetadataFactory')->willReturn($this->metadataFactory);
 
-        $this->command = new DebugFiltersCommand($this->em, $this->filterMetadataProvider);
+        $this->command = new DebugFiltersCommand($em, $filterMetadataProvider);
         $this->commandTester = new CommandTester($this->command);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function commandHasCorrectName(): void
     {
         $this->assertSame('admin:debug:filters', $this->command->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function commandHasDescription(): void
     {
         $this->assertNotEmpty($this->command->getDescription());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function listEntitiesWithNoEntitiesFound(): void
     {
         $this->metadataFactory->method('getAllMetadata')->willReturn([]);
@@ -76,9 +66,7 @@ class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('No entities found', $output);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function showErrorForNonExistentEntity(): void
     {
         $this->metadataFactory->method('getAllMetadata')->willReturn([]);
@@ -89,9 +77,7 @@ class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('not found', $output);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function commandConfiguredWithEntityClassArgument(): void
     {
         $definition = $this->command->getDefinition();
@@ -100,9 +86,7 @@ class DebugFiltersCommandTest extends TestCase
         $this->assertFalse($definition->getArgument('entityClass')->isRequired());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function commandConfiguredWithAllOption(): void
     {
         $definition = $this->command->getDefinition();

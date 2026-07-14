@@ -34,7 +34,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  * @group editability
  */
 #[CoversClass(OverrideEditabilityResolversPass::class)]
-class OverrideEditabilityResolversPassTest extends TestCase
+final class OverrideEditabilityResolversPassTest extends TestCase
 {
     #[Test]
     public function overridesAnAlreadySetAliasFromDynamicFormBundle(): void

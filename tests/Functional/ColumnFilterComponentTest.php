@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Twig\Components\ColumnFilter;
+use PHPUnit\Framework\Attributes\Test;
 
-class ColumnFilterComponentTest extends ComponentTestCase
+final class ColumnFilterComponentTest extends ComponentTestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function getTypeReturnsDefaultText(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -27,9 +26,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertSame('text', $component->getType());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getTypeReturnsTypeFromMetadata(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -46,9 +43,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertSame('enum', $component->getType());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function onUpdatedSetsValueAndColumn(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -69,9 +64,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertSame('name', $component->column);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function componentRendersWithTextInput(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -87,9 +80,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertStringContainsString('initial value', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function componentCanUpdateValue(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -108,9 +99,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertSame('new', $component->value);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function enumWithOptionsRendersSelectDropdown(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -132,9 +121,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertStringContainsString('large', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function enumWithOptionsShowsAllOptionByDefault(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -153,9 +140,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertStringContainsString('>All</option>', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function enumWithOptionsHidesAllOptionWhenDisabled(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -175,9 +160,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertStringNotContainsString('>All</option>', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function enumWithOptionsPreservesSelectedValue(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -196,9 +179,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertMatchesRegularExpression('/value="high"[^>]*selected/', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function enumWithMultipleTrueRendersCheckboxesInsteadOfSelect(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -221,9 +202,7 @@ class ColumnFilterComponentTest extends ComponentTestCase
         $this->assertStringContainsString('inactive', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function enumWithoutEnumClassOrOptionsFallsBackToText(): void
     {
         $testComponent = $this->createLiveComponent(

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use PHPUnit\Framework\TestCase;
 
-class ColumnFilterTest extends TestCase
+final class ColumnFilterTest extends TestCase
 {
     public function testDefaultValues(): void
     {
@@ -30,8 +32,8 @@ class ColumnFilterTest extends TestCase
             placeholder: 'Search by name...'
         );
 
-        $this->assertEquals(ColumnFilter::TYPE_TEXT, $filter->type);
-        $this->assertEquals('Search by name...', $filter->placeholder);
+        $this->assertSame(ColumnFilter::TYPE_TEXT, $filter->type);
+        $this->assertSame('Search by name...', $filter->placeholder);
         $this->assertTrue($filter->enabled);
     }
 
@@ -42,8 +44,8 @@ class ColumnFilterTest extends TestCase
             operator: '>='
         );
 
-        $this->assertEquals(ColumnFilter::TYPE_NUMBER, $filter->type);
-        $this->assertEquals('>=', $filter->operator);
+        $this->assertSame(ColumnFilter::TYPE_NUMBER, $filter->type);
+        $this->assertSame('>=', $filter->operator);
     }
 
     public function testDateFilterConfiguration(): void
@@ -53,8 +55,8 @@ class ColumnFilterTest extends TestCase
             label: 'Created Date'
         );
 
-        $this->assertEquals(ColumnFilter::TYPE_DATE, $filter->type);
-        $this->assertEquals('Created Date', $filter->label);
+        $this->assertSame(ColumnFilter::TYPE_DATE, $filter->type);
+        $this->assertSame('Created Date', $filter->label);
     }
 
     public function testEnumFilterConfiguration(): void
@@ -64,7 +66,7 @@ class ColumnFilterTest extends TestCase
             showAllOption: false
         );
 
-        $this->assertEquals(ColumnFilter::TYPE_ENUM, $filter->type);
+        $this->assertSame(ColumnFilter::TYPE_ENUM, $filter->type);
         $this->assertFalse($filter->showAllOption);
     }
 
@@ -76,8 +78,8 @@ class ColumnFilterTest extends TestCase
             deep: true
         );
 
-        $this->assertEquals(ColumnFilter::TYPE_RELATION, $filter->type);
-        $this->assertEquals(['name', 'email', 'phone'], $filter->searchFields);
+        $this->assertSame(ColumnFilter::TYPE_RELATION, $filter->type);
+        $this->assertSame(['name', 'email', 'phone'], $filter->searchFields);
         $this->assertTrue($filter->deep);
     }
 
@@ -92,7 +94,7 @@ class ColumnFilterTest extends TestCase
     {
         $filter = new ColumnFilter(priority: 1);
 
-        $this->assertEquals(1, $filter->priority);
+        $this->assertSame(1, $filter->priority);
     }
 
     public function testFullConfiguration(): void
@@ -109,15 +111,15 @@ class ColumnFilterTest extends TestCase
             priority: 10
         );
 
-        $this->assertEquals(ColumnFilter::TYPE_TEXT, $filter->type);
+        $this->assertSame(ColumnFilter::TYPE_TEXT, $filter->type);
         $this->assertTrue($filter->enabled);
-        $this->assertEquals('Product Name', $filter->label);
-        $this->assertEquals(['name', 'sku'], $filter->searchFields);
+        $this->assertSame('Product Name', $filter->label);
+        $this->assertSame(['name', 'sku'], $filter->searchFields);
         $this->assertFalse($filter->deep);
-        $this->assertEquals('LIKE', $filter->operator);
+        $this->assertSame('LIKE', $filter->operator);
         $this->assertTrue($filter->showAllOption);
-        $this->assertEquals('Search products...', $filter->placeholder);
-        $this->assertEquals(10, $filter->priority);
+        $this->assertSame('Search products...', $filter->placeholder);
+        $this->assertSame(10, $filter->priority);
     }
 
     public function testMultiplePropertyDefaultValue(): void
@@ -142,7 +144,7 @@ class ColumnFilterTest extends TestCase
             showAllOption: false
         );
 
-        $this->assertEquals(ColumnFilter::TYPE_ENUM, $filter->type);
+        $this->assertSame(ColumnFilter::TYPE_ENUM, $filter->type);
         $this->assertTrue($filter->multiple);
         $this->assertFalse($filter->showAllOption);
     }
@@ -155,9 +157,9 @@ class ColumnFilterTest extends TestCase
             label: 'Tags'
         );
 
-        $this->assertEquals(ColumnFilter::TYPE_COLLECTION, $filter->type);
-        $this->assertEquals(['name', 'display'], $filter->searchFields);
-        $this->assertEquals('Tags', $filter->label);
+        $this->assertSame(ColumnFilter::TYPE_COLLECTION, $filter->type);
+        $this->assertSame(['name', 'display'], $filter->searchFields);
+        $this->assertSame('Tags', $filter->label);
         $this->assertTrue($filter->excludeFromGlobalSearch);
     }
 
@@ -169,12 +171,12 @@ class ColumnFilterTest extends TestCase
             excludeFromGlobalSearch: false
         );
 
-        $this->assertEquals(ColumnFilter::TYPE_COLLECTION, $filter->type);
+        $this->assertSame(ColumnFilter::TYPE_COLLECTION, $filter->type);
         $this->assertFalse($filter->excludeFromGlobalSearch);
     }
 
     public function testTypeCollectionConstantExists(): void
     {
-        $this->assertEquals('collection', ColumnFilter::TYPE_COLLECTION);
+        $this->assertSame('collection', ColumnFilter::TYPE_COLLECTION); // @phpstan-ignore method.alreadyNarrowedType
     }
 }

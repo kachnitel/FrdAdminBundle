@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter
  */
-class DoctrineFilterConverterTest extends TestCase
+final class DoctrineFilterConverterTest extends TestCase
 {
     private DoctrineFilterConverter $converter;
 
@@ -19,7 +20,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->converter = new DoctrineFilterConverter();
     }
 
-    /** @test */
+    #[Test]
     public function convertsBasicTextFilter(): void
     {
         $config = ['type' => 'text', 'operator' => 'LIKE', 'label' => 'Name', 'enabled' => true];
@@ -33,7 +34,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertTrue($filter->enabled);
     }
 
-    /** @test */
+    #[Test]
     public function usesDefaultsWhenConfigKeysAbsent(): void
     {
         $filter = $this->converter->convert('status', []);
@@ -45,7 +46,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertFalse($filter->excludeFromGlobalSearch);
     }
 
-    /** @test */
+    #[Test]
     public function returnsNullEnumOptionsWhenNoEnumKeysPresent(): void
     {
         $config = ['type' => 'text'];
@@ -56,7 +57,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertNull($filter->getEnumClass());
     }
 
-    /** @test */
+    #[Test]
     public function setsEnumOptionsFromEnumClass(): void
     {
         $config = [
@@ -70,7 +71,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertSame('App\\Enum\\Status', $filter->getEnumClass());
     }
 
-    /** @test */
+    #[Test]
     public function setsEnumOptionsFromValuesArray(): void
     {
         $config = [
@@ -83,7 +84,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertSame(['active', 'inactive'], $filter->getOptions());
     }
 
-    /** @test */
+    #[Test]
     public function propagatesMultipleFlag(): void
     {
         $config = ['type' => 'enum', 'options' => ['a', 'b'], 'multiple' => true];
@@ -93,7 +94,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertTrue($filter->isMultiple());
     }
 
-    /** @test */
+    #[Test]
     public function propagatesShowAllOptionFalse(): void
     {
         $config = ['type' => 'enum', 'options' => ['a'], 'showAllOption' => false];
@@ -103,7 +104,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertFalse($filter->getShowAllOption());
     }
 
-    /** @test */
+    #[Test]
     public function propagatesExcludeFromGlobalSearch(): void
     {
         $config = ['type' => 'collection', 'excludeFromGlobalSearch' => true];
@@ -113,7 +114,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertTrue($filter->excludeFromGlobalSearch);
     }
 
-    /** @test */
+    #[Test]
     public function propagatesSearchFields(): void
     {
         $config = ['type' => 'relation', 'searchFields' => ['name', 'email']];
@@ -123,7 +124,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertSame(['name', 'email'], $filter->searchFields);
     }
 
-    /** @test */
+    #[Test]
     public function propagatesPriority(): void
     {
         $config = ['priority' => 5];
@@ -133,7 +134,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertSame(5, $filter->priority);
     }
 
-    /** @test */
+    #[Test]
     public function propagatesTargetClass(): void
     {
         $config = ['type' => 'relation', 'targetClass' => 'App\\Entity\\User'];
@@ -145,7 +146,7 @@ class DoctrineFilterConverterTest extends TestCase
         $this->assertSame('App\\Entity\\User', $array['targetClass'] ?? null);
     }
 
-    /** @test */
+    #[Test]
     public function showAllOptionKeyAloneTriggersEnumOptions(): void
     {
         // showAllOption without values/enumClass should still produce FilterEnumOptions

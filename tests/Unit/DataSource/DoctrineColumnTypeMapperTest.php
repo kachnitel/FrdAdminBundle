@@ -6,14 +6,20 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper
- * @group doctrine-data-source
- */
-class DoctrineColumnTypeMapperTest extends TestCase
+#[CoversClass(DoctrineColumnTypeMapper::class)]
+#[Group('doctrine-data-source')]
+#[Group('data-source')]
+#[Group('doctrine')]
+#[AllowMockObjectsWithoutExpectations]
+final class DoctrineColumnTypeMapperTest extends TestCase
 {
     private DoctrineColumnTypeMapper $mapper;
 
@@ -28,10 +34,8 @@ class DoctrineColumnTypeMapperTest extends TestCase
 
     // ── Regular Doctrine field types ──────────────────────────────────────────
 
-    /**
-     * @test
-     * @dataProvider provideFieldTypes
-     */
+    #[Test]
+    #[DataProvider('provideFieldTypes')]
     public function itMapsDoctrineFieldTypeToAdminColumnType(string $doctrineType, string $expected): void
     {
         $this->metadata->method('hasField')->willReturn(true);
@@ -42,38 +46,36 @@ class DoctrineColumnTypeMapperTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0: string, 1: string}>
+     * @return \Iterator<string, array{string, string}>
      */
-    public static function provideFieldTypes(): array
+    public static function provideFieldTypes(): \Iterator
     {
-        return [
-            'integer'                   => ['integer',                   'integer'],
-            'smallint'                  => ['smallint',                  'integer'],
-            'bigint'                    => ['bigint',                    'integer'],
-            'decimal'                   => ['decimal',                   'decimal'],
-            'float'                     => ['float',                     'decimal'],
-            'boolean'                   => ['boolean',                   'boolean'],
-            'date'                      => ['date',                      'date'],
-            'date_immutable'            => ['date_immutable',            'date'],
-            'datetime'                  => ['datetime',                  'datetime'],
-            'datetime_immutable'        => ['datetime_immutable',        'datetime'],
-            'datetimetz'                => ['datetimetz',                'datetime'],
-            'datetimetz_immutable'      => ['datetimetz_immutable',      'datetime'],
-            'time'                      => ['time',                      'time'],
-            'time_immutable'            => ['time_immutable',            'time'],
-            'text'                      => ['text',                      'text'],
-            'json'                      => ['json',                      'json'],
-            'json_array'                => ['json_array',                'json'],
-            'array'                     => ['array',                     'array'],
-            'simple_array'              => ['simple_array',              'array'],
-            'string (default)'          => ['string',                    'string'],
-            'unknown type falls back'   => ['custom_type_xyz',           'string'],
-        ];
+        yield 'integer' => ['integer',                   'integer'];
+        yield 'smallint' => ['smallint',                  'integer'];
+        yield 'bigint' => ['bigint',                    'integer'];
+        yield 'decimal' => ['decimal',                   'decimal'];
+        yield 'float' => ['float',                     'decimal'];
+        yield 'boolean' => ['boolean',                   'boolean'];
+        yield 'date' => ['date',                      'date'];
+        yield 'date_immutable' => ['date_immutable',            'date'];
+        yield 'datetime' => ['datetime',                  'datetime'];
+        yield 'datetime_immutable' => ['datetime_immutable',        'datetime'];
+        yield 'datetimetz' => ['datetimetz',                'datetime'];
+        yield 'datetimetz_immutable' => ['datetimetz_immutable',      'datetime'];
+        yield 'time' => ['time',                      'time'];
+        yield 'time_immutable' => ['time_immutable',            'time'];
+        yield 'text' => ['text',                      'text'];
+        yield 'json' => ['json',                      'json'];
+        yield 'json_array' => ['json_array',                'json'];
+        yield 'array' => ['array',                     'array'];
+        yield 'simple_array' => ['simple_array',              'array'];
+        yield 'string (default)' => ['string',                    'string'];
+        yield 'unknown type falls back' => ['custom_type_xyz',           'string'];
     }
 
     // ── Association types ─────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function itReturnCollectionForCollectionValuedAssociation(): void
     {
         $this->metadata->method('hasField')->willReturn(false);
@@ -83,7 +85,7 @@ class DoctrineColumnTypeMapperTest extends TestCase
         $this->assertSame('collection', $this->mapper->getColumnType($this->metadata, 'tags'));
     }
 
-    /** @test */
+    #[Test]
     public function itReturnsRelationForSingleValuedAssociation(): void
     {
         $this->metadata->method('hasField')->willReturn(false);
@@ -95,7 +97,7 @@ class DoctrineColumnTypeMapperTest extends TestCase
 
     // ── Unknown / custom columns ──────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function itReturnsStringForColumnWithNoDoctrineMapping(): void
     {
         $this->metadata->method('hasField')->willReturn(false);

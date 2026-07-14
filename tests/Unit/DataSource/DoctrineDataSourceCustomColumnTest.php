@@ -17,19 +17,18 @@ use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group custom-columns
  */
-class DoctrineDataSourceCustomColumnTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class DoctrineDataSourceCustomColumnTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
     private EntityManagerInterface $em;
-
-    /** @var EntityListQueryService&MockObject */
-    private EntityListQueryService $queryService;
 
     /** @var FilterMetadataProvider&MockObject */
     private FilterMetadataProvider $filterMetadataProvider;
@@ -49,7 +48,6 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->queryService = $this->createMock(EntityListQueryService::class);
         $this->filterMetadataProvider = $this->createMock(FilterMetadataProvider::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
         $this->customColumnProvider = $this->createMock(DoctrineCustomColumnProvider::class);
@@ -62,7 +60,7 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
         $this->columnTypeMapper->method('getColumnType')->willReturn('string');
 
         $this->em->method('getClassMetadata')
-            ->with(TestEntity::class)
+            // ->with(TestEntity::class)
             ->willReturn($this->metadata);
 
         $this->filterMetadataProvider->method('getFilters')->willReturn([]);
@@ -74,7 +72,7 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
             entityClass: TestEntity::class,
             adminAttribute: $admin ?? new Admin(),
             em: $this->em,
-            queryService: $this->queryService,
+            queryService: $this->createStub(EntityListQueryService::class),
             filterMetadataProvider: $this->filterMetadataProvider,
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $this->columnAttrProvider,
@@ -84,9 +82,11 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function getColumnsAppendsCustomColumnsAfterDoctrineColumns(): void
     {
+        $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
+
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
         $this->metadata->method('hasField')->willReturn(true);
@@ -108,9 +108,11 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
         $this->assertSame(['id', 'name', 'fullName'], $keys);
     }
 
-    /** @test */
+    #[Test]
     public function getColumnsUsesCustomColumnMetadataDirectly(): void
     {
+        $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
+
         $this->metadata->method('getFieldNames')->willReturn(['id', 'badge']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
         $this->metadata->method('hasField')->willReturn(true);
@@ -126,9 +128,11 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
         $this->assertSame($customMeta, $columns['badge']);
     }
 
-    /** @test */
+    #[Test]
     public function getItemValueReturnsNullForCustomColumn(): void
     {
+        $this->em->expects($this->never())->method('getClassMetadata');
+
         $customMeta = new ColumnMetadata('fullName', 'Full Name', 'custom', false, 'full_name.html.twig');
         $this->customColumnProvider->method('getCustomColumns')->willReturn(['fullName' => $customMeta]);
 
@@ -142,14 +146,16 @@ class DoctrineDataSourceCustomColumnTest extends TestCase
         $this->assertNull($value);
     }
 
-    /** @test */
+    #[Test]
     public function getItemValueReturnsNormalValueForDoctrineColumn(): void
     {
+        $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
+
         $this->customColumnProvider->method('getCustomColumns')->willReturn([]);
 
-        $this->metadata->method('hasField')->willReturnCallback(fn ($f) => $f === 'name');
+        $this->metadata->method('hasField')->willReturnCallback(fn (string $f): bool => $f === 'name');
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('getFieldValue')->with($this->anything(), 'name')->willReturn('Bob');
+        $this->metadata->expects($this->once())->method('getFieldValue')->with($this->anything(), 'name')->willReturn('Bob');
 
         $dataSource = $this->createDataSource();
 

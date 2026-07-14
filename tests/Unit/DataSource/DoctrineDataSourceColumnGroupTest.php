@@ -15,20 +15,19 @@ use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
-use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group composite-columns
  */
-class DoctrineDataSourceColumnGroupTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class DoctrineDataSourceColumnGroupTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
     private EntityManagerInterface $em;
-    /** @var EntityListQueryService&MockObject */
-    private EntityListQueryService $queryService;
     /** @var FilterMetadataProvider&MockObject */
     private FilterMetadataProvider $filterProvider;
     /** @var ClassMetadata<object>&MockObject */
@@ -39,7 +38,6 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->queryService = $this->createMock(EntityListQueryService::class);
         $this->filterProvider = $this->createMock(FilterMetadataProvider::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
         $this->customColumnProvider = $this->createMock(DoctrineCustomColumnProvider::class);
@@ -60,7 +58,7 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
         $columnAttrProvider->method('getColumnAttributes')->willReturn($columnAttributes);
         $columnAttrProvider->method('getGroupAttributes')->willReturn([]);
         $columnAttrProvider->method('build')
-            ->willReturnCallback(fn (array $cols, array $attrs) => (new DoctrineColumnAttributeProvider())->build($cols, $attrs));
+            ->willReturnCallback(fn (array $cols, array $attrs): array => (new DoctrineColumnAttributeProvider())->build($cols, $attrs));
 
         $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
         $columnTypeMapper->method('getColumnType')->willReturn('string');
@@ -69,7 +67,7 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
             entityClass: 'App\\Entity\\Dummy', // @phpstan-ignore argument.type
             adminAttribute: $admin ?? new Admin(),
             em: $this->em,
-            queryService: $this->queryService,
+            queryService: $this->createStub(\Kachnitel\AdminBundle\Service\EntityListQueryService::class),
             filterMetadataProvider: $this->filterProvider,
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $columnAttrProvider,
@@ -79,12 +77,12 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function getColumnGroupsReturnsAllColumnsAsStringsWhenNoGroupsDefined(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'email']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
-        $this->metadata->method('hasField')->willReturnCallback(fn ($f) => in_array($f, ['id', 'name', 'email']));
+        $this->metadata->method('hasField')->willReturnCallback(fn (string $f): bool => in_array($f, ['id', 'name', 'email']));
         $this->metadata->method('getTypeOfField')->willReturn('string');
 
         $slots = $this->createDataSource()->getColumnGroups();
@@ -92,7 +90,7 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertSame(['id', 'name', 'email'], $slots);
     }
 
-    /** @test */
+    #[Test]
     public function getColumnGroupsGroupsConsecutiveColumnsWithSameGroupId(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'firstName', 'lastName', 'email']);
@@ -119,7 +117,7 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertArrayHasKey('lastName', $group->columns);
     }
 
-    /** @test */
+    #[Test]
     public function getColumnGroupsPreservesColumnOrderWithinGroup(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'lastName']);
@@ -138,7 +136,7 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertSame(['firstName', 'lastName'], array_keys($group->columns));
     }
 
-    /** @test */
+    #[Test]
     public function getColumnGroupsHandlesNonContiguousColumnsInSameGroup(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'email', 'lastName']);
@@ -160,7 +158,7 @@ class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertSame('email', $slots[1]);
     }
 
-    /** @test */
+    #[Test]
     public function columnMetadataGroupIsSetFromAttribute(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName']);

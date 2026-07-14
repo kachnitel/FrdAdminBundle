@@ -16,20 +16,19 @@ use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
-use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group composite-columns
  */
-class DoctrineDataSourceColumnGroupConfigTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class DoctrineDataSourceColumnGroupConfigTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
     private EntityManagerInterface $em;
-    /** @var EntityListQueryService&MockObject */
-    private EntityListQueryService $queryService;
     /** @var FilterMetadataProvider&MockObject */
     private FilterMetadataProvider $filterProvider;
     /** @var ClassMetadata<object>&MockObject */
@@ -40,7 +39,6 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->queryService = $this->createMock(EntityListQueryService::class);
         $this->filterProvider = $this->createMock(FilterMetadataProvider::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
         $this->customColumnProvider = $this->createMock(DoctrineCustomColumnProvider::class);
@@ -62,7 +60,7 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $columnAttrProvider->method('getColumnAttributes')->willReturn($columnAttributes);
         $columnAttrProvider->method('getGroupAttributes')->willReturn($groupAttributes);
         $columnAttrProvider->method('build')
-            ->willReturnCallback(fn (array $cols, array $attrs) => (new DoctrineColumnAttributeProvider())->build($cols, $attrs));
+            ->willReturnCallback(fn (array $cols, array $attrs): array => (new DoctrineColumnAttributeProvider())->build($cols, $attrs));
 
         $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
         $columnTypeMapper->method('getColumnType')->willReturn('string');
@@ -71,7 +69,7 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
             entityClass: 'App\\Entity\\Dummy', // @phpstan-ignore argument.type
             adminAttribute: new Admin(),
             em: $this->em,
-            queryService: $this->queryService,
+            queryService: $this->createStub(\Kachnitel\AdminBundle\Service\EntityListQueryService::class),
             filterMetadataProvider: $this->filterProvider,
             customColumnProvider: $this->customColumnProvider,
             columnAttributeProvider: $columnAttrProvider,
@@ -81,7 +79,7 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function columnGroupDefaultsToTextHeader(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'lastName']);
@@ -100,7 +98,7 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_TEXT, $group->header);
     }
 
-    /** @test */
+    #[Test]
     public function collapsibleConfigIsApplied(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'lastName']);
@@ -128,7 +126,7 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_COLLAPSIBLE, $group->header);
     }
 
-    /** @test */
+    #[Test]
     public function fullConfigIsApplied(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['city', 'country']);
@@ -154,7 +152,7 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_FULL, $group->header);
     }
 
-    /** @test */
+    #[Test]
     public function configIsPreservedWhenSubsequentMemberIsAppended(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'email', 'lastName']);
@@ -184,7 +182,7 @@ class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $this->assertArrayHasKey('lastName', $groupSlot->columns);
     }
 
-    /** @test */
+    #[Test]
     public function unconfiguredGroupGetsDefaultTextHeader(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['city', 'country']);

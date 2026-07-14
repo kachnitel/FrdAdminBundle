@@ -15,7 +15,7 @@ use Kachnitel\AdminBundle\Twig\Components\AdminAction\ArchiveButton;
  * @group batch-actions
  * @group archive
  */
-class ArchiveButtonTest extends ComponentTestCase
+final class ArchiveButtonTest extends ComponentTestCase
 {
     public function testRendersDisabledButtonWhenNothingSelected(): void
     {
@@ -103,7 +103,7 @@ class ArchiveButtonTest extends ComponentTestCase
         $em->persist($entity);
         $em->flush();
 
-        $this->assertNull($entity->getDeletedAt());
+        $this->assertNotInstanceOf(\DateTimeImmutable::class, $entity->getDeletedAt());
 
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:Action:Archive',
@@ -119,7 +119,7 @@ class ArchiveButtonTest extends ComponentTestCase
         $em->clear();
 
         $refreshed = $em->find(SoftDeleteEntity::class, $entity->getId());
-        $this->assertNotNull($refreshed?->getDeletedAt());
+        $this->assertInstanceOf(\DateTimeImmutable::class, $refreshed?->getDeletedAt());
     }
 
     public function testExecuteWithEmptyIdsDoesNothing(): void

@@ -11,7 +11,7 @@ use Kachnitel\AdminBundle\Twig\Components\EntityList;
 /**
  * Functional tests for EntityList component in dataSourceId mode.
  */
-class EntityListDataSourceTest extends ComponentTestCase
+final class EntityListDataSourceTest extends ComponentTestCase
 {
     public function testComponentWorksWithDataSourceId(): void
     {
@@ -43,7 +43,7 @@ class EntityListDataSourceTest extends ComponentTestCase
 
         $dataSource = $registry->get('TestEntity');
 
-        $this->assertNotNull($dataSource);
+        $this->assertInstanceOf(\Kachnitel\DataSourceContracts\DataSourceInterface::class, $dataSource);
         $this->assertSame('TestEntity', $dataSource->getIdentifier());
     }
 
@@ -173,7 +173,7 @@ class EntityListDataSourceTest extends ComponentTestCase
 
         $this->assertCount(5, $entities);
         foreach ($entities as $entity) {
-            $this->assertStringContainsString('Special', $entity->getName());
+            $this->assertStringContainsString('Special', (string) $entity->getName());
         }
     }
 
@@ -200,7 +200,7 @@ class EntityListDataSourceTest extends ComponentTestCase
 
         $this->assertCount(5, $entities);
         foreach ($entities as $entity) {
-            $this->assertStringContainsString('Alpha', $entity->getName());
+            $this->assertStringContainsString('Alpha', (string) $entity->getName());
         }
     }
 

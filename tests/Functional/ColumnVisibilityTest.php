@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
  *
  * Tests the end-to-end flow of column visibility toggling and persistence.
  */
-class ColumnVisibilityTest extends ComponentTestCase
+final class ColumnVisibilityTest extends ComponentTestCase
 {
     private Session $session;
 

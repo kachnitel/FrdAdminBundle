@@ -10,6 +10,8 @@ use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -26,7 +28,8 @@ use PHPUnit\Framework\TestCase;
  * @group archive
  */
 #[UsesClass(Admin::class)]
-class ArchiveServiceExtractFieldTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class ArchiveServiceExtractFieldTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
     private EntityManagerInterface $em;
@@ -59,31 +62,31 @@ class ArchiveServiceExtractFieldTest extends TestCase
 
     // ── extractField: "entity." prefix ────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function extractFieldParsesEntityPrefixBoolean(): void
     {
         $this->assertSame('archived', $this->makeService()->extractField('entity.archived'));
     }
 
-    /** @test */
+    #[Test]
     public function extractFieldParsesEntityPrefixNullableDateTime(): void
     {
         $this->assertSame('deletedAt', $this->makeService()->extractField('entity.deletedAt'));
     }
 
-    /** @test */
+    #[Test]
     public function extractFieldParsesEntityPrefixWithUnderscores(): void
     {
         $this->assertSame('deleted_at', $this->makeService()->extractField('entity.deleted_at'));
     }
 
-    /** @test */
+    #[Test]
     public function extractFieldParsesItemPrefixWithUnderscores(): void
     {
         $this->assertSame('soft_deleted', $this->makeService()->extractField('item.soft_deleted'));
     }
 
-    /** @test */
+    #[Test]
     public function extractFieldReturnsSameResultForBothPrefixes(): void
     {
         $service = $this->makeService();
@@ -97,26 +100,26 @@ class ArchiveServiceExtractFieldTest extends TestCase
     // ── extractField: complex expressions that must return null ───────────────
     // @see docs/ARCHIVE.md#Limitations
 
-    /** @test */
+    #[Test]
     public function extractFieldReturnNullForEntityMethodCall(): void
     {
         // Looks simple but has parens → complex
         $this->assertNull($this->makeService()->extractField('entity.isDeleted()'));
     }
 
-    /** @test */
+    #[Test]
     public function extractFieldReturnNullForNestedProperty(): void
     {
         $this->assertNull($this->makeService()->extractField('entity.user.deleted'));
     }
 
-    /** @test */
+    #[Test]
     public function extractFieldReturnNullForUnknownPrefix(): void
     {
         $this->assertNull($this->makeService()->extractField('row.deletedAt'));
     }
 
-    /** @test */
+    #[Test]
     public function extractFieldReturnNullForBarePropertyName(): void
     {
         $this->assertNull($this->makeService()->extractField('deletedAt'));
@@ -124,7 +127,7 @@ class ArchiveServiceExtractFieldTest extends TestCase
 
     // ── resolveConfig: entity. prefix flows through to DQL condition ──────────
 
-    /** @test */
+    #[Test]
     public function resolveConfigWorksWithEntityPrefixExpression(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -143,13 +146,13 @@ class ArchiveServiceExtractFieldTest extends TestCase
 
         $config = $service->resolveConfig('App\\Entity\\Product'); // @phpstan-ignore argument.type
 
-        $this->assertNotNull($config);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
         $this->assertSame('entity.archived', $config->expression);
         $this->assertSame('archived', $config->field);
         $this->assertSame('boolean', $config->doctrineType);
     }
 
-    /** @test */
+    #[Test]
     public function resolveConfigReturnsNullForUnsupportedFieldTypeString(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -161,10 +164,10 @@ class ArchiveServiceExtractFieldTest extends TestCase
         $service = $this->makeService();
         $config  = $service->resolveConfig('App\\Entity\\Product'); // @phpstan-ignore argument.type
 
-        $this->assertNull($config, 'String field type cannot be DQL-filtered — config must be null.');
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config, 'String field type cannot be DQL-filtered — config must be null.');
     }
 
-    /** @test */
+    #[Test]
     public function resolveConfigReturnsNullForIntegerFieldType(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -175,15 +178,13 @@ class ArchiveServiceExtractFieldTest extends TestCase
 
         $config = $this->makeService()->resolveConfig('App\\Entity\\Product'); // @phpstan-ignore argument.type
 
-        $this->assertNull($config);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
     }
 
     // ── buildDqlCondition: datetimetz types ───────────────────────────────────
 
-    /**
-     * @test
-     * @dataProvider provideDatetimetzTypes
-     */
+    #[Test]
+    #[DataProvider('provideDatetimetzTypes')]
     public function buildDqlConditionForDatetimetzTypeInHideMode(string $doctrineType): void
     {
         $condition = $this->makeService()->buildDqlCondition('e', 'deletedAt', $doctrineType, false);
@@ -191,10 +192,8 @@ class ArchiveServiceExtractFieldTest extends TestCase
         $this->assertSame('e.deletedAt IS NULL', $condition, "Failed for type: $doctrineType");
     }
 
-    /**
-     * @test
-     * @dataProvider provideDatetimetzTypes
-     */
+    #[Test]
+    #[DataProvider('provideDatetimetzTypes')]
     public function buildDqlConditionForDatetimetzTypeInShowAllMode(string $doctrineType): void
     {
         $condition = $this->makeService()->buildDqlCondition('e', 'deletedAt', $doctrineType, true);
@@ -202,20 +201,18 @@ class ArchiveServiceExtractFieldTest extends TestCase
         $this->assertNull($condition, "showArchived=true must return null for type: $doctrineType");
     }
 
-    /** @return array<string, array{0: string}> */
-    public static function provideDatetimetzTypes(): array
+    /** @return \Iterator<string, array{string}> */
+    public static function provideDatetimetzTypes(): \Iterator
     {
-        return [
-            'datetimetz'            => ['datetimetz'],
-            'datetimetz_immutable'  => ['datetimetz_immutable'],
-            'date'                  => ['date'],
-            'date_immutable'        => ['date_immutable'],
-        ];
+        yield 'datetimetz' => ['datetimetz'];
+        yield 'datetimetz_immutable' => ['datetimetz_immutable'];
+        yield 'date' => ['date'];
+        yield 'date_immutable' => ['date_immutable'];
     }
 
     // ── buildDqlCondition: alias propagation ──────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function buildDqlConditionUsesProvidedAlias(): void
     {
         $condition = $this->makeService()->buildDqlCondition('p', 'archived', 'boolean', false);
@@ -223,7 +220,7 @@ class ArchiveServiceExtractFieldTest extends TestCase
         $this->assertSame('p.archived = false', $condition);
     }
 
-    /** @test */
+    #[Test]
     public function buildDqlConditionUsesProvidedFieldName(): void
     {
         $condition = $this->makeService()->buildDqlCondition('e', 'softDeleted', 'boolean', false);

@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+use Rector\Config\RectorConfig;
+use Rector\PHPUnit\CodeQuality\Rector\MethodCall\RemoveExpectAnyFromMockRector;
+use Rector\PHPUnit\PHPUnit120\Rector\CallLike\CreateStubOverCreateMockArgRector;
+use Rector\PHPUnit\PHPUnit120\Rector\Class_\AllowMockObjectsWithoutExpectationsAttributeRector;
+use Rector\PHPUnit\Set\PHPUnitSetList;
+
+return RectorConfig::configure()
+    ->withPaths([
+        // __DIR__ . '/config',
+        // __DIR__ . '/src',
+        __DIR__ . '/tests',
+    ])
+    // // uncomment to reach your current PHP version
+    // // ->withPhpSets()
+    // ->withTypeCoverageLevel(0)
+    // ->withDeadCodeLevel(0)
+    // ->withCodeQualityLevel(0);
+    // ->withSets([
+    //     PHPUnitSetList::PHPUNIT_MOCK_TO_STUB,
+    // ])
+    // ->withRules([
+    //     //  AllowMockObjectsWithoutExpectationsAttributeRector::class,
+    //     RemoveExpectAnyFromMockRector::class,
+    //     CreateStubOverCreateMockArgRector::class,
+
+    // ])
+    ->withComposerBased(twig: true, doctrine: true, phpunit: true, symfony: true)
+
+    ->withPreparedSets(phpunitCodeQuality: true)
+    ;

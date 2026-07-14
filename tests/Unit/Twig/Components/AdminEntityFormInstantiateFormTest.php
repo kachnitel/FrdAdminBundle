@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Components;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -23,7 +24,8 @@ use Symfony\Component\Form\FormInterface;
 #[CoversClass(AdminEntityForm::class)]
 #[Group('auto-form')]
 #[Group('collections')]
-class AdminEntityFormInstantiateFormTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+final class AdminEntityFormInstantiateFormTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
     private EntityManagerInterface $em;
@@ -223,8 +225,7 @@ class AdminEntityFormInstantiateFormTest extends TestCase
      */
     private function makeComponent(array &$capturedOptions): TestableAdminEntityForm
     {
-        $dummyForm = $this->createMock(FormInterface::class);
-        $component = new TestableAdminEntityForm($this->em, $capturedOptions, $dummyForm);
+        $component = new TestableAdminEntityForm($this->em, $capturedOptions, $this->createStub(FormInterface::class));
 
         return $component;
     }

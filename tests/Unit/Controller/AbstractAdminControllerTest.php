@@ -6,7 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Controller\AbstractAdminController;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * with a concrete controller implementation. This class tests public configuration
  * methods and inherited behavior.
  */
-class AbstractAdminControllerTest extends TestCase
+final class AbstractAdminControllerTest extends TestCase
 {
     /**
      * Test a concrete implementation of AbstractAdminController
@@ -25,59 +25,45 @@ class AbstractAdminControllerTest extends TestCase
 
     protected function setUp(): void
     {
-        /** @var EntityManagerInterface|MockObject $em */
-        $em = $this->createMock(EntityManagerInterface::class);
-        $this->controller = new ConcreteAdminController($em);
+        $this->controller = new ConcreteAdminController($this->createStub(EntityManagerInterface::class));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getRoutePrefix(): void
     {
         $prefix = $this->controller->getRoutePrefix();
         $this->assertSame('app_entity', $prefix);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityNamespace(): void
     {
         $namespace = $this->controller->getEntityNamespace();
         $this->assertSame('App\\Entity\\', $namespace);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getFormNamespace(): void
     {
         $namespace = $this->controller->getFormNamespace();
         $this->assertSame('App\\Form\\', $namespace);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getFormSuffix(): void
     {
         $suffix = $this->controller->getFormSuffix();
         $this->assertSame('FormType', $suffix);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getFormTypeBuildsCorrectClassName(): void
     {
         $formType = $this->controller->getFormType('Product');
         $this->assertSame('App\\Form\\ProductFormType', $formType);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityLabelUsingGetName(): void
     {
         $entity = new class {
@@ -89,9 +75,7 @@ class AbstractAdminControllerTest extends TestCase
         $this->assertSame('Test Product', $label);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityLabelUsingGetLabel(): void
     {
         $entity = new class {
@@ -103,9 +87,7 @@ class AbstractAdminControllerTest extends TestCase
         $this->assertSame('Test Label', $label);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityLabelUsingGetValue(): void
     {
         $entity = new class {
@@ -117,9 +99,7 @@ class AbstractAdminControllerTest extends TestCase
         $this->assertSame('Test Value', $label);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityLabelFallsBackToId(): void
     {
         $entity = new class {
@@ -130,9 +110,7 @@ class AbstractAdminControllerTest extends TestCase
         $this->assertSame('#42', $label);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityLabelPrefersNameOverOthers(): void
     {
         $entity = new class {
@@ -146,9 +124,7 @@ class AbstractAdminControllerTest extends TestCase
         $this->assertSame('Name', $label);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityLabelPrefersLabelOverValue(): void
     {
         $entity = new class {
@@ -161,45 +137,35 @@ class AbstractAdminControllerTest extends TestCase
         $this->assertSame('Label', $label);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getIndexTemplate(): void
     {
         $template = $this->controller->getIndexTemplate('Product');
         $this->assertSame('@KachnitelAdmin/admin/index.html.twig', $template);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getShowTemplate(): void
     {
         $template = $this->controller->getShowTemplate('Product');
         $this->assertSame('@KachnitelAdmin/admin/show.html.twig', $template);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEditTemplate(): void
     {
         $template = $this->controller->getEditTemplate('Product');
         $this->assertSame('@KachnitelAdmin/admin/edit.html.twig', $template);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getNewTemplate(): void
     {
         $template = $this->controller->getNewTemplate('Product');
         $this->assertSame('@KachnitelAdmin/admin/new.html.twig', $template);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function classNameToSlugConversion(): void
     {
         // Test slug conversion logic used in controller

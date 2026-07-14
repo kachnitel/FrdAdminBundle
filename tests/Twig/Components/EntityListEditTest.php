@@ -23,21 +23,19 @@ use PHPUnit\Framework\TestCase;
  * @covers \Kachnitel\AdminBundle\Twig\Components\EntityList
  */
 #[UsesClass(EntityListConfig::class)]
-class EntityListEditTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class EntityListEditTest extends TestCase
 {
-    /** @var EntityListPermissionService&MockObject */
-    private EntityListPermissionService $permissionService;
-
     private EntityList $component;
 
     protected function setUp(): void
     {
-        $this->permissionService = $this->createMock(EntityListPermissionService::class);
+        $permissionService = $this->createMock(EntityListPermissionService::class);
 
-        $this->permissionService->method('canInlineEdit')->willReturn(true);
-        $this->permissionService->method('canViewList')->willReturn(true);
+        $permissionService->method('canInlineEdit')->willReturn(true);
+        $permissionService->method('canViewList')->willReturn(true);
 
-        $this->component = $this->makeComponent($this->permissionService);
+        $this->component = $this->makeComponent($permissionService);
     }
 
     public function testCanEditRowReturnsTrueWhenPermissionServiceAllows(): void
@@ -86,11 +84,11 @@ class EntityListEditTest extends TestCase
         $component = new EntityList(
             $permissionService,
             new EntityListConfig(),
-            $this->createMock(DataSourceRegistry::class),
-            $this->createMock(EntityListBatchService::class),
-            $this->createMock(AdminPreferencesStorageInterface::class),
-            $this->createMock(EntityListColumnService::class),
-            $this->createMock(ArchiveService::class),
+            $this->createStub(DataSourceRegistry::class),
+            $this->createStub(EntityListBatchService::class),
+            $this->createStub(AdminPreferencesStorageInterface::class),
+            $this->createStub(EntityListColumnService::class),
+            $this->createStub(ArchiveService::class),
         );
         $component->entityClass = TestListEntity::class;
         $component->entityShortClass = 'TestListEntity';

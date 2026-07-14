@@ -48,7 +48,7 @@
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-symfony": "^2.0",
         "phpstan/phpstan": "^2.0",
-        "phpunit/phpunit": "^10.5",
+        "phpunit/phpunit": "^13.0",
         "smnandre/twigmetrics": "^1.1",
         "symfony/browser-kit": "^6.4|^7.0|^8.0",
         "symfony/console": "^6.4|^7.0|^8.0",
@@ -56,7 +56,9 @@
         "symfony/stimulus-bundle": "^2.31",
         "symfony/var-exporter": "^6.4|^7.0|^8.0",
         "symfony/webpack-encore-bundle": "^2.4",
-        "symfony/yaml": "^6.4|^7.0|^8.0"
+        "symfony/yaml": "^6.4|^7.0|^8.0",
+        "brianium/paratest": "^7.23",
+        "rector/rector": "^2.5"
     },
     "suggest": {
         "kachnitel/entity-components-bundle": "For attachment, tag, and comment features"

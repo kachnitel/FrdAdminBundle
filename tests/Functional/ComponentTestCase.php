@@ -48,7 +48,7 @@ abstract class ComponentTestCase extends KernelTestCase
 
         parent::tearDown();
 
-        restore_exception_handler();
+        // restore_exception_handler();
     }
 
     // ── Action rendering helpers ───────────────────────────────────────────────

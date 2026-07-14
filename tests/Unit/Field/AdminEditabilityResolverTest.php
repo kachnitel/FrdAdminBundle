@@ -9,19 +9,22 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Field\AdminEditabilityResolver;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-/**
- * @covers \Kachnitel\AdminBundle\Field\AdminEditabilityResolver
- * @group inline-edit
- */
 #[UsesClass(Admin::class)]
 #[UsesClass(AdminColumn::class)]
-class AdminEditabilityResolverTest extends TestCase
+#[CoversClass(AdminEditabilityResolver::class)]
+#[Group('inline-edit')]
+#[AllowMockObjectsWithoutExpectations]
+final class AdminEditabilityResolverTest extends TestCase
 {
     /** @var AttributeHelper&MockObject */
     private AttributeHelper $attributeHelper;
@@ -31,8 +34,6 @@ class AdminEditabilityResolverTest extends TestCase
 
     /** @var PropertyAccessorInterface&MockObject */
     private PropertyAccessorInterface $propertyAccessor;
-
-    private RowActionExpressionLanguage $expressionLanguage;
     private AdminEditabilityResolver $resolver;
 
     protected function setUp(): void
@@ -40,11 +41,11 @@ class AdminEditabilityResolverTest extends TestCase
         $this->attributeHelper    = $this->createMock(AttributeHelper::class);
         $this->authChecker        = $this->createMock(AuthorizationCheckerInterface::class);
         $this->propertyAccessor   = $this->createMock(PropertyAccessorInterface::class);
-        $this->expressionLanguage = new RowActionExpressionLanguage();
+        $expressionLanguage = new RowActionExpressionLanguage();
 
         $this->resolver = new AdminEditabilityResolver(
             $this->attributeHelper,
-            $this->expressionLanguage,
+            $expressionLanguage,
             $this->authChecker,
             $this->propertyAccessor,
         );
@@ -87,7 +88,7 @@ class AdminEditabilityResolverTest extends TestCase
 
     // ── editable: false short-circuits everything ──────────────────────────────
 
-    /** @test */
+    #[Test]
     public function editableFalseReturnsFalseRegardlessOfEverythingElse(): void
     {
         $this->stubColumnAttr(new AdminColumn(editable: false));
@@ -104,7 +105,7 @@ class AdminEditabilityResolverTest extends TestCase
 
     // ── editable: true bypasses entity default, still needs voter + writable ──
 
-    /** @test */
+    #[Test]
     public function editableTrueReturnsTrueWhenVoterGrantedAndWritable(): void
     {
         $this->stubColumnAttr(new AdminColumn(editable: true));
@@ -118,7 +119,7 @@ class AdminEditabilityResolverTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function editableTrueReturnsFalseWhenPropertyHasNoSetter(): void
     {
         $this->stubColumnAttr(new AdminColumn(editable: true));
@@ -132,7 +133,7 @@ class AdminEditabilityResolverTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function editableTrueReturnsFalseWhenVoterDenies(): void
     {
         $this->stubColumnAttr(new AdminColumn(editable: true));
@@ -148,7 +149,7 @@ class AdminEditabilityResolverTest extends TestCase
 
     // ── editable: null inherits entity-level setting ──────────────────────────
 
-    /** @test */
+    #[Test]
     public function nullEditableWithEntityInlineEditTrueAllowsEditing(): void
     {
         $this->stubColumnAttr(new AdminColumn(editable: null));
@@ -159,7 +160,7 @@ class AdminEditabilityResolverTest extends TestCase
         $this->assertTrue($this->resolver->canEdit($this->makeEntity(), 'title'));
     }
 
-    /** @test */
+    #[Test]
     public function nullEditableWithEntityInlineEditFalseBlocksEditing(): void
     {
         $this->stubColumnAttr(new AdminColumn(editable: null));
@@ -172,7 +173,7 @@ class AdminEditabilityResolverTest extends TestCase
         $this->assertFalse($this->resolver->canEdit($this->makeEntity(), 'title'));
     }
 
-    /** @test */
+    #[Test]
     public function noAdminColumnAttrWithEntityInlineEditFalseBlocksEditing(): void
     {
         $this->stubColumnAttr(null); // No #[AdminColumn] on the property
@@ -181,7 +182,7 @@ class AdminEditabilityResolverTest extends TestCase
         $this->assertFalse($this->resolver->canEdit($this->makeEntity(), 'title'));
     }
 
-    /** @test */
+    #[Test]
     public function noAdminColumnAttrWithEntityInlineEditTrueAndVoterGrantedAllows(): void
     {
         $this->stubColumnAttr(null);
@@ -192,7 +193,7 @@ class AdminEditabilityResolverTest extends TestCase
         $this->assertTrue($this->resolver->canEdit($this->makeEntity(), 'title'));
     }
 
-    /** @test */
+    #[Test]
     public function noAdminAttributeOnEntityBlocksEditing(): void
     {
         $this->stubColumnAttr(null); // No AdminColumn
@@ -206,7 +207,7 @@ class AdminEditabilityResolverTest extends TestCase
 
     // ── editable: expression ──────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function expressionTrueAllowsEditing(): void
     {
         $entity = new class { public string $status = 'draft'; };
@@ -219,7 +220,7 @@ class AdminEditabilityResolverTest extends TestCase
         $this->assertTrue($this->resolver->canEdit($entity, 'status'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionFalseBlocksEditing(): void
     {
         $entity = new class { public string $status = 'published'; };
@@ -234,7 +235,7 @@ class AdminEditabilityResolverTest extends TestCase
         $this->assertFalse($this->resolver->canEdit($entity, 'status'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionWithIsGrantedAllowsWhenRoleGranted(): void
     {
         $entity = new class { public string $title = 'Hello'; };
@@ -256,7 +257,7 @@ class AdminEditabilityResolverTest extends TestCase
         $this->assertTrue($this->resolver->canEdit($entity, 'title'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionWithIsGrantedBlocksWhenRoleMissing(): void
     {
         $entity = new class { public string $title = 'Hello'; };
@@ -271,7 +272,7 @@ class AdminEditabilityResolverTest extends TestCase
         $this->assertFalse($this->resolver->canEdit($entity, 'title'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionCombinedPropertyAndRoleAllowsWhenBothPass(): void
     {
         $entity = new class {
@@ -284,14 +285,14 @@ class AdminEditabilityResolverTest extends TestCase
         // Both expression's is_granted("ROLE_EDITOR") AND the voter's ADMIN_EDIT check need true
         $this->authChecker
             ->method('isGranted')
-            ->willReturnCallback(fn (string $attr) => in_array($attr, ['ROLE_EDITOR', 'ADMIN_EDIT'], true));
+            ->willReturnCallback(fn (string $attr): bool => in_array($attr, ['ROLE_EDITOR', 'ADMIN_EDIT'], true));
 
         $this->stubWritable(true);
 
         $this->assertTrue($this->resolver->canEdit($entity, 'status'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionCombinedBlocksWhenPropertyConditionFails(): void
     {
         $entity = new class {
@@ -306,7 +307,7 @@ class AdminEditabilityResolverTest extends TestCase
         $this->assertFalse($this->resolver->canEdit($entity, 'status'));
     }
 
-    /** @test */
+    #[Test]
     public function invalidExpressionReturnsFalse(): void
     {
         $entity = new class {};
@@ -320,7 +321,7 @@ class AdminEditabilityResolverTest extends TestCase
 
     // ── Voter is checked with correct entity short class ──────────────────────
 
-    /** @test */
+    #[Test]
     public function voterIsCalledWithAdminEditAttributeAndShortClassName(): void
     {
         $entity = new class {};

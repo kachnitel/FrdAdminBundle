@@ -11,23 +11,25 @@ use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\DataSourceContracts\FilterEnumOptions;
 use Kachnitel\DataSourceContracts\FilterMetadata;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
-class DebugDataSourceCommandTest extends TestCase
+#[Group('command')]
+#[AllowMockObjectsWithoutExpectations]
+final class DebugDataSourceCommandTest extends TestCase
 {
     /** @var DataSourceRegistry&MockObject */
     private DataSourceRegistry $registry;
-
-    private DebugDataSourceCommand $command;
     private CommandTester $commandTester;
 
     protected function setUp(): void
     {
         $this->registry = $this->createMock(DataSourceRegistry::class);
-        $this->command = new DebugDataSourceCommand($this->registry);
-        $this->commandTester = new CommandTester($this->command);
+        $command = new DebugDataSourceCommand($this->registry);
+        $this->commandTester = new CommandTester($command);
     }
 
     public function testListDataSourcesWithNoDataSources(): void
@@ -64,7 +66,7 @@ class DebugDataSourceCommandTest extends TestCase
             'audit-log' => $customDs,
         ]);
         $this->registry->method('getIdentifiers')->willReturn(['product', 'audit-log']);
-        $this->registry->method('get')->with('product')->willReturn($doctrineDs);
+        $this->registry->expects($this->once())->method('get')->with('product')->willReturn($doctrineDs);
 
         $this->commandTester->setInputs(['product']);
         $this->commandTester->execute([]);
@@ -84,7 +86,7 @@ class DebugDataSourceCommandTest extends TestCase
 
     public function testShowDetailsForNonExistentDataSource(): void
     {
-        $this->registry->method('get')->with('non-existent')->willReturn(null);
+        $this->registry->expects($this->once())->method('get')->with('non-existent')->willReturn(null);
         $this->registry->method('getIdentifiers')->willReturn(['product', 'audit-log']);
 
         $this->commandTester->execute(['--identifier' => 'non-existent']);
@@ -105,7 +107,7 @@ class DebugDataSourceCommandTest extends TestCase
         $dataSource->method('getDefaultSortBy')->willReturn('name');
         $dataSource->method('getDefaultSortDirection')->willReturn('ASC');
         $dataSource->method('getDefaultItemsPerPage')->willReturn(25);
-        $dataSource->method('supportsAction')->willReturnMap([
+        $dataSource->expects($this->atLeast(6))->method('supportsAction')->willReturnMap([
             ['index', true],
             ['show', true],
             ['new', true],
@@ -116,7 +118,7 @@ class DebugDataSourceCommandTest extends TestCase
         $dataSource->method('getColumns')->willReturn([]);
         $dataSource->method('getFilters')->willReturn([]);
 
-        $this->registry->method('get')->with('product')->willReturn($dataSource);
+        $this->registry->expects($this->once())->method('get')->with('product')->willReturn($dataSource);
 
         $this->commandTester->execute(['--identifier' => 'product']);
 
@@ -145,7 +147,7 @@ class DebugDataSourceCommandTest extends TestCase
         $dataSource->method('getColumns')->willReturn([]);
         $dataSource->method('getFilters')->willReturn([]);
 
-        $this->registry->method('get')->with('product')->willReturn($dataSource);
+        $this->registry->expects($this->once())->method('get')->with('product')->willReturn($dataSource);
 
         $this->commandTester->execute(['-i' => 'product']);
 
@@ -194,7 +196,7 @@ class DebugDataSourceCommandTest extends TestCase
         $dataSource->method('getColumns')->willReturn($columns);
         $dataSource->method('getFilters')->willReturn($filters);
 
-        $this->registry->method('get')->with('product')->willReturn($dataSource);
+        $this->registry->expects($this->once())->method('get')->with('product')->willReturn($dataSource);
 
         $this->commandTester->execute(['--identifier' => 'product']);
 
@@ -227,7 +229,7 @@ class DebugDataSourceCommandTest extends TestCase
         $dataSource->method('getDefaultSortBy')->willReturn('createdAt');
         $dataSource->method('getDefaultSortDirection')->willReturn('DESC');
         $dataSource->method('getDefaultItemsPerPage')->willReturn(50);
-        $dataSource->method('supportsAction')->willReturnMap([
+        $dataSource->expects($this->atLeast(6))->method('supportsAction')->willReturnMap([
             ['index', true],
             ['show', true],
             ['new', false],
@@ -238,7 +240,7 @@ class DebugDataSourceCommandTest extends TestCase
         $dataSource->method('getColumns')->willReturn([]);
         $dataSource->method('getFilters')->willReturn([]);
 
-        $this->registry->method('get')->with('audit-log')->willReturn($dataSource);
+        $this->registry->expects($this->once())->method('get')->with('audit-log')->willReturn($dataSource);
 
         $this->commandTester->execute(['--identifier' => 'audit-log']);
 
@@ -268,7 +270,7 @@ class DebugDataSourceCommandTest extends TestCase
         $dataSource->method('getColumns')->willReturn([]);
         $dataSource->method('getFilters')->willReturn([]);
 
-        $this->registry->method('get')->with('product')->willReturn($dataSource);
+        $this->registry->expects($this->once())->method('get')->with('product')->willReturn($dataSource);
 
         $this->commandTester->execute(['--identifier' => 'product']);
 

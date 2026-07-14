@@ -7,7 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 use Kachnitel\DataSourceContracts\PaginatedResult;
 use PHPUnit\Framework\TestCase;
 
-class PaginatedResultTest extends TestCase
+final class PaginatedResultTest extends TestCase
 {
     public function testConstructorSetsProperties(): void
     {

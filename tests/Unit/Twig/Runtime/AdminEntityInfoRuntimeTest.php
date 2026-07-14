@@ -10,20 +10,19 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityInfoRuntime;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Kachnitel\AdminBundle\Twig\Runtime\AdminEntityInfoRuntime
- */
+#[CoversClass(AdminEntityInfoRuntime::class)]
 #[UsesClass(ObjectHelper::class)]
 #[UsesClass(AdminColumn::class)]
-class AdminEntityInfoRuntimeTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+final class AdminEntityInfoRuntimeTest extends TestCase
 {
-    /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $em;
-
     /** @var ClassMetadata<object>&MockObject */
     private ClassMetadata $metadata;
 
@@ -34,21 +33,21 @@ class AdminEntityInfoRuntimeTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->em = $this->createMock(EntityManagerInterface::class);
+        $em = $this->createMock(EntityManagerInterface::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
         $this->attributeHelper = $this->createMock(AttributeHelper::class);
 
-        $this->em->method('getClassMetadata')->willReturn($this->metadata);
+        $em->method('getClassMetadata')->willReturn($this->metadata);
 
         $this->runtime = new AdminEntityInfoRuntime(
             attributeHelper: $this->attributeHelper,
-            em: $this->em,
+            em: $em,
         );
     }
 
     // ── getColumnTemplates ────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getColumnTemplatesForDoctrineEntityReturnsEntitySpecificPathFirst(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -61,7 +60,7 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertStringContainsString('App/Entity/Product/price.html.twig', $templates[0]);
     }
 
-    /** @test */
+    #[Test]
     public function getColumnTemplatesIncludesTypeSpecificTemplate(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -75,7 +74,7 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertNotEmpty($typeTemplate, 'A datetime type-specific template should be in the list');
     }
 
-    /** @test */
+    #[Test]
     public function getColumnTemplatesAlwaysIncludesFallbackTemplate(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -90,7 +89,7 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertStringContainsString('types/_preview.html.twig', $last);
     }
 
-    /** @test */
+    #[Test]
     public function getColumnTemplatesForDataSourceUsesDataSourcePath(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -103,7 +102,7 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertStringContainsString('types/data/audit-log/action', $templates[0]);
     }
 
-    /** @test */
+    #[Test]
     public function getColumnTemplatesForCollectionUsesCollectionTemplateName(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -123,7 +122,7 @@ class AdminEntityInfoRuntimeTest extends TestCase
 
     // ── getEntityColumnTemplates ──────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getEntityColumnTemplatesReturnsCorrectTemplatesForField(): void
     {
         $entity = new \stdClass();
@@ -131,7 +130,7 @@ class AdminEntityInfoRuntimeTest extends TestCase
 
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('getTypeOfField')->with('name')->willReturn('string');
+        $this->metadata->expects($this->once())->method('getTypeOfField')->with('name')->willReturn('string');
 
         $templates = $this->runtime->getEntityColumnTemplates($entity, 'name');
 
@@ -139,13 +138,13 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertStringContainsString('stdClass/name', $templates[0]);
     }
 
-    /** @test */
+    #[Test]
     public function getEntityColumnTemplatesUsesCollectionTemplateForCollection(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
-        $this->metadata->method('hasAssociation')->with('items')->willReturn(true);
-        $this->metadata->method('getAssociationTargetClass')->with('items')->willReturn('App\\Entity\\Item');
+        $this->metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
+        $this->metadata->expects($this->once())->method('hasAssociation')->with('items')->willReturn(true);
+        $this->metadata->expects($this->once())->method('getAssociationTargetClass')->with('items')->willReturn('App\\Entity\\Item');
 
         $templates = $this->runtime->getEntityColumnTemplates($entity, 'items');
 
@@ -158,13 +157,13 @@ class AdminEntityInfoRuntimeTest extends TestCase
 
     // ── getFieldComponentName ─────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getFieldComponentNameReturnsStringFieldForStringType(): void
     {
         $entity = new \stdClass();
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('hasField')->with('title')->willReturn(true);
-        $this->metadata->method('getTypeOfField')->with('title')->willReturn('string');
+        $this->metadata->expects($this->once())->method('hasField')->with('title')->willReturn(true);
+        $this->metadata->expects($this->once())->method('getTypeOfField')->with('title')->willReturn('string');
         $this->metadata->method('getFieldMapping')->willReturn(
             new \Doctrine\ORM\Mapping\FieldMapping(fieldName: 'title', type: 'string', columnName: 'title')
         );
@@ -174,13 +173,13 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:String', $result);
     }
 
-    /** @test */
+    #[Test]
     public function getFieldComponentNameReturnsIntFieldForIntegerType(): void
     {
         $entity = new \stdClass();
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('hasField')->with('quantity')->willReturn(true);
-        $this->metadata->method('getTypeOfField')->with('quantity')->willReturn('integer');
+        $this->metadata->expects($this->once())->method('hasField')->with('quantity')->willReturn(true);
+        $this->metadata->expects($this->once())->method('getTypeOfField')->with('quantity')->willReturn('integer');
         $this->metadata->method('getFieldMapping')->willReturn(
             new \Doctrine\ORM\Mapping\FieldMapping(fieldName: 'quantity', type: 'integer', columnName: 'quantity')
         );
@@ -190,13 +189,13 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Int', $result);
     }
 
-    /** @test */
+    #[Test]
     public function getFieldComponentNameReturnsFloatFieldForDecimalType(): void
     {
         $entity = new \stdClass();
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('hasField')->with('price')->willReturn(true);
-        $this->metadata->method('getTypeOfField')->with('price')->willReturn('decimal');
+        $this->metadata->expects($this->once())->method('hasField')->with('price')->willReturn(true);
+        $this->metadata->expects($this->once())->method('getTypeOfField')->with('price')->willReturn('decimal');
         $this->metadata->method('getFieldMapping')->willReturn(
             new \Doctrine\ORM\Mapping\FieldMapping(fieldName: 'price', type: 'decimal', columnName: 'price')
         );
@@ -206,13 +205,13 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Float', $result);
     }
 
-    /** @test */
+    #[Test]
     public function getFieldComponentNameReturnsBoolFieldForBooleanType(): void
     {
         $entity = new \stdClass();
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('hasField')->with('active')->willReturn(true);
-        $this->metadata->method('getTypeOfField')->with('active')->willReturn('boolean');
+        $this->metadata->expects($this->once())->method('hasField')->with('active')->willReturn(true);
+        $this->metadata->expects($this->once())->method('getTypeOfField')->with('active')->willReturn('boolean');
         $this->metadata->method('getFieldMapping')->willReturn(
             new \Doctrine\ORM\Mapping\FieldMapping(fieldName: 'active', type: 'boolean', columnName: 'active')
         );
@@ -222,13 +221,13 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Bool', $result);
     }
 
-    /** @test */
+    #[Test]
     public function getFieldComponentNameReturnsDateFieldForDatetimeType(): void
     {
         $entity = new \stdClass();
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('hasField')->with('createdAt')->willReturn(true);
-        $this->metadata->method('getTypeOfField')->with('createdAt')->willReturn('datetime');
+        $this->metadata->expects($this->once())->method('hasField')->with('createdAt')->willReturn(true);
+        $this->metadata->expects($this->once())->method('getTypeOfField')->with('createdAt')->willReturn('datetime');
         $this->metadata->method('getFieldMapping')->willReturn(
             new \Doctrine\ORM\Mapping\FieldMapping(fieldName: 'createdAt', type: 'datetime', columnName: 'created_at')
         );
@@ -238,31 +237,31 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Date', $result);
     }
 
-    /** @test */
+    #[Test]
     public function getFieldComponentNameReturnsRelationshipForSingleValuedAssociation(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('hasAssociation')->with('category')->willReturn(true);
-        $this->metadata->method('isSingleValuedAssociation')->with('category')->willReturn(true);
+        $this->metadata->expects($this->once())->method('hasAssociation')->with('category')->willReturn(true);
+        $this->metadata->expects($this->once())->method('isSingleValuedAssociation')->with('category')->willReturn(true);
 
         $result = $this->runtime->getFieldComponentName($entity, 'category');
 
         $this->assertSame('K:Entity:Field:Relationship', $result);
     }
 
-    /** @test */
+    #[Test]
     public function getFieldComponentNameReturnsCollectionForCollectionValuedAssociation(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('hasAssociation')->with('tags')->willReturn(true);
-        $this->metadata->method('isSingleValuedAssociation')->with('tags')->willReturn(false);
+        $this->metadata->expects($this->once())->method('hasAssociation')->with('tags')->willReturn(true);
+        $this->metadata->expects($this->once())->method('isSingleValuedAssociation')->with('tags')->willReturn(false);
 
         $result = $this->runtime->getFieldComponentName($entity, 'tags');
 
         $this->assertSame('K:Entity:Field:Collection', $result);
     }
 
-    /** @test */
+    #[Test]
     public function getFieldComponentNameReturnsNullForUnmappedProperty(): void
     {
         $entity = new \stdClass();
@@ -276,13 +275,13 @@ class AdminEntityInfoRuntimeTest extends TestCase
 
     // ── getColumnAttribute ────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getColumnAttributeReturnsAttributeWhenPresent(): void
     {
         $entity = new \stdClass();
         $attr = new AdminColumn(editable: true);
 
-        $this->attributeHelper->method('getPropertyAttribute')
+        $this->attributeHelper->expects($this->once())->method('getPropertyAttribute')
             ->with($entity, 'title', AdminColumn::class)
             ->willReturn($attr);
 
@@ -291,7 +290,7 @@ class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame($attr, $result);
     }
 
-    /** @test */
+    #[Test]
     public function getColumnAttributeReturnsNullWhenAttributeAbsent(): void
     {
         $entity = new \stdClass();
@@ -300,10 +299,10 @@ class AdminEntityInfoRuntimeTest extends TestCase
 
         $result = $this->runtime->getColumnAttribute($entity, 'name');
 
-        $this->assertNull($result);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Attribute\AdminColumn::class, $result);
     }
 
-    /** @test */
+    #[Test]
     public function getColumnAttributeReturnsNullOnReflectionException(): void
     {
         $entity = new \stdClass();
@@ -313,6 +312,6 @@ class AdminEntityInfoRuntimeTest extends TestCase
 
         $result = $this->runtime->getColumnAttribute($entity, 'nonExistent');
 
-        $this->assertNull($result);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Attribute\AdminColumn::class, $result);
     }
 }

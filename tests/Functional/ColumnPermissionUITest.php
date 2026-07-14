@@ -24,18 +24,16 @@ use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
  * @see \Kachnitel\AdminBundle\Tests\Unit\Service\ColumnPermissionServiceTest
  * @see \Kachnitel\AdminBundle\Tests\Unit\Service\EntityListColumnServiceTest
  */
-class ColumnPermissionUITest extends ComponentTestCase
+final class ColumnPermissionUITest extends ComponentTestCase
 {
-    private Session $session;
-
     protected function setUp(): void
     {
         parent::setUp();
 
         // Create and push a request with session to the request stack
-        $this->session = new Session(new MockArraySessionStorage());
+        $session = new Session(new MockArraySessionStorage());
         $request = new Request();
-        $request->setSession($this->session);
+        $request->setSession($session);
 
         $requestStack = self::getContainer()->get('request_stack');
         $requestStack->push($request);

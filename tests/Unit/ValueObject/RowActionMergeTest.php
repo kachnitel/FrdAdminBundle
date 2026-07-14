@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -13,11 +14,11 @@ use PHPUnit\Framework\TestCase;
  * @group row-actions
  */
 #[CoversClass(RowAction::class)]
-class RowActionMergeTest extends TestCase
+final class RowActionMergeTest extends TestCase
 {
     // ── contexts OR logic ──────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function mergePreservesOriginalContextsWhenOtherHasNone(): void
     {
         $original = new RowAction(
@@ -37,7 +38,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame([RowAction::CONTEXT_INDEX], $merged->contexts);
     }
 
-    /** @test */
+    #[Test]
     public function mergeUsesOtherContextsWhenOtherHasNonEmpty(): void
     {
         $original = new RowAction(
@@ -57,7 +58,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame([RowAction::CONTEXT_SHOW, RowAction::CONTEXT_EDIT], $merged->contexts);
     }
 
-    /** @test */
+    #[Test]
     public function mergeUsesOtherContextsWhenBothHaveNonEmptyContexts(): void
     {
         $original = new RowAction(
@@ -78,7 +79,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame([RowAction::CONTEXT_SHOW], $merged->contexts);
     }
 
-    /** @test */
+    #[Test]
     public function mergeResultPreservesOriginalName(): void
     {
         $original = new RowAction(name: 'edit', label: 'Edit');
@@ -92,7 +93,7 @@ class RowActionMergeTest extends TestCase
 
     // ── DEFAULT_PRIORITY tie-break ─────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function mergeKeepsOriginalPriorityWhenOtherHasDefaultPriority(): void
     {
         $original = new RowAction(
@@ -112,7 +113,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame(20, $merged->priority, 'When other uses DEFAULT_PRIORITY, original priority must be preserved.');
     }
 
-    /** @test */
+    #[Test]
     public function mergeUsesOtherPriorityWhenExplicitlySet(): void
     {
         $original = new RowAction(
@@ -132,7 +133,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame(5, $merged->priority);
     }
 
-    /** @test */
+    #[Test]
     public function mergeBothDefaultPriorityKeepsOriginal(): void
     {
         $original = new RowAction(
@@ -153,7 +154,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame(RowAction::DEFAULT_PRIORITY, $merged->priority);
     }
 
-    /** @test */
+    #[Test]
     public function mergeBothHaveExplicitPriorityUsesOther(): void
     {
         $original = new RowAction(name: 'edit', label: 'Edit', priority: 50);
@@ -166,7 +167,7 @@ class RowActionMergeTest extends TestCase
 
     // ── null / non-null property merging ──────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function mergePreservesOriginalIconWhenOtherHasNone(): void
     {
         $original = new RowAction(name: 'edit', label: 'Edit', icon: '✏️');
@@ -177,7 +178,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame('✏️', $merged->icon);
     }
 
-    /** @test */
+    #[Test]
     public function mergeOverridesIconWithOtherWhenSet(): void
     {
         $original = new RowAction(name: 'edit', label: 'Edit', icon: '✏️');
@@ -188,7 +189,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame('🖊', $merged->icon);
     }
 
-    /** @test */
+    #[Test]
     public function mergeUsesOtherConditionWhenSet(): void
     {
         $original = new RowAction(name: 'edit', label: 'Edit', condition: 'entity.active');
@@ -199,7 +200,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame('!entity.locked', $merged->condition);
     }
 
-    /** @test */
+    #[Test]
     public function mergePreservesOriginalConditionWhenOtherHasNone(): void
     {
         $original = new RowAction(name: 'edit', label: 'Edit', condition: 'entity.active');
@@ -210,7 +211,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame('entity.active', $merged->condition);
     }
 
-    /** @test */
+    #[Test]
     public function mergeUsesOtherRouteParamsWhenNonEmpty(): void
     {
         $original = new RowAction(name: 'edit', label: 'Edit', routeParams: ['workspace' => 'main']);
@@ -221,7 +222,7 @@ class RowActionMergeTest extends TestCase
         $this->assertSame(['workspace' => 'secondary'], $merged->routeParams);
     }
 
-    /** @test */
+    #[Test]
     public function mergeKeepsOriginalRouteParamsWhenOtherEmpty(): void
     {
         $original = new RowAction(name: 'edit', label: 'Edit', routeParams: ['workspace' => 'main']);
@@ -234,7 +235,7 @@ class RowActionMergeTest extends TestCase
 
     // ── supportsContext() ─────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function supportsContextReturnsTrueForEmptyContexts(): void
     {
         $action = new RowAction(name: 'show', label: 'Show', contexts: []);
@@ -244,7 +245,7 @@ class RowActionMergeTest extends TestCase
         $this->assertTrue($action->supportsContext(RowAction::CONTEXT_EDIT));
     }
 
-    /** @test */
+    #[Test]
     public function supportsContextReturnsTrueOnlyForDeclaredContext(): void
     {
         $action = new RowAction(
@@ -258,7 +259,7 @@ class RowActionMergeTest extends TestCase
         $this->assertFalse($action->supportsContext(RowAction::CONTEXT_EDIT));
     }
 
-    /** @test */
+    #[Test]
     public function supportsContextReturnsTrueForMultipleDeclaredContexts(): void
     {
         $action = new RowAction(

@@ -10,16 +10,18 @@ use Kachnitel\AdminBundle\Tests\Unit\ValueObject\ApprovalService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-/**
- * @group row-actions
- */
-class RowActionRuntimeTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+#[Group('row-actions')]
+final class RowActionRuntimeTest extends TestCase
 {
     /** @var RowActionRegistry&MockObject */
     private RowActionRegistry $registry;
@@ -74,7 +76,7 @@ class RowActionRuntimeTest extends TestCase
     // String expression conditions
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function expressionEqualityHidesActionWhenFalse(): void
     {
         $entity = $this->makeEntity(status: 'archived');
@@ -88,7 +90,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionEqualityShowsActionWhenTrue(): void
     {
         $entity = $this->makeEntity(status: 'pending');
@@ -102,7 +104,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionNegationWorks(): void
     {
         $entity = $this->makeEntity(active: false);
@@ -113,7 +115,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionBooleanCheck(): void
     {
         $entity = $this->makeEntity(active: true);
@@ -123,7 +125,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionInequalityCheck(): void
     {
         $entity = $this->makeEntity(status: 'archived');
@@ -133,7 +135,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function expressionHidesActionOnEvaluationError(): void
     {
         $entity = $this->makeEntity();
@@ -148,7 +150,7 @@ class RowActionRuntimeTest extends TestCase
     // Combining conditions (&&, ||)
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function andCombinationRequiresBothConditionsTrue(): void
     {
         $entity = $this->makeEntity(status: 'pending', active: true);
@@ -162,7 +164,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionVisible($action, $entity, 'Order'));
     }
 
-    /** @test */
+    #[Test]
     public function andCombinationHidesActionWhenOneConditionFails(): void
     {
         $entity = $this->makeEntity(status: 'archived', active: true);
@@ -176,7 +178,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'Order'));
     }
 
-    /** @test */
+    #[Test]
     public function orCombinationShowsActionWhenEitherTrue(): void
     {
         $entity = $this->makeEntity(status: 'archived', active: true);
@@ -190,7 +192,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionVisible($action, $entity, 'Order'));
     }
 
-    /** @test */
+    #[Test]
     public function orCombinationHidesActionWhenBothFalse(): void
     {
         $entity = $this->makeEntity(status: 'archived', active: false);
@@ -208,10 +210,10 @@ class RowActionRuntimeTest extends TestCase
     // is_granted() in expressions
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function isGrantedInExpressionShowsActionWhenRoleGranted(): void
     {
-        $this->authChecker->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
+        $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
 
         $entity = $this->makeEntity();
         $action = new RowAction(
@@ -224,10 +226,10 @@ class RowActionRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionVisible($action, $entity, 'User'));
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedInExpressionHidesActionWhenRoleNotGranted(): void
     {
-        $this->authChecker->method('isGranted')->with('ROLE_SUPER_ADMIN', null)->willReturn(false);
+        $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_SUPER_ADMIN', null)->willReturn(false);
 
         $entity = $this->makeEntity();
         $action = new RowAction(
@@ -240,10 +242,10 @@ class RowActionRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'User'));
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedCombinedWithPropertyCondition(): void
     {
-        $this->authChecker->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
+        $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
 
         $entity = $this->makeEntity(status: 'pending');
         $action = new RowAction(
@@ -256,10 +258,10 @@ class RowActionRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionVisible($action, $entity, 'Order'));
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedCombinedFalseWhenPropertyConditionFails(): void
     {
-        $this->authChecker->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
+        $this->authChecker->expects($this->never())->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true); // REVIEW:
 
         $entity = $this->makeEntity(status: 'archived');
         $action = new RowAction(
@@ -272,7 +274,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'Order'));
     }
 
-    /** @test */
+    #[Test]
     public function isGrantedReturnsFalseWhenNoAuthCheckerProvided(): void
     {
         $entity = $this->makeEntity();
@@ -290,7 +292,7 @@ class RowActionRuntimeTest extends TestCase
     // DI tuple conditions
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function diTupleHidesActionWhenServiceReturnsFalse(): void
     {
         $entity = $this->makeEntity();
@@ -314,7 +316,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function diTupleShowsActionWhenServiceReturnsTrue(): void
     {
         $entity = $this->makeEntity();
@@ -339,7 +341,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function diTupleReceivesEntityObject(): void
     {
         $entity = $this->makeEntity(status: 'pending');
@@ -370,7 +372,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertSame($entity, $conditionService->received);
     }
 
-    /** @test */
+    #[Test]
     public function diTupleFailsOpenWhenContainerNotAvailable(): void
     {
         $entity = $this->makeEntity();
@@ -388,7 +390,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function diTupleHidesActionWhenServiceThrows(): void
     {
         $entity = $this->makeEntity();
@@ -411,12 +413,12 @@ class RowActionRuntimeTest extends TestCase
     // Permission / voter checks
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function voterAttributeHidesActionWhenNotAccessible(): void
     {
         $entity = $this->makeEntity();
         $this->routeRuntime
-            ->method('isActionAccessible')
+            ->expects($this->once())->method('isActionAccessible')
             ->with('Product', 'edit')
             ->willReturn(false);
 
@@ -426,11 +428,11 @@ class RowActionRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function directPermissionHidesActionWhenNotGranted(): void
     {
         $entity = $this->makeEntity();
-        $this->authChecker->method('isGranted')->with('ROLE_MANAGER')->willReturn(false);
+        $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_MANAGER')->willReturn(false);
 
         $action = new RowAction(name: 'promote', label: 'Promote', permission: 'ROLE_MANAGER');
 
@@ -438,7 +440,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function actionVisibleWhenNoConstraints(): void
     {
         $entity = $this->makeEntity();
@@ -452,7 +454,7 @@ class RowActionRuntimeTest extends TestCase
     // getVisibleRowActions
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function getVisibleRowActionsFiltersActions(): void
     {
         $entity = $this->makeEntity(active: true);
@@ -469,7 +471,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertSame('show', $visible[0]->name);
     }
 
-    /** @test */
+    #[Test]
     public function getRowActionsReturnsAllUnfiltered(): void
     {
         $actions = [
@@ -482,7 +484,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertSame($actions, $runtime->getRowActions('App\\Entity\\Product'));
     }
 
-    /** @test */
+    #[Test]
     public function diTupleThrowsInDebugModeWhenServiceNotFound(): void
     {
         $entity = $this->makeEntity();
@@ -508,7 +510,7 @@ class RowActionRuntimeTest extends TestCase
         $runtime->isActionVisible($action, $entity, 'Product');
     }
 
-    /** @test */
+    #[Test]
     public function diTupleThrowsInDebugModeWhenServiceNotInLocator(): void
     {
         $entity = $this->makeEntity();
@@ -534,7 +536,7 @@ class RowActionRuntimeTest extends TestCase
         $runtime->isActionVisible($action, $entity, 'Product');
     }
 
-    /** @test */
+    #[Test]
     public function diTupleThrowsInDebugModeWhenMethodThrows(): void
     {
         $entity = $this->makeEntity();
@@ -567,7 +569,7 @@ class RowActionRuntimeTest extends TestCase
         $runtime->isActionVisible($action, $entity, 'Product');
     }
 
-    /** @test */
+    #[Test]
     public function diTupleDebugExceptionWrapsOriginal(): void
     {
         $entity = $this->makeEntity();
@@ -596,7 +598,7 @@ class RowActionRuntimeTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function diTupleLogsWarningInProdModeAndHidesAction(): void
     {
         $entity = $this->makeEntity();
@@ -633,7 +635,7 @@ class RowActionRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function noLogAndNoThrowWhenDiConditionSucceeds(): void
     {
         $entity = $this->makeEntity();

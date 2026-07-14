@@ -6,13 +6,12 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-class AdminActionsConfigTest extends TestCase
+final class AdminActionsConfigTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function itHasCorrectDefaults(): void
     {
         $config = new AdminActionsConfig();
@@ -22,9 +21,7 @@ class AdminActionsConfigTest extends TestCase
         $this->assertNull($config->include);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function disableDefaultsCanBeSet(): void
     {
         $config = new AdminActionsConfig(disableDefaults: true);
@@ -32,9 +29,7 @@ class AdminActionsConfigTest extends TestCase
         $this->assertTrue($config->disableDefaults);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function excludeCanBeSet(): void
     {
         $config = new AdminActionsConfig(exclude: ['delete', 'edit']);
@@ -42,9 +37,7 @@ class AdminActionsConfigTest extends TestCase
         $this->assertSame(['delete', 'edit'], $config->exclude);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function includeCanBeSet(): void
     {
         $config = new AdminActionsConfig(include: ['show', 'duplicate']);
@@ -52,9 +45,7 @@ class AdminActionsConfigTest extends TestCase
         $this->assertSame(['show', 'duplicate'], $config->include);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function allParametersCanBeSetTogether(): void
     {
         $config = new AdminActionsConfig(
@@ -68,9 +59,7 @@ class AdminActionsConfigTest extends TestCase
         $this->assertSame(['show', 'archive'], $config->include);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function itCanTargetClasses(): void
     {
         $reflection = new \ReflectionClass(AdminActionsConfig::class);

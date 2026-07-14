@@ -8,7 +8,7 @@ use Kachnitel\AdminBundle\Tests\Service\TemplatePatcher;
 use Kachnitel\AdminBundle\Tests\Service\TemplatePatchException;
 use PHPUnit\Framework\TestCase;
 
-class TemplatePatcherTest extends TestCase
+final class TemplatePatcherTest extends TestCase
 {
     private TemplatePatcher $patcher;
 

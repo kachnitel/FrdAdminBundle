@@ -8,14 +8,16 @@ use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\BatchAction\ArchiveBatchActionProvider;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group batch-actions
- * @group archive
- */
-class ArchiveBatchActionProviderTest extends TestCase
+#[Group('archive')]
+#[Group('batch-actions')]
+#[AllowMockObjectsWithoutExpectations]
+final class ArchiveBatchActionProviderTest extends TestCase
 {
     /** @var ArchiveService&MockObject */
     private ArchiveService $archiveService;
@@ -28,7 +30,7 @@ class ArchiveBatchActionProviderTest extends TestCase
         $this->provider = new ArchiveBatchActionProvider($this->archiveService);
     }
 
-    /** @test */
+    #[Test]
     public function supportsTrueWhenArchiveConfigured(): void
     {
         $config = new ArchiveConfig('item.archived', 'archived', 'boolean', null);
@@ -37,7 +39,7 @@ class ArchiveBatchActionProviderTest extends TestCase
         $this->assertTrue($this->provider->supports('App\\Entity\\Product')); // @phpstan-ignore argument.type
     }
 
-    /** @test */
+    #[Test]
     public function supportsFalseWhenArchiveNotConfigured(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn(null);
@@ -45,7 +47,7 @@ class ArchiveBatchActionProviderTest extends TestCase
         $this->assertFalse($this->provider->supports('App\\Entity\\Product')); // @phpstan-ignore argument.type
     }
 
-    /** @test */
+    #[Test]
     public function returnsArchiveBatchAction(): void
     {
         $config = new ArchiveConfig('item.archived', 'archived', 'boolean', null);
@@ -58,7 +60,7 @@ class ArchiveBatchActionProviderTest extends TestCase
         $this->assertSame('K:Admin:Action:Archive', $actions[0]->liveComponent);
     }
 
-    /** @test */
+    #[Test]
     public function actionRequiresAdminArchiveVoter(): void
     {
         $config = new ArchiveConfig('item.archived', 'archived', 'boolean', null);
@@ -69,7 +71,7 @@ class ArchiveBatchActionProviderTest extends TestCase
         $this->assertSame(AdminEntityVoter::ADMIN_ARCHIVE, $actions[0]->voterAttribute);
     }
 
-    /** @test */
+    #[Test]
     public function actionHasConfirmMessage(): void
     {
         $config = new ArchiveConfig('item.archived', 'archived', 'boolean', null);
@@ -81,7 +83,7 @@ class ArchiveBatchActionProviderTest extends TestCase
         $this->assertStringContainsString('%count%', (string) $actions[0]->confirmMessage);
     }
 
-    /** @test */
+    #[Test]
     public function priorityIsTwelve(): void
     {
         $this->assertSame(12, $this->provider->getPriority());

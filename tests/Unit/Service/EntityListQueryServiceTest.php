@@ -10,19 +10,20 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class EntityListQueryServiceTest extends TestCase
+#[Group('entity-list')]
+#[Group('query')]
+#[AllowMockObjectsWithoutExpectations]
+final class EntityListQueryServiceTest extends TestCase
 {
     private EntityListQueryService $service;
     private MockObject&EntityManagerInterface $em;
-    /** @var EntityRepository<object>&MockObject */
-    private MockObject&EntityRepository $repository;
     private MockObject&QueryBuilder $qb;
-    private Expr $expr;
-    /** @var ClassMetadata<object>&MockObject */
-    private MockObject&ClassMetadata $classMetadata;
 
     /** @var list<array{string, string}> */
     private array $orderByCalls = [];
@@ -34,14 +35,14 @@ class EntityListQueryServiceTest extends TestCase
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->repository = $this->createMock(EntityRepository::class);
+        $repository = $this->createMock(EntityRepository::class);
         $this->qb = $this->createMock(QueryBuilder::class);
-        $this->expr = new Expr();
-        $this->classMetadata = $this->createMock(ClassMetadata::class);
+        $expr = new Expr();
+        $classMetadata = $this->createMock(ClassMetadata::class);
 
-        $this->em->method('getRepository')->willReturn($this->repository);
-        $this->em->method('getClassMetadata')->willReturn($this->classMetadata);
-        $this->repository->method('createQueryBuilder')->willReturn($this->qb);
+        $this->em->method('getRepository')->willReturn($repository);
+        $this->em->method('getClassMetadata')->willReturn($classMetadata);
+        $repository->method('createQueryBuilder')->willReturn($this->qb);
 
         $this->orderByCalls = [];
         $this->andWhereCalls = [];
@@ -62,12 +63,12 @@ class EntityListQueryServiceTest extends TestCase
         });
         $this->qb->method('setFirstResult')->willReturnSelf();
         $this->qb->method('setMaxResults')->willReturnSelf();
-        $this->qb->method('expr')->willReturn($this->expr);
+        $this->qb->method('expr')->willReturn($expr);
 
         // Mock ClassMetadata methods
-        $this->classMetadata->method('getFieldNames')->willReturn(['id', 'name', 'description']);
-        $this->classMetadata->method('hasField')->willReturn(true);
-        $this->classMetadata->method('getTypeOfField')->willReturnCallback(fn (string $field) => match ($field) {
+        $classMetadata->method('getFieldNames')->willReturn(['id', 'name', 'description']);
+        $classMetadata->method('hasField')->willReturn(true);
+        $classMetadata->method('getTypeOfField')->willReturnCallback(fn (string $field): string => match ($field) {
             'id' => 'integer',
             'name' => 'string',
             'description' => 'text',
@@ -77,9 +78,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->service = new EntityListQueryService($this->em);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithEmptyFiltersOnlyAppliesSort(): void
     {
         $this->service->buildQuery(
@@ -97,9 +96,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertEmpty($this->setParameterCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithSingleFilterAppliesWhereClause(): void
     {
         $this->service->buildQuery(
@@ -116,9 +113,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertNotEmpty($this->setParameterCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithMultipleFiltersAppliesMultipleWhereClauses(): void
     {
         $this->service->buildQuery(
@@ -142,9 +137,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertCount(2, $this->setParameterCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithSingleEnumFilterAppliesEqualityWhere(): void
     {
         $this->service->buildQuery(
@@ -163,9 +156,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame('active', $this->setParameterCalls[0][1]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithGlobalSearchAppliesSearchFilter(): void
     {
         $this->service->buildQuery(
@@ -186,9 +177,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame('%search term%', $this->setParameterCalls[0][1]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithCustomRepositoryMethodFallsBackToCreateQueryBuilder(): void
     {
         // Mock repository doesn't have 'findActive' method, so it falls back
@@ -205,9 +194,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame([['e.id', 'ASC']], $this->orderByCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithAscendingSortUsesASC(): void
     {
         $this->service->buildQuery(
@@ -223,9 +210,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame([['e.name', 'ASC']], $this->orderByCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithDescendingSortUsesDESC(): void
     {
         $this->service->buildQuery(
@@ -241,9 +226,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame([['e.id', 'DESC']], $this->orderByCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithDotNotationSortPrefixesAlias(): void
     {
         $this->service->buildQuery(
@@ -259,9 +242,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame([['e.category.name', 'ASC']], $this->orderByCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithNullFilterValueSkipsFilter(): void
     {
         $this->service->buildQuery(
@@ -279,9 +260,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertEmpty($this->setParameterCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithEmptyStringFilterValueSkipsFilter(): void
     {
         $this->service->buildQuery(
@@ -299,9 +278,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertEmpty($this->setParameterCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithSearchAndFiltersAppliesBoth(): void
     {
         $this->service->buildQuery(
@@ -320,9 +297,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertGreaterThanOrEqual(2, count($this->setParameterCalls));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithRepositoryMethodAndFiltersCombinesBoth(): void
     {
         $this->service->buildQuery(
@@ -339,9 +314,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertNotEmpty($this->andWhereCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithComplexFilterCombinationAppliesAllFilters(): void
     {
         $this->service->buildQuery(
@@ -370,9 +343,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertCount(4, $this->setParameterCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryPassesEntityClassToRepository(): void
     {
         $this->em->expects($this->once())
@@ -390,9 +361,7 @@ class EntityListQueryServiceTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithArrayFilterValuesAppliesFilter(): void
     {
         $this->service->buildQuery(
@@ -411,9 +380,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame(['active', 'pending'], $this->setParameterCalls[0][1]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithNumericFilterValuesAppliesFilters(): void
     {
         $this->service->buildQuery(
@@ -434,9 +401,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertCount(2, $this->setParameterCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithInOperatorAndArrayValue(): void
     {
         $this->service->buildQuery(
@@ -455,9 +420,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame(['pending', 'approved'], $this->setParameterCalls[0][1]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithInOperatorAndJsonStringValue(): void
     {
         $this->service->buildQuery(
@@ -476,9 +439,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame(['pending', 'approved', 'rejected'], $this->setParameterCalls[0][1]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithInOperatorAndSingleStringValueFallsBack(): void
     {
         $this->service->buildQuery(
@@ -498,9 +459,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertSame(['pending'], $this->setParameterCalls[0][1]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithInOperatorAndEmptyArraySkipsFilter(): void
     {
         $this->service->buildQuery(
@@ -517,9 +476,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertEmpty($this->andWhereCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithInOperatorAndEmptyJsonArraySkipsFilter(): void
     {
         $this->service->buildQuery(
@@ -536,9 +493,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertEmpty($this->andWhereCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithCollectionFilter(): void
     {
         $this->service->buildQuery(
@@ -560,9 +515,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertNotEmpty($this->andWhereCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithCollectionFilterMultipleSearchFields(): void
     {
         $this->service->buildQuery(
@@ -584,9 +537,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertNotEmpty($this->andWhereCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithCollectionFilterEmptySearchFieldsSkipsFilter(): void
     {
         $this->service->buildQuery(
@@ -609,9 +560,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertEmpty($this->andWhereCalls);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithCollectionFilterGeneratesExistsWithMemberOf(): void
     {
         // Need real QueryBuilder to verify DQL generation
@@ -658,9 +607,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertStringContainsString('sub_attributes.attr LIKE', $dql);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithRelationFilterAlsoMatchesById(): void
     {
         $em = $this->createMock(EntityManagerInterface::class);
@@ -701,9 +648,7 @@ class EntityListQueryServiceTest extends TestCase
         $this->assertStringContainsString('rel_category.id =', $dql);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function buildQueryWithRelationFilterDoesNotMatchByIdForNonNumeric(): void
     {
         $em = $this->createMock(EntityManagerInterface::class);

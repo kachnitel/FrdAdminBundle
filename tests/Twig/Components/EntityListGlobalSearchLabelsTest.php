@@ -14,6 +14,7 @@ use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -25,7 +26,8 @@ use PHPUnit\Framework\TestCase;
  * @covers \Kachnitel\AdminBundle\Twig\Components\EntityList::getGlobalSearchColumnLabels
  */
 #[UsesClass(EntityListConfig::class)]
-class EntityListGlobalSearchLabelsTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class EntityListGlobalSearchLabelsTest extends TestCase
 {
     /** @var DataSourceRegistry&MockObject */
     private DataSourceRegistry $registry;
@@ -39,10 +41,10 @@ class EntityListGlobalSearchLabelsTest extends TestCase
             $this->permissionService,
             new EntityListConfig(),
             $this->registry,
-            $this->createMock(EntityListBatchService::class),
-            $this->createMock(AdminPreferencesStorageInterface::class),
-            $this->createMock(EntityListColumnService::class),
-            $this->createMock(ArchiveService::class),
+            $this->createStub(EntityListBatchService::class),
+            $this->createStub(AdminPreferencesStorageInterface::class),
+            $this->createStub(EntityListColumnService::class),
+            $this->createStub(ArchiveService::class),
         );
         $component->entityClass = 'App\\Entity\\User';
         $component->entityShortClass = 'User';
@@ -56,7 +58,7 @@ class EntityListGlobalSearchLabelsTest extends TestCase
         $this->permissionService->method('canViewList')->willReturn(true);
     }
 
-    /** @test */
+    #[Test]
     public function returnsLabelsFromSearchAwareDataSource(): void
     {
         /** @var DataSourceInterface&SearchAwareDataSourceInterface&MockObject $dataSource */
@@ -74,11 +76,11 @@ class EntityListGlobalSearchLabelsTest extends TestCase
         $this->assertSame(['Name', 'Description', 'Email'], $labels);
     }
 
-    /** @test */
+    #[Test]
     public function returnsEmptyArrayForNonSearchAwareDataSource(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */
-        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource = $this->createStub(DataSourceInterface::class);
 
         $this->registry->method('resolve')->willReturn($dataSource);
 

@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-class AttributeHelperTest extends TestCase
+final class AttributeHelperTest extends TestCase
 {
     private AttributeHelper $helper;
 
@@ -16,9 +17,7 @@ class AttributeHelperTest extends TestCase
         $this->helper = new AttributeHelper();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getAttributeReturnsAttributeFromClass(): void
     {
         $result = $this->helper->getAttribute(TestEntityWithAttribute::class, TestAttribute::class);
@@ -27,9 +26,7 @@ class AttributeHelperTest extends TestCase
         $this->assertSame('test_value', $result->value);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getAttributeReturnsAttributeFromObject(): void
     {
         $entity = new TestEntityWithAttribute();
@@ -39,29 +36,23 @@ class AttributeHelperTest extends TestCase
         $this->assertSame('test_value', $result->value);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getAttributeReturnsNullWhenAttributeNotPresent(): void
     {
         $result = $this->helper->getAttribute(TestEntityWithoutAttribute::class, TestAttribute::class);
 
-        $this->assertNull($result);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Tests\Unit\Service\TestAttribute::class, $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getAttributeReturnsNullForNonExistentClass(): void
     {
         $result = $this->helper->getAttribute('NonExistent\\Class\\Name', TestAttribute::class);
 
-        $this->assertNull($result);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Tests\Unit\Service\TestAttribute::class, $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getPropertyAttributeReturnsAttributeFromProperty(): void
     {
         $result = $this->helper->getPropertyAttribute(
@@ -74,9 +65,7 @@ class AttributeHelperTest extends TestCase
         $this->assertSame('property_value', $result->value);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getPropertyAttributeReturnsAttributeFromObjectProperty(): void
     {
         $entity = new TestEntityWithPropertyAttribute();
@@ -86,9 +75,7 @@ class AttributeHelperTest extends TestCase
         $this->assertSame('property_value', $result->value);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getPropertyAttributeReturnsNullWhenAttributeNotPresent(): void
     {
         $result = $this->helper->getPropertyAttribute(
@@ -97,12 +84,10 @@ class AttributeHelperTest extends TestCase
             TestAttribute::class
         );
 
-        $this->assertNull($result);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Tests\Unit\Service\TestAttribute::class, $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getPropertyAttributeReturnsNullForNonExistentClass(): void
     {
         $result = $this->helper->getPropertyAttribute(
@@ -111,7 +96,7 @@ class AttributeHelperTest extends TestCase
             TestAttribute::class
         );
 
-        $this->assertNull($result);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Tests\Unit\Service\TestAttribute::class, $result);
     }
 }
 

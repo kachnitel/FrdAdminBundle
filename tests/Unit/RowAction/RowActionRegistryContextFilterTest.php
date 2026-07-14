@@ -8,7 +8,10 @@ use Kachnitel\AdminBundle\RowAction\AttributeRowActionProvider;
 use Kachnitel\AdminBundle\RowAction\RowActionProviderInterface;
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -27,9 +30,12 @@ use PHPUnit\Framework\TestCase;
  * @covers \Kachnitel\AdminBundle\RowAction\RowActionRegistry::getActions
  * @group row-actions
  */
+
+#[Group('row-action')]
 #[CoversClass(RowActionRegistry::class)]
 #[UsesClass(RowAction::class)]
-class RowActionRegistryContextFilterTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+final class RowActionRegistryContextFilterTest extends TestCase
 {
     /** @var AttributeRowActionProvider&MockObject */
     private AttributeRowActionProvider $attributeProvider;
@@ -54,7 +60,7 @@ class RowActionRegistryContextFilterTest extends TestCase
 
     // ── Context filtering before merge ────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function indexOnlyActionIsAbsentFromShowContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */
@@ -77,7 +83,7 @@ class RowActionRegistryContextFilterTest extends TestCase
         $this->assertNotContains('edit', $names, 'CONTEXT_INDEX-only action must not appear in show context.');
     }
 
-    /** @test */
+    #[Test]
     public function indexOnlyActionIsAbsentFromEditContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */
@@ -100,7 +106,7 @@ class RowActionRegistryContextFilterTest extends TestCase
         $this->assertNotContains('edit', $names, 'CONTEXT_INDEX-only action must not appear in edit context.');
     }
 
-    /** @test */
+    #[Test]
     public function indexOnlyActionDoesNotOverwriteUniversalActionInShowContext(): void
     {
         // Low-priority provider: universal plain-link edit (all contexts)
@@ -144,7 +150,7 @@ class RowActionRegistryContextFilterTest extends TestCase
             }
         }
 
-        $this->assertNotNull($editAction, 'Edit action must still be present in show context.');
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\ValueObject\RowAction::class, $editAction, 'Edit action must still be present in show context.');
         $this->assertNull(
             $editAction->liveComponent,
             'The plain-link edit action must survive — the index-only liveComponent must not have merged into it.'
@@ -152,7 +158,7 @@ class RowActionRegistryContextFilterTest extends TestCase
         $this->assertSame('🖊', $editAction->icon, 'Plain-link edit icon must be preserved.');
     }
 
-    /** @test */
+    #[Test]
     public function indexOnlyActionDoesNotOverwriteUniversalActionInEditContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $lowPriority */
@@ -187,11 +193,11 @@ class RowActionRegistryContextFilterTest extends TestCase
             }
         }
 
-        $this->assertNotNull($editAction);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\ValueObject\RowAction::class, $editAction);
         $this->assertNull($editAction->liveComponent);
     }
 
-    /** @test */
+    #[Test]
     public function indexOnlyActionIsVisibleInIndexContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */
@@ -214,7 +220,7 @@ class RowActionRegistryContextFilterTest extends TestCase
         $this->assertContains('edit', $names, 'CONTEXT_INDEX action must appear in index context.');
     }
 
-    /** @test */
+    #[Test]
     public function inIndexContextBothUniversalAndIndexOnlyActionsAreReturnedAndMerged(): void
     {
         /** @var RowActionProviderInterface&MockObject $lowPriority */
@@ -250,12 +256,12 @@ class RowActionRegistryContextFilterTest extends TestCase
             }
         }
 
-        $this->assertNotNull($editAction);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\ValueObject\RowAction::class, $editAction);
         // In index context both are present → merge applies → liveComponent from high priority
         $this->assertSame('K:Admin:Action:InlineEdit', $editAction->liveComponent);
     }
 
-    /** @test */
+    #[Test]
     public function noContextFilterReturnsAllActionsRegardlessOfContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */
@@ -277,7 +283,7 @@ class RowActionRegistryContextFilterTest extends TestCase
         $this->assertContains('inline', $names);
     }
 
-    /** @test */
+    #[Test]
     public function cacheKeyIncludesContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */

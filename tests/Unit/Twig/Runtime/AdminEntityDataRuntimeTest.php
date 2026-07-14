@@ -9,17 +9,16 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime
- */
-class AdminEntityDataRuntimeTest extends TestCase
+#[CoversClass(AdminEntityDataRuntime::class)]
+#[AllowMockObjectsWithoutExpectations]
+final class AdminEntityDataRuntimeTest extends TestCase
 {
-    /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $em;
-
     /** @var ClassMetadata<object>&MockObject */
     private ClassMetadata $metadata;
 
@@ -27,66 +26,66 @@ class AdminEntityDataRuntimeTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->em = $this->createMock(EntityManagerInterface::class);
+        $em = $this->createMock(EntityManagerInterface::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
 
-        $this->em->method('getClassMetadata')->willReturn($this->metadata);
+        $em->method('getClassMetadata')->willReturn($this->metadata);
 
         $this->runtime = new AdminEntityDataRuntime(
-            em: $this->em,
-            attributeHelper: $this->createMock(AttributeHelper::class),
+            em: $em,
+            attributeHelper: $this->createStub(AttributeHelper::class),
             resolver: new DoctrineItemValueResolver(),
         );
     }
 
     // ── isAssociation ──────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function isAssociationReturnsTrueForSingleValuedAssociation(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('isSingleValuedAssociation')->with('category')->willReturn(true);
-        $this->metadata->method('isCollectionValuedAssociation')->with('category')->willReturn(false);
+        $this->metadata->expects($this->once())->method('isSingleValuedAssociation')->with('category')->willReturn(true);
+        $this->metadata->expects($this->never())->method('isCollectionValuedAssociation');
 
         $this->assertTrue($this->runtime->isAssociation($entity, 'category'));
     }
 
-    /** @test */
+    #[Test]
     public function isAssociationReturnsTrueForCollectionValuedAssociation(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('isSingleValuedAssociation')->with('tags')->willReturn(false);
-        $this->metadata->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
+        $this->metadata->expects($this->once())->method('isSingleValuedAssociation')->with('tags')->willReturn(false);
+        $this->metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
 
         $this->assertTrue($this->runtime->isAssociation($entity, 'tags'));
     }
 
-    /** @test */
+    #[Test]
     public function isAssociationReturnsFalseForRegularField(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('isSingleValuedAssociation')->with('name')->willReturn(false);
-        $this->metadata->method('isCollectionValuedAssociation')->with('name')->willReturn(false);
+        $this->metadata->expects($this->once())->method('isSingleValuedAssociation')->with('name')->willReturn(false);
+        $this->metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('name')->willReturn(false);
 
         $this->assertFalse($this->runtime->isAssociation($entity, 'name'));
     }
 
     // ── getAssociationType ─────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getAssociationTypeReturnsTargetClassForAssociation(): void
     {
         $entity = new \stdClass();
         $this->metadata->method('isSingleValuedAssociation')->willReturn(true);
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
-        $this->metadata->method('getAssociationTargetClass')->with('category')->willReturn('App\\Entity\\Category');
+        $this->metadata->expects($this->once())->method('getAssociationTargetClass')->with('category')->willReturn('App\\Entity\\Category');
 
         $result = $this->runtime->getAssociationType($entity, 'category');
 
         $this->assertSame('App\\Entity\\Category', $result);
     }
 
-    /** @test */
+    #[Test]
     public function getAssociationTypeReturnsNullForNonAssociation(): void
     {
         $entity = new \stdClass();
@@ -98,13 +97,13 @@ class AdminEntityDataRuntimeTest extends TestCase
         $this->assertNull($result);
     }
 
-    /** @test */
+    #[Test]
     public function getAssociationTypeReturnsTargetClassForCollection(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('isSingleValuedAssociation')->with('tags')->willReturn(false);
-        $this->metadata->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
-        $this->metadata->method('getAssociationTargetClass')->with('tags')->willReturn('App\\Entity\\Tag');
+        $this->metadata->expects($this->once())->method('isSingleValuedAssociation')->with('tags')->willReturn(false);
+        $this->metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
+        $this->metadata->expects($this->once())->method('getAssociationTargetClass')->with('tags')->willReturn('App\\Entity\\Tag');
 
         $result = $this->runtime->getAssociationType($entity, 'tags');
 
@@ -113,27 +112,27 @@ class AdminEntityDataRuntimeTest extends TestCase
 
     // ── isCollection ──────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function isCollectionReturnsTrueForCollectionValuedAssociation(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
+        $this->metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
 
         $this->assertTrue($this->runtime->isCollection($entity, 'items'));
     }
 
-    /** @test */
+    #[Test]
     public function isCollectionReturnsFalseForSingleValuedAssociation(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('isCollectionValuedAssociation')->with('owner')->willReturn(false);
+        $this->metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('owner')->willReturn(false);
 
         $this->assertFalse($this->runtime->isCollection($entity, 'owner'));
     }
 
     // ── getEntityLabel ────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getEntityLabelUsesGetNameMethod(): void
     {
         $entity = new class {
@@ -143,7 +142,7 @@ class AdminEntityDataRuntimeTest extends TestCase
         $this->assertSame('Test Product', $this->runtime->getEntityLabel($entity));
     }
 
-    /** @test */
+    #[Test]
     public function getEntityLabelFallsBackToGetLabel(): void
     {
         $entity = new class {
@@ -153,7 +152,7 @@ class AdminEntityDataRuntimeTest extends TestCase
         $this->assertSame('My Label', $this->runtime->getEntityLabel($entity));
     }
 
-    /** @test */
+    #[Test]
     public function getEntityLabelFallsBackToGetTitle(): void
     {
         $entity = new class {
@@ -163,7 +162,7 @@ class AdminEntityDataRuntimeTest extends TestCase
         $this->assertSame('My Title', $this->runtime->getEntityLabel($entity));
     }
 
-    /** @test */
+    #[Test]
     public function getEntityLabelFallsBackToToString(): void
     {
         $entity = new class {
@@ -173,7 +172,7 @@ class AdminEntityDataRuntimeTest extends TestCase
         $this->assertSame('String Rep', $this->runtime->getEntityLabel($entity));
     }
 
-    /** @test */
+    #[Test]
     public function getEntityLabelFallsBackToGetId(): void
     {
         $entity = new class {
@@ -183,7 +182,7 @@ class AdminEntityDataRuntimeTest extends TestCase
         $this->assertSame('#42', $this->runtime->getEntityLabel($entity));
     }
 
-    /** @test */
+    #[Test]
     public function getEntityLabelFallsBackToClassName(): void
     {
         $entity = new \stdClass();
@@ -191,7 +190,7 @@ class AdminEntityDataRuntimeTest extends TestCase
         $this->assertSame('stdClass', $this->runtime->getEntityLabel($entity));
     }
 
-    /** @test */
+    #[Test]
     public function getEntityLabelUsesCustomGetterWhenProvided(): void
     {
         $entity = new class {
@@ -202,7 +201,7 @@ class AdminEntityDataRuntimeTest extends TestCase
         $this->assertSame('Custom Display', $this->runtime->getEntityLabel($entity, 'getDisplayName'));
     }
 
-    /** @test */
+    #[Test]
     public function getEntityLabelPrefersLabelOverNameAndTitle(): void
     {
         $entity = new class {
@@ -216,29 +215,29 @@ class AdminEntityDataRuntimeTest extends TestCase
 
     // ── getPropertyType ───────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getPropertyTypeReturnsDoctrineFieldType(): void
     {
         $entity = new \stdClass();
         $this->metadata->method('isSingleValuedAssociation')->willReturn(false);
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
-        $this->metadata->method('getTypeOfField')->with('createdAt')->willReturn('datetime');
+        $this->metadata->expects($this->once())->method('getTypeOfField')->with('createdAt')->willReturn('datetime');
 
         $this->assertSame('datetime', $this->runtime->getPropertyType($entity, 'createdAt'));
     }
 
-    /** @test */
+    #[Test]
     public function getPropertyTypeReturnsTargetClassForAssociation(): void
     {
         $entity = new \stdClass();
-        $this->metadata->method('isSingleValuedAssociation')->with('category')->willReturn(true);
+        $this->metadata->expects($this->once())->method('isSingleValuedAssociation')->with('category')->willReturn(true);
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
-        $this->metadata->method('getAssociationTargetClass')->with('category')->willReturn('App\\Entity\\Category');
+        $this->metadata->expects($this->once())->method('getAssociationTargetClass')->with('category')->willReturn('App\\Entity\\Category');
 
         $this->assertSame('App\\Entity\\Category', $this->runtime->getPropertyType($entity, 'category'));
     }
 
-    /** @test */
+    #[Test]
     public function getPropertyTypeReturnsStringWhenFieldTypeIsNull(): void
     {
         $entity = new \stdClass();
@@ -251,12 +250,12 @@ class AdminEntityDataRuntimeTest extends TestCase
 
     // ── getColumns ────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getColumnsReturnsMappedFieldNamesAndSingleValuedAssociations(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'active']);
         $this->metadata->method('getAssociationNames')->willReturn(['category', 'tags']);
-        $this->metadata->method('isCollectionValuedAssociation')
+        $this->metadata->expects($this->atLeast(2))->method('isCollectionValuedAssociation')
             ->willReturnMap([['category', false], ['tags', true]]);
 
         $columns = $this->runtime->getColumns(\stdClass::class);

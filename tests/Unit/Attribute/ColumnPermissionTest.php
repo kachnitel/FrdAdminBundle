@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @covers \Kachnitel\AdminBundle\Attribute\ColumnPermission
  */
-class ColumnPermissionTest extends TestCase
+final class ColumnPermissionTest extends TestCase
 {
     public function testEmptyPermissionsIsDefault(): void
     {

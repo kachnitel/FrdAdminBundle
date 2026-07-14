@@ -10,22 +10,19 @@ use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Service\Traits\FieldFilterConfigTrait;
 use Kachnitel\AdminBundle\Utils\Text;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Kachnitel\AdminBundle\Service\FilterMetadataProvider::getFilterForProperty
- * @group collection-url
- */
-#[UsesClass(FilterMetadataProvider::class)]
-#[UsesClass(Text::class)]
-#[UsesClass(FieldFilterConfigTrait::class)]
-class FilterMetadataProviderGetFilterForPropertyTest extends TestCase
+#[PHPUnit\CoversMethod(FilterMetadataProvider::class, 'getFilterForProperty')]
+#[PHPUnit\UsesClass(Text::class)]
+#[PHPUnit\UsesClass(ColumnFilter::class)]
+#[PHPUnit\UsesClass(FilterMetadataProvider::class)]
+#[PHPUnit\UsesTrait(FieldFilterConfigTrait::class)]
+#[PHPUnit\Group('collection-url')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
+final class FilterMetadataProviderGetFilterForPropertyTest extends TestCase
 {
-    /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $em;
-
     /** @var ClassMetadata<object>&MockObject */
     private ClassMetadata $metadata;
 
@@ -33,16 +30,17 @@ class FilterMetadataProviderGetFilterForPropertyTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->em = $this->createMock(EntityManagerInterface::class);
+        $em = $this->createMock(EntityManagerInterface::class);
         /** @var ClassMetadata<object>&MockObject $metadata */
         $metadata = $this->createMock(ClassMetadata::class);
         $this->metadata = $metadata;
 
-        $this->em->method('getClassMetadata')->willReturn($this->metadata);
+        $em->method('getClassMetadata')->willReturn($this->metadata);
 
-        $this->provider = new FilterMetadataProvider($this->em);
+        $this->provider = new FilterMetadataProvider($em);
     }
 
+    #[PHPUnit\Test]
     public function testReturnsNullForNonExistentProperty(): void
     {
         $this->metadata->method('hasField')->willReturn(false);
@@ -56,6 +54,7 @@ class FilterMetadataProviderGetFilterForPropertyTest extends TestCase
         $this->assertNull($result);
     }
 
+    #[PHPUnit\Test]
     public function testReturnsNullWhenFilteringExplicitlyDisabled(): void
     {
         $this->metadata->method('hasField')->willReturn(true);
@@ -71,6 +70,7 @@ class FilterMetadataProviderGetFilterForPropertyTest extends TestCase
         $this->assertNull($result);
     }
 
+    #[PHPUnit\Test]
     public function testReturnsFilterConfigForFieldWithExplicitAttribute(): void
     {
         $this->metadata->method('hasField')->willReturn(true);
@@ -87,6 +87,7 @@ class FilterMetadataProviderGetFilterForPropertyTest extends TestCase
         $this->assertSame('text', $result['type']);
     }
 
+    #[PHPUnit\Test]
     public function testReturnsAutoDetectedFilterConfigForFieldWithNoAttribute(): void
     {
         $this->metadata->method('hasField')->willReturn(true);
@@ -104,6 +105,7 @@ class FilterMetadataProviderGetFilterForPropertyTest extends TestCase
         $this->assertTrue($result['enabled']);
     }
 
+    #[PHPUnit\Test]
     public function testReturnsNullForCollectionAssociationWithoutAttribute(): void
     {
         $this->metadata->method('hasField')->willReturn(false);

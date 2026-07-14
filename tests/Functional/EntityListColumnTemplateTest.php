@@ -14,7 +14,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestDataSourceProvider;
  * Verifies that ColumnMetadata.template is respected when rendering columns
  * in DataSource mode.
  */
-class EntityListColumnTemplateTest extends ComponentTestCase
+final class EntityListColumnTemplateTest extends ComponentTestCase
 {
     private CustomTemplateDataSource $dataSource;
 
@@ -164,7 +164,7 @@ class EntityListColumnTemplateTest extends ComponentTestCase
 
         $dataSource = $registry->get('custom-template-test');
 
-        $this->assertNotNull($dataSource);
+        $this->assertInstanceOf(\Kachnitel\DataSourceContracts\DataSourceInterface::class, $dataSource);
         $this->assertSame('custom-template-test', $dataSource->getIdentifier());
     }
 
@@ -175,7 +175,7 @@ class EntityListColumnTemplateTest extends ComponentTestCase
         $registry = $container->get(DataSourceRegistry::class);
 
         $dataSource = $registry->get('custom-template-test');
-        $this->assertNotNull($dataSource);
+        $this->assertInstanceOf(\Kachnitel\DataSourceContracts\DataSourceInterface::class, $dataSource);
 
         $columns = $dataSource->getColumns();
 

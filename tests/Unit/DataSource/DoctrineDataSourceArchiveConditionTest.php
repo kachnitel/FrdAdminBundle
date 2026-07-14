@@ -15,6 +15,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -33,27 +34,22 @@ use PHPUnit\Framework\TestCase;
  */
 #[UsesClass(Admin::class)]
 #[UsesClass(DoctrineDataSource::class)]
-class DoctrineDataSourceArchiveConditionTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class DoctrineDataSourceArchiveConditionTest extends TestCase
 {
-    /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $em;
-
     /** @var EntityListQueryService&MockObject */
     private EntityListQueryService $queryService;
-
-    /** @var ClassMetadata<object>&MockObject */
-    private ClassMetadata $metadata;
 
     private DoctrineDataSource $dataSource;
 
     protected function setUp(): void
     {
-        $this->em           = $this->createMock(EntityManagerInterface::class);
+        $em           = $this->createMock(EntityManagerInterface::class);
         $this->queryService = $this->createMock(EntityListQueryService::class);
-        $this->metadata     = $this->createMock(ClassMetadata::class);
+        $metadata     = $this->createMock(ClassMetadata::class);
 
-        $this->em->method('getClassMetadata')->willReturn($this->metadata);
-        $this->metadata->method('getSingleIdentifierFieldName')->willReturn('id');
+        $em->method('getClassMetadata')->willReturn($metadata);
+        $metadata->method('getSingleIdentifierFieldName')->willReturn('id');
 
         $filterProvider = $this->createMock(FilterMetadataProvider::class);
         $filterProvider->method('getFilters')->willReturn([]);
@@ -71,7 +67,7 @@ class DoctrineDataSourceArchiveConditionTest extends TestCase
         $this->dataSource = new DoctrineDataSource(
             entityClass: 'App\\Entity\\Product', // @phpstan-ignore argument.type
             adminAttribute: new Admin(),
-            em: $this->em,
+            em: $em,
             queryService: $this->queryService,
             filterMetadataProvider: $filterProvider,
             customColumnProvider: $customCols,
@@ -91,7 +87,7 @@ class DoctrineDataSourceArchiveConditionTest extends TestCase
 
     // ── Condition forwarded to query service ──────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function archiveDqlConditionIsPassedToQueryService(): void
     {
         $this->queryService
@@ -115,7 +111,7 @@ class DoctrineDataSourceArchiveConditionTest extends TestCase
         $this->dataSource->query('', [], 'id', 'DESC', 1, 20);
     }
 
-    /** @test */
+    #[Test]
     public function nullConditionIsPassedAsNullToQueryService(): void
     {
         $this->queryService
@@ -141,7 +137,7 @@ class DoctrineDataSourceArchiveConditionTest extends TestCase
 
     // ── Condition is cleared after first query() ──────────────────────────────
 
-    /** @test */
+    #[Test]
     public function archiveConditionIsNotPassedOnSecondQueryCall(): void
     {
         /** @var list<string|null> $capturedConditions */
@@ -180,7 +176,7 @@ class DoctrineDataSourceArchiveConditionTest extends TestCase
         $this->assertNull($capturedConditions[1], 'Second query must NOT receive the condition — it must be cleared after first use.');
     }
 
-    /** @test */
+    #[Test]
     public function archiveConditionCanBeSetAgainAfterFirstQuery(): void
     {
         /** @var list<string|null> $capturedConditions */
@@ -218,7 +214,7 @@ class DoctrineDataSourceArchiveConditionTest extends TestCase
         $this->assertSame('e.archived = false', $capturedConditions[1], 'Re-setting condition before second query must work.');
     }
 
-    /** @test */
+    #[Test]
     public function settingNullConditionExplicitlyAfterSetClearsIt(): void
     {
         /** @var list<string|null> $capturedConditions */

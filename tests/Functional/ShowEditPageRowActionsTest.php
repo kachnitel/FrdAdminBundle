@@ -37,7 +37,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  *
  * @group show-edit-row-actions
  */
-class ShowEditPageRowActionsTest extends WebTestCase
+final class ShowEditPageRowActionsTest extends WebTestCase
 {
     protected static function getKernelClass(): string
     {

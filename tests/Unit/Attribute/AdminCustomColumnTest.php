@@ -6,14 +6,15 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminCustomColumn;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group custom-columns
  */
-class AdminCustomColumnTest extends TestCase
+final class AdminCustomColumnTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function itCreatesAttributeWithRequiredFieldsOnly(): void
     {
         $column = new AdminCustomColumn(
@@ -27,7 +28,7 @@ class AdminCustomColumnTest extends TestCase
         $this->assertFalse($column->sortable);
     }
 
-    /** @test */
+    #[Test]
     public function itCreatesAttributeWithAllFields(): void
     {
         $column = new AdminCustomColumn(
@@ -43,25 +44,25 @@ class AdminCustomColumnTest extends TestCase
         $this->assertTrue($column->sortable);
     }
 
-    /** @test */
+    #[Test]
     public function itIsRepeatableAttribute(): void
     {
         $reflection = new \ReflectionClass(AdminCustomColumn::class);
         $attrInstance = $reflection->getAttributes(Attribute::class)[0]->newInstance();
 
-        $this->assertTrue(($attrInstance->flags & Attribute::IS_REPEATABLE) !== 0);
+        $this->assertNotSame(0, $attrInstance->flags & Attribute::IS_REPEATABLE);
     }
 
-    /** @test */
+    #[Test]
     public function itTargetsClasses(): void
     {
         $reflection = new \ReflectionClass(AdminCustomColumn::class);
         $attrInstance = $reflection->getAttributes(Attribute::class)[0]->newInstance();
 
-        $this->assertTrue(($attrInstance->flags & Attribute::TARGET_CLASS) !== 0);
+        $this->assertNotSame(0, $attrInstance->flags & Attribute::TARGET_CLASS);
     }
 
-    /** @test */
+    #[Test]
     public function sortableDefaultsToFalse(): void
     {
         $column = new AdminCustomColumn(name: 'computed', template: 'some/template.html.twig');
@@ -69,7 +70,7 @@ class AdminCustomColumnTest extends TestCase
         $this->assertFalse($column->sortable);
     }
 
-    /** @test */
+    #[Test]
     public function labelDefaultsToNull(): void
     {
         $column = new AdminCustomColumn(name: 'computed', template: 'some/template.html.twig');

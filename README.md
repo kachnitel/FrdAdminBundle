@@ -1,9 +1,9 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1589%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-88%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-3126-blue>)
+![Tests](<https://img.shields.io/badge/tests-1512%20passed-red>)
+![Coverage](<https://img.shields.io/badge/coverage-85%25-brightgreen>)
+![Assertions](<https://img.shields.io/badge/assertions-3455-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-8-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-6%20issues-red>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
@@ -167,6 +167,38 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 </details>
 
 <details>
+<summary><strong>Auto-Generated Forms</strong></summary>
+
+**Level 1:** Zero config — every `#[Admin]` entity gets New/Edit forms automatically, powered by [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle):
+```php
+#[Admin(label: 'Products')]
+class Product { }
+// Visit /admin/product/new — fields generated from Doctrine metadata, no FormType written
+```
+
+**Level 2:** Hand-written FormType (conventional naming, auto-discovered):
+```php
+// src/Form/ProductFormType.php
+class ProductFormType extends AbstractType { /* ... */ }
+```
+
+**Level 3:** Custom LiveComponent for extra behaviour (collection management, computed fields):
+```php
+#[AsLiveComponent(name: 'App:Form:PurchaseOrder')]
+final class PurchaseOrderForm extends AdminEntityForm { /* ... */ }
+```
+
+**Level 4:** Control which fields appear:
+```php
+#[AdminColumn(editable: false)]                        // exclude from the form
+#[AdminColumn(editable: 'entity.status != "locked"')]   // conditional
+```
+
+**Details:** [Forms Guide](docs/FORMS.md)
+
+</details>
+
+<details>
 <summary><strong>Archive / Soft-Delete Filtering</strong></summary>
 
 **Level 1:** Point at a boolean field — the list hides archived rows by default, with a toggle to reveal them:
@@ -209,6 +241,7 @@ kachnitel_admin:
 - **Multi-Layer Permissions** - Entity, action, and column-level control
 - **Easy start** - Add `#[Admin]` to entity, auto-detects columns
 - **Highly Customizable** - From [cell level templates](docs/TEMPLATE_OVERRIDES.md#common-override-scenarios) to entire layout overrides using [Symfony's Twig inheritance](https://symfony.com/doc/current/bundles/override.html#templates)
+- **Auto-Generated Forms** - Zero-config create/edit forms from Doctrine metadata via [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle), including associations and collections; drop in a hand-written FormType any time you need more control
 - **Inline Editing** - Edit any field in-place, with type-aware inputs and per-column permission guards
 - **Column Visibility** - Show/hide columns with session or database-backed preferences
 - **Row Actions** — Per-row buttons with conditions, permissions, and priority ordering; extend defaults or replace them
@@ -225,6 +258,8 @@ kachnitel_admin:
 | [Column Visibility](docs/COLUMN_VISIBILITY.md) | Permissions and user preferences |
 | [Filters](docs/FILTERS.md) | Automatic filtering and customization |
 | [Row Actions](docs/ROW_ACTIONS.md) | Custom action buttons per row — conditions, ordering, providers |
+| [Forms](docs/FORMS.md) | Auto-generated and custom create/edit forms |
+| [Inline Add](docs/INLINE_ADD.md) | Create related entities without leaving the current form |
 | [Inline Editing](docs/INLINE_EDIT.md) | Per-field in-place editing in list views |
 | [Composite Columns](docs/COMPOSITE_COLUMNS.md) | Group related properties into one stacked table cell |
 | [Archive](docs/ARCHIVE.md) | Soft-delete / archive filtering with show/hide toggle |
@@ -251,7 +286,7 @@ EasyAdmin and SonataAdmin use PHP configuration, while this bundle leans heavily
 - Doctrine ORM 3.5+
 - [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts) (pulled automatically by Composer)
 - [`kachnitel/entity-expression-language`](https://github.com/kachnitel/entity-expression-language) (pulled automatically by Composer)
-- [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle) (pulled automatically by Composer)
+- [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle) (pulled automatically by Composer — licensed MPL-2.0, a file-level copyleft compatible with this bundle's MIT license and with closed-source deployments)
 
 ## License
 

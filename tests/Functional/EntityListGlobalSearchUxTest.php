@@ -6,15 +6,16 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Functional tests for global search tooltip UX in EntityList.
  *
  * @group global-search
  */
-class EntityListGlobalSearchUxTest extends ComponentTestCase
+final class EntityListGlobalSearchUxTest extends ComponentTestCase
 {
-    /** @test */
+    #[Test]
     public function searchInputHasSimplePlaceholder(): void
     {
         $component = $this->createLiveComponent(
@@ -31,7 +32,7 @@ class EntityListGlobalSearchUxTest extends ComponentTestCase
         $this->assertStringNotContainsString('Global search across all columns', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function searchHelpIconIsRenderedWithSearchableColumnLabel(): void
     {
         $component = $this->createLiveComponent(
@@ -51,7 +52,7 @@ class EntityListGlobalSearchUxTest extends ComponentTestCase
         $this->assertStringContainsString('Name', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function renderedHelpIconHasNonEmptyTitle(): void
     {
         $component = $this->createLiveComponent(

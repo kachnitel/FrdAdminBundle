@@ -9,15 +9,15 @@ use Kachnitel\AdminBundle\RowAction\DefaultRowActionProvider;
 use Kachnitel\AdminBundle\RowAction\InlineEditRowActionProvider;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Unit tests for InlineEditRowActionProvider.
- *
- * @group inline-edit
- */
-class InlineEditRowActionProviderTest extends TestCase
+#[Group('inline-edit')]
+#[Group('row-action')]
+#[AllowMockObjectsWithoutExpectations]
+final class InlineEditRowActionProviderTest extends TestCase
 {
     /** @var AttributeHelper&MockObject */
     private AttributeHelper $attributeHelper;

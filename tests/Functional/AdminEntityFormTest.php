@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
+use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -33,7 +34,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  *
  * @group admin-entity-form
  */
-class AdminEntityFormTest extends ComponentTestCase
+final class AdminEntityFormTest extends ComponentTestCase
 {
     /**
      * Form name derived from TestEntityFormType by Symfony's block prefix convention:
@@ -89,9 +90,7 @@ class AdminEntityFormTest extends ComponentTestCase
 
     // ── Render ────────────────────────────────────────────────────────────────
 
-    /**
-     * @test
-     */
+    #[Test]
     public function editFormRendersWithEntityValue(): void
     {
         $entity = $this->createEntity('My Product');
@@ -102,9 +101,7 @@ class AdminEntityFormTest extends ComponentTestCase
         $this->assertStringContainsString('My Product', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function newFormRendersEmptyForm(): void
     {
         $rendered = (string) $this->mountNewForm()->render();
@@ -115,9 +112,7 @@ class AdminEntityFormTest extends ComponentTestCase
 
     // ── Edit: save with valid data ────────────────────────────────────────────
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveEditPersistsChangedValue(): void
     {
         $entity = $this->createEntity('Before');
@@ -128,13 +123,11 @@ class AdminEntityFormTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertNotNull($reloaded);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
         $this->assertSame('After', $reloaded->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveEditEntityIdRemainsUnchanged(): void
     {
         $entity = $this->createEntity();
@@ -146,15 +139,13 @@ class AdminEntityFormTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $originalId);
-        $this->assertNotNull($reloaded);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
         $this->assertSame('Updated', $reloaded->getName());
     }
 
     // ── Edit: save with invalid data ──────────────────────────────────────────
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveEditWithBlankNameShowsValidationError(): void
     {
         $entity = $this->createEntity('Keep Me');
@@ -167,9 +158,7 @@ class AdminEntityFormTest extends ComponentTestCase
         $this->assertStringContainsString('Name is required.', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveEditWithBlankNameDoesNotPersist(): void
     {
         $entity = $this->createEntity('Keep Me');
@@ -180,15 +169,13 @@ class AdminEntityFormTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertNotNull($reloaded);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
         $this->assertSame('Keep Me', $reloaded->getName());
     }
 
     // ── New: save with valid data ─────────────────────────────────────────────
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveNewCreatesEntity(): void
     {
         $component = $this->mountNewForm();
@@ -200,16 +187,7 @@ class AdminEntityFormTest extends ComponentTestCase
         $this->assertCount(1, $entities);
     }
 
-    /**
-     * @test
-     *
-     * Verifies a persisted row exists with a positive ID after a new-entity save.
-     *
-     * Note: component()->entityId is NOT asserted because component() re-hydrates
-     * from the original serialised LiveProps after call(), discarding mutations made
-     * during the action — a known LiveComponent test limitation.
-     */
-    public function saveNewSetsEntityIdAfterPersist(): void
+    public function testSaveNewSetsEntityIdAfterPersist(): void
     {
         $component = $this->mountNewForm();
 
@@ -224,9 +202,7 @@ class AdminEntityFormTest extends ComponentTestCase
 
     // ── New: save with invalid data ───────────────────────────────────────────
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveNewWithBlankNameShowsValidationError(): void
     {
         $component = $this->mountNewForm();
@@ -238,9 +214,7 @@ class AdminEntityFormTest extends ComponentTestCase
         $this->assertStringContainsString('Name is required.', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveNewWithBlankNameDoesNotInsertRow(): void
     {
         $component = $this->mountNewForm();

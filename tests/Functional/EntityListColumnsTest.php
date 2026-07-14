@@ -11,7 +11,7 @@ use Kachnitel\AdminBundle\Twig\Components\EntityList;
 /**
  * Tests that the columns configuration from #[Admin] attribute is respected.
  */
-class EntityListColumnsTest extends ComponentTestCase
+final class EntityListColumnsTest extends ComponentTestCase
 {
 
     public function testColumnsFromAdminAttributeAreUsed(): void

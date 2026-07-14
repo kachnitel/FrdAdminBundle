@@ -33,7 +33,7 @@ use Symfony\Component\Form\FormFactoryInterface;
  * @group collections
  * @group editability
  */
-class DynamicFormEditabilityResolverIntegrationTest extends KernelTestCase
+final class DynamicFormEditabilityResolverIntegrationTest extends KernelTestCase
 {
     /** @var array<class-string> */
     private const FIXTURE_CLASSES = [

@@ -11,7 +11,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 /**
  * @group row-actions
  */
-class EntityListRowActionsTest extends ComponentTestCase
+final class EntityListRowActionsTest extends ComponentTestCase
 {
     private EntityManagerInterface $entityManager;
 

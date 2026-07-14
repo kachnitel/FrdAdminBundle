@@ -8,26 +8,27 @@ use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithGroupedColumns;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Functional tests for composite/grouped columns feature.
  *
  * @group composite-columns
  */
-class EntityListColumnGroupTest extends ComponentTestCase
+final class EntityListColumnGroupTest extends ComponentTestCase
 {
     // ──────────────────────────────────────────────────────────────────────────
     // DataSource: getColumnGroups()
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function dataSourceReturnsColumnGroupForGroupedColumns(): void
     {
         /** @var DoctrineDataSourceFactory $factory */
         $factory = static::getContainer()->get(DoctrineDataSourceFactory::class);
         $ds = $factory->create(EntityWithGroupedColumns::class);
 
-        $this->assertNotNull($ds);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::class, $ds);
         $slots = $ds->getColumnGroups();
 
         // Should have: id (ungrouped), ColumnGroup(firstName+lastName), email (ungrouped)
@@ -46,7 +47,7 @@ class EntityListColumnGroupTest extends ComponentTestCase
     // EntityList component: getColumnSlots()
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function componentGetColumnSlotsReturnsGroupForGroupedEntity(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -63,7 +64,7 @@ class EntityListColumnGroupTest extends ComponentTestCase
         $this->assertCount(1, $groupSlots);
     }
 
-    /** @test */
+    #[Test]
     public function componentGetColumnSlotsUngroupedColumnsRemainAsStrings(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -86,7 +87,7 @@ class EntityListColumnGroupTest extends ComponentTestCase
     // Template rendering
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function compositeHeaderIsRenderedForGroup(): void
     {
         $entity = new EntityWithGroupedColumns();
@@ -113,7 +114,7 @@ class EntityListColumnGroupTest extends ComponentTestCase
         $this->assertStringContainsString('Last name', $html);
     }
 
-    /** @test */
+    #[Test]
     public function compositeBodyCellRendersSubColumnValues(): void
     {
         $entity = new EntityWithGroupedColumns();
@@ -138,7 +139,7 @@ class EntityListColumnGroupTest extends ComponentTestCase
         $this->assertStringContainsString('jane@example.com', $html);
     }
 
-    /** @test */
+    #[Test]
     public function ungroupedColumnAppearsAsRegularColumn(): void
     {
         $entity = new EntityWithGroupedColumns();
@@ -163,7 +164,7 @@ class EntityListColumnGroupTest extends ComponentTestCase
         $this->assertStringContainsString('alice@example.com', $html);
     }
 
-    /** @test */
+    #[Test]
     public function isColumnGroupHelperReturnsTrueForColumnGroup(): void
     {
         $testComponent = $this->createLiveComponent(

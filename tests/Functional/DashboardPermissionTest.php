@@ -19,7 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  *
  * @group dashboard-permissions
  */
-class DashboardPermissionTest extends WebTestCase
+final class DashboardPermissionTest extends WebTestCase
 {
     protected static function getKernelClass(): string
     {

@@ -7,14 +7,15 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnGroup;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group composite-columns
  */
-class AdminColumnGroupTest extends TestCase
+final class AdminColumnGroupTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function itCreatesAttributeWithIdOnly(): void
     {
         $attr = new AdminColumnGroup(id: 'name_block');
@@ -24,7 +25,7 @@ class AdminColumnGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_TEXT, $attr->header);
     }
 
-    /** @test */
+    #[Test]
     public function itCreatesAttributeWithCollapsibleHeader(): void
     {
         $attr = new AdminColumnGroup(
@@ -38,7 +39,7 @@ class AdminColumnGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_COLLAPSIBLE, $attr->header);
     }
 
-    /** @test */
+    #[Test]
     public function itCreatesAttributeWithFullHeader(): void
     {
         $attr = new AdminColumnGroup(
@@ -49,13 +50,13 @@ class AdminColumnGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_FULL, $attr->header);
     }
 
-    /** @test */
+    #[Test]
     public function itIsRepeatableClassAttribute(): void
     {
         $reflection = new \ReflectionClass(AdminColumnGroup::class);
         $attrInstance = $reflection->getAttributes(Attribute::class)[0]->newInstance();
 
-        $this->assertTrue(($attrInstance->flags & Attribute::IS_REPEATABLE) !== 0);
-        $this->assertTrue(($attrInstance->flags & Attribute::TARGET_CLASS) !== 0);
+        $this->assertNotSame(0, $attrInstance->flags & Attribute::IS_REPEATABLE);
+        $this->assertNotSame(0, $attrInstance->flags & Attribute::TARGET_CLASS);
     }
 }

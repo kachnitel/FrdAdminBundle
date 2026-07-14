@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Config;
 
 use Kachnitel\AdminBundle\Config\EntityListConfig;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-class EntityListConfigTest extends TestCase
+final class EntityListConfigTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function defaultValuesAreSetCorrectly(): void
     {
         $config = new EntityListConfig();
@@ -22,9 +21,7 @@ class EntityListConfigTest extends TestCase
         $this->assertSame([10, 20, 50, 100], $config->allowedItemsPerPage);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function formNamespaceCanBeCustomized(): void
     {
         $config = new EntityListConfig(formNamespace: 'Custom\\Form\\Namespace\\');
@@ -32,9 +29,7 @@ class EntityListConfigTest extends TestCase
         $this->assertSame('Custom\\Form\\Namespace\\', $config->formNamespace);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function formSuffixCanBeCustomized(): void
     {
         $config = new EntityListConfig(formSuffix: 'FormType');
@@ -42,9 +37,7 @@ class EntityListConfigTest extends TestCase
         $this->assertSame('FormType', $config->formSuffix);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function defaultItemsPerPageCanBeCustomized(): void
     {
         $config = new EntityListConfig(defaultItemsPerPage: 50);
@@ -52,9 +45,7 @@ class EntityListConfigTest extends TestCase
         $this->assertSame(50, $config->defaultItemsPerPage);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function allowedItemsPerPageCanBeCustomized(): void
     {
         $config = new EntityListConfig(allowedItemsPerPage: [5, 10, 25, 50]);

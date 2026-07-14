@@ -16,20 +16,23 @@ use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group sorting
- */
-class DoctrineDataSourceSortableTest extends TestCase
+#[Group('sorting')]
+#[Group('data-source')]
+#[AllowMockObjectsWithoutExpectations]
+final class DoctrineDataSourceSortableTest extends TestCase
 {
     /** @var ClassMetadata<object>&MockObject */
     private MockObject&ClassMetadata $metadata;
     /** @var EntityManagerInterface&MockObject */
     private MockObject&EntityManagerInterface $em;
-    /** @var EntityListQueryService&MockObject */
-    private MockObject&EntityListQueryService $queryService;
+    /** @var EntityListQueryService&\PHPUnit\Framework\MockObject\Stub */
+    private \PHPUnit\Framework\MockObject\Stub&EntityListQueryService $queryService;
     /** @var FilterMetadataProvider&MockObject */
     private MockObject&FilterMetadataProvider $filterProvider;
 
@@ -37,7 +40,7 @@ class DoctrineDataSourceSortableTest extends TestCase
     {
         $this->metadata = $this->createMock(ClassMetadata::class);
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->queryService = $this->createMock(EntityListQueryService::class);
+        $this->queryService = $this->createStub(EntityListQueryService::class);
         $this->filterProvider = $this->createMock(FilterMetadataProvider::class);
 
         $this->em->method('getClassMetadata')->willReturn($this->metadata);
@@ -74,7 +77,7 @@ class DoctrineDataSourceSortableTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function regularFieldsAreSortable(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'createdAt']);
@@ -90,13 +93,13 @@ class DoctrineDataSourceSortableTest extends TestCase
         $this->assertTrue($columns['createdAt']->sortable);
     }
 
-    /** @test */
+    #[Test]
     public function manyToOneAssociationIsNotSortable(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id']);
         $this->metadata->method('getAssociationNames')->willReturn(['category']);
-        $this->metadata->method('hasField')->willReturnCallback(fn ($f) => $f === 'id');
-        $this->metadata->method('hasAssociation')->willReturnCallback(fn ($f) => $f === 'category');
+        $this->metadata->method('hasField')->willReturnCallback(fn (string $f): bool => $f === 'id');
+        $this->metadata->method('hasAssociation')->willReturnCallback(fn (string $f): bool => $f === 'category');
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
         $this->metadata->method('getTypeOfField')->willReturn('integer');
 
@@ -106,13 +109,13 @@ class DoctrineDataSourceSortableTest extends TestCase
         $this->assertFalse($columns['category']->sortable, 'ManyToOne association must not be sortable');
     }
 
-    /** @test */
+    #[Test]
     public function oneToManyAssociationIsNotSortable(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id']);
         $this->metadata->method('getAssociationNames')->willReturn(['tags']);
-        $this->metadata->method('hasField')->willReturnCallback(fn ($f) => $f === 'id');
-        $this->metadata->method('hasAssociation')->willReturnCallback(fn ($f) => $f === 'tags');
+        $this->metadata->method('hasField')->willReturnCallback(fn (string $f): bool => $f === 'id');
+        $this->metadata->method('hasAssociation')->willReturnCallback(fn (string $f): bool => $f === 'tags');
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(true);
         $this->metadata->method('getTypeOfField')->willReturn('integer');
 
@@ -122,7 +125,7 @@ class DoctrineDataSourceSortableTest extends TestCase
         $this->assertFalse($columns['tags']->sortable, 'OneToMany/ManyToMany association must not be sortable');
     }
 
-    /** @test */
+    #[Test]
     public function customColumnIsNotSortableByDefault(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id']);

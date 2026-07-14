@@ -21,55 +21,38 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class DoctrineDataSourceFactoryTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class DoctrineDataSourceFactoryTest extends TestCase
 {
-    /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $em;
-
     /** @var EntityDiscoveryService&MockObject */
     private EntityDiscoveryService $entityDiscovery;
-
-    /** @var EntityListQueryService&MockObject */
-    private EntityListQueryService $queryService;
-
-    /** @var FilterMetadataProvider&MockObject */
-    private FilterMetadataProvider $filterMetadataProvider;
-
-    /** @var DoctrineCustomColumnProvider&MockObject */
-    private DoctrineCustomColumnProvider $customColumnProvider;
-
-    /** @var DoctrineColumnAttributeProvider&MockObject */
-    private DoctrineColumnAttributeProvider $columnAttrProvider;
-
-    /** @var DoctrineColumnTypeMapper&MockObject */
-    private DoctrineColumnTypeMapper $columnTypeMapper;
 
     private DoctrineDataSourceFactory $factory;
 
     protected function setUp(): void
     {
-        $this->em = $this->createMock(EntityManagerInterface::class);
+        $em = $this->createStub(EntityManagerInterface::class);
         $this->entityDiscovery = $this->createMock(EntityDiscoveryService::class);
-        $this->queryService = $this->createMock(EntityListQueryService::class);
-        $this->filterMetadataProvider = $this->createMock(FilterMetadataProvider::class);
+        $queryService = $this->createStub(EntityListQueryService::class);
+        $filterMetadataProvider = $this->createStub(FilterMetadataProvider::class);
 
-        $this->customColumnProvider = $this->createMock(DoctrineCustomColumnProvider::class);
-        $this->customColumnProvider->method('getCustomColumns')->willReturn([]);
+        $customColumnProvider = $this->createMock(DoctrineCustomColumnProvider::class);
+        $customColumnProvider->method('getCustomColumns')->willReturn([]);
 
-        $this->columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
-        $this->columnAttrProvider->method('getColumnAttributes')->willReturn([]);
+        $columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
+        $columnAttrProvider->method('getColumnAttributes')->willReturn([]);
 
-        $this->columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
-        $this->columnTypeMapper->method('getColumnType')->willReturn('string');
+        $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
+        $columnTypeMapper->method('getColumnType')->willReturn('string');
 
         $this->factory = new DoctrineDataSourceFactory(
-            $this->em,
+            $em,
             $this->entityDiscovery,
-            $this->queryService,
-            $this->filterMetadataProvider,
-            $this->customColumnProvider,
-            $this->columnAttrProvider,
-            $this->columnTypeMapper,
+            $queryService,
+            $filterMetadataProvider,
+            $customColumnProvider,
+            $columnAttrProvider,
+            $columnTypeMapper,
             new DoctrineFilterConverter(),
             new DoctrineItemValueResolver(),
         );
@@ -150,7 +133,7 @@ class DoctrineDataSourceFactoryTest extends TestCase
 
         $result = $this->factory->create(TestEntity::class);
 
-        $this->assertNull($result);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::class, $result);
     }
 
     public function testCreateReturnsDataSourceForEntityWithAdminAttribute(): void
@@ -193,7 +176,7 @@ class DoctrineDataSourceFactoryTest extends TestCase
 
         $result = $this->factory->getByShortName('NonExistent');
 
-        $this->assertNull($result);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::class, $result);
     }
 
     public function testGetByShortNamePopulatesCache(): void
@@ -233,13 +216,13 @@ class DoctrineDataSourceFactoryTest extends TestCase
     {
         $admin = new Admin();
 
-        $this->entityDiscovery->method('getAdminAttribute')
+        $this->entityDiscovery->expects($this->once())->method('getAdminAttribute')
             ->with(TestEntity::class)
             ->willReturn($admin);
 
         $dataSource = $this->factory->create(TestEntity::class);
 
-        $this->assertNotNull($dataSource);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::class, $dataSource);
         $this->assertSame(TestEntity::class, $dataSource->getEntityClass());
     }
 
@@ -252,13 +235,13 @@ class DoctrineDataSourceFactoryTest extends TestCase
             sortDirection: 'ASC'
         );
 
-        $this->entityDiscovery->method('getAdminAttribute')
+        $this->entityDiscovery->expects($this->once())->method('getAdminAttribute')
             ->with(TestEntity::class)
             ->willReturn($admin);
 
         $dataSource = $this->factory->create(TestEntity::class);
 
-        $this->assertNotNull($dataSource);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::class, $dataSource);
         $this->assertSame('Custom Label', $dataSource->getLabel());
         $this->assertSame('fa-custom', $dataSource->getIcon());
         $this->assertSame('name', $dataSource->getDefaultSortBy());

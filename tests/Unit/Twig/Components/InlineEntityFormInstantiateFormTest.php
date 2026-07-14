@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Components;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -27,20 +26,13 @@ use Symfony\Component\Form\FormInterface;
  *   - Custom FormType receives only csrf_protection (no DynamicEntityFormType extras)
  *   - null is always passed as form data (inline add is creation-only — no DB lookup)
  *   - The EntityManager's find() is never called (entityId is intentionally ignored)
- *
- * @group inline-add
  */
 #[CoversClass(InlineEntityForm::class)]
 #[Group('inline-add')]
-class InlineEntityFormInstantiateFormTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+final class InlineEntityFormInstantiateFormTest extends TestCase
 {
-    /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $em;
-
-    protected function setUp(): void
-    {
-        $this->em = $this->createMock(EntityManagerInterface::class);
-    }
+    protected function setUp(): void {}
 
     // ── Form name derivation ───────────────────────────────────────────────────
 
@@ -224,7 +216,7 @@ class InlineEntityFormInstantiateFormTest extends TestCase
                 }
             );
 
-        return new TestableInlineEntityForm($this->em, $formFactory);
+        return new TestableInlineEntityForm($this->createStub(\Doctrine\ORM\EntityManagerInterface::class), $formFactory);
     }
 }
 

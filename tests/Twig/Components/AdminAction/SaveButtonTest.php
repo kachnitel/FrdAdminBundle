@@ -24,8 +24,8 @@ final class SaveButtonTest extends TestCase
     {
         $button = $this->createSaveButton();
 
-        self::assertFalse($button->saving);
-        self::assertTrue($button->valid);
+        $this->assertFalse($button->saving);
+        $this->assertTrue($button->valid);
     }
 
     public function testTriggerSaveSetsSavingState(): void
@@ -34,7 +34,7 @@ final class SaveButtonTest extends TestCase
 
         $button->triggerSave();
 
-        self::assertTrue($button->saving);
+        $this->assertTrue($button->saving);
     }
 
     /**
@@ -47,30 +47,28 @@ final class SaveButtonTest extends TestCase
 
         $button->onFormStateChanged(valid: $broadcastValid);
 
-        self::assertSame($expectedValid, $button->valid);
+        $this->assertSame($expectedValid, $button->valid);
     }
 
     /**
-     * @return array<string, array{0: int, 1: bool}>
+     * @return \Iterator<string, array{int, bool}>
      */
-    public static function formStateProvider(): array
+    public static function formStateProvider(): \Iterator
     {
-        return [
-            'valid'   => [1, true],
-            'invalid' => [0, false],
-        ];
+        yield 'valid' => [1, true];
+        yield 'invalid' => [0, false];
     }
 
     public function testOnFormStateChangedClearsSavingFlag(): void
     {
         $button = $this->createSaveButton();
         $button->triggerSave();
-        self::assertTrue($button->saving);
+        $this->assertTrue($button->saving);
 
         $button->onFormStateChanged(valid: 1);
 
-        self::assertFalse($button->saving);
-        self::assertTrue($button->valid);
+        $this->assertFalse($button->saving);
+        $this->assertTrue($button->valid);
     }
 
     private function createSaveButton(): SaveButton

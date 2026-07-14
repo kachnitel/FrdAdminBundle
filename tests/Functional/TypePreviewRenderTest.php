@@ -12,7 +12,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\AllTypesEntity;
  * This catches issues like DateTimeImmutable "could not be converted to string"
  * when a type-specific template is missing and the fallback tries {{ value }}.
  */
-class TypePreviewRenderTest extends ComponentTestCase
+final class TypePreviewRenderTest extends ComponentTestCase
 {
     public function testAllTypePreviewTemplatesRenderWithoutErrors(): void
     {

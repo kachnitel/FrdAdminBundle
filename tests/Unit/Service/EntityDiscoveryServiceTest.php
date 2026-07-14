@@ -12,27 +12,30 @@ use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\ConfiguredEntity;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class EntityDiscoveryServiceTest extends TestCase
+
+#[Group('entity-list')]
+#[AllowMockObjectsWithoutExpectations]
+final class EntityDiscoveryServiceTest extends TestCase
 {
     private EntityDiscoveryService $service;
-    /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $entityManager;
     /** @var ClassMetadataFactory&MockObject */
     private ClassMetadataFactory $metadataFactory;
 
     protected function setUp(): void
     {
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager = $this->createMock(EntityManagerInterface::class);
         $this->metadataFactory = $this->createMock(ClassMetadataFactory::class);
 
-        $this->entityManager
+        $entityManager
             ->method('getMetadataFactory')
             ->willReturn($this->metadataFactory);
 
-        $this->service = new EntityDiscoveryService($this->entityManager);
+        $this->service = new EntityDiscoveryService($entityManager);
     }
 
     public function testGetAdminEntitiesFindsEntitiesWithAttribute(): void
@@ -88,7 +91,7 @@ class EntityDiscoveryServiceTest extends TestCase
 
         $adminAttr = $this->service->getAdminAttribute(RelatedEntity::class);
 
-        $this->assertNull($adminAttr);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Attribute\Admin::class, $adminAttr);
     }
 
     public function testIsAdminEntityReturnsTrueForEntityWithAttribute(): void
@@ -209,7 +212,7 @@ class EntityDiscoveryServiceTest extends TestCase
 
         $adminAttr = $this->service->getAdminAttribute(TestEntity::class);
 
-        $this->assertNotNull($adminAttr);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Attribute\Admin::class, $adminAttr);
         $this->assertSame('ROLE_TEST_VIEW', $adminAttr->getPermissionForAction('index'));
         $this->assertSame('ROLE_TEST_EDIT', $adminAttr->getPermissionForAction('edit'));
         $this->assertNull($adminAttr->getPermissionForAction('delete'));
@@ -226,7 +229,7 @@ class EntityDiscoveryServiceTest extends TestCase
 
         $adminAttr = $this->service->getAdminAttribute(ConfiguredEntity::class);
 
-        $this->assertNotNull($adminAttr);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Attribute\Admin::class, $adminAttr);
 
         // Basic properties
         $this->assertSame('Configured Items', $adminAttr->getLabel());
@@ -268,7 +271,7 @@ class EntityDiscoveryServiceTest extends TestCase
 
         $adminAttr = $this->service->getAdminAttribute(TestEntity::class);
 
-        $this->assertNotNull($adminAttr);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Attribute\Admin::class, $adminAttr);
 
         // Defaults for properties not set in TestEntity
         $this->assertTrue($adminAttr->isEnableFilters()); // Default is true

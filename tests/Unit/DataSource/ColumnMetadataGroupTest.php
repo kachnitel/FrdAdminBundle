@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Kachnitel\DataSourceContracts\ColumnMetadata;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group composite-columns
  */
-class ColumnMetadataGroupTest extends TestCase
+final class ColumnMetadataGroupTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function defaultGroupIsNull(): void
     {
         $col = ColumnMetadata::create(name: 'name');
@@ -20,7 +21,7 @@ class ColumnMetadataGroupTest extends TestCase
         $this->assertNull($col->group);
     }
 
-    /** @test */
+    #[Test]
     public function groupCarriedThroughCreate(): void
     {
         $col = ColumnMetadata::create(name: 'firstName', group: 'name_block');
@@ -28,7 +29,7 @@ class ColumnMetadataGroupTest extends TestCase
         $this->assertSame('name_block', $col->group);
     }
 
-    /** @test */
+    #[Test]
     public function groupCarriedThroughConstructor(): void
     {
         $col = new ColumnMetadata(

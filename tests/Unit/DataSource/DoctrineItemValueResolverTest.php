@@ -7,13 +7,15 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestStatus;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver
- */
-class DoctrineItemValueResolverTest extends TestCase
+#[CoversClass(DoctrineItemValueResolver::class)]
+#[AllowMockObjectsWithoutExpectations]
+final class DoctrineItemValueResolverTest extends TestCase
 {
     private DoctrineItemValueResolver $resolver;
 
@@ -28,36 +30,36 @@ class DoctrineItemValueResolverTest extends TestCase
 
     // ── Doctrine field path ────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function resolvesRegularDoctrineField(): void
     {
         $entity = new \stdClass();
 
-        $this->metadata->method('hasField')->with('name')->willReturn(true);
+        $this->metadata->expects($this->once())->method('hasField')->with('name')->willReturn(true);
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('getFieldValue')->with($entity, 'name')->willReturn('Test Name');
+        $this->metadata->expects($this->once())->method('getFieldValue')->with($entity, 'name')->willReturn('Test Name');
 
         $this->assertSame('Test Name', $this->resolver->resolve($entity, 'name', $this->metadata));
     }
 
-    /** @test */
+    #[Test]
     public function resolvesIntegerDoctrineField(): void
     {
         $entity = new \stdClass();
 
-        $this->metadata->method('hasField')->with('quantity')->willReturn(true);
+        $this->metadata->expects($this->once())->method('hasField')->with('quantity')->willReturn(true);
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('getFieldValue')->with($entity, 'quantity')->willReturn(42);
+        $this->metadata->expects($this->once())->method('getFieldValue')->with($entity, 'quantity')->willReturn(42);
 
         $this->assertSame(42, $this->resolver->resolve($entity, 'quantity', $this->metadata));
     }
 
-    /** @test */
+    #[Test]
     public function resolvesNullableDoctrineField(): void
     {
         $entity = new \stdClass();
 
-        $this->metadata->method('hasField')->with('deletedAt')->willReturn(true);
+        $this->metadata->expects($this->once())->method('hasField')->with('deletedAt')->willReturn(true);
         $this->metadata->method('hasAssociation')->willReturn(false);
         $this->metadata->method('getFieldValue')->willReturn(null);
 
@@ -66,12 +68,12 @@ class DoctrineItemValueResolverTest extends TestCase
 
     // ── BackedEnum normalisation ───────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function normalisesStringBackedEnumToScalarValue(): void
     {
         $entity = new \stdClass();
 
-        $this->metadata->method('hasField')->with('status')->willReturn(true);
+        $this->metadata->expects($this->once())->method('hasField')->with('status')->willReturn(true);
         $this->metadata->method('hasAssociation')->willReturn(false);
         $this->metadata->method('getFieldValue')->willReturn(TestStatus::ACTIVE);
 
@@ -80,7 +82,7 @@ class DoctrineItemValueResolverTest extends TestCase
         $this->assertSame('active', $result, 'String-backed enum must be unwrapped to its value.');
     }
 
-    /** @test */
+    #[Test]
     public function normalisesInactiveEnumCaseCorrectly(): void
     {
         $entity = new \stdClass();
@@ -96,26 +98,26 @@ class DoctrineItemValueResolverTest extends TestCase
 
     // ── Doctrine association path ──────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function resolvesDoctrineAssociation(): void
     {
         $entity = new \stdClass();
         $related = new \stdClass();
 
         $this->metadata->method('hasField')->willReturn(false);
-        $this->metadata->method('hasAssociation')->with('category')->willReturn(true);
-        $this->metadata->method('getFieldValue')->with($entity, 'category')->willReturn($related);
+        $this->metadata->expects($this->once())->method('hasAssociation')->with('category')->willReturn(true);
+        $this->metadata->expects($this->once())->method('getFieldValue')->with($entity, 'category')->willReturn($related);
 
         $this->assertSame($related, $this->resolver->resolve($entity, 'category', $this->metadata));
     }
 
-    /** @test */
+    #[Test]
     public function resolvesNullAssociation(): void
     {
         $entity = new \stdClass();
 
         $this->metadata->method('hasField')->willReturn(false);
-        $this->metadata->method('hasAssociation')->with('category')->willReturn(true);
+        $this->metadata->expects($this->once())->method('hasAssociation')->with('category')->willReturn(true);
         $this->metadata->method('getFieldValue')->willReturn(null);
 
         $this->assertNull($this->resolver->resolve($entity, 'category', $this->metadata));
@@ -123,7 +125,7 @@ class DoctrineItemValueResolverTest extends TestCase
 
     // ── get{Field}() getter fallback ───────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function fallsBackToGetterWhenNoDoctrineMapping(): void
     {
         $entity = new class {
@@ -136,7 +138,7 @@ class DoctrineItemValueResolverTest extends TestCase
         $this->assertSame('virtual value', $this->resolver->resolve($entity, 'virtualField', $this->metadata));
     }
 
-    /** @test */
+    #[Test]
     public function getterReceivesPriorityOverIsGetter(): void
     {
         $entity = new class {
@@ -156,7 +158,7 @@ class DoctrineItemValueResolverTest extends TestCase
 
     // ── is{Field}() getter fallback ────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function fallsBackToIsBooleanGetter(): void
     {
         $entity = new class {
@@ -169,7 +171,7 @@ class DoctrineItemValueResolverTest extends TestCase
         $this->assertTrue($this->resolver->resolve($entity, 'enabled', $this->metadata));
     }
 
-    /** @test */
+    #[Test]
     public function isBooleanGetterReturningFalseIsPreserved(): void
     {
         $entity = new class {
@@ -184,7 +186,7 @@ class DoctrineItemValueResolverTest extends TestCase
 
     // ── null fallback ──────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function returnsNullWhenNoResolutionPathExists(): void
     {
         $entity = new \stdClass();
@@ -195,14 +197,14 @@ class DoctrineItemValueResolverTest extends TestCase
         $this->assertNull($this->resolver->resolve($entity, 'nonExistentProperty', $this->metadata));
     }
 
-    /** @test */
+    #[Test]
     public function hasFieldTakesPriorityOverGetterWithSameName(): void
     {
         $entity = new class {
             public function getName(): string { return 'from getter'; }
         };
 
-        $this->metadata->method('hasField')->with('name')->willReturn(true);
+        $this->metadata->expects($this->once())->method('hasField')->with('name')->willReturn(true);
         $this->metadata->method('hasAssociation')->willReturn(false);
         $this->metadata->method('getFieldValue')->willReturn('from doctrine');
 

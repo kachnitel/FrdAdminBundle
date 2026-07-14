@@ -12,7 +12,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 /**
  * Tests that application-level template overrides work correctly.
  */
-class TemplateOverrideTest extends ComponentTestCase
+final class TemplateOverrideTest extends ComponentTestCase
 {
 
     /**
@@ -310,7 +310,7 @@ class TemplateOverrideTest extends ComponentTestCase
         $testComponent->set('search', 'Entity 1');
         $entities = $testComponent->component()->getEntities();
         $this->assertCount(1, $entities);
-        $this->assertStringContainsString('Entity 1', $entities[0]->getName());
+        $this->assertStringContainsString('Entity 1', (string) $entities[0]->getName());
 
         $testComponent->set('sortBy', 'name');
         $testComponent->set('sortDirection', 'ASC');

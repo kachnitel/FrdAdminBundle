@@ -10,10 +10,15 @@ use Kachnitel\DataSourceContracts\FilterMetadata;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class EntityListColumnServiceTest extends TestCase
+#[Group('entity-list')]
+#[AllowMockObjectsWithoutExpectations]
+final class EntityListColumnServiceTest extends TestCase
 {
     /** @var ColumnPermissionService&MockObject */
     private ColumnPermissionService $columnPermissionService;
@@ -33,7 +38,7 @@ class EntityListColumnServiceTest extends TestCase
 
     // --- getPermittedColumns ---
 
-    /** @test */
+    #[Test]
     public function getPermittedColumnsReturnsAllColumnsWhenNoEntityClass(): void
     {
         $this->dataSource->method('getColumns')->willReturn([
@@ -49,7 +54,7 @@ class EntityListColumnServiceTest extends TestCase
         $this->assertSame(['id', 'name', 'email'], $result);
     }
 
-    /** @test */
+    #[Test]
     public function getPermittedColumnsFiltersDeniedColumnsForEntity(): void
     {
         $this->dataSource->method('getColumns')->willReturn([
@@ -59,7 +64,7 @@ class EntityListColumnServiceTest extends TestCase
             'secret' => ColumnMetadata::create('col'),
         ]);
 
-        $this->columnPermissionService->method('getDeniedColumnsForAction')
+        $this->columnPermissionService->expects($this->once())->method('getDeniedColumnsForAction')
             ->with('App\\Entity\\User', AdminEntityVoter::ADMIN_SHOW)
             ->willReturn(['secret']);
 
@@ -68,7 +73,7 @@ class EntityListColumnServiceTest extends TestCase
         $this->assertSame(['id', 'name', 'email'], $result);
     }
 
-    /** @test */
+    #[Test]
     public function getPermittedColumnsReturnsAllColumnsWhenNoneDenied(): void
     {
         $this->dataSource->method('getColumns')->willReturn([
@@ -76,7 +81,7 @@ class EntityListColumnServiceTest extends TestCase
             'name' => ColumnMetadata::create('col'),
         ]);
 
-        $this->columnPermissionService->method('getDeniedColumnsForAction')
+        $this->columnPermissionService->expects($this->once())->method('getDeniedColumnsForAction')
             ->with('App\\Entity\\Product', AdminEntityVoter::ADMIN_SHOW)
             ->willReturn([]);
 
@@ -85,7 +90,7 @@ class EntityListColumnServiceTest extends TestCase
         $this->assertSame(['id', 'name'], $result);
     }
 
-    /** @test */
+    #[Test]
     public function getPermittedColumnsFiltersMultipleDeniedColumns(): void
     {
         $this->dataSource->method('getColumns')->willReturn([
@@ -105,7 +110,7 @@ class EntityListColumnServiceTest extends TestCase
 
     // --- getPermittedFilters ---
 
-    /** @test */
+    #[Test]
     public function getPermittedFiltersReturnsAllFiltersWhenNoEntityClass(): void
     {
         $nameFilter = FilterMetadata::text('name');
@@ -131,7 +136,7 @@ class EntityListColumnServiceTest extends TestCase
         $this->assertSame($nameFilter->toArray(), $result['name']);
     }
 
-    /** @test */
+    #[Test]
     public function getPermittedFiltersExcludesDeniedColumnFilters(): void
     {
         $nameFilter = FilterMetadata::text('name');
@@ -147,7 +152,7 @@ class EntityListColumnServiceTest extends TestCase
             'secret' => $secretFilter,
         ]);
 
-        $this->columnPermissionService->method('getDeniedColumnsForAction')
+        $this->columnPermissionService->expects($this->once())->method('getDeniedColumnsForAction')
             ->with('App\\Entity\\User', AdminEntityVoter::ADMIN_SHOW)
             ->willReturn(['secret']);
 
@@ -158,7 +163,7 @@ class EntityListColumnServiceTest extends TestCase
         $this->assertArrayNotHasKey('secret', $result);
     }
 
-    /** @test */
+    #[Test]
     public function getPermittedFiltersReturnsEmptyWhenAllFiltersDenied(): void
     {
         $secretFilter = FilterMetadata::text('secret');
@@ -178,7 +183,7 @@ class EntityListColumnServiceTest extends TestCase
         $this->assertSame([], $result);
     }
 
-    /** @test */
+    #[Test]
     public function getPermittedFiltersConvertsFilterMetadataToArray(): void
     {
         $filter = FilterMetadata::number('price', operator: '>');

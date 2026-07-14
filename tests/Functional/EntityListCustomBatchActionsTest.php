@@ -10,7 +10,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithBatchActions;
 /**
  * @group batch-actions
  */
-class EntityListCustomBatchActionsTest extends ComponentTestCase
+final class EntityListCustomBatchActionsTest extends ComponentTestCase
 {
     private EntityManagerInterface $entityManager;
 

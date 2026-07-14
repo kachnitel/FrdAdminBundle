@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\RowAction;
 
 use Kachnitel\AdminBundle\Attribute\AdminAction;
 use Kachnitel\AdminBundle\RowAction\AttributeRowActionProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -14,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  * @group batch-actions
  * @group row-actions
  */
-class AttributeRowActionProviderBatchFilterTest extends TestCase
+final class AttributeRowActionProviderBatchFilterTest extends TestCase
 {
     private AttributeRowActionProvider $provider;
 
@@ -23,7 +24,7 @@ class AttributeRowActionProviderBatchFilterTest extends TestCase
         $this->provider = new AttributeRowActionProvider();
     }
 
-    /** @test */
+    #[Test]
     public function batchOnlyActionIsExcludedFromRowActions(): void
     {
         $actions = $this->provider->getActions(EntityWithMixedActionTypes::class);
@@ -32,7 +33,7 @@ class AttributeRowActionProviderBatchFilterTest extends TestCase
         $this->assertNotContains('bulk-publish', $names, 'BATCH-only action must not appear as row action');
     }
 
-    /** @test */
+    #[Test]
     public function rowOnlyActionIsIncluded(): void
     {
         $actions = $this->provider->getActions(EntityWithMixedActionTypes::class);
@@ -41,7 +42,7 @@ class AttributeRowActionProviderBatchFilterTest extends TestCase
         $this->assertContains('approve', $names);
     }
 
-    /** @test */
+    #[Test]
     public function bothTypeActionIsIncludedAsRowAction(): void
     {
         $actions = $this->provider->getActions(EntityWithMixedActionTypes::class);
@@ -50,7 +51,7 @@ class AttributeRowActionProviderBatchFilterTest extends TestCase
         $this->assertContains('archive', $names);
     }
 
-    /** @test */
+    #[Test]
     public function defaultActionTypeIsRow(): void
     {
         $actions = $this->provider->getActions(EntityWithDefaultActionType::class);

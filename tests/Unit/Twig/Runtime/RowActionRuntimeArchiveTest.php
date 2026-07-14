@@ -11,6 +11,7 @@ use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -21,11 +22,8 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(RowActionRuntime::class)]
 #[UsesClass(RowAction::class)]
-class RowActionRuntimeArchiveTest extends TestCase
+final class RowActionRuntimeArchiveTest extends TestCase
 {
-    /** @var RowActionRegistry&MockObject */
-    private RowActionRegistry $registry;
-
     /** @var AdminRouteRuntime&MockObject */
     private AdminRouteRuntime $routeRuntime;
 
@@ -33,11 +31,11 @@ class RowActionRuntimeArchiveTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->registry = $this->createMock(RowActionRegistry::class);
+        $registry = $this->createStub(RowActionRegistry::class);
         $this->routeRuntime = $this->createMock(AdminRouteRuntime::class);
 
         $this->runtime = new RowActionRuntime(
-            registry: $this->registry,
+            registry: $registry,
             routeRuntime: $this->routeRuntime,
             expressionLanguage: new RowActionExpressionLanguage(),
         );
@@ -48,11 +46,11 @@ class RowActionRuntimeArchiveTest extends TestCase
         return new \stdClass();
     }
 
-    /** @test */
+    #[Test]
     public function archiveActionIsVisibleWhenRouteAccessible(): void
     {
         $this->routeRuntime
-            ->method('isActionAccessible')
+            ->expects($this->once())->method('isActionAccessible')
             ->with('Product', 'archive')
             ->willReturn(true);
 
@@ -65,11 +63,11 @@ class RowActionRuntimeArchiveTest extends TestCase
         $this->assertTrue($this->runtime->isActionVisible($action, $this->makeEntity(), 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function archiveActionIsHiddenWhenRouteNotAccessible(): void
     {
         $this->routeRuntime
-            ->method('isActionAccessible')
+            ->expects($this->once())->method('isActionAccessible')
             ->with('Product', 'archive')
             ->willReturn(false);
 
@@ -82,7 +80,7 @@ class RowActionRuntimeArchiveTest extends TestCase
         $this->assertFalse($this->runtime->isActionVisible($action, $this->makeEntity(), 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function unarchiveActionRoutesUnderArchivePermission(): void
     {
         // Both archive and unarchive use ADMIN_ARCHIVE voter, which maps to 'archive' action name
@@ -101,7 +99,7 @@ class RowActionRuntimeArchiveTest extends TestCase
         $this->assertTrue($this->runtime->isActionVisible($action, $this->makeEntity(), 'Product'));
     }
 
-    /** @test */
+    #[Test]
     public function adminArchiveVoterAttributeDoesNotFallThroughToStrtolower(): void
     {
         // If mapVoterAttributeToActionName falls through to strtolower, it would call

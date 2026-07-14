@@ -7,6 +7,10 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -19,12 +23,12 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *   - getColumnPermissionMap() with an empty permissions array on the attribute
  *   - canPerformAction() returns true without calling the voter when permissions is []
  *   - getRestrictedColumns() includes columns with empty-array permissions (has attribute)
- *
- * @covers \Kachnitel\AdminBundle\Service\ColumnPermissionService
- * @group column-permissions
  */
+#[CoversClass(ColumnPermissionService::class)]
 #[UsesClass(ColumnPermission::class)]
-class ColumnPermissionServiceClearCacheTest extends TestCase
+#[Group('column-permissions')]
+#[AllowMockObjectsWithoutExpectations]
+final class ColumnPermissionServiceClearCacheTest extends TestCase
 {
     /** @var AuthorizationCheckerInterface&MockObject */
     private AuthorizationCheckerInterface $authChecker;
@@ -36,7 +40,7 @@ class ColumnPermissionServiceClearCacheTest extends TestCase
 
     // ── clearCache() ──────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function clearCacheDoesNotBreakSubsequentReads(): void
     {
         $service = new ColumnPermissionService($this->authChecker);
@@ -51,7 +55,7 @@ class ColumnPermissionServiceClearCacheTest extends TestCase
         $this->assertSame($map1, $map2, 'Re-read after clearCache must return equivalent data.');
     }
 
-    /** @test */
+    #[Test]
     public function clearCacheAllowsDifferentClassToBeReadCleanly(): void
     {
         $service = new ColumnPermissionService($this->authChecker);
@@ -65,13 +69,13 @@ class ColumnPermissionServiceClearCacheTest extends TestCase
         $this->assertSame([], $emptyMap);
     }
 
-    /** @test */
+    #[Test]
     public function clearCacheResetsInternalMapSoVoterIsCalledAgain(): void
     {
         $service = new ColumnPermissionService($this->authChecker);
 
         // First canPerformAction — populates cache
-        $this->authChecker->method('isGranted')->with('ROLE_HR')->willReturn(true);
+        $this->authChecker->expects($this->exactly(2))->method('isGranted')->with('ROLE_HR')->willReturn(true);
         $service->canPerformAction(PermCacheFixtureEntity::class, 'salary', AdminEntityVoter::ADMIN_SHOW);
 
         $service->clearCache();
@@ -88,7 +92,7 @@ class ColumnPermissionServiceClearCacheTest extends TestCase
 
     // ── Empty permissions array on the attribute ──────────────────────────────
 
-    /** @test */
+    #[Test]
     public function emptyPermissionsArrayAppearsInMapWithEmptyValue(): void
     {
         $service = new ColumnPermissionService($this->authChecker);
@@ -98,7 +102,7 @@ class ColumnPermissionServiceClearCacheTest extends TestCase
         $this->assertSame([], $map['field'], 'Permissions must be the empty array as-declared.');
     }
 
-    /** @test */
+    #[Test]
     public function canPerformActionReturnsTrueForEmptyPermissionsWithoutCallingVoter(): void
     {
         $this->authChecker->expects($this->never())->method('isGranted');
@@ -115,7 +119,7 @@ class ColumnPermissionServiceClearCacheTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function canPerformActionReturnsTrueForAllActionsWithEmptyPermissions(): void
     {
         $service = new ColumnPermissionService($this->authChecker);
@@ -128,7 +132,7 @@ class ColumnPermissionServiceClearCacheTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function getRestrictedColumnsIncludesColumnWithEmptyPermissions(): void
     {
         // getRestrictedColumns returns all columns that HAVE the #[ColumnPermission]
@@ -143,7 +147,7 @@ class ColumnPermissionServiceClearCacheTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function getDeniedColumnsForActionDoesNotIncludeEmptyPermissionsColumn(): void
     {
         // getDeniedColumnsForAction only returns columns the current user CANNOT access.

@@ -7,35 +7,35 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Archive;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveEntityService;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-/**
- * @group archive
- * @covers \Kachnitel\AdminBundle\Archive\ArchiveEntityService
- */
+#[CoversClass(ArchiveEntityService::class)]
 #[UsesClass(ArchiveConfig::class)]
-class ArchiveEntityServiceTest extends TestCase
+#[Group('archive')]
+#[AllowMockObjectsWithoutExpectations]
+final class ArchiveEntityServiceTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
     private EntityManagerInterface $em;
-
-    private PropertyAccessorInterface $propertyAccessor;
     private ArchiveEntityService $service;
 
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
-        $this->service = new ArchiveEntityService($this->em, $this->propertyAccessor);
+        $propertyAccessor = PropertyAccess::createPropertyAccessor();
+        $this->service = new ArchiveEntityService($this->em, $propertyAccessor);
     }
 
     // ── archive() ────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function archiveSetsBooleanFieldToTrue(): void
     {
         $entity = new class {
@@ -51,7 +51,7 @@ class ArchiveEntityServiceTest extends TestCase
         $this->assertTrue($entity->archived);
     }
 
-    /** @test */
+    #[Test]
     public function archiveSetsDatetimeFieldToCurrentTime(): void
     {
         $entity = new class {
@@ -66,12 +66,12 @@ class ArchiveEntityServiceTest extends TestCase
         $this->service->archive($entity, $config);
         $after = new \DateTime();
 
-        $this->assertNotNull($entity->deletedAt);
+        $this->assertInstanceOf(\DateTime::class, $entity->deletedAt);
         $this->assertGreaterThanOrEqual($before->getTimestamp(), $entity->deletedAt->getTimestamp());
         $this->assertLessThanOrEqual($after->getTimestamp(), $entity->deletedAt->getTimestamp());
     }
 
-    /** @test */
+    #[Test]
     public function archiveSetsDatetimeImmutableFieldToCurrentTime(): void
     {
         $entity = new class {
@@ -87,7 +87,7 @@ class ArchiveEntityServiceTest extends TestCase
         $this->assertInstanceOf(\DateTimeImmutable::class, $entity->archivedAt);
     }
 
-    /** @test */
+    #[Test]
     public function archiveSetsDatetzImmutableFieldToCurrentTime(): void
     {
         $entity = new class {
@@ -103,7 +103,7 @@ class ArchiveEntityServiceTest extends TestCase
         $this->assertInstanceOf(\DateTimeImmutable::class, $entity->deletedAt);
     }
 
-    /** @test */
+    #[Test]
     public function archiveSetsDateFieldToToday(): void
     {
         $entity = new class {
@@ -116,11 +116,11 @@ class ArchiveEntityServiceTest extends TestCase
         $this->em->expects($this->once())->method('flush');
         $this->service->archive($entity, $config);
 
-        $this->assertNotNull($entity->archivedOn);
+        $this->assertInstanceOf(\DateTime::class, $entity->archivedOn);
         $this->assertSame(date('Y-m-d'), $entity->archivedOn->format('Y-m-d'));
     }
 
-    /** @test */
+    #[Test]
     public function archiveSetsDateImmutableFieldToToday(): void
     {
         $entity = new class {
@@ -139,7 +139,7 @@ class ArchiveEntityServiceTest extends TestCase
 
     // ── unarchive() ───────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function unarchiveSetsBooleanFieldToFalse(): void
     {
         $entity = new class {
@@ -155,7 +155,7 @@ class ArchiveEntityServiceTest extends TestCase
         $this->assertFalse($entity->archived);
     }
 
-    /** @test */
+    #[Test]
     public function unarchiveSetsDatetimeFieldToNull(): void
     {
         $entity = new class {
@@ -169,10 +169,10 @@ class ArchiveEntityServiceTest extends TestCase
         $this->em->expects($this->once())->method('flush');
         $this->service->unarchive($entity, $config);
 
-        $this->assertNull($entity->deletedAt);
+        $this->assertNotInstanceOf(\DateTime::class, $entity->deletedAt);
     }
 
-    /** @test */
+    #[Test]
     public function unarchiveSetsDatetimeImmutableFieldToNull(): void
     {
         $entity = new class {
@@ -186,10 +186,10 @@ class ArchiveEntityServiceTest extends TestCase
         $this->em->expects($this->once())->method('flush');
         $this->service->unarchive($entity, $config);
 
-        $this->assertNull($entity->archivedAt);
+        $this->assertNotInstanceOf(\DateTimeImmutable::class, $entity->archivedAt);
     }
 
-    /** @test */
+    #[Test]
     public function unarchiveSetsDateFieldToNull(): void
     {
         $entity = new class {
@@ -203,10 +203,10 @@ class ArchiveEntityServiceTest extends TestCase
         $this->em->expects($this->once())->method('flush');
         $this->service->unarchive($entity, $config);
 
-        $this->assertNull($entity->archivedOn);
+        $this->assertNotInstanceOf(\DateTime::class, $entity->archivedOn);
     }
 
-    /** @test */
+    #[Test]
     public function throwsForUnsupportedDoctrineType(): void
     {
         $entity = new class {};

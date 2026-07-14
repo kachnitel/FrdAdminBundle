@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithConfiguredGroups;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithGroupedColumns;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Functional tests for composite column display configuration.
@@ -21,20 +22,20 @@ use Kachnitel\AdminBundle\Twig\Components\EntityList;
  *
  * @group composite-columns
  */
-class EntityListColumnGroupConfigTest extends ComponentTestCase
+final class EntityListColumnGroupConfigTest extends ComponentTestCase
 {
     // ──────────────────────────────────────────────────────────────────────────
     // Data source: config propagation
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function dataSourceAppliesAdminColumnGroupConfig(): void
     {
         /** @var DoctrineDataSourceFactory $factory */
         $factory = static::getContainer()->get(DoctrineDataSourceFactory::class);
         $ds = $factory->create(EntityWithConfiguredGroups::class);
 
-        $this->assertNotNull($ds);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::class, $ds);
         $slots = $ds->getColumnGroups();
 
         $groups = array_values(array_filter($slots, fn ($s) => $s instanceof ColumnGroup));
@@ -55,7 +56,7 @@ class EntityListColumnGroupConfigTest extends ComponentTestCase
     // header: 'text' mode
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function headerTextModeRendersGroupLabelWithNoSortOrFilterRows(): void
     {
         // address_block uses HEADER_TEXT — plain label, no sort/filter rows for its columns.
@@ -80,7 +81,7 @@ class EntityListColumnGroupConfigTest extends ComponentTestCase
         $this->assertSame(1, substr_count($html, '<details'));
     }
 
-    /** @test */
+    #[Test]
     public function defaultGroupWithNoConfigUsesTextHeader(): void
     {
         // EntityWithGroupedColumns has no AdminColumnGroup — must default to HEADER_TEXT.
@@ -110,7 +111,7 @@ class EntityListColumnGroupConfigTest extends ComponentTestCase
     // header: 'collapsible' mode
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function headerCollapsibleModeRendersDetailsElement(): void
     {
         $entity = new EntityWithConfiguredGroups();
@@ -140,7 +141,7 @@ class EntityListColumnGroupConfigTest extends ComponentTestCase
         $this->assertStringNotContainsString('<details open', $html);
     }
 
-    /** @test */
+    #[Test]
     public function headerCollapsibleModeContainsSubColumnFiltersInDom(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -162,7 +163,7 @@ class EntityListColumnGroupConfigTest extends ComponentTestCase
     // header: 'full' mode — template branch distinguishable from collapsible
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function headerCollapsibleUsesDetailsSummaryNotPlainDiv(): void
     {
         // HEADER_FULL renders: <div class="admin-composite-group-label">
@@ -187,7 +188,7 @@ class EntityListColumnGroupConfigTest extends ComponentTestCase
     // subLabels modes
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function subLabelsIconModeRendersIconWithColumnLabelTitle(): void
     {
         $entity = new EntityWithConfiguredGroups();
@@ -212,7 +213,7 @@ class EntityListColumnGroupConfigTest extends ComponentTestCase
         $this->assertStringContainsString('title="Last name"', $html);
     }
 
-    /** @test */
+    #[Test]
     public function subLabelsHiddenModeRendersNoLabelSpan(): void
     {
         $entity = new EntityWithConfiguredGroups();
@@ -242,7 +243,7 @@ class EntityListColumnGroupConfigTest extends ComponentTestCase
     // rowspan fix
     // ──────────────────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function compositeThAlwaysHasRowspan2(): void
     {
         $testComponent = $this->createLiveComponent(

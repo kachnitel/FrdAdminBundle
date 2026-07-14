@@ -7,12 +7,13 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 use Kachnitel\AdminBundle\Attribute\AdminCustomColumn;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group custom-columns
  */
-class DoctrineCustomColumnProviderTest extends TestCase
+final class DoctrineCustomColumnProviderTest extends TestCase
 {
     private DoctrineCustomColumnProvider $provider;
 
@@ -21,7 +22,7 @@ class DoctrineCustomColumnProviderTest extends TestCase
         $this->provider = new DoctrineCustomColumnProvider();
     }
 
-    /** @test */
+    #[Test]
     public function returnsEmptyArrayForClassWithNoCustomColumns(): void
     {
         $result = $this->provider->getCustomColumns(NoCustomColumnsEntity::class);
@@ -29,7 +30,7 @@ class DoctrineCustomColumnProviderTest extends TestCase
         $this->assertSame([], $result);
     }
 
-    /** @test */
+    #[Test]
     public function returnsSingleCustomColumnFromAttribute(): void
     {
         $result = $this->provider->getCustomColumns(SingleCustomColumnEntity::class);
@@ -45,7 +46,7 @@ class DoctrineCustomColumnProviderTest extends TestCase
         $this->assertFalse($meta->sortable);
     }
 
-    /** @test */
+    #[Test]
     public function humanisesLabelFromNameWhenLabelIsNull(): void
     {
         $result = $this->provider->getCustomColumns(SingleCustomColumnEntity::class);
@@ -54,7 +55,7 @@ class DoctrineCustomColumnProviderTest extends TestCase
         $this->assertSame('Full name', $result['fullName']->label);
     }
 
-    /** @test */
+    #[Test]
     public function usesExplicitLabelWhenProvided(): void
     {
         $result = $this->provider->getCustomColumns(LabelledCustomColumnEntity::class);
@@ -62,7 +63,7 @@ class DoctrineCustomColumnProviderTest extends TestCase
         $this->assertSame('Full Name', $result['fullName']->label);
     }
 
-    /** @test */
+    #[Test]
     public function respectsSortableFlag(): void
     {
         $result = $this->provider->getCustomColumns(SortableCustomColumnEntity::class);
@@ -70,7 +71,7 @@ class DoctrineCustomColumnProviderTest extends TestCase
         $this->assertTrue($result['score']->sortable);
     }
 
-    /** @test */
+    #[Test]
     public function returnsMultipleCustomColumnsInDeclarationOrder(): void
     {
         $result = $this->provider->getCustomColumns(MultipleCustomColumnsEntity::class);
@@ -81,7 +82,7 @@ class DoctrineCustomColumnProviderTest extends TestCase
         $this->assertSame('activityBadge', $keys[1]);
     }
 
-    /** @test */
+    #[Test]
     public function columnTypeIsAlwaysCustom(): void
     {
         $result = $this->provider->getCustomColumns(SingleCustomColumnEntity::class);
@@ -89,7 +90,7 @@ class DoctrineCustomColumnProviderTest extends TestCase
         $this->assertSame('custom', $result['fullName']->type);
     }
 
-    /** @test */
+    #[Test]
     public function templateIsPreservedVerbatim(): void
     {
         $result = $this->provider->getCustomColumns(MultipleCustomColumnsEntity::class);

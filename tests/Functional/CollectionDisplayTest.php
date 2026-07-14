@@ -8,11 +8,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithCollectionDisplay;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * @group collection-display
  */
-class CollectionDisplayTest extends ComponentTestCase
+final class CollectionDisplayTest extends ComponentTestCase
 {
     // private EntityManagerInterface $em;
 
@@ -67,7 +68,7 @@ class CollectionDisplayTest extends ComponentTestCase
 
     // ── accordion (collapsible) ───────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function accordionRendersDetailsAndSummary(): void
     {
         $this->persistEntityWithTags(2);
@@ -78,7 +79,7 @@ class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('<summary', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function accordionSummaryShowsCountLabel(): void
     {
         $this->persistEntityWithTags(5);
@@ -88,7 +89,7 @@ class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('5 items', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function accordionShowsItemsUpToLimit(): void
     {
         $this->persistEntityWithTags(5); // limit is 3
@@ -101,7 +102,7 @@ class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('Tag 3', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function accordionShowsOverflowLinkWhenCountExceedsLimit(): void
     {
         $this->persistEntityWithTags(5); // limit 3 → overflow 2
@@ -111,7 +112,7 @@ class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('+ 2 more', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function accordionHasNoOverflowWhenCountWithinLimit(): void
     {
         $this->persistEntityWithTags(2); // limit 3 → no overflow
@@ -121,7 +122,7 @@ class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringNotContainsString('more…', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function accordionSummaryContainsViewAllLinkWhenCollectionUrlAvailable(): void
     {
         // The ↗ link only renders when admin_collection_url() returns a URL.
@@ -138,7 +139,7 @@ class CollectionDisplayTest extends ComponentTestCase
 
     // ── always-visible list ───────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function alwaysVisibleListRendersWithoutDetailsElement(): void
     {
         $this->persistEntityWithTags(2);
@@ -151,7 +152,7 @@ class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('admin-collection-inline', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function alwaysVisibleListShowsOverflowLink(): void
     {
         $this->persistEntityWithTags(5); // limit 3 → overflow 2
@@ -164,7 +165,7 @@ class CollectionDisplayTest extends ComponentTestCase
 
     // ── default (count+link) mode ─────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function defaultModeRendersCountLabel(): void
     {
         $this->persistEntityWithTags(4);
@@ -174,7 +175,7 @@ class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('4 items', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function defaultModeDoesNotRenderCollectionListWhenEmpty(): void
     {
         // With zero tags the default column should show '-', not an inline item list.
@@ -188,7 +189,7 @@ class CollectionDisplayTest extends ComponentTestCase
 
     // ── empty collection ──────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function emptyCollectionRendersDashRegardlessOfMode(): void
     {
         $this->persistEntityWithTags(0);
@@ -202,7 +203,7 @@ class CollectionDisplayTest extends ComponentTestCase
 
     // ── singular / plural label ───────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function singleItemLabelIsSingular(): void
     {
         $this->persistEntityWithTags(1);

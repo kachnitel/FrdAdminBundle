@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Service;
 
 use SebastianBergmann\Diff\Differ;
-use SebastianBergmann\Diff\Output\UnifiedDiffOutputBuilder;
+use SebastianBergmann\Diff\Output\DiffOnlyOutputBuilder;
 
 /**
  * Exception thrown when a template patch cannot be applied.
@@ -79,7 +79,7 @@ final class TemplatePatcher
      */
     public function generateDiff(string $from, string $to): string
     {
-        $differ = new Differ(new UnifiedDiffOutputBuilder("--- Current\n+++ Expected\n"));
+        $differ = new Differ(new DiffOnlyOutputBuilder("--- Current\n+++ Expected\n"));
 
         return $differ->diff($from, $to);
     }

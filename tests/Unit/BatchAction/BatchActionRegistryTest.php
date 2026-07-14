@@ -7,13 +7,15 @@ namespace Kachnitel\AdminBundle\Tests\Unit\BatchAction;
 use Kachnitel\AdminBundle\BatchAction\BatchActionProviderInterface;
 use Kachnitel\AdminBundle\BatchAction\BatchActionRegistry;
 use Kachnitel\AdminBundle\ValueObject\BatchAction;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group batch-actions
- */
-class BatchActionRegistryTest extends TestCase
+#[Group('batch-actions')]
+#[AllowMockObjectsWithoutExpectations]
+final class BatchActionRegistryTest extends TestCase
 {
     /** @var class-string */
     private const PRODUCT_CLASS = 'App\\Entity\\Product'; // @phpstan-ignore classConstant.phpDocType
@@ -26,7 +28,7 @@ class BatchActionRegistryTest extends TestCase
         return new BatchActionRegistry($providers);
     }
 
-    /** @test */
+    #[Test]
     public function returnsEmptyArrayWhenNoProvidersSupport(): void
     {
         /** @var BatchActionProviderInterface&MockObject $provider */
@@ -39,7 +41,7 @@ class BatchActionRegistryTest extends TestCase
         $this->assertSame([], $registry->getActions(self::PRODUCT_CLASS)); // @phpstan-ignore argument.type
     }
 
-    /** @test */
+    #[Test]
     public function mergesActionsFromMultipleProviders(): void
     {
         $action1 = new BatchAction(name: 'publish', label: 'Publish', priority: 10);
@@ -63,7 +65,7 @@ class BatchActionRegistryTest extends TestCase
         $this->assertCount(2, $actions);
     }
 
-    /** @test */
+    #[Test]
     public function sortsByPriority(): void
     {
         $action1 = new BatchAction(name: 'archive', label: 'Archive', priority: 30);
@@ -81,7 +83,7 @@ class BatchActionRegistryTest extends TestCase
         $this->assertSame('archive', $actions[1]->name);
     }
 
-    /** @test */
+    #[Test]
     public function cachesResultsForSameEntityClass(): void
     {
         /** @var BatchActionProviderInterface&MockObject $provider */
@@ -100,7 +102,7 @@ class BatchActionRegistryTest extends TestCase
         $this->assertSame($first, $second);
     }
 
-    /** @test */
+    #[Test]
     public function clearCacheRemovesCachedResults(): void
     {
         $callCount = 0;
@@ -124,7 +126,7 @@ class BatchActionRegistryTest extends TestCase
         $this->assertSame(2, $callCount); // @phpstan-ignore method.impossibleType
     }
 
-    /** @test */
+    #[Test]
     public function skipsProvidersThatDontSupport(): void
     {
         /** @var BatchActionProviderInterface&MockObject $unsupportedProvider */

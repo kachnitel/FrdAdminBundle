@@ -5,141 +5,112 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Service\Filter;
 
 use Kachnitel\AdminBundle\Service\Filter\FieldFilter;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-class FieldFilterTest extends TestCase
+final class FieldFilterTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorInitializesName(): void
     {
         $filter = new FieldFilter('product_name', 'Product Name', 'name');
-        $this->assertEquals('product_name', $filter->getName());
+        $this->assertSame('product_name', $filter->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorInitializesLabel(): void
     {
         $filter = new FieldFilter('product_name', 'Product Name', 'name');
-        $this->assertEquals('Product Name', $filter->getLabel());
+        $this->assertSame('Product Name', $filter->getLabel());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorInitializesType(): void
     {
         $filter = new FieldFilter('name', 'Name', 'name', '=', 'text');
-        $this->assertEquals('text', $filter->getType());
+        $this->assertSame('text', $filter->getType());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function defaultTypeIsText(): void
     {
         $filter = new FieldFilter('name', 'Name', 'name');
-        $this->assertEquals('text', $filter->getType());
+        $this->assertSame('text', $filter->getType());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function defaultOperatorIsEquals(): void
     {
         $filter = new FieldFilter('status', 'Status', 'status');
-        $this->assertEquals('status', $filter->getName());
+        $this->assertSame('status', $filter->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getOptionsReturnsProvidedOptions(): void
     {
         $options = ['placeholder' => 'Search', 'class' => 'form-control'];
         $filter = new FieldFilter('name', 'Name', 'name', '=', 'text', $options);
-        $this->assertEquals($options, $filter->getOptions());
+        $this->assertSame($options, $filter->getOptions());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getOptionsReturnsEmptyArrayByDefault(): void
     {
         $filter = new FieldFilter('name', 'Name', 'name');
         $this->assertEmpty($filter->getOptions());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function supportsLikeOperator(): void
     {
         $filter = new FieldFilter('name', 'Name', 'name', 'LIKE');
-        $this->assertEquals('name', $filter->getName());
+        $this->assertSame('name', $filter->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function supportsInOperator(): void
     {
         $filter = new FieldFilter('status', 'Status', 'status', 'IN');
-        $this->assertEquals('status', $filter->getName());
+        $this->assertSame('status', $filter->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function supportsGreaterThanOperator(): void
     {
         $filter = new FieldFilter('price', 'Price', 'price', '>');
-        $this->assertEquals('price', $filter->getName());
+        $this->assertSame('price', $filter->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function supportsLessThanOperator(): void
     {
         $filter = new FieldFilter('price', 'Price', 'price', '<');
-        $this->assertEquals('price', $filter->getName());
+        $this->assertSame('price', $filter->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function supportsGreaterThanOrEqualOperator(): void
     {
         $filter = new FieldFilter('quantity', 'Quantity', 'quantity', '>=');
-        $this->assertEquals('quantity', $filter->getName());
+        $this->assertSame('quantity', $filter->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function supportsLessThanOrEqualOperator(): void
     {
         $filter = new FieldFilter('quantity', 'Quantity', 'quantity', '<=');
-        $this->assertEquals('quantity', $filter->getName());
+        $this->assertSame('quantity', $filter->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function handlesFieldNamesWithDots(): void
     {
         // Fields with dots represent relations (e.g., relation.field)
         $filter = new FieldFilter('related.name', 'Related Name', 'related.name');
-        $this->assertEquals('related.name', $filter->getName());
+        $this->assertSame('related.name', $filter->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canCreateMultipleFilters(): void
     {
         $filters = [
@@ -150,14 +121,12 @@ class FieldFilterTest extends TestCase
 
         // @phpstan-ignore-next-line method.alreadyNarrowedType
         $this->assertCount(3, $filters);
-        $this->assertEquals('name', $filters[0]->getName());
-        $this->assertEquals('status', $filters[1]->getName());
-        $this->assertEquals('price', $filters[2]->getName());
+        $this->assertSame('name', $filters[0]->getName());
+        $this->assertSame('status', $filters[1]->getName());
+        $this->assertSame('price', $filters[2]->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function optionsCanIncludeMultipleEntries(): void
     {
         $options = [
@@ -167,31 +136,25 @@ class FieldFilterTest extends TestCase
             'data-attr' => 'value',
         ];
         $filter = new FieldFilter('field', 'Label', 'field', '=', 'text', $options);
-        $this->assertEquals($options, $filter->getOptions());
+        $this->assertSame($options, $filter->getOptions());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function typeCanBeCustom(): void
     {
         $filter = new FieldFilter('count', 'Count', 'count', '=', 'integer');
-        $this->assertEquals('integer', $filter->getType());
+        $this->assertSame('integer', $filter->getType());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function nameAndLabelCanBeDifferent(): void
     {
         $filter = new FieldFilter('user_name', 'Full Name', 'name');
-        $this->assertEquals('user_name', $filter->getName());
-        $this->assertEquals('Full Name', $filter->getLabel());
+        $this->assertSame('user_name', $filter->getName());
+        $this->assertSame('Full Name', $filter->getLabel());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithDefaultEqualsOperator(): void
     {
         $filter = new FieldFilter('status', 'Status', 'status');
@@ -209,14 +172,12 @@ class FieldFilterTest extends TestCase
         $filter->apply($qb, 'active');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithLikeOperator(): void
     {
         $filter = new FieldFilter('name', 'Name', 'name', 'LIKE');
 
-        $comparison = $this->createMock(\Doctrine\ORM\Query\Expr\Comparison::class);
+        $comparison = $this->createStub(\Doctrine\ORM\Query\Expr\Comparison::class);
 
         $expr = $this->createMock(\Doctrine\ORM\Query\Expr::class);
         $expr->expects($this->once())
@@ -238,14 +199,12 @@ class FieldFilterTest extends TestCase
         $filter->apply($qb, 'test');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithInOperatorAndArray(): void
     {
         $filter = new FieldFilter('status', 'Status', 'status', 'IN');
 
-        $func = $this->createMock(\Doctrine\ORM\Query\Expr\Func::class);
+        $func = $this->createStub(\Doctrine\ORM\Query\Expr\Func::class);
 
         $expr = $this->createMock(\Doctrine\ORM\Query\Expr::class);
         $expr->expects($this->once())
@@ -267,14 +226,12 @@ class FieldFilterTest extends TestCase
         $filter->apply($qb, ['active', 'pending']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithInOperatorAndScalar(): void
     {
         $filter = new FieldFilter('status', 'Status', 'status', 'IN');
 
-        $func = $this->createMock(\Doctrine\ORM\Query\Expr\Func::class);
+        $func = $this->createStub(\Doctrine\ORM\Query\Expr\Func::class);
 
         $expr = $this->createMock(\Doctrine\ORM\Query\Expr::class);
         $expr->expects($this->once())
@@ -296,9 +253,7 @@ class FieldFilterTest extends TestCase
         $filter->apply($qb, 'active');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithGreaterThanOrEqualOperator(): void
     {
         $filter = new FieldFilter('price', 'Min Price', 'price', '>=');
@@ -316,9 +271,7 @@ class FieldFilterTest extends TestCase
         $filter->apply($qb, 100);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithLessThanOrEqualOperator(): void
     {
         $filter = new FieldFilter('price', 'Max Price', 'price', '<=');
@@ -336,9 +289,7 @@ class FieldFilterTest extends TestCase
         $filter->apply($qb, 500);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithGreaterThanOperator(): void
     {
         $filter = new FieldFilter('quantity', 'Quantity', 'quantity', '>');
@@ -356,9 +307,7 @@ class FieldFilterTest extends TestCase
         $filter->apply($qb, 10);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithLessThanOperator(): void
     {
         $filter = new FieldFilter('quantity', 'Quantity', 'quantity', '<');
@@ -376,9 +325,7 @@ class FieldFilterTest extends TestCase
         $filter->apply($qb, 50);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithDottedFieldNameConvertsToUnderscoreInParam(): void
     {
         $filter = new FieldFilter('category_name', 'Category', 'category.name');

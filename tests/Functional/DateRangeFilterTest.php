@@ -6,7 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Twig\Components\DateRangeFilter;
 
-class DateRangeFilterTest extends ComponentTestCase
+final class DateRangeFilterTest extends ComponentTestCase
 {
     public function testInitialRenderWithEmptyValue(): void
     {

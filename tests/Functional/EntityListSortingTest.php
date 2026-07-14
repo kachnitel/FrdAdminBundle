@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithCustomColumns;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithRelationInColumns;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Verifies that the EntityList component handles non-sortable columns correctly:
@@ -15,14 +16,13 @@ use Kachnitel\AdminBundle\Twig\Components\EntityList;
  *
  * @group sorting
  */
-class EntityListSortingTest extends ComponentTestCase
+final class EntityListSortingTest extends ComponentTestCase
 {
     /**
      * Sorting by a ManyToOne association column must fall back to the default
      * sort field rather than throwing a DQL error.
-     *
-     * @test
      */
+    #[Test]
     public function sortByAssociationColumnFallsBackToDefault(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -52,9 +52,8 @@ class EntityListSortingTest extends ComponentTestCase
 
     /**
      * Sorting by a custom (#[AdminCustomColumn]) column must fall back gracefully.
-     *
-     * @test
      */
+    #[Test]
     public function sortByCustomColumnFallsBackToDefault(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -81,9 +80,8 @@ class EntityListSortingTest extends ComponentTestCase
 
     /**
      * Invoking the sort LiveAction on a non-sortable column must be silently ignored.
-     *
-     * @test
      */
+    #[Test]
     public function sortActionOnNonSortableColumnIsIgnored(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -116,9 +114,8 @@ class EntityListSortingTest extends ComponentTestCase
 
     /**
      * Sort buttons must not be rendered for association (non-sortable) columns.
-     *
-     * @test
      */
+    #[Test]
     public function sortButtonIsAbsentForAssociationColumn(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -140,9 +137,8 @@ class EntityListSortingTest extends ComponentTestCase
 
     /**
      * Sort buttons must still be rendered for regular sortable fields.
-     *
-     * @test
      */
+    #[Test]
     public function sortButtonIsPresentForRegularField(): void
     {
         $testComponent = $this->createLiveComponent(

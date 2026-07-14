@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 
 use Kachnitel\AdminBundle\ValueObject\BatchAction;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group batch-actions
  */
-class BatchActionTest extends TestCase
+final class BatchActionTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function itCreatesActionWithRequiredFieldsOnly(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish');
@@ -30,63 +31,63 @@ class BatchActionTest extends TestCase
         $this->assertSame(BatchAction::DEFAULT_PRIORITY, $action->priority);
     }
 
-    /** @test */
+    #[Test]
     public function isRouteActionReturnsTrueWhenRouteIsSet(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish', route: 'app_publish');
         $this->assertTrue($action->hasRoute());
     }
 
-    /** @test */
+    #[Test]
     public function isRouteActionReturnsFalseWhenNoRoute(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish');
         $this->assertFalse($action->hasRoute());
     }
 
-    /** @test */
+    #[Test]
     public function isLiveActionReturnsTrueWhenLiveActionIsSet(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish', liveComponent: 'bulkPublish');
         $this->assertTrue($action->isComponentAction());
     }
 
-    /** @test */
+    #[Test]
     public function isLiveActionReturnsFalseWhenNoLiveAction(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish');
         $this->assertFalse($action->isComponentAction());
     }
 
-    /** @test */
+    #[Test]
     public function requiresConfirmationReturnsTrueWhenMessageSet(): void
     {
         $action = new BatchAction(name: 'delete', label: 'Delete', confirmMessage: 'Delete %count% items?');
         $this->assertTrue($action->requiresConfirmation());
     }
 
-    /** @test */
+    #[Test]
     public function requiresConfirmationReturnsFalseWhenNoMessage(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish');
         $this->assertFalse($action->requiresConfirmation());
     }
 
-    /** @test */
+    #[Test]
     public function getConfirmMessageInterpolatesCount(): void
     {
         $action = new BatchAction(name: 'delete', label: 'Delete', confirmMessage: 'Delete %count% items?');
         $this->assertSame('Delete 5 items?', $action->getConfirmMessage(5));
     }
 
-    /** @test */
+    #[Test]
     public function getConfirmMessageReturnsNullWhenNoMessage(): void
     {
         $action = new BatchAction(name: 'publish', label: 'Publish');
         $this->assertNull($action->getConfirmMessage(3));
     }
 
-    /** @test */
+    #[Test]
     public function getConfirmMessageWithoutPlaceholderReturnsMessageAsIs(): void
     {
         $action = new BatchAction(name: 'archive', label: 'Archive', confirmMessage: 'Archive all selected?');

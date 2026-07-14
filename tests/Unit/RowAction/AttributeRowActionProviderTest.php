@@ -10,12 +10,13 @@ use Kachnitel\AdminBundle\RowAction\AttributeRowActionProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithRowActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group row-actions
  */
-class AttributeRowActionProviderTest extends TestCase
+final class AttributeRowActionProviderTest extends TestCase
 {
     private AttributeRowActionProvider $provider;
 
@@ -28,14 +29,14 @@ class AttributeRowActionProviderTest extends TestCase
     // supports()
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function supportsAnyExistingClass(): void
     {
         $this->assertTrue($this->provider->supports(TestEntity::class));
         $this->assertTrue($this->provider->supports(EntityWithRowActions::class));
     }
 
-    /** @test */
+    #[Test]
     public function doesNotSupportNonExistentClass(): void
     {
         /** @var class-string $missing */
@@ -47,14 +48,14 @@ class AttributeRowActionProviderTest extends TestCase
     // getActions()
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function returnsEmptyArrayForEntityWithNoAdminActionAttributes(): void
     {
         $actions = $this->provider->getActions(TestEntity::class);
         $this->assertSame([], $actions);
     }
 
-    /** @test */
+    #[Test]
     public function readsAdminActionAttributesFromEntityClass(): void
     {
         $actions = $this->provider->getActions(EntityWithRowActions::class);
@@ -63,7 +64,7 @@ class AttributeRowActionProviderTest extends TestCase
         $this->assertContainsOnlyInstancesOf(RowAction::class, $actions);
     }
 
-    /** @test */
+    #[Test]
     public function actionNameAndLabelAreReadCorrectly(): void
     {
         $actions = $this->provider->getActions(EntityWithRowActions::class);
@@ -80,7 +81,7 @@ class AttributeRowActionProviderTest extends TestCase
         $this->assertSame('Archive', $byName['archive']->label);
     }
 
-    /** @test */
+    #[Test]
     public function actionConditionIsReadCorrectly(): void
     {
         $actions = $this->provider->getActions(EntityWithRowActions::class);
@@ -94,7 +95,7 @@ class AttributeRowActionProviderTest extends TestCase
         $this->assertSame('entity.status != "archived"', $byName['archive']->condition);
     }
 
-    /** @test */
+    #[Test]
     public function actionPriorityIsReadCorrectly(): void
     {
         $actions = $this->provider->getActions(EntityWithRowActions::class);
@@ -108,7 +109,7 @@ class AttributeRowActionProviderTest extends TestCase
         $this->assertSame(40, $byName['archive']->priority);
     }
 
-    /** @test */
+    #[Test]
     public function postMethodIsReadCorrectly(): void
     {
         $actions = $this->provider->getActions(EntityWithRowActions::class);
@@ -120,12 +121,12 @@ class AttributeRowActionProviderTest extends TestCase
             }
         }
 
-        $this->assertNotNull($archive);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\ValueObject\RowAction::class, $archive);
         $this->assertSame('POST', $archive->method);
         $this->assertSame('Archive this item?', $archive->confirmMessage);
     }
 
-    /** @test */
+    #[Test]
     public function contextsDefaultToEmptyArrayWhenNotSetOnAttribute(): void
     {
         $actions = $this->provider->getActions(EntityWithRowActions::class);
@@ -139,7 +140,7 @@ class AttributeRowActionProviderTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function contextsArePropagatedFromAdminActionAttribute(): void
     {
         // EntityWithRowActions actions use default empty contexts — confirming pass-through
@@ -152,7 +153,7 @@ class AttributeRowActionProviderTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function resultIsCachedOnSecondCall(): void
     {
         $first = $this->provider->getActions(EntityWithRowActions::class);
@@ -161,7 +162,7 @@ class AttributeRowActionProviderTest extends TestCase
         $this->assertSame($first, $second);
     }
 
-    /** @test */
+    #[Test]
     public function returnsEmptyForNonExistentClass(): void
     {
         /** @var class-string $missing */
@@ -175,13 +176,13 @@ class AttributeRowActionProviderTest extends TestCase
     // getActionsConfig()
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function returnsNullForEntityWithNoActionsConfig(): void
     {
-        $this->assertNull($this->provider->getActionsConfig(TestEntity::class));
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Attribute\AdminActionsConfig::class, $this->provider->getActionsConfig(TestEntity::class));
     }
 
-    /** @test */
+    #[Test]
     public function returnsAdminActionsConfigWhenPresent(): void
     {
         $config = $this->provider->getActionsConfig(EntityWithRowActions::class);
@@ -190,7 +191,7 @@ class AttributeRowActionProviderTest extends TestCase
         $this->assertSame(['edit'], $config->exclude);
     }
 
-    /** @test */
+    #[Test]
     public function configResultIsCachedOnSecondCall(): void
     {
         $first = $this->provider->getActionsConfig(EntityWithRowActions::class);
@@ -203,14 +204,14 @@ class AttributeRowActionProviderTest extends TestCase
     // getAdminActionAttribute() / isOverride()
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function getAdminActionAttributeReturnsNullForUnknownAction(): void
     {
         $attr = $this->provider->getAdminActionAttribute(EntityWithRowActions::class, 'nonexistent');
-        $this->assertNull($attr);
+        $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Attribute\AdminAction::class, $attr);
     }
 
-    /** @test */
+    #[Test]
     public function getAdminActionAttributeReturnsAttributeForKnownAction(): void
     {
         $attr = $this->provider->getAdminActionAttribute(EntityWithRowActions::class, 'approve');
@@ -219,19 +220,19 @@ class AttributeRowActionProviderTest extends TestCase
         $this->assertSame('approve', $attr->name);
     }
 
-    /** @test */
+    #[Test]
     public function isOverrideReturnsFalseWhenNoOverrideFlag(): void
     {
         $this->assertFalse($this->provider->isOverride(EntityWithRowActions::class, 'approve'));
     }
 
-    /** @test */
+    #[Test]
     public function isOverrideReturnsFalseForUnknownAction(): void
     {
         $this->assertFalse($this->provider->isOverride(EntityWithRowActions::class, 'missing'));
     }
 
-    /** @test */
+    #[Test]
     public function isOverrideReturnsTrueForActionWithOverrideFlag(): void
     {
         $provider = new AttributeRowActionProvider();
@@ -242,7 +243,7 @@ class AttributeRowActionProviderTest extends TestCase
     // getPriority()
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function priorityIs50(): void
     {
         $this->assertSame(50, $this->provider->getPriority());

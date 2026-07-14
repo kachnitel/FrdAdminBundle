@@ -9,7 +9,7 @@ use Kachnitel\DataSourceContracts\FilterEnumOptions;
 use Kachnitel\DataSourceContracts\FilterMetadata;
 use PHPUnit\Framework\TestCase;
 
-class FilterMetadataTest extends TestCase
+final class FilterMetadataTest extends TestCase
 {
     public function testConstructorDefaults(): void
     {

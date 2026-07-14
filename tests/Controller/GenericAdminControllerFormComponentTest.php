@@ -11,18 +11,20 @@ use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormRegistryInterface;
 
-/**
- * @covers \Kachnitel\AdminBundle\Controller\GenericAdminController
- * @group auto-form
- */
+#[CoversClass(GenericAdminController::class)]
 #[UsesClass(Admin::class)]
 #[UsesClass(AdminColumn::class)]
-class GenericAdminControllerFormComponentTest extends TestCase
+#[Group('auto-form')]
+#[AllowMockObjectsWithoutExpectations]
+final class GenericAdminControllerFormComponentTest extends TestCase
 {
     /** @var EntityDiscoveryService&MockObject */
     private EntityDiscoveryService $entityDiscovery;
@@ -39,12 +41,12 @@ class GenericAdminControllerFormComponentTest extends TestCase
     private function makeController(): GenericAdminController
     {
         return new GenericAdminController(
-            em:               $this->createMock(EntityManagerInterface::class),
+            em:               $this->createStub(EntityManagerInterface::class),
             entityDiscovery:  $this->entityDiscovery,
             entityNamespace:  'App\\Entity\\',
             formNamespace:    'App\\Form\\',
             formSuffix:       'FormType',
-            dataSourceRegistry: $this->createMock(DataSourceRegistry::class),
+            dataSourceRegistry: $this->createStub(DataSourceRegistry::class),
             formRegistry:     $this->formRegistry,
         );
     }

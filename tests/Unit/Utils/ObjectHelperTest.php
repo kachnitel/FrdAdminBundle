@@ -6,16 +6,17 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Utils;
 
 use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \Kachnitel\AdminBundle\Utils\ObjectHelper
  */
-class ObjectHelperTest extends TestCase
+final class ObjectHelperTest extends TestCase
 {
     // ── getClassName ───────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getClassNameReturnsShortNameWithoutNamespace(): void
     {
         $object = new \stdClass();
@@ -23,7 +24,7 @@ class ObjectHelperTest extends TestCase
         $this->assertSame('stdClass', ObjectHelper::getClassName($object));
     }
 
-    /** @test */
+    #[Test]
     public function getClassNameReturnsShortNameForNamespacedClass(): void
     {
         $object = new class {};
@@ -35,14 +36,14 @@ class ObjectHelperTest extends TestCase
 
     // ── getRealClass with string ───────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getRealClassReturnsStringUnchangedWhenNotProxy(): void
     {
         $result = ObjectHelper::getRealClass(\stdClass::class);
         $this->assertSame(\stdClass::class, $result);
     }
 
-    /** @test */
+    #[Test]
     public function getRealClassReturnsStringClassNameForRegularClass(): void
     {
         $result = ObjectHelper::getRealClass(self::class);
@@ -51,7 +52,7 @@ class ObjectHelperTest extends TestCase
 
     // ── getRealClass with object ───────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getRealClassReturnsObjectClassWhenNotProxy(): void
     {
         $object = new \stdClass();
@@ -59,7 +60,7 @@ class ObjectHelperTest extends TestCase
         $this->assertSame(\stdClass::class, $result);
     }
 
-    /** @test */
+    #[Test]
     public function getRealClassUnwrapsDoctrineProxy(): void
     {
         // Create a mock proxy object that extends a real class
@@ -73,7 +74,7 @@ class ObjectHelperTest extends TestCase
         $this->assertSame(\stdClass::class, $result);
     }
 
-    /** @test */
+    #[Test]
     public function getRealClassReturnsProxyClassWhenNoParentClass(): void
     {
         // A proxy that has no parent class other than itself would return its own class.
@@ -83,7 +84,7 @@ class ObjectHelperTest extends TestCase
         $this->assertSame(\stdClass::class, $result);
     }
 
-    /** @test */
+    #[Test]
     public function getRealClassHandlesNamespacedObjectClass(): void
     {
         $object = new \DateTimeImmutable();
@@ -93,7 +94,7 @@ class ObjectHelperTest extends TestCase
 
     // ── getRealClass with proxy string ────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function getRealClassWithStringProxyReturnsParent(): void
     {
         // Create a named proxy class at runtime

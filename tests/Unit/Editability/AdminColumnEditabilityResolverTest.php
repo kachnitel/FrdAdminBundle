@@ -9,13 +9,13 @@ use Kachnitel\AdminBundle\Editability\AdminColumnEditabilityResolver;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
  * Direct unit coverage for AdminColumnEditabilityResolver — the admin-bundle
@@ -26,9 +26,6 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * DynamicEntityFormType::buildForm(). Now that the precedence logic lives here
  * instead of inline inside DynamicEntityFormType, it's tested directly against
  * this class — no form builder, no metadata mocking required.
- *
- * @group dynamic-form
- * @group expressions
  */
 #[CoversClass(AdminColumnEditabilityResolver::class)]
 #[UsesClass(AdminColumn::class)]
@@ -36,20 +33,17 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 #[UsesClass(ObjectHelper::class)]
 #[Group('dynamic-form')]
 #[Group('expressions')]
-class AdminColumnEditabilityResolverTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+final class AdminColumnEditabilityResolverTest extends TestCase
 {
     /** @var RowActionExpressionLanguage&MockObject */
     private RowActionExpressionLanguage $expressionLanguage;
-
-    /** @var AuthorizationCheckerInterface&MockObject */
-    private AuthorizationCheckerInterface $authorizationChecker;
 
     private AdminColumnEditabilityResolver $resolver;
 
     protected function setUp(): void
     {
         $this->expressionLanguage   = $this->createMock(RowActionExpressionLanguage::class);
-        $this->authorizationChecker = $this->createMock(AuthorizationCheckerInterface::class);
 
         // AttributeHelper is a plain reflection service with no dependencies of its
         // own — using the real implementation keeps this test honest about how
@@ -58,7 +52,7 @@ class AdminColumnEditabilityResolverTest extends TestCase
         $this->resolver = new AdminColumnEditabilityResolver(
             new AttributeHelper(),
             $this->expressionLanguage,
-            $this->authorizationChecker,
+            $this->createStub(\Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface::class),
         );
     }
 
@@ -109,8 +103,8 @@ class AdminColumnEditabilityResolverTest extends TestCase
         $entity          = new ResolverTestEntity();
         $entity->enabled = true;
 
-        $this->expressionLanguage->method('evaluate')
-            ->with('entity.enabled', $entity, $this->authorizationChecker)
+        $this->expressionLanguage->expects($this->once())->method('evaluate')
+            ->with('entity.enabled', $entity, $this->createStub(\Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface::class))
             ->willReturn(true);
 
         $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status', $entity));
@@ -190,8 +184,8 @@ class AdminColumnEditabilityResolverTest extends TestCase
         $entity          = new ResolverTestEntity();
         $entity->enabled = true;
 
-        $this->expressionLanguage->method('evaluate')
-            ->with('entity.enabled', $entity, $this->authorizationChecker)
+        $this->expressionLanguage->expects($this->once())->method('evaluate')
+            ->with('entity.enabled', $entity, $this->createStub(\Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface::class))
             ->willReturn(true);
 
         $this->assertTrue($this->resolver->isExplicitOverride(ResolverTestEntity::class, 'status', $entity));

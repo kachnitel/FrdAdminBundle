@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -10,24 +12,25 @@ use Kachnitel\AdminBundle\Tests\Fixtures\LabelEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TitleEntity;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class FilterMetadataProviderTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+final class FilterMetadataProviderTest extends TestCase
 {
     private FilterMetadataProvider $provider;
-    private EntityManagerInterface&MockObject $em;
     /** @var ClassMetadata<object>&MockObject */
     private ClassMetadata $metadata;
 
     protected function setUp(): void
     {
-        $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->provider = new FilterMetadataProvider($this->em);
+        $em = $this->createMock(EntityManagerInterface::class);
+        $this->provider = new FilterMetadataProvider($em);
 
         // Create metadata mock
         $this->metadata = $this->createMock(ClassMetadata::class);
-        $this->em->method('getClassMetadata')
+        $em->method('getClassMetadata')
             ->willReturn($this->metadata);
 
         // Default hasField to return true unless overridden in specific tests
@@ -42,12 +45,12 @@ class FilterMetadataProviderTest extends TestCase
         $this->metadata->method('getAssociationNames')->willReturn(['relatedEntity']);
         $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
         $this->metadata->method('hasField')->willReturnCallback(
-            fn($name) => in_array($name, ['name', 'description', 'quantity', 'price', 'createdAt', 'active', 'status', 'disabledFilter'], true)
+            fn(string $name): bool => in_array($name, ['name', 'description', 'quantity', 'price', 'createdAt', 'active', 'status', 'disabledFilter'], true)
         );
         $this->metadata->method('hasAssociation')->willReturnCallback(
-            fn($name) => $name === 'relatedEntity'
+            fn(string $name): bool => $name === 'relatedEntity'
         );
-        $this->metadata->method('getTypeOfField')->willReturnCallback(function ($field) {
+        $this->metadata->method('getTypeOfField')->willReturnCallback(function (string $field) {
             return match ($field) {
                 'name', 'status', 'disabledFilter' => 'string',
                 'description' => 'text',
@@ -167,7 +170,7 @@ class FilterMetadataProviderTest extends TestCase
             ->willReturn(RelatedEntity::class);
         // Mock the target entity metadata for field validation
         $this->metadata->method('hasField')->willReturnCallback(
-            fn($field) => in_array($field, ['id', 'name', 'email'])
+            fn(string $field): bool => in_array($field, ['id', 'name', 'email'])
         );
 
         $filters = $this->provider->getFilters(TestEntity::class);
@@ -227,7 +230,7 @@ class FilterMetadataProviderTest extends TestCase
         $tagEntityMetadata = $this->createMock(ClassMetadata::class);
 
         $em->method('getClassMetadata')->willReturnCallback(
-            function ($class) use ($mainEntityMetadata, $tagEntityMetadata) {
+            function (string $class) use ($mainEntityMetadata, $tagEntityMetadata) {
                 if ($class === TestEntity::class) {
                     return $mainEntityMetadata;
                 }
@@ -248,7 +251,7 @@ class FilterMetadataProviderTest extends TestCase
 
         // TagEntity has 'name' field
         $tagEntityMetadata->method('hasField')->willReturnCallback(
-            fn ($field) => in_array($field, ['id', 'name'])
+            fn (string $field): bool => in_array($field, ['id', 'name'])
         );
 
         $provider = new FilterMetadataProvider($em);
@@ -267,7 +270,7 @@ class FilterMetadataProviderTest extends TestCase
         $this->metadata->method('getFieldNames')->willReturn(['name', 'quantity', 'createdAt']);
         $this->metadata->method('getAssociationNames')->willReturn([]);
         $this->metadata->method('hasAssociation')->willReturn(false);
-        $this->metadata->method('getTypeOfField')->willReturnCallback(function ($field) {
+        $this->metadata->method('getTypeOfField')->willReturnCallback(function (string $field) {
             return match ($field) {
                 'name' => 'string',
                 'quantity' => 'integer',
@@ -309,7 +312,7 @@ class FilterMetadataProviderTest extends TestCase
 
         // Set up getClassMetadata with callback to handle different classes
         $em->method('getClassMetadata')->willReturnCallback(
-            function($class) use ($mainEntityMetadata, $userMetadata) {
+            function(string $class) use ($mainEntityMetadata, $userMetadata) {
                 if ($class === TestEntity::class) {
                     return $mainEntityMetadata;
                 }
@@ -324,13 +327,13 @@ class FilterMetadataProviderTest extends TestCase
         $mainEntityMetadata->method('getAssociationNames')->willReturn(['customer']);
         $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
         $mainEntityMetadata->method('hasAssociation')->willReturnCallback(
-            fn($name) => $name === 'customer'
+            fn(string $name): bool => $name === 'customer'
         );
         $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(\Kachnitel\AdminBundle\Tests\Fixtures\User::class);
 
         // User entity has firstName, lastName, email but NOT "name" (name is a getter)
         $userMetadata->method('hasField')->willReturnCallback(
-            fn($field) => in_array($field, ['firstName', 'lastName', 'email', 'id'])
+            fn(string $field): bool => in_array($field, ['firstName', 'lastName', 'email', 'id'])
         );
 
         $provider = new FilterMetadataProvider($em);
@@ -366,7 +369,7 @@ class FilterMetadataProviderTest extends TestCase
 
         // Set up getClassMetadata with callback to handle different classes
         $em->method('getClassMetadata')->willReturnCallback(
-            function($class) use ($mainEntityMetadata, $userMetadata) {
+            function(string $class) use ($mainEntityMetadata, $userMetadata) {
                 if ($class === TestEntity::class) {
                     return $mainEntityMetadata;
                 }
@@ -381,13 +384,13 @@ class FilterMetadataProviderTest extends TestCase
         $mainEntityMetadata->method('getAssociationNames')->willReturn(['customer']);
         $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
         $mainEntityMetadata->method('hasAssociation')->willReturnCallback(
-            fn($name) => $name === 'customer'
+            fn(string $name): bool => $name === 'customer'
         );
         $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(\Kachnitel\AdminBundle\Tests\Fixtures\User::class);
 
         // User entity has no 'name' or 'email' fields (but has id)
         $userMetadata->method('hasField')->willReturnCallback(
-            fn($field) => $field === 'id'
+            fn(string $field): bool => $field === 'id'
         );
 
         $provider = new FilterMetadataProvider($em);
@@ -413,7 +416,7 @@ class FilterMetadataProviderTest extends TestCase
 
         // Use LabelEntity which is not in DEFAULT_SEARCH_FIELDS
         $em->method('getClassMetadata')->willReturnCallback(
-            function ($class) use ($mainEntityMetadata, $labelEntityMetadata) {
+            function (string $class) use ($mainEntityMetadata, $labelEntityMetadata) {
                 if ($class === TestEntity::class) {
                     return $mainEntityMetadata;
                 }
@@ -428,13 +431,13 @@ class FilterMetadataProviderTest extends TestCase
         $mainEntityMetadata->method('getAssociationNames')->willReturn(['relatedEntity']);
         $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
         $mainEntityMetadata->method('hasAssociation')->willReturnCallback(
-            fn ($name) => $name === 'relatedEntity'
+            fn (string $name): bool => $name === 'relatedEntity'
         );
         $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(LabelEntity::class);
 
         // LabelEntity has 'label' field but not 'name'
         $labelEntityMetadata->method('hasField')->willReturnCallback(
-            fn ($field) => in_array($field, ['id', 'label', 'code'])
+            fn (string $field): bool => in_array($field, ['id', 'label', 'code'])
         );
 
         $provider = new FilterMetadataProvider($em);
@@ -454,7 +457,7 @@ class FilterMetadataProviderTest extends TestCase
         $titleEntityMetadata = $this->createMock(ClassMetadata::class);
 
         $em->method('getClassMetadata')->willReturnCallback(
-            function ($class) use ($mainEntityMetadata, $titleEntityMetadata) {
+            function (string $class) use ($mainEntityMetadata, $titleEntityMetadata) {
                 if ($class === TestEntity::class) {
                     return $mainEntityMetadata;
                 }
@@ -469,13 +472,13 @@ class FilterMetadataProviderTest extends TestCase
         $mainEntityMetadata->method('getAssociationNames')->willReturn(['relatedEntity']);
         $mainEntityMetadata->method('isCollectionValuedAssociation')->willReturn(false);
         $mainEntityMetadata->method('hasAssociation')->willReturnCallback(
-            fn ($name) => $name === 'relatedEntity'
+            fn (string $name): bool => $name === 'relatedEntity'
         );
         $mainEntityMetadata->method('getAssociationTargetClass')->willReturn(TitleEntity::class);
 
         // TitleEntity only has 'title' field, no 'name' or 'label'
         $titleEntityMetadata->method('hasField')->willReturnCallback(
-            fn ($field) => in_array($field, ['id', 'title', 'description'])
+            fn (string $field): bool => in_array($field, ['id', 'title', 'description'])
         );
 
         $provider = new FilterMetadataProvider($em);

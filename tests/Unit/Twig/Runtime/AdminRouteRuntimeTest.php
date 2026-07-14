@@ -10,6 +10,8 @@ use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormRegistryInterface;
@@ -18,7 +20,8 @@ use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-class AdminRouteRuntimeTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+final class AdminRouteRuntimeTest extends TestCase
 {
     /** @var RouterInterface&MockObject */
     private RouterInterface $router;
@@ -108,8 +111,8 @@ class AdminRouteRuntimeTest extends TestCase
 
         $this->attributeHelper->method('getAttribute')->willReturn($routes);
 
-        $this->assertEquals('app_product_index', $this->runtime->getRoute('TestEntity', 'index'));
-        $this->assertEquals('app_product_edit', $this->runtime->getRoute('TestEntity', 'edit'));
+        $this->assertSame('app_product_index', $this->runtime->getRoute('TestEntity', 'index'));
+        $this->assertSame('app_product_edit', $this->runtime->getRoute('TestEntity', 'edit'));
     }
 
     public function testGetRouteReturnsNullWhenRouteDoesNotExist(): void
@@ -134,7 +137,7 @@ class AdminRouteRuntimeTest extends TestCase
             ->with('app_product_index', [])
             ->willReturn('/products');
 
-        $this->assertEquals('/products', $this->runtime->getPath('TestEntity', 'index'));
+        $this->assertSame('/products', $this->runtime->getPath('TestEntity', 'index'));
     }
 
     public function testGetPathAutoFillsIdParameter(): void
@@ -156,7 +159,7 @@ class AdminRouteRuntimeTest extends TestCase
             ->with('app_product_edit', ['id' => 42])
             ->willReturn('/products/42/edit');
 
-        $this->assertEquals('/products/42/edit', $this->runtime->getPath($entity, 'edit'));
+        $this->assertSame('/products/42/edit', $this->runtime->getPath($entity, 'edit'));
     }
 
     public function testGetPathAutoFillsClassParameter(): void
@@ -174,7 +177,7 @@ class AdminRouteRuntimeTest extends TestCase
             ->with('app_product_new', ['class' => 'TestEntity'])
             ->willReturn('/admin/TestEntity/new');
 
-        $this->assertEquals('/admin/TestEntity/new', $this->runtime->getPath(TestEntity::class, 'new', []));
+        $this->assertSame('/admin/TestEntity/new', $this->runtime->getPath(TestEntity::class, 'new', []));
     }
 
     public function testGetPathThrowsExceptionWhenRouteNotFound(): void
@@ -190,7 +193,7 @@ class AdminRouteRuntimeTest extends TestCase
     public function testIsRouteAccessibleReturnsTrueWhenRouteExists(): void
     {
         $collection = new RouteCollection();
-        $collection->add('app_product_index', $this->createMock(Route::class));
+        $collection->add('app_product_index', $this->createStub(Route::class));
         $this->router->method('getRouteCollection')->willReturn($collection);
 
         $this->assertTrue($this->runtime->isRouteAccessible('app_product_index'));
@@ -208,13 +211,13 @@ class AdminRouteRuntimeTest extends TestCase
         $runtime = $this->makeRuntime(authChecker: null);
 
         $collection = new RouteCollection();
-        $collection->add('app_product_index', $this->createMock(Route::class));
+        $collection->add('app_product_index', $this->createStub(Route::class));
         $this->router->method('getRouteCollection')->willReturn($collection);
 
         $this->assertTrue($runtime->isRouteAccessible('app_product_index'));
     }
 
-    /** @test */
+    #[Test]
     public function canPerformActionChecksPermission(): void
     {
         $entity = new class {
@@ -224,7 +227,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($this->runtime->hasRoute($entity, 'index'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleChecksRouteExistence(): void
     {
         $this->attributeHelper->method('getAttribute')->willReturn(null);
@@ -232,13 +235,13 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertFalse($this->runtime->isActionAccessible('Product', 'unknown_action'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleWithValidAction(): void
     {
         $this->assertTrue($this->runtime->hasRoute('Product', 'index'));
     }
 
-    /** @test */
+    #[Test]
     public function getPathWithEntitySlugParameter(): void
     {
         $this->attributeHelper->method('getAttribute')->willReturn(new AdminRoutes(['show' => 'app_admin_entity_show']));
@@ -257,7 +260,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertStringContainsString('test-entity', $path);
     }
 
-    /** @test */
+    #[Test]
     public function hasRouteReturnsTrueForGenericAdminRoutes(): void
     {
         $this->attributeHelper->method('getAttribute')->willReturn(null);
@@ -269,17 +272,17 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($this->runtime->hasRoute('TestEntity', 'delete'));
     }
 
-    /** @test */
+    #[Test]
     public function getRouteReturnsFallbackGenericAdminRoute(): void
     {
         $this->attributeHelper->method('getAttribute')->willReturn(null);
 
-        $this->assertEquals('app_admin_entity_index', $this->runtime->getRoute('TestEntity', 'index'));
-        $this->assertEquals('app_admin_entity_show', $this->runtime->getRoute('TestEntity', 'show'));
-        $this->assertEquals('app_admin_entity_edit', $this->runtime->getRoute('TestEntity', 'edit'));
+        $this->assertSame('app_admin_entity_index', $this->runtime->getRoute('TestEntity', 'index'));
+        $this->assertSame('app_admin_entity_show', $this->runtime->getRoute('TestEntity', 'show'));
+        $this->assertSame('app_admin_entity_edit', $this->runtime->getRoute('TestEntity', 'edit'));
     }
 
-    /** @test */
+    #[Test]
     public function getPathWithMultipleParameters(): void
     {
         $entity = new class {
@@ -303,7 +306,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertStringContainsString('5', $path);
     }
 
-    /** @test */
+    #[Test]
     public function getPathPreservesExistingParameters(): void
     {
         $this->attributeHelper->method('getAttribute')->willReturn(new AdminRoutes(['custom' => 'app_custom_action']));
@@ -319,10 +322,10 @@ class AdminRouteRuntimeTest extends TestCase
             ->with('app_custom_action', ['custom' => 'value123'])
             ->willReturn('/admin/value123');
 
-        $this->assertEquals('/admin/value123', $this->runtime->getPath('TestEntity', 'custom', ['custom' => 'value123']));
+        $this->assertSame('/admin/value123', $this->runtime->getPath('TestEntity', 'custom', ['custom' => 'value123']));
     }
 
-    /** @test */
+    #[Test]
     public function canPerformActionReturnsTrueForAccessibleAction(): void
     {
         $entity = new class {
@@ -335,7 +338,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($this->runtime->canPerformAction($entity, 'index'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsFalseWhenAuthDenied(): void
     {
         $this->attributeHelper->method('getAttribute')->willReturn(null);
@@ -344,7 +347,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertFalse($this->runtime->isActionAccessible('Product', 'show'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueForIndexWithPermission(): void
     {
         $this->attributeHelper->method('getAttribute')->willReturn(null);
@@ -353,7 +356,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($this->runtime->isActionAccessible('Product', 'index'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueForShowWithPermission(): void
     {
         $this->attributeHelper->method('getAttribute')->willReturn(null);
@@ -362,7 +365,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($this->runtime->isActionAccessible('Product', 'show'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueForDeleteWithPermission(): void
     {
         $this->attributeHelper->method('getAttribute')->willReturn(null);
@@ -371,7 +374,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($this->runtime->isActionAccessible('Product', 'delete'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueForNewWithFormAndPermission(): void
     {
         /** @var FormRegistryInterface&MockObject $formRegistry */
@@ -389,7 +392,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionAccessible('TestEntity', 'new'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsFalseForNewWithoutForm(): void
     {
         /** @var FormRegistryInterface&MockObject $formRegistry */
@@ -407,7 +410,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionAccessible('TestEntity', 'new'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueForEditWithFormAndPermission(): void
     {
         /** @var FormRegistryInterface&MockObject $formRegistry */
@@ -425,7 +428,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionAccessible('TestEntity', 'edit'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsFalseForEditWithoutForm(): void
     {
         /** @var FormRegistryInterface&MockObject $formRegistry */
@@ -443,7 +446,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertFalse($runtime->isActionAccessible('TestEntity', 'edit'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueWithNoAuthChecker(): void
     {
         $runtime = $this->makeRuntime(authChecker: null);
@@ -453,7 +456,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionAccessible('Product', 'index'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueForNewEditWithNoFormDependencies(): void
     {
         // No formRegistry or entityDiscovery — should assume form exists
@@ -464,7 +467,7 @@ class AdminRouteRuntimeTest extends TestCase
         $this->assertTrue($runtime->isActionAccessible('Product', 'new'));
     }
 
-    /** @test */
+    #[Test]
     public function hasFormReturnsTrueWhenEntityDiscoveryThrowsException(): void
     {
         /** @var FormRegistryInterface&MockObject $formRegistry */

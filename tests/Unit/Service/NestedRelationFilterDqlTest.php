@@ -22,7 +22,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  *
  * @group nested-filter
  */
-class NestedRelationFilterDqlTest extends KernelTestCase
+final class NestedRelationFilterDqlTest extends KernelTestCase
 {
     protected static function getKernelClass(): string
     {

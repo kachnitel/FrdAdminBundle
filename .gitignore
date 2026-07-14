@@ -34,3 +34,6 @@ tests/templates/bundles/KachnitelAdminBundle/types/_preview.html.twig
 
 #Ignore windsurf AI rules
 .windsurfrules
+
+# Rector config is essentially transient
+rector.php

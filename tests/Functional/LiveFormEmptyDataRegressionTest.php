@@ -47,7 +47,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * @group admin-entity-form
  * @group live-form-defaults
  */
-class LiveFormEmptyDataRegressionTest extends ComponentTestCase
+final class LiveFormEmptyDataRegressionTest extends ComponentTestCase
 {
     /**
      * Form name derived from DynamicEntityFormType by Symfony's block prefix
@@ -172,16 +172,7 @@ class LiveFormEmptyDataRegressionTest extends ComponentTestCase
     }
 
     // ── After editing an unrelated field ─────────────────────────────────────
-
-    /**
-     * @test
-     *
-     * Mirrors the exact scenario reported: the user edits one field (name);
-     * the LiveComponent client echoes back the *current* (still blank) value
-     * of every other field, exactly as symfony/ux-live-component's
-     * data-model="on(change)|*" default binding does in the browser.
-     */
-    public function editingOneFieldDoesNotBackfillUntouchedIntegerFieldWithZero(): void
+    public function testEditingOneFieldDoesNotBackfillUntouchedIntegerFieldWithZero(): void
     {
         $component = $this->mountNewForm();
 
@@ -219,16 +210,7 @@ class LiveFormEmptyDataRegressionTest extends ComponentTestCase
     }
 
     // ── Control: explicit values still work correctly ──────────────────────────
-
-    /**
-     * @test
-     *
-     * Sanity check that DynamicEntityFormType still maps and persists these
-     * fields correctly when the user *does* provide values. Not expected to
-     * fail before or after the fix — guards against a fix that "solves" the
-     * regression by breaking normal submission instead.
-     */
-    public function savingWithExplicitValuesPersistsThemCorrectly(): void
+    public function testSavingWithExplicitValuesPersistsThemCorrectly(): void
     {
         $component = $this->mountNewForm();
 
@@ -265,18 +247,7 @@ class LiveFormEmptyDataRegressionTest extends ComponentTestCase
     }
 
     // ── Genuinely blank required fields must fail validation, not persist ──────
-
-    /**
-     * @test
-     *
-     * With the sentinel gone, a *genuinely* blank required field (a new
-     * entity where the user really did skip it) must be caught by
-     * validation before it ever reaches $em->flush() — otherwise it would
-     * either silently persist null into a NOT NULL column and crash at
-     * flush, or (with the old sentinel) silently "succeed" with a fabricated
-     * value the user never chose.
-     */
-    public function savingWithBlankRequiredFieldsShowsValidationErrorInsteadOfPersisting(): void
+    public function testSavingWithBlankRequiredFieldsShowsValidationErrorInsteadOfPersisting(): void
     {
         $component = $this->mountNewForm();
 
@@ -299,16 +270,7 @@ class LiveFormEmptyDataRegressionTest extends ComponentTestCase
     }
 
     // ── Genuinely optional fields must never show a required-field error ───────
-
-    /**
-     * @test
-     *
-     * completedAt is nullable at both the Doctrine and PHP level — a
-     * genuinely optional field, unlike scheduledAt (Doctrine-required with a
-     * PHP-nullable workaround). Leaving it blank alongside otherwise-valid
-     * data must never surface any error for it.
-     */
-    public function savingWithBlankGenuinelyOptionalDateFieldShowsNoErrorForIt(): void
+    public function testSavingWithBlankGenuinelyOptionalDateFieldShowsNoErrorForIt(): void
     {
         $component = $this->mountNewForm();
 

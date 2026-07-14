@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Command;
 
 use Kachnitel\AdminBundle\Command\SyncTestTemplatesCommand;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -12,7 +13,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 /**
  * @group sync-test-templates
  */
-class SyncTestTemplatesCommandTest extends TestCase
+final class SyncTestTemplatesCommandTest extends TestCase
 {
     private string $projectDir;
     private SyncTestTemplatesCommand $command;
@@ -44,13 +45,13 @@ class SyncTestTemplatesCommandTest extends TestCase
     // Structural / metadata
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function commandHasCorrectName(): void
     {
         $this->assertSame('admin:sync-test-templates', $this->command->getName());
     }
 
-    /** @test */
+    #[Test]
     public function commandHasCheckOption(): void
     {
         $optionNames = array_keys($this->command->getDefinition()->getOptions());
@@ -58,7 +59,7 @@ class SyncTestTemplatesCommandTest extends TestCase
         $this->assertFalse($this->command->getDefinition()->getOption('check')->acceptValue());
     }
 
-    /** @test */
+    #[Test]
     public function commandHasDiffOption(): void
     {
         $optionNames = array_keys($this->command->getDefinition()->getOptions());
@@ -70,7 +71,7 @@ class SyncTestTemplatesCommandTest extends TestCase
     // Core patching behaviour
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function syncsTemplatesByPrependingMarkersAndReturnsSuccess(): void
     {
         $this->seedSources();
@@ -98,7 +99,7 @@ class SyncTestTemplatesCommandTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function targetContainsFullSourceContentAfterMarker(): void
     {
         $sourceContent = $this->entityListSourceContent();
@@ -113,7 +114,7 @@ class SyncTestTemplatesCommandTest extends TestCase
         $this->assertSame($expectedContent, $targetContent);
     }
 
-    /** @test */
+    #[Test]
     public function outputReportsSyncedTemplateCount(): void
     {
         $this->seedSources();
@@ -128,7 +129,7 @@ class SyncTestTemplatesCommandTest extends TestCase
     // Idempotency
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function secondRunIsIdempotentWhenAlreadyInSync(): void
     {
         $this->seedSources();
@@ -155,7 +156,7 @@ class SyncTestTemplatesCommandTest extends TestCase
     // Missing source
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function missingSourceTemplateProducesWarningButNotFailure(): void
     {
         // Seed only one of the two sources
@@ -176,7 +177,7 @@ class SyncTestTemplatesCommandTest extends TestCase
     // --check option
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function checkOptionReturnsFailureWhenTargetsAreOutOfSync(): void
     {
         $this->seedSources();
@@ -188,7 +189,7 @@ class SyncTestTemplatesCommandTest extends TestCase
         $this->assertSame(Command::FAILURE, $result);
     }
 
-    /** @test */
+    #[Test]
     public function checkOptionDoesNotWriteTargetFiles(): void
     {
         $this->seedSources();
@@ -206,7 +207,7 @@ class SyncTestTemplatesCommandTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function checkOptionReturnsSuccessWhenTargetsAreAlreadyInSync(): void
     {
         $this->seedSources();
@@ -221,7 +222,7 @@ class SyncTestTemplatesCommandTest extends TestCase
         $this->assertSame(Command::SUCCESS, $result);
     }
 
-    /** @test */
+    #[Test]
     public function checkOptionOutputsOutOfSyncMessage(): void
     {
         $this->seedSources();
@@ -237,7 +238,7 @@ class SyncTestTemplatesCommandTest extends TestCase
     // --diff option
     // -------------------------------------------------------------------------
 
-    /** @test */
+    #[Test]
     public function diffOptionShowsDiffWhenTargetExistsButIsOutOfSync(): void
     {
         $this->seedSources();
@@ -259,7 +260,7 @@ class SyncTestTemplatesCommandTest extends TestCase
         $this->assertStringContainsString('TEST_OVERRIDE:ENTITY_LIST', $output, 'Diff must show the inserted marker');
     }
 
-    /** @test */
+    #[Test]
     public function diffOptionCombinedWithCheckStillRefusesToWrite(): void
     {
         $this->seedSources();

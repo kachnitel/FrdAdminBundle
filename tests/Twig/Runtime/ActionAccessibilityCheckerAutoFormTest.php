@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -21,7 +22,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 #[CoversClass(ActionAccessibilityChecker::class)]
 #[UsesClass(Admin::class)]
 #[Group('auto-form')]
-class ActionAccessibilityCheckerAutoFormTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+final class ActionAccessibilityCheckerAutoFormTest extends TestCase
 {
     /** @var AuthorizationCheckerInterface&MockObject */
     private AuthorizationCheckerInterface $authChecker;
@@ -192,14 +194,12 @@ class ActionAccessibilityCheckerAutoFormTest extends TestCase
         $this->assertTrue($this->makeChecker()->isActionAccessible('AcCheckerNoEditEntity', $action, true));
     }
 
-    /** @return array<string, array{string}> */
-    public static function nonFormActionsProvider(): array
+    /** @return \Iterator<string, array{string}> */
+    public static function nonFormActionsProvider(): \Iterator
     {
-        return [
-            'index'  => ['index'],
-            'show'   => ['show'],
-            'delete' => ['delete'],
-        ];
+        yield 'index' => ['index'];
+        yield 'show' => ['show'];
+        yield 'delete' => ['delete'];
     }
 }
 

@@ -16,7 +16,7 @@ use Symfony\Component\Security\Core\User\InMemoryUser;
  * Tests that permission enforcement respects both global required_role and
  * entity-specific permissions from #[Admin] attribute.
  */
-class PermissionEnforcementTest extends KernelTestCase
+final class PermissionEnforcementTest extends KernelTestCase
 {
     private AccessDecisionManagerInterface $accessDecisionManager;
     private AdminEntityVoter $voter;
@@ -41,7 +41,7 @@ class PermissionEnforcementTest extends KernelTestCase
     {
         parent::tearDown();
 
-        restore_exception_handler();
+        // restore_exception_handler();
     }
 
     /**
@@ -232,7 +232,7 @@ class PermissionEnforcementTest extends KernelTestCase
     {
         $reflection = new \ReflectionClass($object);
         $method = $reflection->getMethod($methodName);
-        $method->setAccessible(true);
+        // $method->setAccessible(true);
 
         return $method->invokeArgs($object, $parameters);
     }

@@ -7,10 +7,12 @@ namespace Kachnitel\AdminBundle\Tests\Service;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Service\PropertyFilterabilityService;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 // use Kachnitel\AdminBundle\Tests\Service\Fixtures\EntityWithFilterDisabled;
 // use Kachnitel\AdminBundle\Tests\Service\Fixtures\EntityWithFilterEnabled;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -18,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(PropertyFilterabilityService::class)]
 #[UsesClass(ColumnFilter::class)]
 #[Group('property-filterability')]
+#[AllowMockObjectsWithoutExpectations]
 final class PropertyFilterabilityServiceTest extends TestCase
 {
     /** @var FilterMetadataProvider&MockObject */
@@ -30,6 +33,7 @@ final class PropertyFilterabilityServiceTest extends TestCase
 
     // ── getFilterConfig / isFilterable ─────────────────────────────────────────
 
+    #[Test]
     public function testGetFilterConfigDelegatesToProvider(): void
     {
         $config = ['type' => 'text', 'operator' => 'LIKE'];
@@ -42,84 +46,86 @@ final class PropertyFilterabilityServiceTest extends TestCase
 
         $service = $this->makeService();
 
-        self::assertSame($config, $service->getFilterConfig('App\Entity\Product', 'name'));
+        $this->assertSame($config, $service->getFilterConfig('App\Entity\Product', 'name'));
     }
 
+    #[Test]
     public function testGetFilterConfigReturnsNullWhenProviderReturnsNull(): void
     {
         $this->filterMetadataProvider
             ->method('getFilterForProperty')
             ->willReturn(null);
 
-        self::assertNull($this->makeService()->getFilterConfig('App\Entity\Product', 'internalCode'));
+        $this->assertNull($this->makeService()->getFilterConfig('App\Entity\Product', 'internalCode'));
     }
 
+    #[Test]
     public function testIsFilterableReturnsTrueWhenConfigExists(): void
     {
         $this->filterMetadataProvider
             ->method('getFilterForProperty')
             ->willReturn(['type' => 'text']);
 
-        self::assertTrue($this->makeService()->isFilterable('App\Entity\Product', 'name'));
+        $this->assertTrue($this->makeService()->isFilterable('App\Entity\Product', 'name'));
     }
 
+    #[Test]
     public function testIsFilterableReturnsFalseWhenConfigIsNull(): void
     {
         $this->filterMetadataProvider
             ->method('getFilterForProperty')
             ->willReturn(null);
 
-        self::assertFalse($this->makeService()->isFilterable('App\Entity\Product', 'name'));
+        $this->assertFalse($this->makeService()->isFilterable('App\Entity\Product', 'name'));
     }
 
     // ── isExplicitlyDisabled ───────────────────────────────────────────────────
 
+    #[Test]
     public function testIsExplicitlyDisabledReturnsFalseForUnknownClass(): void
     {
         // @phpstan-ignore argument.type
-        self::assertFalse($this->makeService()->isExplicitlyDisabled('NonExistentClass9999', 'field'));
+        $this->assertFalse($this->makeService()->isExplicitlyDisabled('NonExistentClass9999', 'field'));
     }
 
+    #[Test]
     public function testIsExplicitlyDisabledReturnsFalseWhenPropertyHasNoAttribute(): void
     {
         // stdClass has no ColumnFilter attribute anywhere
-        self::assertFalse($this->makeService()->isExplicitlyDisabled(\stdClass::class, 'nonexistent'));
+        $this->assertFalse($this->makeService()->isExplicitlyDisabled(\stdClass::class, 'nonexistent'));
     }
 
+    #[Test]
     public function testIsExplicitlyDisabledReturnsTrueForDisabledAttribute(): void
     {
-        self::assertTrue(
-            $this->makeService()->isExplicitlyDisabled(EntityWithFilterDisabled::class, 'field')
-        );
+        $this->assertTrue($this->makeService()->isExplicitlyDisabled(EntityWithFilterDisabled::class, 'field'));
     }
 
+    #[Test]
     public function testIsExplicitlyDisabledReturnsFalseForEnabledAttribute(): void
     {
-        self::assertFalse(
-            $this->makeService()->isExplicitlyDisabled(EntityWithFilterEnabled::class, 'field')
-        );
+        $this->assertFalse($this->makeService()->isExplicitlyDisabled(EntityWithFilterEnabled::class, 'field'));
     }
 
     // ── buildCollectionFilterEntry ─────────────────────────────────────────────
 
+    #[Test]
     public function testBuildCollectionFilterEntryReturnsNullWhenEntityHasNoGetId(): void
     {
         $entity = new \stdClass();
 
-        self::assertNull(
-            $this->makeService()->buildCollectionFilterEntry($entity, 'product', 'App\Entity\Tag')
-        );
+        $this->assertNull($this->makeService()->buildCollectionFilterEntry($entity, 'product', 'App\Entity\Tag'));
     }
 
+    #[Test]
     public function testBuildCollectionFilterEntryReturnsNullWhenIdIsNull(): void
     {
         $entity = $this->entityWithId(null);
 
-        self::assertNull(
-            $this->makeService()->buildCollectionFilterEntry($entity, 'product', 'App\Entity\Tag')
-        );
+        $this->assertNull($this->makeService()->buildCollectionFilterEntry($entity, 'product', 'App\Entity\Tag'));
     }
 
+    #[Test]
     public function testBuildCollectionFilterEntryReturnsNullWhenPropertyNotFilterable(): void
     {
         $this->filterMetadataProvider
@@ -128,15 +134,14 @@ final class PropertyFilterabilityServiceTest extends TestCase
 
         $entity = $this->entityWithId(5);
 
-        self::assertNull(
-            $this->makeService()->buildCollectionFilterEntry($entity, 'product', 'App\Entity\Tag')
-        );
+        $this->assertNull($this->makeService()->buildCollectionFilterEntry($entity, 'product', 'App\Entity\Tag'));
     }
 
+    #[Test]
     public function testBuildCollectionFilterEntryReturnsFieldValuePairWhenFilterable(): void
     {
         $this->filterMetadataProvider
-            ->method('getFilterForProperty')
+            ->expects($this->once())->method('getFilterForProperty')
             ->with('App\Entity\Tag', 'product')
             ->willReturn(['type' => 'relation']);
 
@@ -144,9 +149,10 @@ final class PropertyFilterabilityServiceTest extends TestCase
 
         $result = $this->makeService()->buildCollectionFilterEntry($entity, 'product', 'App\Entity\Tag');
 
-        self::assertSame(['product' => '42'], $result);
+        $this->assertSame(['product' => '42'], $result);
     }
 
+    #[Test]
     public function testBuildCollectionFilterEntryCastsIdToString(): void
     {
         $this->filterMetadataProvider
@@ -157,12 +163,13 @@ final class PropertyFilterabilityServiceTest extends TestCase
 
         $result = $this->makeService()->buildCollectionFilterEntry($entity, 'owner', 'App\Entity\Order');
 
-        self::assertIsString($result['owner'] ?? null);
-        self::assertSame('7', $result['owner']);
+        $this->assertIsString($result['owner'] ?? null);
+        $this->assertSame('7', $result['owner']);
     }
 
     // ── debug mode ─────────────────────────────────────────────────────────────
 
+    #[Test]
     public function testBuildCollectionFilterEntryDoesNotThrowInNonDebugModeEvenWhenDisabled(): void
     {
         $this->filterMetadataProvider->method('getFilterForProperty')->willReturn(null);
@@ -171,9 +178,10 @@ final class PropertyFilterabilityServiceTest extends TestCase
         $service = $this->makeService(debug: false);
 
         // Must not throw, must return null
-        self::assertNull($service->buildCollectionFilterEntry($entity, 'product', 'App\Entity\Tag'));
+        $this->assertNull($service->buildCollectionFilterEntry($entity, 'product', 'App\Entity\Tag'));
     }
 
+    #[Test]
     public function testBuildCollectionFilterEntryThrowsInDebugModeWhenExplicitlyDisabled(): void
     {
         $this->filterMetadataProvider->method('getFilterForProperty')->willReturn(null);
@@ -188,6 +196,7 @@ final class PropertyFilterabilityServiceTest extends TestCase
         $service->buildCollectionFilterEntry($entity, 'field', $entityClass);
     }
 
+    #[Test]
     public function testBuildCollectionFilterEntryDoesNotThrowInDebugModeWhenNotExplicitlyDisabled(): void
     {
         // No attribute at all → not explicitly disabled → no throw, just returns null
@@ -196,7 +205,7 @@ final class PropertyFilterabilityServiceTest extends TestCase
         $entity  = $this->entityWithId(1);
         $service = $this->makeService(debug: true);
 
-        self::assertNull($service->buildCollectionFilterEntry($entity, 'unknownField', \stdClass::class));
+        $this->assertNull($service->buildCollectionFilterEntry($entity, 'unknownField', \stdClass::class));
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ use Doctrine\Persistence\ManagerRegistry;
 /**
  * @group batch-actions
  */
-class DeleteButtonTest extends ComponentTestCase
+final class DeleteButtonTest extends ComponentTestCase
 {
     public function testRendersDisabledButtonWhenNothingSelected(): void
     {

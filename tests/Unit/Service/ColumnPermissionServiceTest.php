@@ -7,6 +7,9 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -24,8 +27,11 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *
  * @covers \Kachnitel\AdminBundle\Service\ColumnPermissionService
  */
+#[CoversClass(ColumnPermissionService::class)]
 #[UsesClass(ColumnPermission::class)]
-class ColumnPermissionServiceTest extends TestCase
+#[Group('column-permissions')]
+#[AllowMockObjectsWithoutExpectations]
+final class ColumnPermissionServiceTest extends TestCase
 {
     /** @var AuthorizationCheckerInterface&MockObject */
     private AuthorizationCheckerInterface $authorizationChecker;
@@ -61,7 +67,7 @@ class ColumnPermissionServiceTest extends TestCase
     public function testCanPerformActionReturnsTrueWhenGranted(): void
     {
         $this->authorizationChecker
-            ->method('isGranted')
+            ->expects($this->once())->method('isGranted')
             ->with('ROLE_HR')
             ->willReturn(true);
 
@@ -77,7 +83,7 @@ class ColumnPermissionServiceTest extends TestCase
     public function testCanPerformActionReturnsFalseWhenDenied(): void
     {
         $this->authorizationChecker
-            ->method('isGranted')
+            ->expects($this->once())->method('isGranted')
             ->with('ROLE_HR')
             ->willReturn(false);
 
@@ -124,7 +130,7 @@ class ColumnPermissionServiceTest extends TestCase
     {
         $this->authorizationChecker
             ->method('isGranted')
-            ->willReturnCallback(fn($role) => $role === 'ROLE_SECURITY_OFFICER');
+            ->willReturnCallback(fn($role): bool => $role === 'ROLE_SECURITY_OFFICER');
 
         $result = $this->service->canPerformAction(
             TestEntityWithPermissions::class,
@@ -155,7 +161,7 @@ class ColumnPermissionServiceTest extends TestCase
         // Use callback to cover all roles that may be queried (ROLE_HR, ROLE_SECURITY_OFFICER, etc.)
         $this->authorizationChecker
             ->method('isGranted')
-            ->willReturnCallback(fn($role) => $role === 'ROLE_HR');
+            ->willReturnCallback(fn($role): bool => $role === 'ROLE_HR');
 
         $permitted = $this->service->getPermittedColumns(
             TestEntityWithPermissions::class,
@@ -220,7 +226,7 @@ class ColumnPermissionServiceTest extends TestCase
         $entity = new TestEntityWithPermissions();
 
         $this->authorizationChecker
-            ->method('isGranted')
+            ->expects($this->once())->method('isGranted')
             ->with('ROLE_HR')
             ->willReturn(true);
 

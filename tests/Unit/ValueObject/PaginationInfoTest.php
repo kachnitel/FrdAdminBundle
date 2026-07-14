@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 
 use Kachnitel\DataSourceContracts\PaginationInfo;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-class PaginationInfoTest extends TestCase
+final class PaginationInfoTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorSetsProperties(): void
     {
         $pagination = new PaginationInfo(
@@ -25,9 +24,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(20, $pagination->itemsPerPage);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getTotalPagesCalculatesCorrectly(): void
     {
         $pagination = new PaginationInfo(
@@ -39,9 +36,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(5, $pagination->getTotalPages());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getTotalPagesRoundsUp(): void
     {
         $pagination = new PaginationInfo(
@@ -53,9 +48,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(6, $pagination->getTotalPages());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getTotalPagesReturnsZeroForEmptyResults(): void
     {
         $pagination = new PaginationInfo(
@@ -67,9 +60,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(0, $pagination->getTotalPages());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getTotalPagesHandlesSinglePage(): void
     {
         $pagination = new PaginationInfo(
@@ -81,9 +72,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(1, $pagination->getTotalPages());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getTotalPagesHandlesExactMultiple(): void
     {
         $pagination = new PaginationInfo(
@@ -95,9 +84,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(3, $pagination->getTotalPages());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getStartItemCalculatesCorrectlyForFirstPage(): void
     {
         $pagination = new PaginationInfo(
@@ -109,9 +96,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(1, $pagination->getStartItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getStartItemCalculatesCorrectlyForMiddlePage(): void
     {
         $pagination = new PaginationInfo(
@@ -123,9 +108,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(41, $pagination->getStartItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getStartItemReturnsZeroForEmptyResults(): void
     {
         $pagination = new PaginationInfo(
@@ -137,9 +120,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(0, $pagination->getStartItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEndItemCalculatesCorrectlyForFullPage(): void
     {
         $pagination = new PaginationInfo(
@@ -151,9 +132,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(20, $pagination->getEndItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEndItemCalculatesCorrectlyForPartialLastPage(): void
     {
         $pagination = new PaginationInfo(
@@ -165,9 +144,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(45, $pagination->getEndItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEndItemDoesNotExceedTotalItems(): void
     {
         $pagination = new PaginationInfo(
@@ -180,9 +157,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(55, $pagination->getEndItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEndItemReturnsZeroForEmptyResults(): void
     {
         $pagination = new PaginationInfo(
@@ -194,9 +169,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(0, $pagination->getEndItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function differentItemsPerPageValues(): void
     {
         $pagination = new PaginationInfo(
@@ -210,9 +183,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(20, $pagination->getEndItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function largeDataset(): void
     {
         $pagination = new PaginationInfo(
@@ -226,9 +197,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(5000, $pagination->getEndItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function singleItem(): void
     {
         $pagination = new PaginationInfo(
@@ -242,9 +211,7 @@ class PaginationInfoTest extends TestCase
         $this->assertSame(1, $pagination->getEndItem());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function isReadonly(): void
     {
         $reflection = new \ReflectionClass(PaginationInfo::class);

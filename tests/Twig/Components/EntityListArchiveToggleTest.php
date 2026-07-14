@@ -13,6 +13,7 @@ use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -26,7 +27,8 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * @covers \Kachnitel\AdminBundle\Twig\Components\EntityList::toggleArchive
  */
 #[UsesClass(EntityListConfig::class)]
-class EntityListArchiveToggleTest extends TestCase
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+final class EntityListArchiveToggleTest extends TestCase
 {
     /** @var ArchiveService&MockObject */
     private ArchiveService $archiveService;
@@ -46,10 +48,10 @@ class EntityListArchiveToggleTest extends TestCase
         $component = new EntityList(
             $this->permissionService,
             new EntityListConfig(),
-            $this->createMock(DataSourceRegistry::class),
-            $this->createMock(EntityListBatchService::class),
-            $this->createMock(AdminPreferencesStorageInterface::class),
-            $this->createMock(EntityListColumnService::class),
+            $this->createStub(DataSourceRegistry::class),
+            $this->createStub(EntityListBatchService::class),
+            $this->createStub(AdminPreferencesStorageInterface::class),
+            $this->createStub(EntityListColumnService::class),
             $this->archiveService,
         );
         $component->entityClass = ArchiveToggleEntity::class;
@@ -70,7 +72,7 @@ class EntityListArchiveToggleTest extends TestCase
 
     // ── canToggleArchive ──────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function canToggleArchiveReturnsFalseForNonDoctrineDataSource(): void
     {
         $component = $this->makeComponent();
@@ -79,7 +81,7 @@ class EntityListArchiveToggleTest extends TestCase
         $this->assertFalse($component->canToggleArchive());
     }
 
-    /** @test */
+    #[Test]
     public function canToggleArchiveReturnsFalseWhenNoArchiveConfig(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn(null);
@@ -87,17 +89,17 @@ class EntityListArchiveToggleTest extends TestCase
         $this->assertFalse($this->makeComponent()->canToggleArchive());
     }
 
-    /** @test */
+    #[Test]
     public function canToggleArchiveReturnsFalseWhenPermissionDenied(): void
     {
         $config = $this->makeConfig();
         $this->archiveService->method('resolveConfig')->willReturn($config);
-        $this->permissionService->method('canToggleArchive')->with($config)->willReturn(false);
+        $this->permissionService->expects($this->once())->method('canToggleArchive')->with($config)->willReturn(false);
 
         $this->assertFalse($this->makeComponent()->canToggleArchive());
     }
 
-    /** @test */
+    #[Test]
     public function canToggleArchiveReturnsTrueWhenConfiguredAndPermitted(): void
     {
         $config = $this->makeConfig();
@@ -109,7 +111,7 @@ class EntityListArchiveToggleTest extends TestCase
 
     // ── toggleArchive ────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function toggleArchiveThrowsAccessDeniedWhenNotPermitted(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn(null);
@@ -120,7 +122,7 @@ class EntityListArchiveToggleTest extends TestCase
         $this->makeComponent()->toggleArchive();
     }
 
-    /** @test */
+    #[Test]
     public function toggleArchiveFlipsShowArchivedFromFalseToTrue(): void
     {
         $config = $this->makeConfig();
@@ -135,7 +137,7 @@ class EntityListArchiveToggleTest extends TestCase
         $this->assertTrue($component->showArchived);
     }
 
-    /** @test */
+    #[Test]
     public function toggleArchiveFlipsShowArchivedFromTrueToFalse(): void
     {
         $config = $this->makeConfig();
@@ -150,7 +152,7 @@ class EntityListArchiveToggleTest extends TestCase
         $this->assertFalse($component->showArchived);
     }
 
-    /** @test */
+    #[Test]
     public function toggleArchiveResetsPageToOne(): void
     {
         $config = $this->makeConfig();

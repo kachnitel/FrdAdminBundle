@@ -8,11 +8,16 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
 
-class EntityListPermissionServiceTest extends TestCase
+#[Group('entity-list')]
+#[AllowMockObjectsWithoutExpectations]
+final class EntityListPermissionServiceTest extends TestCase
 {
     /** @var EntityDiscoveryService&MockObject */
     private EntityDiscoveryService $entityDiscovery;
@@ -33,14 +38,12 @@ class EntityListPermissionServiceTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function isBatchActionsEnabledReturnsTrueWhenEnabled(): void
     {
         $admin = new Admin(enableBatchActions: true);
 
-        $this->entityDiscovery->method('getAdminAttribute')
+        $this->entityDiscovery->expects($this->once())->method('getAdminAttribute')
             ->with('App\\Entity\\TestEntity')
             ->willReturn($admin);
 
@@ -49,14 +52,12 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function isBatchActionsEnabledReturnsFalseWhenDisabled(): void
     {
         $admin = new Admin(enableBatchActions: false);
 
-        $this->entityDiscovery->method('getAdminAttribute')
+        $this->entityDiscovery->expects($this->once())->method('getAdminAttribute')
             ->with('App\\Entity\\TestEntity')
             ->willReturn($admin);
 
@@ -65,12 +66,10 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function isBatchActionsEnabledReturnsFalseWhenNoAttribute(): void
     {
-        $this->entityDiscovery->method('getAdminAttribute')
+        $this->entityDiscovery->expects($this->once())->method('getAdminAttribute')
             ->with('App\\Entity\\TestEntity')
             ->willReturn(null);
 
@@ -79,9 +78,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function isBatchActionsEnabledReturnsFalseByDefault(): void
     {
         // Admin attribute with default values
@@ -95,18 +92,16 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeleteReturnsTrueWhenEnabledAndGranted(): void
     {
         $admin = new Admin(enableBatchActions: true);
 
-        $this->entityDiscovery->method('getAdminAttribute')
+        $this->entityDiscovery->expects($this->once())->method('getAdminAttribute')
             ->with('App\\Entity\\TestEntity')
             ->willReturn($admin);
 
-        $this->security->method('isGranted')
+        $this->security->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_DELETE, 'TestEntity')
             ->willReturn(true);
 
@@ -115,9 +110,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeleteReturnsFalseWhenNotEnabled(): void
     {
         $admin = new Admin(enableBatchActions: false);
@@ -133,9 +126,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeleteReturnsFalseWhenNotGranted(): void
     {
         $admin = new Admin(enableBatchActions: true);
@@ -143,7 +134,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->entityDiscovery->method('getAdminAttribute')
             ->willReturn($admin);
 
-        $this->security->method('isGranted')
+        $this->security->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_DELETE, 'TestEntity')
             ->willReturn(false);
 
@@ -152,9 +143,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeleteReturnsFalseWhenNoAttribute(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -167,9 +156,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeleteUsesCorrectVoterAttribute(): void
     {
         $admin = new Admin(enableBatchActions: true);
@@ -187,12 +174,10 @@ class EntityListPermissionServiceTest extends TestCase
 
     // --- Non-Doctrine data source tests ---
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeleteReturnsTrueForNonDoctrineWhenGranted(): void
     {
-        $this->security->method('isGranted')
+        $this->security->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_DELETE, 'custom-source')
             ->willReturn(true);
 
@@ -201,12 +186,10 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeleteReturnsFalseForNonDoctrineWhenNotGranted(): void
     {
-        $this->security->method('isGranted')
+        $this->security->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_DELETE, 'custom-source')
             ->willReturn(false);
 
@@ -215,9 +198,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeleteUsesEntityShortClassWhenNoDataSourceId(): void
     {
         $this->security->expects($this->once())
@@ -228,9 +209,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->service->canBatchDelete('', 'MyShortClass');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeletePrefersDataSourceIdOverEntityShortClass(): void
     {
         $this->security->expects($this->once())
@@ -241,9 +220,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->service->canBatchDelete('', 'MyShortClass', 'custom-source');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canBatchDeleteSkipsAttributeCheckForNonDoctrine(): void
     {
         $this->entityDiscovery->expects($this->never())->method('getAdminAttribute');
@@ -255,27 +232,23 @@ class EntityListPermissionServiceTest extends TestCase
 
     // --- canInlineEdit tests ---
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canInlineEditReturnsTrueWhenEnabledAndGranted(): void
     {
         $admin = new Admin(enableInlineEdit: true);
 
-        $this->entityDiscovery->method('getAdminAttribute')
+        $this->entityDiscovery->expects($this->once())->method('getAdminAttribute')
             ->with('App\\Entity\\Product')
             ->willReturn($admin);
 
-        $this->security->method('isGranted')
+        $this->security->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_EDIT, 'Product')
             ->willReturn(true);
 
         $this->assertTrue($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canInlineEditReturnsFalseWhenFlagDisabled(): void
     {
         $admin = new Admin(enableInlineEdit: false);
@@ -288,9 +261,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canInlineEditReturnsFalseWhenNoAttribute(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
@@ -300,25 +271,21 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canInlineEditReturnsFalseWhenVoterDenies(): void
     {
         $admin = new Admin(enableInlineEdit: true);
 
         $this->entityDiscovery->method('getAdminAttribute')->willReturn($admin);
 
-        $this->security->method('isGranted')
+        $this->security->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_EDIT, 'Product')
             ->willReturn(false);
 
         $this->assertFalse($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canInlineEditReturnsFalseForEmptyEntityClass(): void
     {
         // Non-Doctrine data sources have no entityClass
@@ -328,9 +295,7 @@ class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($this->service->canInlineEdit('', 'SomeDataSource'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canInlineEditChecksAdminEditVoterAttribute(): void
     {
         $admin = new Admin(enableInlineEdit: true);
@@ -347,33 +312,27 @@ class EntityListPermissionServiceTest extends TestCase
 
     // --- canViewList tests ---
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canViewListReturnsTrueWhenGranted(): void
     {
-        $this->security->method('isGranted')
+        $this->security->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_INDEX, 'Product')
             ->willReturn(true);
 
         $this->assertTrue($this->service->canViewList('Product'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canViewListReturnsFalseWhenDenied(): void
     {
-        $this->security->method('isGranted')
+        $this->security->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_INDEX, 'Product')
             ->willReturn(false);
 
         $this->assertFalse($this->service->canViewList('Product'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canViewListUsesAdminIndexVoterAttribute(): void
     {
         $this->security->expects($this->once())

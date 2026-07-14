@@ -6,15 +6,21 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
-use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
-class EntityListBatchServiceTest extends TestCase
+#[Group('entity-list')]
+#[Group('batch')]
+#[AllowMockObjectsWithoutExpectations]
+final class EntityListBatchServiceTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
     private EntityManagerInterface $em;
@@ -35,14 +41,12 @@ class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function batchDeleteThrowsExceptionWhenDataSourceDoesNotSupportBatchDelete(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */
         $dataSource = $this->createMock(DataSourceInterface::class);
-        $dataSource->method('supportsAction')
+        $dataSource->expects($this->once())->method('supportsAction')
             ->with('batch_delete')
             ->willReturn(false);
 
@@ -57,18 +61,16 @@ class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function batchDeleteThrowsExceptionWhenPermissionDenied(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */
         $dataSource = $this->createMock(DataSourceInterface::class);
-        $dataSource->method('supportsAction')
+        $dataSource->expects($this->once())->method('supportsAction')
             ->with('batch_delete')
             ->willReturn(true);
 
-        $this->permissionService->method('canBatchDelete')
+        $this->permissionService->expects($this->once())->method('canBatchDelete')
             ->with('App\\Entity\\TestEntity', 'TestEntity')
             ->willReturn(false);
 
@@ -83,14 +85,12 @@ class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function batchDeleteThrowsExceptionForNonDoctrineDataSource(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */
         $dataSource = $this->createMock(DataSourceInterface::class);
-        $dataSource->method('supportsAction')
+        $dataSource->expects($this->once())->method('supportsAction')
             ->with('batch_delete')
             ->willReturn(true);
 
@@ -108,13 +108,11 @@ class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function batchDeleteDoesNothingWithEmptyIds(): void
     {
         $doctrineDataSource = $this->createDoctrineDataSourceMock();
-        $doctrineDataSource->method('supportsAction')
+        $doctrineDataSource->expects($this->once())->method('supportsAction')
             ->with('batch_delete')
             ->willReturn(true);
         $doctrineDataSource->method('getEntityClass')
@@ -136,16 +134,14 @@ class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function batchDeleteRemovesEntities(): void
     {
         $entity1 = new \stdClass();
         $entity2 = new \stdClass();
 
         $doctrineDataSource = $this->createDoctrineDataSourceMock();
-        $doctrineDataSource->method('supportsAction')
+        $doctrineDataSource->expects($this->once())->method('supportsAction')
             ->with('batch_delete')
             ->willReturn(true);
         $doctrineDataSource->method('getEntityClass')
@@ -156,13 +152,13 @@ class EntityListBatchServiceTest extends TestCase
 
         /** @var EntityRepository<object>&MockObject $repository */
         $repository = $this->createMock(EntityRepository::class);
-        $repository->method('find')
+        $repository->expects($this->atLeast(2))->method('find')
             ->willReturnMap([
                 [1, null, null, $entity1],
                 [2, null, null, $entity2],
             ]);
 
-        $this->em->method('getRepository')
+        $this->em->expects($this->once())->method('getRepository')
             ->with('App\\Entity\\TestEntity')
             ->willReturn($repository);
 
@@ -182,15 +178,13 @@ class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function batchDeleteSkipsNullEntities(): void
     {
         $entity1 = new \stdClass();
 
         $doctrineDataSource = $this->createDoctrineDataSourceMock();
-        $doctrineDataSource->method('supportsAction')
+        $doctrineDataSource->expects($this->once())->method('supportsAction')
             ->with('batch_delete')
             ->willReturn(true);
         $doctrineDataSource->method('getEntityClass')
@@ -201,7 +195,7 @@ class EntityListBatchServiceTest extends TestCase
 
         /** @var EntityRepository<object>&MockObject $repository */
         $repository = $this->createMock(EntityRepository::class);
-        $repository->method('find')
+        $repository->expects($this->atLeast(2))->method('find')
             ->willReturnMap([
                 [1, null, null, $entity1],
                 [999, null, null, null], // Entity not found
@@ -225,9 +219,7 @@ class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityIdsReturnsArrayOfIds(): void
     {
         $entity1 = new \stdClass();
@@ -235,7 +227,7 @@ class EntityListBatchServiceTest extends TestCase
 
         /** @var DataSourceInterface&MockObject $dataSource */
         $dataSource = $this->createMock(DataSourceInterface::class);
-        $dataSource->method('getItemId')
+        $dataSource->expects($this->atLeast(2))->method('getItemId')
             ->willReturnMap([
                 [$entity1, 1],
                 [$entity2, 2],
@@ -246,29 +238,25 @@ class EntityListBatchServiceTest extends TestCase
         $this->assertSame([1, 2], $ids);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityIdsReturnsEmptyArrayForEmptyEntities(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */
-        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource = $this->createStub(DataSourceInterface::class);
 
         $ids = $this->service->getEntityIds([], $dataSource);
 
         $this->assertSame([], $ids);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getEntityIdsHandlesStringIds(): void
     {
         $entity1 = new \stdClass();
 
         /** @var DataSourceInterface&MockObject $dataSource */
         $dataSource = $this->createMock(DataSourceInterface::class);
-        $dataSource->method('getItemId')
+        $dataSource->expects($this->once())->method('getItemId')
             ->with($entity1)
             ->willReturn('uuid-123-456');
 

@@ -6,14 +6,15 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminAction;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group row-actions
  */
-class AdminActionTest extends TestCase
+final class AdminActionTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function itCreatesAttributeWithRequiredFieldsOnly(): void
     {
         $action = new AdminAction(name: 'duplicate', label: 'Duplicate');
@@ -36,7 +37,7 @@ class AdminActionTest extends TestCase
         $this->assertFalse($action->override);
     }
 
-    /** @test */
+    #[Test]
     public function itAcceptsStringExpressionCondition(): void
     {
         $action = new AdminAction(
@@ -48,7 +49,7 @@ class AdminActionTest extends TestCase
         $this->assertSame('entity.status == "pending"', $action->condition);
     }
 
-    /** @test */
+    #[Test]
     public function itCreatesAttributeWithAllFields(): void
     {
         $action = new AdminAction(
@@ -76,25 +77,25 @@ class AdminActionTest extends TestCase
         $this->assertTrue($action->override);
     }
 
-    /** @test */
+    #[Test]
     public function itIsRepeatableAttribute(): void
     {
         $reflection = new \ReflectionClass(AdminAction::class);
         $attrInstance = $reflection->getAttributes(Attribute::class)[0]->newInstance();
 
-        $this->assertTrue(($attrInstance->flags & Attribute::IS_REPEATABLE) !== 0);
+        $this->assertNotSame(0, $attrInstance->flags & Attribute::IS_REPEATABLE);
     }
 
-    /** @test */
+    #[Test]
     public function itTargetsClasses(): void
     {
         $reflection = new \ReflectionClass(AdminAction::class);
         $attrInstance = $reflection->getAttributes(Attribute::class)[0]->newInstance();
 
-        $this->assertTrue(($attrInstance->flags & Attribute::TARGET_CLASS) !== 0);
+        $this->assertNotSame(0, $attrInstance->flags & Attribute::TARGET_CLASS);
     }
 
-    /** @test */
+    #[Test]
     public function conditionTypeIsFlexible(): void
     {
         // Both forms must be accepted without type errors

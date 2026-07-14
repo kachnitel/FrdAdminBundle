@@ -16,7 +16,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
  *
  * @group archive
  */
-class EntityListArchiveRowActionTest extends ComponentTestCase
+final class EntityListArchiveRowActionTest extends ComponentTestCase
 {
     public function testArchiveButtonAppearsForNonArchivedEntity(): void
     {

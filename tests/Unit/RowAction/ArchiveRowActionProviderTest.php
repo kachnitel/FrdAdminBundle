@@ -11,19 +11,20 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group archive
- * @covers \Kachnitel\AdminBundle\RowAction\ArchiveRowActionProvider
- */
 #[CoversClass(ArchiveRowActionProvider::class)]
 #[UsesClass(ArchiveConfig::class)]
 #[UsesClass(RowAction::class)]
-class ArchiveRowActionProviderTest extends TestCase
+#[Group('archive')]
+#[AllowMockObjectsWithoutExpectations]
+final class ArchiveRowActionProviderTest extends TestCase
 {
     /** @var ArchiveService&MockObject */
     private ArchiveService $archiveService;
@@ -41,7 +42,7 @@ class ArchiveRowActionProviderTest extends TestCase
         return new ArchiveConfig($expression, 'archived', 'boolean', null);
     }
 
-    /** @test */
+    #[Test]
     public function supportsEntityWhenArchiveIsConfigured(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig());
@@ -49,7 +50,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertTrue($this->provider->supports(TestEntity::class));
     }
 
-    /** @test */
+    #[Test]
     public function doesNotSupportEntityWhenArchiveNotConfigured(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn(null);
@@ -57,7 +58,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertFalse($this->provider->supports(TestEntity::class));
     }
 
-    /** @test */
+    #[Test]
     public function providesTwoActionsArchiveAndUnarchive(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig());
@@ -70,7 +71,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertContains('unarchive', $names);
     }
 
-    /** @test */
+    #[Test]
     public function returnsEmptyActionsWhenConfigIsNull(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn(null);
@@ -78,7 +79,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertSame([], $this->provider->getActions(TestEntity::class));
     }
 
-    /** @test */
+    #[Test]
     public function archiveActionRequiresAdminArchiveVoterAttribute(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig());
@@ -90,7 +91,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertSame(AdminEntityVoter::ADMIN_ARCHIVE, $archive->voterAttribute);
     }
 
-    /** @test */
+    #[Test]
     public function unarchiveActionRequiresAdminArchiveVoterAttribute(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig());
@@ -102,7 +103,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertSame(AdminEntityVoter::ADMIN_ARCHIVE, $unarchive->voterAttribute);
     }
 
-    /** @test */
+    #[Test]
     public function archiveActionUsesPostMethod(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig());
@@ -114,7 +115,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertSame('POST', $archive->method);
     }
 
-    /** @test */
+    #[Test]
     public function unarchiveActionUsesPostMethod(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig());
@@ -126,7 +127,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertSame('POST', $unarchive->method);
     }
 
-    /** @test */
+    #[Test]
     public function archiveConditionIsNegationOfArchiveExpression(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig('item.archived'));
@@ -139,7 +140,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertSame('!(item.archived)', $archive->condition);
     }
 
-    /** @test */
+    #[Test]
     public function unarchiveConditionIsTheArchiveExpression(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig('item.archived'));
@@ -152,7 +153,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertSame('item.archived', $unarchive->condition);
     }
 
-    /** @test */
+    #[Test]
     public function conditionsAdaptToCustomArchiveExpression(): void
     {
         $this->archiveService->method('resolveConfig')
@@ -170,7 +171,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertSame('item.deletedAt', $unarchive->condition);
     }
 
-    /** @test */
+    #[Test]
     public function archiveActionHasConfirmMessage(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig());
@@ -182,7 +183,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertNotNull($archive->confirmMessage);
     }
 
-    /** @test */
+    #[Test]
     public function archiveActionHasPriorityBetweenEditAndCustomActions(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn($this->makeConfig());
@@ -195,7 +196,7 @@ class ArchiveRowActionProviderTest extends TestCase
         $this->assertLessThan(100, $archive->priority);
     }
 
-    /** @test */
+    #[Test]
     public function getPriorityIsGreaterThanZero(): void
     {
         $this->assertGreaterThan(0, $this->provider->getPriority());

@@ -7,23 +7,25 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Security;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
 
-class AdminEntityVoterTest extends TestCase
+
+#[Group('voter')]
+#[AllowMockObjectsWithoutExpectations]
+final class AdminEntityVoterTest extends TestCase
 {
     /** @var EntityDiscoveryService&MockObject */
     private EntityDiscoveryService $entityDiscovery;
 
     /** @var TokenInterface&MockObject */
     private TokenInterface $token;
-
-    /** @var UserInterface&MockObject */
-    private UserInterface $user;
 
     /** @var AccessDecisionManagerInterface&MockObject */
     private AccessDecisionManagerInterface $decisionManager;
@@ -32,7 +34,6 @@ class AdminEntityVoterTest extends TestCase
     {
         $this->entityDiscovery = $this->createMock(EntityDiscoveryService::class);
         $this->token           = $this->createMock(TokenInterface::class);
-        $this->user            = $this->createMock(UserInterface::class);
         $this->decisionManager = $this->createMock(AccessDecisionManagerInterface::class);
     }
 
@@ -55,12 +56,12 @@ class AdminEntityVoterTest extends TestCase
      */
     private function stubAuthenticatedUser(string ...$roles): void
     {
-        $this->token->method('getUser')->willReturn($this->user);
+        $this->token->method('getUser')->willReturn($this->createStub(\Symfony\Component\Security\Core\User\UserInterface::class));
         $this->token->method('getRoleNames')->willReturn($roles);
 
         // Tell the decision manager to return true if it's asked for any of these roles
         $this->decisionManager->method('decide')
-            ->willReturnCallback(fn($token, $attributes) => count(array_intersect($attributes, $roles)) > 0);
+            ->willReturnCallback(fn($token, array $attributes): bool => count(array_intersect($attributes, $roles)) > 0);
     }
 
     // -------------------------------------------------------------------------
@@ -87,9 +88,7 @@ class AdminEntityVoterTest extends TestCase
     // All five ADMIN_* attributes are evaluated (not just INDEX)
     // -------------------------------------------------------------------------
 
-    /**
-     * @dataProvider allAdminAttributesProvider
-     */
+    #[DataProvider( 'allAdminAttributesProvider')]
     public function testAllAdminAttributesGrantAccessWhenRoleMatches(string $attribute): void
     {
         $this->stubDiscovery();
@@ -99,9 +98,7 @@ class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
-    /**
-     * @dataProvider allAdminAttributesProvider
-     */
+    #[DataProvider('allAdminAttributesProvider')]
     public function testAllAdminAttributesDenyAccessWhenRoleMissing(string $attribute): void
     {
         $this->stubDiscovery();
@@ -112,16 +109,14 @@ class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
 
-    /** @return array<string, array{string}> */
-    public static function allAdminAttributesProvider(): array
+    /** @return \Iterator<string, array{string}> */
+    public static function allAdminAttributesProvider(): \Iterator
     {
-        return [
-            'ADMIN_INDEX'  => [AdminEntityVoter::ADMIN_INDEX],
-            'ADMIN_SHOW'   => [AdminEntityVoter::ADMIN_SHOW],
-            'ADMIN_NEW'    => [AdminEntityVoter::ADMIN_NEW],
-            'ADMIN_EDIT'   => [AdminEntityVoter::ADMIN_EDIT],
-            'ADMIN_DELETE' => [AdminEntityVoter::ADMIN_DELETE],
-        ];
+        yield 'ADMIN_INDEX' => [AdminEntityVoter::ADMIN_INDEX];
+        yield 'ADMIN_SHOW' => [AdminEntityVoter::ADMIN_SHOW];
+        yield 'ADMIN_NEW' => [AdminEntityVoter::ADMIN_NEW];
+        yield 'ADMIN_EDIT' => [AdminEntityVoter::ADMIN_EDIT];
+        yield 'ADMIN_DELETE' => [AdminEntityVoter::ADMIN_DELETE];
     }
 
     // -------------------------------------------------------------------------
@@ -227,7 +222,7 @@ class AdminEntityVoterTest extends TestCase
     {
         // Entity requires ROLE_EDITOR
         $this->stubDiscovery(new Admin(permissions: ['edit' => 'ROLE_EDITOR']));
-        $this->token->method('getUser')->willReturn($this->user);
+        $this->token->method('getUser')->willReturn($this->createStub(\Symfony\Component\Security\Core\User\UserInterface::class));
 
         // Verify that decisionManager is called with specifically 'ROLE_EDITOR'
         $this->decisionManager->expects($this->once())
@@ -269,9 +264,9 @@ class AdminEntityVoterTest extends TestCase
         // Instead of mocking the hierarchy, we simply tell the DecisionManager
         // that SUPER_EDITOR is allowed to perform roles that standard users aren't.
         $this->stubDiscovery(new Admin(permissions: ['edit' => 'ROLE_EDITOR']));
-        $this->token->method('getUser')->willReturn($this->user);
+        $this->token->method('getUser')->willReturn($this->createStub(\Symfony\Component\Security\Core\User\UserInterface::class));
 
-        $this->decisionManager->method('decide')
+        $this->decisionManager->expects($this->once())->method('decide')
             ->with($this->token, ['ROLE_EDITOR'])
             ->willReturn(true);
 

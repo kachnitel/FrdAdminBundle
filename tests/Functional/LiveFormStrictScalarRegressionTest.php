@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Tests\Fixtures\RequiredFieldsStrictEntity;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
+use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -50,7 +51,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * @group live-form-defaults
  * @group strict-nullability
  */
-class LiveFormStrictScalarRegressionTest extends ComponentTestCase
+final class LiveFormStrictScalarRegressionTest extends ComponentTestCase
 {
     private const FORM_NAME = 'dynamic_entity_form';
 
@@ -95,13 +96,12 @@ class LiveFormStrictScalarRegressionTest extends ComponentTestCase
     // ── Surface 1: initial mount/render, before any submission ────────────────
 
     /**
-     * @test
-     *
      * Open question this test exists to answer, not a confirmed reproduction:
      * does DataMapper::mapDataToForms() reading the never-set $qty off a
      * freshly-constructed entity crash on its own, independently of
      * empty_data and independently of submitFormOnRender()?
      */
+    #[Test]
     public function newFormMountAndFirstRenderDoesNotCrash(): void
     {
         $component = $this->mountNewForm();
@@ -117,8 +117,6 @@ class LiveFormStrictScalarRegressionTest extends ComponentTestCase
     // ── Surface 2: the confirmed production crash ──────────────────────────────
 
     /**
-     * @test
-     *
      * Mirrors the actual trigger: the LiveComponent client echoes back every
      * field's current value on each model update, including fields the user
      * hasn't touched yet. Editing "name" resubmits the whole form —
@@ -126,6 +124,7 @@ class LiveFormStrictScalarRegressionTest extends ComponentTestCase
      * still-blank "qty" field's empty_data currently resolves to null against
      * a property typed `int`, not `?int`.
      */
+    #[Test]
     public function editingAnotherFieldWhileRequiredScalarIsBlankDoesNotCrash(): void
     {
         $component = $this->mountNewForm();
@@ -146,12 +145,11 @@ class LiveFormStrictScalarRegressionTest extends ComponentTestCase
     // ── Control: a real value still works ──────────────────────────────────────
 
     /**
-     * @test
-     *
      * Baseline, not itself testing the bug: guards against a fix that
      * "solves" the crash by also breaking normal submission of a value the
      * user actually provided.
-     */
+    */
+    #[Test]
     public function savingWithAnExplicitValuePersistsCorrectly(): void
     {
         $component = $this->mountNewForm();

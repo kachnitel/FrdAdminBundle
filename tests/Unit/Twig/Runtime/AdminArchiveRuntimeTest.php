@@ -9,17 +9,20 @@ use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminArchiveRuntime;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group archive
- * @covers \Kachnitel\AdminBundle\Twig\Runtime\AdminArchiveRuntime
- */
+#[Group('archive')]
+#[CoversClass(AdminArchiveRuntime::class)]
 #[UsesClass(ObjectHelper::class)]
 #[UsesClass(ArchiveConfig::class)]
-class AdminArchiveRuntimeTest extends TestCase
+#[AllowMockObjectsWithoutExpectations]
+final class AdminArchiveRuntimeTest extends TestCase
 {
     /** @var ArchiveService&MockObject */
     private ArchiveService $archiveService;
@@ -42,19 +45,19 @@ class AdminArchiveRuntimeTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function isArchivedReturnsTrueWhenArchiveServiceConfirms(): void
     {
         $entity = new \stdClass();
         $config = $this->makeConfig();
 
         $this->archiveService->method('resolveConfig')->willReturn($config);
-        $this->archiveService->method('isArchived')->with($entity, $config->expression)->willReturn(true);
+        $this->archiveService->expects($this->once())->method('isArchived')->with($entity, $config->expression)->willReturn(true);
 
         $this->assertTrue($this->runtime->isArchived($entity));
     }
 
-    /** @test */
+    #[Test]
     public function isArchivedReturnsFalseWhenNotArchived(): void
     {
         $entity = new \stdClass();
@@ -66,7 +69,7 @@ class AdminArchiveRuntimeTest extends TestCase
         $this->assertFalse($this->runtime->isArchived($entity));
     }
 
-    /** @test */
+    #[Test]
     public function isArchivedReturnsFalseWhenNoConfigForEntity(): void
     {
         $entity = new \stdClass();
@@ -77,7 +80,7 @@ class AdminArchiveRuntimeTest extends TestCase
         $this->assertFalse($this->runtime->isArchived($entity));
     }
 
-    /** @test */
+    #[Test]
     public function isArchivedUnwrapsDoctrineProxy(): void
     {
         // Doctrine proxies extend the real entity class; resolveConfig should
@@ -100,7 +103,7 @@ class AdminArchiveRuntimeTest extends TestCase
         $this->runtime->isArchived($proxyEntity);
     }
 
-    /** @test */
+    #[Test]
     public function isArchivedPassesExpressionStringToService(): void
     {
         $entity = new \stdClass();

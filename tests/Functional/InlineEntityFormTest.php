@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
+use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -35,7 +36,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * @group inline-add
  * @group admin-entity-form
  */
-class InlineEntityFormTest extends ComponentTestCase
+final class InlineEntityFormTest extends ComponentTestCase
 {
     private const FORM_NAME = 'inline_kachnitel_adminbundle_tests_fixtures_testentity';
 
@@ -66,9 +67,7 @@ class InlineEntityFormTest extends ComponentTestCase
 
     // ── Render ────────────────────────────────────────────────────────────────
 
-    /**
-     * @test
-     */
+    #[Test]
     public function formRendersWithFormElementAndSaveButton(): void
     {
         $rendered = (string) $this->mountForm()->render();
@@ -79,26 +78,14 @@ class InlineEntityFormTest extends ComponentTestCase
         $this->assertStringContainsString('data-live-action-param="save"', $rendered);
     }
 
-    /**
-     * @test
-     *
-     * The inline form must NOT carry data-admin-form, so the page-header
-     * K:Admin:Action:Save button cannot accidentally trigger inline saves.
-     */
-    public function formRootDoesNotHaveDataAdminFormAttribute(): void
+    public function testFormRootDoesNotHaveDataAdminFormAttribute(): void
     {
         $rendered = (string) $this->mountForm()->render();
 
         $this->assertStringNotContainsString('data-admin-form', $rendered);
     }
 
-    /**
-     * @test
-     *
-     * The inline form name must start with 'inline_' so that its HTML id
-     * attributes are distinct from those of the parent page form.
-     */
-    public function formFieldIdsArePrefixedWithInline(): void
+    public function testFormFieldIdsArePrefixedWithInline(): void
     {
         $rendered = (string) $this->mountForm()->render();
 
@@ -107,9 +94,7 @@ class InlineEntityFormTest extends ComponentTestCase
 
     // ── Save: valid data ──────────────────────────────────────────────────────
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveWithValidDataCreatesEntity(): void
     {
         $component = $this->mountForm();
@@ -121,9 +106,7 @@ class InlineEntityFormTest extends ComponentTestCase
         $this->assertCount(1, $entities);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function savedEntityHasPositiveId(): void
     {
         $component = $this->mountForm();
@@ -139,9 +122,7 @@ class InlineEntityFormTest extends ComponentTestCase
 
     // ── Save: invalid data ────────────────────────────────────────────────────
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveWithBlankNameShowsValidationError(): void
     {
         $component = $this->mountForm();
@@ -153,9 +134,7 @@ class InlineEntityFormTest extends ComponentTestCase
         $this->assertStringContainsString('Name is required.', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function saveWithBlankNameDoesNotInsertRow(): void
     {
         $component = $this->mountForm();
@@ -167,13 +146,7 @@ class InlineEntityFormTest extends ComponentTestCase
         $this->assertCount(0, $all);
     }
 
-    /**
-     * @test
-     *
-     * After a failed save the Save button must still be present so the
-     * user can correct the errors and retry.
-     */
-    public function saveButtonRemainsVisibleAfterValidationFailure(): void
+    public function testSaveButtonRemainsVisibleAfterValidationFailure(): void
     {
         $component = $this->mountForm();
 

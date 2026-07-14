@@ -9,10 +9,17 @@ use Kachnitel\DataSourceContracts\DataSourceProviderInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class DataSourceRegistryTest extends TestCase
+
+#[CoversClass(DataSourceRegistry::class)]
+#[Group('data-source')]
+#[AllowMockObjectsWithoutExpectations]
+final class DataSourceRegistryTest extends TestCase
 {
     /** @var DoctrineDataSourceFactory&MockObject */
     private DoctrineDataSourceFactory $doctrineFactory;
@@ -186,7 +193,7 @@ class DataSourceRegistryTest extends TestCase
 
         $registry = new DataSourceRegistry([], [], $this->doctrineFactory);
 
-        $this->assertNull($registry->get('NonExistent'));
+        $this->assertNotInstanceOf(\Kachnitel\DataSourceContracts\DataSourceInterface::class, $registry->get('NonExistent'));
     }
 
     public function testHasReturnsTrueForExistingIdentifier(): void
@@ -293,10 +300,10 @@ class DataSourceRegistryTest extends TestCase
 
     public function testResolveByEntityClassFallback(): void
     {
-        $doctrineDs = $this->createMock(DoctrineDataSource::class);
+        $doctrineDs = $this->createStub(DoctrineDataSource::class);
 
         $this->doctrineFactory->method('createAll')->willReturn([]);
-        $this->doctrineFactory->method('createForClass')
+        $this->doctrineFactory->expects($this->once())->method('createForClass')
             ->with('App\Entity\Product')
             ->willReturn($doctrineDs);
 

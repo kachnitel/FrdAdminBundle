@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Twig\Components\EnumMultiFilter;
+use PHPUnit\Framework\Attributes\Test;
 
-class EnumMultiFilterComponentTest extends ComponentTestCase
+final class EnumMultiFilterComponentTest extends ComponentTestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function deserializeValueParsesJsonArray(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -27,9 +26,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame(['pending', 'approved'], $component->selectedValues);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function deserializeValueHandlesEmptyValue(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -46,9 +43,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame([], $component->selectedValues);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function deserializeValueFallsBackToSingleValueForNonJson(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -65,9 +60,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame(['pending'], $component->selectedValues);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function onSelectedValuesUpdatedSerializesToJson(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -86,9 +79,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame('["pending","approved"]', $component->value);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function onSelectedValuesUpdatedSetsEmptyStringWhenNoSelection(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -107,9 +98,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame('', $component->value);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function clearResetsState(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -129,9 +118,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame([], $component->selectedValues);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getChoicesReturnsEnumCasesWhenEnumClass(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -149,9 +136,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame(['active' => 'ACTIVE', 'inactive' => 'INACTIVE', 'archived' => 'ARCHIVED'], $choices);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getChoicesReturnsOptionsWhenNoEnumClass(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -171,9 +156,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function rendersWithStringOptions(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -191,9 +174,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertStringContainsString('food', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function selectionWorksWithStringOptions(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -212,9 +193,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame('["electronics","food"]', $component->value);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function clearWorksWithStringOptions(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -234,9 +213,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame([], $component->selectedValues);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function rendersWithEnumClassOptions(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -254,9 +231,7 @@ class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertStringContainsString('INACTIVE', $rendered);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function rendersSelectedCheckboxesAsChecked(): void
     {
         $testComponent = $this->createLiveComponent(

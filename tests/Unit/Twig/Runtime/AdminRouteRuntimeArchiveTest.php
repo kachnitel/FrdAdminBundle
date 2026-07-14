@@ -9,7 +9,10 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -33,7 +36,9 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 #[CoversClass(AdminRouteRuntime::class)]
 #[UsesClass(ActionAccessibilityChecker::class)]
 #[UsesClass(AdminRoutes::class)]
-class AdminRouteRuntimeArchiveTest extends TestCase
+#[Group('archive')]
+#[AllowMockObjectsWithoutExpectations]
+final class AdminRouteRuntimeArchiveTest extends TestCase
 {
     /** @var RouterInterface&MockObject */
     private RouterInterface $router;
@@ -78,39 +83,38 @@ class AdminRouteRuntimeArchiveTest extends TestCase
 
     private function stubRouteCollection(string $routeName): void
     {
-        $route = $this->createMock(Route::class);
         $collection = new RouteCollection();
-        $collection->add($routeName, $route);
+        $collection->add($routeName, $this->createStub(Route::class));
         $this->router->method('getRouteCollection')->willReturn($collection);
     }
 
     // ── hasRoute ─────────────────────────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function hasRouteReturnsTrueForArchiveAction(): void
     {
         $this->assertTrue($this->makeRuntime()->hasRoute('Product', 'archive'));
     }
 
-    /** @test */
+    #[Test]
     public function hasRouteReturnsTrueForUnarchiveAction(): void
     {
         $this->assertTrue($this->makeRuntime()->hasRoute('Product', 'unarchive'));
     }
 
-    /** @test */
+    #[Test]
     public function getRouteReturnsGenericArchiveRoute(): void
     {
         $this->assertSame('app_admin_entity_archive', $this->makeRuntime()->getRoute('Product', 'archive'));
     }
 
-    /** @test */
+    #[Test]
     public function getRouteReturnsGenericUnarchiveRoute(): void
     {
         $this->assertSame('app_admin_entity_unarchive', $this->makeRuntime()->getRoute('Product', 'unarchive'));
     }
 
-    /** @test */
+    #[Test]
     public function getRouteReturnsCustomArchiveRouteWhenConfigured(): void
     {
         $routes = new AdminRoutes(['archive' => 'app_product_archive']);
@@ -122,59 +126,59 @@ class AdminRouteRuntimeArchiveTest extends TestCase
 
     // ── isActionAccessible for archive ────────────────────────────────────────
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueForArchiveWhenRouteExistsAndGranted(): void
     {
         $this->stubRouteCollection('app_admin_entity_archive');
 
         $this->authChecker
-            ->method('isGranted')
+            ->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_ARCHIVE, 'Product')
             ->willReturn(true);
 
         $this->assertTrue($this->makeRuntime()->isActionAccessible('Product', 'archive'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsFalseForArchiveWhenDenied(): void
     {
         $this->stubRouteCollection('app_admin_entity_archive');
 
         $this->authChecker
-            ->method('isGranted')
+            ->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_ARCHIVE, 'Product')
             ->willReturn(false);
 
         $this->assertFalse($this->makeRuntime()->isActionAccessible('Product', 'archive'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueForUnarchiveWhenRouteExistsAndGranted(): void
     {
         $this->stubRouteCollection('app_admin_entity_unarchive');
 
         $this->authChecker
-            ->method('isGranted')
+            ->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_ARCHIVE, 'Product')
             ->willReturn(true);
 
         $this->assertTrue($this->makeRuntime()->isActionAccessible('Product', 'unarchive'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsFalseForUnarchiveWhenVoterDenies(): void
     {
         $this->stubRouteCollection('app_admin_entity_unarchive');
 
         $this->authChecker
-            ->method('isGranted')
+            ->expects($this->once())->method('isGranted')
             ->with(AdminEntityVoter::ADMIN_ARCHIVE, 'Product')
             ->willReturn(false);
 
         $this->assertFalse($this->makeRuntime()->isActionAccessible('Product', 'unarchive'));
     }
 
-    /** @test */
+    #[Test]
     public function voterIsCalledWithAdminArchiveNotLowercasedString(): void
     {
         $this->stubRouteCollection('app_admin_entity_archive');
@@ -191,7 +195,7 @@ class AdminRouteRuntimeArchiveTest extends TestCase
         $this->makeRuntime()->isActionAccessible('Product', 'archive');
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsTrueForArchiveWithNoAuthChecker(): void
     {
         $this->stubRouteCollection('app_admin_entity_archive');
@@ -199,7 +203,7 @@ class AdminRouteRuntimeArchiveTest extends TestCase
         $this->assertTrue($this->makeRuntime(null)->isActionAccessible('Product', 'archive'));
     }
 
-    /** @test */
+    #[Test]
     public function isActionAccessibleReturnsFalseWhenArchiveRouteDoesNotExist(): void
     {
         $this->router->method('getRouteCollection')->willReturn(new RouteCollection());

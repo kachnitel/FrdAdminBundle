@@ -6,14 +6,13 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service\Filter;
 
 use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Service\Filter\EnumFilter;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class EnumFilterTest extends TestCase
+final class EnumFilterTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorInitializesNameAndLabel(): void
     {
         $filter = new EnumFilter('status', 'Status', 'status', TestStatus::class);
@@ -22,9 +21,7 @@ class EnumFilterTest extends TestCase
         $this->assertSame('Status', $filter->getLabel());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorSetsTypeToSelect(): void
     {
         $filter = new EnumFilter('status', 'Status', 'status', TestStatus::class);
@@ -32,9 +29,7 @@ class EnumFilterTest extends TestCase
         $this->assertSame('select', $filter->getType());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorExtractsOptionsFromBackedEnum(): void
     {
         $filter = new EnumFilter('status', 'Status', 'status', TestStatus::class);
@@ -45,9 +40,7 @@ class EnumFilterTest extends TestCase
         $this->assertArrayHasKey('pending', $options);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorUsesEnumNameAsOptionValue(): void
     {
         $filter = new EnumFilter('status', 'Status', 'status', TestStatus::class);
@@ -59,9 +52,7 @@ class EnumFilterTest extends TestCase
         $this->assertSame('Pending', $options['pending']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorUsesDisplayValueMethodIfAvailable(): void
     {
         $filter = new EnumFilter('status', 'Status', 'status', TestStatusWithDisplayValue::class);
@@ -71,9 +62,7 @@ class EnumFilterTest extends TestCase
         $this->assertSame('Inactive Status', $options['inactive']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorHandlesUnitEnum(): void
     {
         $filter = new EnumFilter('priority', 'Priority', 'priority', TestPriority::class);
@@ -85,9 +74,7 @@ class EnumFilterTest extends TestCase
         $this->assertArrayHasKey('High', $options);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorReturnsEmptyOptionsForNonExistentEnum(): void
     {
         $filter = new EnumFilter('field', 'Label', 'field', 'NonExistent\\Enum\\Class');
@@ -96,9 +83,7 @@ class EnumFilterTest extends TestCase
         $this->assertEmpty($options);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyAddsWhereClause(): void
     {
         $filter = new EnumFilter('status', 'Status', 'status', TestStatus::class);
@@ -117,9 +102,7 @@ class EnumFilterTest extends TestCase
         $filter->apply($qb, 'active');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyHandlesDottedFieldNames(): void
     {
         $filter = new EnumFilter('category_status', 'Category Status', 'category.status', TestStatus::class);
@@ -138,9 +121,7 @@ class EnumFilterTest extends TestCase
         $filter->apply($qb, 'pending');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyWithIntegerBackedEnum(): void
     {
         $filter = new EnumFilter('level', 'Level', 'level', TestLevel::class);

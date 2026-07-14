@@ -20,7 +20,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
  *
  * @group nested-filter
  */
-class FilterNestedRelationTest extends ComponentTestCase
+final class FilterNestedRelationTest extends ComponentTestCase
 {
     protected function setUp(): void
     {

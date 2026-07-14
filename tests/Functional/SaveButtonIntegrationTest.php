@@ -34,7 +34,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * @group save-button
  */
 #[Group('save-button')]
-class SaveButtonIntegrationTest extends ComponentTestCase
+final class SaveButtonIntegrationTest extends ComponentTestCase
 {
     private const FORM_NAME = 'test_entity_form';
 
@@ -113,7 +113,7 @@ class SaveButtonIntegrationTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertNotNull($reloaded);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
         $this->assertSame('Keep Me', $reloaded->getName());
     }
 
@@ -129,7 +129,7 @@ class SaveButtonIntegrationTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertNotNull($reloaded);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
         $this->assertSame('After', $reloaded->getName());
     }
 
@@ -149,7 +149,7 @@ class SaveButtonIntegrationTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertNotNull($reloaded);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
         $this->assertSame('Touched', $reloaded->getName());
     }
 
@@ -187,7 +187,7 @@ class SaveButtonIntegrationTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertNotNull($reloaded);
+        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
         $this->assertSame('Fixed', $reloaded->getName());
     }
 
