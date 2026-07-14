@@ -33,6 +33,6 @@ class DashboardPermissionTestKernel extends TestKernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir() . '/kachnitel-admin-bundle-test/cache-dashboard-perm';
+        return ParatestCacheDir::resolve('cache-dashboard-perm');
     }
 }

@@ -190,11 +190,11 @@ class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir() . '/kachnitel-admin-bundle-test/cache';
+        return ParatestCacheDir::resolve('cache');
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir() . '/kachnitel-admin-bundle-test/logs';
+        return ParatestCacheDir::resolve('logs');
     }
 }
