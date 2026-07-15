@@ -129,12 +129,18 @@ services:
             $entityNamespace: '%kachnitel_admin.entity_namespace%'
             $formNamespace: '%kachnitel_admin.form_namespace%'
             $formSuffix: '%kachnitel_admin.form_suffix%'
-            $dataSourceRegistry: '@Kachnitel\AdminBundle\DataSource\DataSourceRegistry'
             $formRegistry: '@form.registry'
             $routePrefix: '%kachnitel_admin.route_prefix%'
             $dashboardRoute: '%kachnitel_admin.dashboard_route%'
             $requiredRole: '%kachnitel_admin.required_role%'
         tags: ['controller.service_arguments']
+
+    Kachnitel\AdminBundle\Controller\DataSourceController:
+        arguments:
+            $entityDiscovery: '@Kachnitel\AdminBundle\Service\EntityDiscoveryService'
+            $dataSourceRegistry: '@Kachnitel\AdminBundle\DataSource\DataSourceRegistry'
+            $entityNamespace: '%kachnitel_admin.entity_namespace%'
+            $requiredRole: '%kachnitel_admin.required_role%'
 
     # Security Voter for entity admin access control
     Kachnitel\AdminBundle\Security\AdminEntityVoter:

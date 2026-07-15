@@ -7,8 +7,6 @@ namespace Kachnitel\AdminBundle\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Archive\ArchiveEntityService;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
-use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
-use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
@@ -38,8 +36,6 @@ use Symfony\Component\Routing\Attribute\Route;
  * Permissions are checked using the AdminEntityVoter which respects:
  * 1. Entity-specific permissions from #[Admin(permissions: [...])]
  * 2. Global required_role configuration (fallback)
- *
- * @SuppressWarnings(TooManyPublicMethods)
  */
 class GenericAdminController extends AbstractAdminController
 {
@@ -49,7 +45,6 @@ class GenericAdminController extends AbstractAdminController
         private readonly string $entityNamespace,
         private readonly string $formNamespace,
         private readonly string $formSuffix,
-        private readonly DataSourceRegistry $dataSourceRegistry,
         private readonly FormRegistryInterface $formRegistry,
         private readonly string $routePrefix = 'app_admin_entity',
         private readonly string $dashboardRoute = 'app_admin_dashboard',
@@ -122,58 +117,6 @@ class GenericAdminController extends AbstractAdminController
         // Non-Doctrine data source — return the custom type string as-is.
         // AdminEntityForm will surface a clear error if the type is not registered.
         return $customType;
-    }
-
-    /**
-     * Dashboard: Lists all supported entities and data sources.
-     */
-    #[Route('/admin', name: 'app_admin_dashboard', methods: ['GET'])]
-    public function dashboard(): Response
-    {
-        $this->checkGlobalPermission();
-
-        $supportedEntities = $this->getSupportedEntities();
-
-        usort($supportedEntities, function ($a, $b): int {
-            $entityClassA = $this->entityDiscovery->resolveEntityClass($a, $this->entityNamespace);
-            $entityClassB = $this->entityDiscovery->resolveEntityClass($b, $this->entityNamespace);
-            $labelA = $entityClassA ? ($this->entityDiscovery->getAdminAttribute($entityClassA)?->getLabel() ?? $a) : $a;
-            $labelB = $entityClassB ? ($this->entityDiscovery->getAdminAttribute($entityClassB)?->getLabel() ?? $b) : $b;
-            return strcasecmp($labelA, $labelB);
-        });
-
-        $supportedEntities = $this->filterAccessibleEntities($supportedEntities);
-
-        $entities = array_map(function (string $entityName): array {
-            $entityClass = $this->entityDiscovery->resolveEntityClass($entityName, $this->entityNamespace);
-            $adminAttr = $entityClass ? $this->entityDiscovery->getAdminAttribute($entityClass) : null;
-
-            return [
-                'name'  => $entityName,
-                'label' => $adminAttr?->getLabel() ?? trim((string) preg_replace('/[A-Z]/', ' $0', $entityName)),
-                'icon'  => $adminAttr?->getIcon(),
-                'slug'  => strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($entityName))),
-                'type'  => 'entity',
-            ];
-        }, $supportedEntities);
-
-        $dataSources = [];
-        foreach ($this->dataSourceRegistry->all() as $identifier => $dataSource) {
-            if ($dataSource instanceof DoctrineDataSource) {
-                continue;
-            }
-            $dataSources[] = [
-                'identifier' => $identifier,
-                'label'      => $dataSource->getLabel(),
-                'icon'       => $dataSource->getIcon(),
-                'type'       => 'datasource',
-            ];
-        }
-
-        return $this->render('@KachnitelAdmin/admin/dashboard.html.twig', [
-            'entities'    => $entities,
-            'dataSources' => $dataSources,
-        ]);
     }
 
     #[Route('/admin/{entitySlug}', name: 'app_admin_entity_index', methods: ['GET'])]
@@ -304,79 +247,12 @@ class GenericAdminController extends AbstractAdminController
         return $this->doDeleteEntity($entityName, $id, $request);
     }
 
-    // ── Data Source Routes ─────────────────────────────────────────────────────
-
-    #[Route('/admin/data/{dataSourceId}', name: 'app_admin_datasource_index', methods: ['GET'], priority: 10)]
-    public function dataSourceIndex(string $dataSourceId): Response
-    {
-        $this->checkGlobalPermission();
-
-        $dataSource = $this->dataSourceRegistry->get($dataSourceId);
-        if (!$dataSource) {
-            throw new NotFoundHttpException(sprintf('Data source "%s" not found.', $dataSourceId));
-        }
-
-        return $this->render('@KachnitelAdmin/admin/datasource_index.html.twig', [
-            'dataSourceId' => $dataSourceId,
-            'dataSource'   => $dataSource,
-        ]);
-    }
-
-    #[Route('/admin/data/{dataSourceId}/{id}', name: 'app_admin_datasource_show', methods: ['GET'], priority: 10)]
-    public function dataSourceShow(string $dataSourceId, string $id): Response
-    {
-        $this->checkGlobalPermission();
-
-        $dataSource = $this->dataSourceRegistry->get($dataSourceId);
-        if (!$dataSource) {
-            throw new NotFoundHttpException(sprintf('Data source "%s" not found.', $dataSourceId));
-        }
-
-        if (!$dataSource->supportsAction('show')) {
-            throw new NotFoundHttpException('This data source does not support showing individual entries.');
-        }
-
-        $item = $dataSource->find($id);
-        if (!$item) {
-            throw new NotFoundHttpException(sprintf('Entry "%s" not found in data source "%s".', $id, $dataSourceId));
-        }
-
-        return $this->render('@KachnitelAdmin/admin/datasource_show.html.twig', [
-            'dataSourceId' => $dataSourceId,
-            'dataSource'   => $dataSource,
-            'item'         => $item,
-        ]);
-    }
-
     // ── Private helpers ────────────────────────────────────────────────────────
-
-    /**
-     * @param array<string> $entityNames
-     * @return array<string>
-     */
-    private function filterAccessibleEntities(array $entityNames): array
-    {
-        if ($this->requiredRole === null) {
-            return $entityNames;
-        }
-
-        return array_values(array_filter(
-            $entityNames,
-            fn (string $name): bool => $this->isGranted(AdminEntityVoter::ADMIN_INDEX, $name)
-        ));
-    }
 
     private function checkEntityPermission(string $attribute, string $entityName): void
     {
         if ($this->requiredRole !== null) {
             $this->denyAccessUnlessGranted($attribute, $entityName);
-        }
-    }
-
-    private function checkGlobalPermission(): void
-    {
-        if ($this->requiredRole !== null) {
-            $this->denyAccessUnlessGranted($this->requiredRole);
         }
     }
 

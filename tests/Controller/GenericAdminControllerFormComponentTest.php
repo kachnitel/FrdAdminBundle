@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
-use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
@@ -46,7 +45,6 @@ final class GenericAdminControllerFormComponentTest extends TestCase
             entityNamespace:  'App\\Entity\\',
             formNamespace:    'App\\Form\\',
             formSuffix:       'FormType',
-            dataSourceRegistry: $this->createStub(DataSourceRegistry::class),
             formRegistry:     $this->formRegistry,
         );
     }

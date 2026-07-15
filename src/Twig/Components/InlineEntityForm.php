@@ -161,37 +161,72 @@ class InlineEntityForm extends AbstractController
      * Mirrors the priority order of the admin_entity_label() Twig function:
      *   getLabel() → getName() → getTitle() → __toString() → #id
      *
+     * Split into tryGetterLabel() / tryToStringLabel() / fallbackIdLabel() so
+     * each step stays under PHPMD's CyclomaticComplexity threshold; this
+     * method itself is now just a null-coalescing pipeline through them.
+     */
+    private function resolveEntityLabel(object $entity): string
+    {
+        return $this->tryGetterLabel($entity)
+            ?? $this->tryToStringLabel($entity)
+            ?? $this->fallbackIdLabel($entity);
+    }
+
+    /**
+     * Try getLabel() -> getName() -> getTitle(), in that order, returning the
+     * first non-empty string result. Returns null when none of the methods
+     * exist, none return a non-empty string, or all throw.
+     *
      * ReflectionMethod::invoke() is used instead of dynamic method calls
      * ($entity->$method()) to satisfy PHPStan level 8 without a suppression
      * comment — invoke() returns mixed, which is assignable to any type check.
      */
-    private function resolveEntityLabel(object $entity): string
+    private function tryGetterLabel(object $entity): ?string
     {
         foreach (['getLabel', 'getName', 'getTitle'] as $methodName) {
             if (!method_exists($entity, $methodName)) {
                 continue;
             }
+
             try {
                 $result = (new \ReflectionMethod($entity, $methodName))->invoke($entity);
-                if (is_string($result) && $result !== '') {
-                    return $result;
-                }
             } catch (\Throwable) {
-                // Method not accessible or threw; try next.
+                continue; // Method not accessible or threw; try next.
+            }
+
+            if (is_string($result) && $result !== '') {
+                return $result;
             }
         }
 
-        if (method_exists($entity, '__toString')) {
-            try {
-                $label = (string) $entity;
-                if ($label !== '') {
-                    return $label;
-                }
-            } catch (\Throwable) {
-                // Ignore __toString() errors.
-            }
+        return null;
+    }
+
+    /**
+     * Try __toString(), returning it when non-empty. Returns null when the
+     * entity has no __toString(), it throws, or it returns an empty string.
+     */
+    private function tryToStringLabel(object $entity): ?string
+    {
+        if (!method_exists($entity, '__toString')) {
+            return null;
         }
 
+        try {
+            $label = (string) $entity;
+        } catch (\Throwable) {
+            return null; // Ignore __toString() errors.
+        }
+
+        return $label !== '' ? $label : null;
+    }
+
+    /**
+     * Last-resort label: the entity's identifier prefixed with '#', or '#?'
+     * when no identifier value is available.
+     */
+    private function fallbackIdLabel(object $entity): string
+    {
         $idValues = $this->em->getClassMetadata($entity::class)->getIdentifierValues($entity);
         $id       = reset($idValues);
 

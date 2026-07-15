@@ -3,6 +3,7 @@
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Kachnitel\AdminBundle\Controller\DataSourceController;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestDataSourceProvider;
@@ -181,6 +182,7 @@ class TestKernel extends Kernel
             ->prefix('/_components');
 
         $routes->import(GenericAdminController::class, 'attribute');
+        $routes->import(DataSourceController::class, 'attribute');
     }
 
     public function getProjectDir(): string
