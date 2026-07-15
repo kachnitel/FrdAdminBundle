@@ -10,7 +10,7 @@ use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\Traits\DateFilterTrait;
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  * DateFilterTrait has no public surface of its own — it's exercised entirely
  * through EntityListQueryService::buildQuery(), the only class that composes it.
  */
-#[CoversClass(DateFilterTrait::class)]
+#[CoversTrait(DateFilterTrait::class)]
 #[UsesClass(EntityListQueryService::class)]
 #[Group('entity-list')]
 #[Group('query')]

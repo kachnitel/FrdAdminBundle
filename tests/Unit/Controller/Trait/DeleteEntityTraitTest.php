@@ -9,7 +9,7 @@ use Kachnitel\AdminBundle\Controller\Trait\DeleteEntityTrait;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeletableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeleteEntityTraitHost;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestForeignKeyConstraintViolationException;
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\Stub;
@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-#[CoversClass(DeleteEntityTrait::class)]
+#[CoversTrait(DeleteEntityTrait::class)]
 #[Group('controller')]
 #[Group('delete')]
 final class DeleteEntityTraitTest extends TestCase
