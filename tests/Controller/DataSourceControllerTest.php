@@ -29,6 +29,14 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * the actual dashboard()/dataSourceIndex()/dataSourceShow() bodies — the
  * sorting, filtering, mapping, and 404 logic — run for real and are
  * asserted against directly.
+ *
+ * Override signatures (isGranted, denyAccessUnlessGranted, render) were
+ * checked against Symfony\Bundle\FrameworkBundle\Controller\AbstractController
+ * on 6.4 through 8.2 — unchanged across that range. denyAccessUnlessGranted()
+ * as of 7.2+ internally routes through a new getAccessDecision() method
+ * rather than calling $this->isGranted() directly, but the double replaces
+ * the whole method body instead of delegating to parent::, so that internal
+ * change doesn't affect it either way.
  */
 #[CoversClass(DataSourceController::class)]
 #[UsesClass(Admin::class)]
@@ -48,11 +56,18 @@ final class DataSourceControllerTest extends TestCase
         $this->dataSourceRegistry = $this->createStub(DataSourceRegistry::class);
     }
 
-    private function makeController(?string $requiredRole = 'ROLE_ADMIN'): DataSourceControllerTestDouble
-    {
+    /**
+     * @param DataSourceRegistry|null $dataSourceRegistry Override for tests that need
+     *   argument-level verification on get() — a Stub can't do ->expects(), so those
+     *   tests pass a local ->createMock() here instead of using the shared property.
+     */
+    private function makeController(
+        ?string $requiredRole = 'ROLE_ADMIN',
+        ?DataSourceRegistry $dataSourceRegistry = null,
+    ): DataSourceControllerTestDouble {
         return new DataSourceControllerTestDouble(
             $this->entityDiscovery,
-            $this->dataSourceRegistry,
+            $dataSourceRegistry ?? $this->dataSourceRegistry,
             'App\\Entity\\',
             $requiredRole,
         );
@@ -95,6 +110,7 @@ final class DataSourceControllerTest extends TestCase
         $this->assertNotNull($controller->lastRender);
         $this->assertSame('@KachnitelAdmin/admin/dashboard.html.twig', $controller->lastRender['view']);
 
+        /** @var list<array<string, mixed>> $entities */
         $entities = $controller->lastRender['parameters']['entities'];
         // Sorted alphabetically by resolved label: Apple, NoAttribute, Zebra
         $this->assertSame(['Apple Label', 'No Attribute', 'Zebra Label'], array_column($entities, 'label'));
@@ -104,6 +120,7 @@ final class DataSourceControllerTest extends TestCase
         $this->assertSame(['entity', 'entity', 'entity'], array_column($entities, 'type'));
 
         // DoctrineDataSource instances are excluded from the dataSources listing
+        /** @var list<array<string, mixed>> $dataSources */
         $dataSources = $controller->lastRender['parameters']['dataSources'];
         $this->assertCount(1, $dataSources);
         $this->assertSame('audit-log', $dataSources[0]['identifier']);
@@ -144,7 +161,8 @@ final class DataSourceControllerTest extends TestCase
 
         $controller->dashboard();
 
-        /** @phpstan-ignore offsetAccess.notFound */
+        $this->assertNotNull($controller->lastRender);
+        /** @var list<array<string, mixed>> $entities */
         $entities = $controller->lastRender['parameters']['entities'];
         $this->assertSame(['Zebra'], array_column($entities, 'name'));
     }
@@ -155,12 +173,13 @@ final class DataSourceControllerTest extends TestCase
     public function dataSourceIndexRendersWhenDataSourceFound(): void
     {
         $dataSource = $this->createStub(DataSourceInterface::class);
-        $this->dataSourceRegistry->method('get')
-            // ->expects($this->once())
-            // ->with('audit-log')
-            ->willReturn($dataSource);
 
-        $controller = $this->makeController(requiredRole: null);
+        // Local mock (not the shared Stub property) so the exact dataSourceId
+        // reaching the registry lookup is actually verified, not just assumed.
+        $registry = $this->createMock(DataSourceRegistry::class);
+        $registry->expects($this->once())->method('get')->with('audit-log')->willReturn($dataSource);
+
+        $controller = $this->makeController(requiredRole: null, dataSourceRegistry: $registry);
         $controller->dataSourceIndex('audit-log');
 
         $this->assertNotNull($controller->lastRender);
@@ -208,11 +227,13 @@ final class DataSourceControllerTest extends TestCase
         $dataSource->expects($this->once())->method('supportsAction')->with('show')->willReturn(true);
         $dataSource->expects($this->once())->method('find')->with('42')->willReturn($item);
 
-        $this->dataSourceRegistry->method('get')
-            // ->with('audit-log')
-            ->willReturn($dataSource);
+        // Local mock — same reasoning as dataSourceIndexRendersWhenDataSourceFound:
+        // this has TWO string params (dataSourceId, id), so verifying which one
+        // reaches the registry lookup actually matters here.
+        $registry = $this->createMock(DataSourceRegistry::class);
+        $registry->expects($this->once())->method('get')->with('audit-log')->willReturn($dataSource);
 
-        $controller = $this->makeController(requiredRole: null);
+        $controller = $this->makeController(requiredRole: null, dataSourceRegistry: $registry);
         $controller->dataSourceShow('audit-log', '42');
 
         $this->assertNotNull($controller->lastRender);
@@ -240,6 +261,10 @@ final class DataSourceControllerTest extends TestCase
     {
         $dataSource = $this->createMock(DataSourceInterface::class);
         $dataSource->expects($this->once())->method('supportsAction')->with('show')->willReturn(false);
+        // Proves the method genuinely short-circuits rather than happening to
+        // pass because find() wasn't stubbed (a mock with no method('find')
+        // configured would silently return null if called, not fail).
+        $dataSource->expects($this->never())->method('find');
 
         $this->dataSourceRegistry->method('get')->willReturn($dataSource);
 

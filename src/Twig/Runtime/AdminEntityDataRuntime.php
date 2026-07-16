@@ -192,7 +192,7 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
                     && method_exists($object, 'getId')
                  ) ? $object->getId() : null
             ]);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return $value;
         }
     }

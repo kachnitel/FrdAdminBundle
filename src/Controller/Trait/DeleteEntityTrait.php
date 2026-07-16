@@ -29,7 +29,7 @@ trait DeleteEntityTrait
             $em->remove($entity);
             $em->flush();
             $this->addFlash('success', $shortName . ' #' . $entityId . ' deleted.');
-        } catch (ForeignKeyConstraintViolationException $th) {
+        } catch (ForeignKeyConstraintViolationException) {
             $this->addFlash('error', 'Cannot delete ' . $shortName . ' because it is in use.');
 
             if ($request->headers->get('referer')) {
