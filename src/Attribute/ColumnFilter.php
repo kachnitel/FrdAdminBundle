@@ -96,11 +96,6 @@ class ColumnFilter
         public array $searchFields = [],
 
         /**
-         * For relation filters: whether to allow deep filtering (related entity's relations).
-         */
-        public bool $deep = false,
-
-        /**
          * Custom SQL operator (=, !=, <, >, <=, >=, LIKE, IN, BETWEEN).
          * Auto-selected based on type if not specified.
          */

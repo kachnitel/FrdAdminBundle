@@ -17,7 +17,6 @@ final class ColumnFilterTest extends TestCase
         $this->assertTrue($filter->enabled);
         $this->assertNull($filter->label);
         $this->assertEmpty($filter->searchFields);
-        $this->assertFalse($filter->deep);
         $this->assertNull($filter->operator);
         $this->assertTrue($filter->showAllOption);
         $this->assertNull($filter->placeholder);
@@ -74,13 +73,11 @@ final class ColumnFilterTest extends TestCase
     {
         $filter = new ColumnFilter(
             type: ColumnFilter::TYPE_RELATION,
-            searchFields: ['name', 'email', 'phone'],
-            deep: true
+            searchFields: ['name', 'email', 'phone']
         );
 
         $this->assertSame(ColumnFilter::TYPE_RELATION, $filter->type);
         $this->assertSame(['name', 'email', 'phone'], $filter->searchFields);
-        $this->assertTrue($filter->deep);
     }
 
     public function testDisabledFilter(): void
@@ -104,7 +101,6 @@ final class ColumnFilterTest extends TestCase
             enabled: true,
             label: 'Product Name',
             searchFields: ['name', 'sku'],
-            deep: false,
             operator: 'LIKE',
             showAllOption: true,
             placeholder: 'Search products...',
@@ -115,7 +111,6 @@ final class ColumnFilterTest extends TestCase
         $this->assertTrue($filter->enabled);
         $this->assertSame('Product Name', $filter->label);
         $this->assertSame(['name', 'sku'], $filter->searchFields);
-        $this->assertFalse($filter->deep);
         $this->assertSame('LIKE', $filter->operator);
         $this->assertTrue($filter->showAllOption);
         $this->assertSame('Search products...', $filter->placeholder);
