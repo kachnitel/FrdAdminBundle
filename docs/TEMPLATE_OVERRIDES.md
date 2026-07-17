@@ -217,7 +217,7 @@ When rendering properties, the bundle uses a **three-level fallback system** wit
 The **source-specific path** differs based on configuration:
 
 | Source | Configuration | Template Path |
-|--------|---------------|---------------|
+|--------|---------------|----------------|
 | Doctrine Entity | `#[Admin]` attribute on entity class | `types/{ClassName}/{property}.html.twig` |
 | Custom DataSource | `DataSourceInterface` implementation | `types/data/{dataSourceId}/{column}.html.twig` |
 
@@ -635,7 +635,7 @@ Add debugging output to see what variables are available:
 | `this.sortBy` | string | Current sort column |
 | `this.sortDirection` | string | 'ASC' or 'DESC' |
 | `this.page` | int | Current page number |
-| `this.totalPages` | int | Total number of pages |
+| `this.paginationInfo.totalPages` | int | Total number of pages (from `getPaginationInfo()`) |
 
 </details>
 

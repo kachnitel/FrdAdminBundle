@@ -85,37 +85,44 @@ The bundle's `package.json` includes the necessary Symfony UX configuration. Enc
 
 **Purpose:** Multi-select functionality with keyboard modifiers for batch operations.
 
-**Usage:** Automatically used by `EntityList` component when `enableBatchActions: true`.
+**Usage:** Automatically used by `EntityList` component when `enableBatchActions: true`. It's wired up for you —
+`EntityList.html.twig` sets `data-controller="batch-select"` on its own root element whenever `canBatchDelete()`
+is true, so you don't attach the controller by hand in normal usage.
 
 **Features:**
 - Click to toggle individual selection
 - Shift+Click for range selection (selects all checkboxes between first and second click)
 - Ctrl/Cmd+Click for multi-toggle
-- Real-time selection counter
-- Syncs with LiveComponent state
+- Master checkbox to select/deselect all visible rows, with an indeterminate state when partially selected
+- Syncs with LiveComponent state via `data-model="selectedIds[]"` on each row checkbox
 
-**Targets:**
-- `checkbox`: Checkboxes to track
-- `selectedIds`: Hidden input for LiveComponent sync
-- `count`: Element to display selection count
+**Targets used by the bundle's own templates:**
+- `master`: the header checkbox that selects/deselects all visible rows
+- `checkbox`: each row's own selection checkbox
 
-**Example:**
+> Selection state itself isn't tracked via a dedicated Stimulus target — it lives in `EntityList`'s `selectedIds`
+> LiveProp, kept in sync through `data-model="selectedIds[]"`. The running total shown on batch action buttons
+> (e.g. "Delete Selected (3)") is rendered server-side from `this.selectedIds|length`, not read from a `count`
+> target. If your controller version exposes further targets, check
+> `assets/controllers/batch-select_controller.js` in the bundle for the authoritative list.
+
+**Example (mirrors the markup `EntityList.html.twig` actually renders):**
 ```twig
-<div data-controller="kachnitel--admin-bundle--batch-select">
+<div data-controller="batch-select">
+    <input
+        type="checkbox"
+        data-batch-select-target="master"
+        data-action="change->batch-select#toggleAll"
+    >
+
+    <!-- One per row -->
     <input
         type="checkbox"
         value="1"
-        data-kachnitel--admin-bundle--batch-select-target="checkbox"
-        data-action="change->kachnitel--admin-bundle--batch-select#toggle"
+        data-model="selectedIds[]"
+        data-batch-select-target="checkbox"
+        data-action="click->batch-select#toggle"
     >
-    <!-- More checkboxes... -->
-
-    <input
-        type="hidden"
-        data-kachnitel--admin-bundle--batch-select-target="selectedIds"
-    >
-
-    <span data-kachnitel--admin-bundle--batch-select-target="count">0</span>
 </div>
 ```
 

@@ -56,7 +56,7 @@ class Order { ... }
 Three practical modes control what the group header cell renders:
 
 | Constant                          | Behaviour                                                                                    | Default |
-|-----------------------------------|----------------------------------------------------------------------------------------------|---------|
+|-----------------------------------|------------------------------------------------------------------------------------------------|---------|
 | `ColumnGroup::HEADER_TEXT`        | Renders only the humanized group label as plain text — like a regular column header          | ✔       |
 | `ColumnGroup::HEADER_COLLAPSIBLE` | Group label inside a native `<details>`/`<summary>` toggle; per-sub-column sort and filter rows are hidden by default and revealed on click. No JavaScript required. | |
 | `ColumnGroup::HEADER_FULL`        | Group label strip always visible plus all per-sub-column sort and filter rows always expanded | |
@@ -73,7 +73,7 @@ Controls how each sub-column's label is displayed next to its value inside the
 composite `<td>`.
 
 | Constant                         | Behaviour                                         | Default |
-|----------------------------------|---------------------------------------------------|---------|
+|-----------------------------------|----------------------------------------------------|---------|
 | `ColumnGroup::SUB_LABELS_SHOW`   | Text label before each value                      | ✔       |
 | `ColumnGroup::SUB_LABELS_ICON`   | Small ℹ icon with the label in a `title` tooltip  |         |
 | `ColumnGroup::SUB_LABELS_HIDDEN` | No label rendered — values only                   |         |
@@ -213,4 +213,7 @@ public function getColumnGroups(): array
 - **subLabels:** `SUB_LABELS_SHOW`, `SUB_LABELS_ICON`, `SUB_LABELS_HIDDEN`
 - **header:** `HEADER_TEXT` (simple text), `HEADER_COLLAPSIBLE` (collapsible accordion), `HEADER_FULL` (full-width cell)
 
-See the source code for [`AdminColumnGroup`](../src/Attribute/AdminColumnGroup.php) and [`ColumnGroup`](../src/ValueObject/ColumnGroup.php) for complete details.
+See the source code for [`AdminColumnGroup`](../src/Attribute/AdminColumnGroup.php) for complete details.
+`ColumnGroup` itself (the value object holding a resolved group's columns, `subLabels`, and
+`header` mode) now lives in the [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts)
+package as `Kachnitel\DataSourceContracts\ColumnGroup`, not in this bundle's `src/ValueObject/`.

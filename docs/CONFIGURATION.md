@@ -814,7 +814,9 @@ class User implements UserInterface
 - `permissions: ?array<string, string>` — Role map (index, show, new, edit, delete)
 - `enableFilters: bool = true`
 - `enableBatchActions: bool = false`
+- `enableColumnVisibility: bool = false` — user-toggleable column show/hide (see [Column Visibility](COLUMN_VISIBILITY.md))
 - `enableInlineEdit: bool = false`
+- `formComponent: ?string = null` — override the LiveComponent used for new/edit forms (see [Forms](FORMS.md#custom-form-components))
 - `itemsPerPage: ?int = null`
 - `sortBy: ?string = null`
 - `sortDirection: ?string = null` — 'ASC' or 'DESC'
@@ -826,7 +828,7 @@ class User implements UserInterface
 - `collectionCollapsible: bool = true` — Wrap in `<details>` accordion
 - `collectionLimit: ?int = 5` — Items before "+ N more…" link; null/0 = show all
 - `collectionLabelMethod: ?string = null` — Custom method to get item label; null = auto-detect
-- `editable: bool|array|string|null` — Inline edit config (see [Inline Editing Guide](INLINE_EDIT.md))
+- `editable: string|bool|null` — Inline edit config (see [Inline Editing Guide](INLINE_EDIT.md))
 - `group: ?string` — Group columns together - See [Composite Columns](COMPOSITE_COLUMNS.md)
 
 **#[ColumnFilter]** — Constants:

@@ -10,7 +10,7 @@ Batch actions let users select multiple entities and perform operations on them 
   - [1. Enable on Entity](#1-enable-on-entity)
   - [2. Register Stimulus Controller](#2-register-stimulus-controller)
   - [3. Clear Cache](#3-clear-cache)
-- [Built-In Batch Delete](#built-in-batch-delete)
+- [Built-In Batch Actions](#built-in-batch-actions)
 - [Custom Batch Actions](#custom-batch-actions)
   - [Declaring with `#[AdminAction]`](#declaring-with-adminaction)
   - [Action Types](#action-types)

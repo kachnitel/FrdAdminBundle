@@ -18,7 +18,7 @@ open .coverage/index.html
 ## Code Quality
 
 ```bash
-# Run PHPStan (level 6)
+# Run PHPStan (level 8)
 composer phpstan
 
 # Update metrics and badges

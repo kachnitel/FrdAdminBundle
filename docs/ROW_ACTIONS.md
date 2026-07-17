@@ -71,7 +71,7 @@ class Product
 ## Action Parameters
 
 | Parameter        | Type                                     | Default      | Description |
-|------------------|------------------------------------------|--------------|-------------|
+|------------------|--------------------------------------------|--------------|-------------|
 | `name`           | `string`                                 | **required** | Unique action identifier (e.g., `'approve'`, `'duplicate'`) |
 | `label`          | `string`                                 | **required** | Button label text |
 | `icon`           | `?string`                                | `null`       | Emoji or icon identifier displayed in the button |
@@ -90,6 +90,7 @@ class Product
 | `liveComponent`  | `?string`                                | `null`       | TwigComponent/LiveComponent name; receives `{entity}` as prop |
 | `override`       | `bool`                                   | `false`      | If `true`, fully replaces an existing action with the same name instead of merging |
 | `contexts`       | `array`                                  | `[]`         | Restrict to specific contexts (e.g., `[RowAction::CONTEXT_INDEX]` for list-only) |
+| `actionType`     | `string`                                 | `AdminAction::ACTION_TYPE_ROW` | Where the button renders: `ACTION_TYPE_ROW` (list/show/edit, default), `ACTION_TYPE_BATCH` (batch actions bar only), or `ACTION_TYPE_BOTH`. See [Batch Actions](BATCH_ACTIONS.md#action-types). |
 
 ## Conditions (Visibility)
 
@@ -258,6 +259,7 @@ Providers are **auto-discovered** — implement the interface and they're regist
 | Provider | Priority | Notes |
 |----------|----------|-------|
 | `DefaultRowActionProvider` | 0 | Ships with the bundle — Show and Edit |
+| `ArchiveRowActionProvider` | 12 | Adds Archive/Unarchive buttons when archive filtering is configured — see [Archive Guide](ARCHIVE.md) |
 | `InlineEditRowActionProvider` | 15 | Adds inline-edit component to the Edit action (list-only) |
 | `AttributeRowActionProvider` | 50 | Reads `#[AdminAction]` attributes |
 | Your provider | Your choice | Higher wins on merge conflicts |

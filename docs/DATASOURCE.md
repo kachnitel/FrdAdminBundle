@@ -420,12 +420,17 @@ The detail view displays comprehensive information:
 
 | Class | Purpose |
 |-------|---------|
-| [`DataSourceInterface`](../src/DataSource/DataSourceInterface.php) | Contract for all data sources — implement this to create custom data providers |
-| [`DataSourceProviderInterface`](../src/DataSource/DataSourceProviderInterface.php) | Registry-like service that returns all available data sources |
-| [`ColumnMetadata`](../src/ValueObject/ColumnMetadata.php) | Describes a column: name, label, type, sortability, template, grouping |
-| [`FilterMetadata`](../src/ValueObject/FilterMetadata.php) | Describes a filter: type, operator, options, placeholders, etc. Factory methods for common patterns |
+| [`DataSourceInterface`](https://github.com/kachnitel/datasource-contracts) | Contract for all data sources — implement this to create custom data providers |
+| [`DataSourceProviderInterface`](https://github.com/kachnitel/datasource-contracts) | Registry-like service that returns all available data sources |
+| [`ColumnMetadata`](https://github.com/kachnitel/datasource-contracts) | Describes a column: name, label, type, sortability, template, grouping |
+| [`FilterMetadata`](https://github.com/kachnitel/datasource-contracts) | Describes a filter: type, operator, options, placeholders, etc. Factory methods for common patterns |
 | [`DoctrineDataSource`](../src/DataSource/DoctrineDataSource.php) | Built-in data source for Doctrine ORM entities |
 | [`DoctrineDataSourceFactory`](../src/DataSource/DoctrineDataSourceFactory.php) | Automatically creates `DoctrineDataSource` instances for `#[Admin]` entities |
+
+> The first four now live in the standalone [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts)
+> package (`Kachnitel\DataSourceContracts\...` namespace) rather than this bundle's own `src/` tree — see that
+> repository for their source and full API docs. Only `DoctrineDataSource` and `DoctrineDataSourceFactory`,
+> the bundle's own Doctrine-backed implementation, remain here.
 
 **ColumnMetadata Factory Methods:**
 ```php

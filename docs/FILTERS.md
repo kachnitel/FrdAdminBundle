@@ -61,7 +61,7 @@ This renders a multi-select dropdown and uses the `IN` operator to match any of 
 **Programmatic configuration:**
 
 ```php
-use Kachnitel\AdminBundle\DataSource\FilterMetadata;
+use Kachnitel\DataSourceContracts\FilterMetadata;
 
 FilterMetadata::enumClass(
     name: 'status',
@@ -106,7 +106,7 @@ Collection filters use an **EXISTS subquery** for optimal performance:
 **Programmatic configuration:**
 
 ```php
-use Kachnitel\AdminBundle\DataSource\FilterMetadata;
+use Kachnitel\DataSourceContracts\FilterMetadata;
 
 FilterMetadata::collection(
     name: 'tags',
