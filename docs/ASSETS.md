@@ -126,6 +126,65 @@ is true, so you don't attach the controller by hand in normal usage.
 </div>
 ```
 
+### admin-inline-add
+
+**Purpose:** Manages the "+ Add" inline-entity-creation dialog next to `EntityType` autocomplete fields in edit and new forms.
+
+**Usage:** Automatically used by `EntityTypeAddButton` when the `admin_compact` theme renders an EntityType field the user has `ADMIN_NEW` permission for. You don't attach the controller by hand — it ships wired to the dialog markup that `EntityTypeAddButton.html.twig` renders. See [Inline Entity Creation](INLINE_ADD.md) for the full feature guide.
+
+**Features:**
+- Opens the native `<dialog>` via `showModal()` on button click
+- Listens on `window` for the `admin:inline:entity:saved` event dispatched by `K:Admin:EntityType:InlineForm` after a successful save
+- Closes the dialog once the matching entity is saved
+- Auto-selects the newly created entity in the parent Tom Select widget (from `symfony/ux-autocomplete`), adding it as a new option first if needed
+
+**Values:**
+- `entityClass` — FQCN of the entity managed by this dialog; used to ignore `admin:inline:entity:saved` events fired by other inline-add dialogs on the same page
+- `fieldName` — HTML `name` of the parent `<select>` (e.g. `order[category]`, or `order[tags]` for multi-valued fields)
+- `dialogId` — id of the `<dialog>` element; used as a fallback lookup if the Stimulus target reference is lost after a LiveComponent re-render inside the dialog
+
+**Targets used by the bundle's own templates:**
+- `dialog`: the `<dialog>` element inside the component root
+
+**Example (mirrors the markup `EntityTypeAddButton.html.twig` actually renders):**
+```twig
+<div data-controller="admin-inline-add"
+     data-admin-inline-add-entity-class-value="App\Entity\Category"
+     data-admin-inline-add-field-name-value="order[category]"
+     data-admin-inline-add-dialog-id-value="category-dialog">
+    <button type="button" data-action="admin-inline-add#open">+ Category</button>
+
+    <dialog id="category-dialog" data-admin-inline-add-target="dialog">
+        <twig:K:Admin:EntityType:InlineForm entityClass="App\Entity\Category" />
+    </dialog>
+</div>
+```
+
+**Registering it (AssetMapper):**
+
+Add to `assets/controllers.json`:
+```json
+{
+    "controllers": {
+        "@kachnitel/admin-bundle": {
+            "admin-inline-add": {
+                "enabled": true,
+                "fetch": "eager"
+            }
+        }
+    }
+}
+```
+
+Then clear the cache to regenerate the importmap: `php bin/console cache:clear`. Symfony Flex will **not** auto-add this entry for symlinked or path-repository installs, so it must be added manually.
+
+**Registering it (Webpack Encore):**
+
+```javascript
+import AdminInlineAddController from '../vendor/kachnitel/admin-bundle/assets/controllers/admin-inline-add_controller.js';
+application.register('admin-inline-add', AdminInlineAddController);
+```
+
 ## Troubleshooting
 
 ### Controller Not Loading (AssetMapper)
