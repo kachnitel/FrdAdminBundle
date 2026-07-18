@@ -217,7 +217,7 @@ final class ArchiveServiceExtractFieldTest extends TestCase
     {
         $condition = $this->makeService()->buildDqlCondition('p', 'archived', 'boolean', false);
 
-        $this->assertSame('p.archived = false', $condition);
+        $this->assertSame('(p.archived IS NULL OR p.archived = false)', $condition);
     }
 
     #[Test]
@@ -225,6 +225,6 @@ final class ArchiveServiceExtractFieldTest extends TestCase
     {
         $condition = $this->makeService()->buildDqlCondition('e', 'softDeleted', 'boolean', false);
 
-        $this->assertSame('e.softDeleted = false', $condition);
+        $this->assertSame('(e.softDeleted IS NULL OR e.softDeleted = false)', $condition);
     }
 }

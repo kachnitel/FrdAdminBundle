@@ -122,6 +122,11 @@ class ArchiveService
     /**
      * Generate a DQL WHERE clause fragment for the archive filter.
      * Returns null when showArchived is true (no restriction needed) or type is unsupported.
+     *
+     * Boolean columns use `(alias.field IS NULL OR alias.field = false)` rather than
+     * the simpler `alias.field = false` because MySQL evaluates `NULL = false` as NULL
+     * (not TRUE), which silently excludes rows where the column was never set.
+     * Rows that have not been explicitly archived should always be visible.
      */
     public function buildDqlCondition(
         string $alias,
@@ -134,7 +139,7 @@ class ArchiveService
         }
 
         if (in_array($doctrineType, self::BOOLEAN_TYPES, true)) {
-            return sprintf('%s.%s = false', $alias, $field);
+            return sprintf('(%s.%s IS NULL OR %s.%s = false)', $alias, $field, $alias, $field);
         }
 
         if (in_array($doctrineType, self::DATETIME_TYPES, true)) {

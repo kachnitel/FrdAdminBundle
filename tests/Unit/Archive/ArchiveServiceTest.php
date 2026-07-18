@@ -189,7 +189,29 @@ final class ArchiveServiceTest extends TestCase
 
         $condition = $service->buildDqlCondition('e', 'archived', 'boolean', showArchived: false);
 
-        $this->assertSame('e.archived = false', $condition);
+        // NULL = false evaluates to NULL in MySQL (not TRUE), so rows where the boolean
+        // column was never set are silently excluded. The condition must be NULL-safe.
+        $this->assertSame('(e.archived IS NULL OR e.archived = false)', $condition);
+    }
+
+    #[Test]
+    public function buildDqlConditionForBooleanFieldIncludesNullRows(): void
+    {
+        // Regression test: the previous `e.archived = false` excluded rows where archived
+        // was NULL because MySQL evaluates `NULL = false` as NULL (falsy in WHERE).
+        // `NOT (NULL = true)` has the same problem: `NOT NULL` = NULL → also falsy.
+        // Only `IS NULL OR = false` is NULL-safe in standard DQL.
+        $service = $this->makeService();
+
+        $condition = $service->buildDqlCondition('e', 'archived', 'boolean', showArchived: false);
+
+        $this->assertNotNull($condition);
+        $this->assertStringContainsString('IS NULL', $condition,
+            'NULL rows must be explicitly included; `NULL = false` evaluates to NULL in MySQL');
+        $this->assertStringContainsString('= false', $condition,
+            'Explicitly false rows must pass through');
+        $this->assertStringNotContainsString('= true', $condition,
+            'Must not be expressed as NOT (= true): NOT NULL is also NULL in SQL');
     }
 
     #[Test]
