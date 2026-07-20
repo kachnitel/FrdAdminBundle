@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle;
 
 use Kachnitel\AdminBundle\DependencyInjection\Compiler\OverrideEditabilityResolversPass;
+use Kachnitel\AdminBundle\DependencyInjection\Compiler\OverrideTypeGuesserPass;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -29,6 +30,7 @@ class KachnitelAdminBundle extends AbstractBundle
         parent::build($container);
 
         $container->addCompilerPass(new OverrideEditabilityResolversPass());
+        $container->addCompilerPass(new OverrideTypeGuesserPass());
     }
 
     public function configure(DefinitionConfigurator $definition): void
