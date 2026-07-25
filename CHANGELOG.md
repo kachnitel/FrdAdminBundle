@@ -7,6 +7,96 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.12.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.11.0...v0.12.0) (2026-07-25)
+
+### Features
+
+* Add phpstan-require-implements to BatchActionTrait ([2c735d](https://github.com/kachnitel/FrdAdminBundle/commit/2c735de03e1652710bb56ab6af3d5ca290fa5931))
+* Add QA badges to readme ([be6a28](https://github.com/kachnitel/FrdAdminBundle/commit/be6a28721c647844eb75eb285419bc589440e288))
+* Form save btn component with visual feedback ([d81864](https://github.com/kachnitel/FrdAdminBundle/commit/d8186427f6a515a2006accd1dab06dbc4c900507))
+* Inline "New entity" form ([356235](https://github.com/kachnitel/FrdAdminBundle/commit/356235418acfda8727e28182709bf7128f6891aa))
+* Lazy load JS controllers ([2cd71e](https://github.com/kachnitel/FrdAdminBundle/commit/2cd71e2bb2739822baa6668316a1e5ec76563773))
+* Re-add admin_is_action_visible twig function ([c5ec75](https://github.com/kachnitel/FrdAdminBundle/commit/c5ec75afd4dbd11a5d0c3cb34a1528a85f944613))
+* Support nested relationship in ColumnFilter configuration ([2401a9](https://github.com/kachnitel/FrdAdminBundle/commit/2401a9899249ca728bad55c42fc61fcd164314c3))
+* Update dynamic-form-bundle to 0.0.2 to support conventional field type guessing ([2a1f20](https://github.com/kachnitel/FrdAdminBundle/commit/2a1f206177d2e6912cfc5c1b201b6b3b8fba41e5))
+* Use compiler pass to ensure our Editability resolver is used ([ab6488](https://github.com/kachnitel/FrdAdminBundle/commit/ab6488ab193907639d34cd3f0f56004eb4b5ce40))
+
+##### DX
+
+* Configure paratest ([4c1f2f](https://github.com/kachnitel/FrdAdminBundle/commit/4c1f2f7a870fef3e98b24ed35575294d79be1797))
+* Use paratest in coverage scripts ([315cc1](https://github.com/kachnitel/FrdAdminBundle/commit/315cc14e7991fdae403186984030468f04e8e50e))
+
+##### IU
+
+* Use a more compact layout in default form theme ([0148af](https://github.com/kachnitel/FrdAdminBundle/commit/0148af64514ffc33a0d1dfc61aba7a9b2380bed4))
+
+##### JS
+
+* Add vitest for js testing ([d47c6e](https://github.com/kachnitel/FrdAdminBundle/commit/d47c6e93657a46f183e5874ee814ac8d4c28549a))
+
+### Bug Fixes
+
+* AdminEntityForm new entity initialization ([f1502a](https://github.com/kachnitel/FrdAdminBundle/commit/f1502a8aae2fd95f1e6d9bc1dbe5c7cddbc9779b))
+* Default values in dynamic form mapper ([abf06f](https://github.com/kachnitel/FrdAdminBundle/commit/abf06f242cfcaeae1197eb07a484cb057c1cfe72))
+* Expression editability resolution in dynamic entity form ([b65b9c](https://github.com/kachnitel/FrdAdminBundle/commit/b65b9c389d91a82a16a97d9a4adffb11c414bea7))
+* Filter out parent reference in collection child form ([7fe8fa](https://github.com/kachnitel/FrdAdminBundle/commit/7fe8fafd3a0a938547f96c3ae0d663644f9e3eae))
+* Handle null values gracefully when required in a new entity form ([fcc71a](https://github.com/kachnitel/FrdAdminBundle/commit/fcc71a337d05b6cee28c10c832271cbf022056a3))
+* Initialize all values in new DynamicEntityForm ([c655cc](https://github.com/kachnitel/FrdAdminBundle/commit/c655cc9176ac6f29aa019e6f9845ac9e51da0a95))
+* Set default value for Enum in doctrine form type mapper ([7cd3b0](https://github.com/kachnitel/FrdAdminBundle/commit/7cd3b022d72bd39b4004e5c21326d25c6ab52075))
+* Strip colors from phpunit output in generate-badges script ([6dcdb5](https://github.com/kachnitel/FrdAdminBundle/commit/6dcdb50bc66102c331d7e5aa3f2071eac1e1f613))
+* Support nested property column filters without specific #[ColumnFilter] if the filter can be autodetected ([051393](https://github.com/kachnitel/FrdAdminBundle/commit/051393ba97f1e92178762ede9331fd2aef9f8114))
+* Update dialog styling and backdrop notes for Bootstrap and Tailwind themes ([e3aa37](https://github.com/kachnitel/FrdAdminBundle/commit/e3aa37af257b3b45d46fcf3db706199a373fdc29))
+
+##### Archive
+
+* Treat null value in ArchiveService as false ([a8e9e2](https://github.com/kachnitel/FrdAdminBundle/commit/a8e9e2bb1b47c80c11d102cd667dfbd1860eea6a))
+
+##### Auto-form
+
+* Render new-mode inputs instead of "Entity not found" when entityId is null ([ae65c9](https://github.com/kachnitel/FrdAdminBundle/commit/ae65c9876af10062fbee5ef3b203b79e23e45aad))
+
+##### Config
+
+* Normalize `required_role: false` to `null` in live bundle path ([27b429](https://github.com/kachnitel/FrdAdminBundle/commit/27b4292c5e2eb405bf2029bdc16c4ad82a5acf0d))
+
+##### Coverage
+
+* Use CoversTrait over CoversClass where appropriate ([bbbc81](https://github.com/kachnitel/FrdAdminBundle/commit/bbbc815bd15122e8e93474e4625d1a0bb1fcbe32))
+
+##### Dead code
+
+* Remove unused "deep" parameter in ColumnFilter ([e1b57f](https://github.com/kachnitel/FrdAdminBundle/commit/e1b57f2f0e33ce865e657eb2b0e2bbbcd5e490c2))
+
+##### Docs
+
+* Unclosed details tag in Filters.md, update Forms and Composite_Columns ([487575](https://github.com/kachnitel/FrdAdminBundle/commit/48757540032aa6378e64dfa2fecf221bed8b6d26))
+
+##### Tests
+
+* Coverage warnings ([e84d50](https://github.com/kachnitel/FrdAdminBundle/commit/e84d50a58316f4a0aa1200efa2179263c07232e6))
+
+### Code Refactoring
+
+* Extract filterable checks from AdminEntityUrlRuntime ([d9f3e9](https://github.com/kachnitel/FrdAdminBundle/commit/d9f3e9e4daaf188561d8171795032367d44310bf))
+* Reduce complexity in GenericAdminController ([4af76a](https://github.com/kachnitel/FrdAdminBundle/commit/4af76a74baecc204f0b056acc2e0f52447a32bfb))
+
+### Tests
+
+* Add assertAction(Not)Rendered to ComponentTestCase for clarity ([b8a04d](https://github.com/kachnitel/FrdAdminBundle/commit/b8a04df90643c7858d9a4c2d3f50efd02ba036cd))
+* Add DataSourceController test for newly split controller ([6b3358](https://github.com/kachnitel/FrdAdminBundle/commit/6b335807da388ba112da122cd756b88de74653fd))
+* Improve Generic Admin Controller coverage ([72c800](https://github.com/kachnitel/FrdAdminBundle/commit/72c800644187bd30831a1eb3b1a5c6eddaaf9094))
+
+### Documentation
+
+* Add documentation for inline entity creation feature ([f39dac](https://github.com/kachnitel/FrdAdminBundle/commit/f39dac863bdeb3f9d0ca0b01978efa9064846462))
+* Update AdminAction documentation ([3df5f9](https://github.com/kachnitel/FrdAdminBundle/commit/3df5f95acf60d1b0710fa53780a7293c8f632c47))
+* Update docs to match extracted package namespaces ([e33b65](https://github.com/kachnitel/FrdAdminBundle/commit/e33b652cbd121ec9969b31b09f3a9499bd2055f9))
+* Update docs to reflect extracted dynamic-form-bundle ([8d6b83](https://github.com/kachnitel/FrdAdminBundle/commit/8d6b83288d5672656719969abcab17233fca686b))
+* Update form collection documentation ([f08f29](https://github.com/kachnitel/FrdAdminBundle/commit/f08f294450a1fe6faf00cdd88f96a5a5d477e6f9))
+
+
+---
+
 ## [0.11.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.10.0...v0.11.0) (2026-05-11)
 
 ### Features
