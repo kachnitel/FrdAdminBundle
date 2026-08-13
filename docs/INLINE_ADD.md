@@ -45,7 +45,7 @@ The `admin-inline-add` controller is part of the `@kachnitel/admin-bundle` packa
 
 ### AssetMapper
 
-Manually add the entry to your project's `assets/controllers.json` (Symfony Flex will not auto-update this for symlinked or path-repository installs):
+Manually add the entry to your project's `assets/controllers.json` unless you use Symfony Flex's auto-import feature:
 
 ```json
 {
@@ -121,7 +121,7 @@ The dialog creates its form using an FQCN-derived name (e.g., `inline_app_entity
 
 ## OneToMany Fields
 
-OneToMany associations appear in the inline dialog via `LiveCollectionType` when using the auto-generated form. If you encounter issues with add/remove row controls (as this edge-case is untested), exclude the association from the inline form:
+OneToMany associations appear in the inline dialog via `LiveCollectionType` when using the auto-generated form. If you encounter issues with add/remove row controls (as this edge-case is untested), use a custom form type or exclude the association from the inline form:
 
 ```php
 class OrderLine {

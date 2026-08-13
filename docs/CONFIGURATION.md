@@ -8,6 +8,7 @@ This guide covers how to configure entities for the admin bundle using PHP attri
 - [Bundle Configuration](#bundle-configuration)
 - [The Admin Attribute](#the-admin-attribute)
 - [Configuration Options](#configuration-options)
+- [Row Actions](#row-actions)
 - [AdminRoutes Attribute](#adminroutes-attribute)
 - [Column Filtering](#column-filtering)
 - [Permissions](#permissions)
@@ -63,9 +64,9 @@ kachnitel_admin:
 ```yaml
 kachnitel_admin:
     # Entity and form namespaces
-    entity_namespace: 'App\Entity\'      # Default namespace for entities
-    form_namespace: 'App\Form\'          # Default namespace for form types
-    form_suffix: 'FormType'              # Suffix for form type classes
+    entity_namespace: 'App\Entity\'     # Default namespace for entities
+    form_namespace: 'App\Form\'         # Default namespace for form types
+    form_suffix: 'FormType'             # Suffix for form type classes
 
     # Layout and routing
     base_layout: 'layout.html.twig'     # Your app's base layout (optional)
@@ -85,8 +86,8 @@ kachnitel_admin:
 
     # Archive / soft-delete filtering
     archive:
-        expression: 'item.deletedAt'  # field expression applied to every entity
-        role: ~                        # role required to toggle; ~ = everyone
+        expression: 'item.deletedAt'    # field expression applied to every entity
+        role: ~                         # role required to toggle; ~ = everyone
 ```
 
 ### Key Configuration Options
@@ -176,19 +177,7 @@ Enable/disable column filtering in the list view.
 #### enableBatchActions
 **Type:** `bool` **Default:** `false`
 
-Enable/disable batch actions for selecting and performing operations on multiple entities at once.
-
-**Features:**
-- Individual row selection with checkboxes
-- **Shift+Click** for range selection (click first checkbox, then shift+click another to select all rows between them)
-- **Ctrl/Cmd+Click** for multi-toggle
-- Master checkbox to select/deselect all (with indeterminate state when partially selected)
-- Batch delete with confirmation dialog
-- Real-time selection counter
-
-**Requirements:**
-- User must have delete permission (`ADMIN_DELETE`) to see batch actions
-- Must explicitly enable with `enableBatchActions: true`
+Enable multi-row selection (checkboxes, Shift+Click range select, master checkbox) with built-in batch delete and confirmation dialog. Requires `ADMIN_DELETE` permission to appear. Disabled by default.
 
 ```php
 // Enable batch actions for this entity
@@ -201,7 +190,7 @@ Enable/disable batch actions for selecting and performing operations on multiple
 )]
 ```
 
-**Note:** Batch actions are disabled by default for safety. The batch delete UI includes a confirmation dialog before deletion to prevent accidental data loss.
+Also requires registering a Stimulus controller for the selection UI — see the [Batch Actions Guide](BATCH_ACTIONS.md) for that setup step, selection behavior, and adding custom batch actions.
 
 #### enableInlineEdit
 **Type:** `bool` **Default:** `false`
@@ -374,7 +363,7 @@ Per-action permission requirements. Map of action name to required role.
 
 Row action buttons appear in each entity row alongside the default Show and Edit buttons.
 
-See the full [Row Actions Guide](ROW_ACTIONS.md) for conditions, overrides, and programmatic providers.
+See the [Row Actions Guide](ROW_ACTIONS.md) for conditions, overrides, and programmatic providers.
 
 ### Quick Example
 
@@ -406,47 +395,7 @@ class Order { }
 
 Actions render in `priority` order — lower numbers appear first. Default Show is 10, Edit is 20.
 
-
-### AdminAction Attribute
-
-```php
-#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-class AdminAction
-{
-    public function __construct(
-        string $name,                           // Unique identifier
-        string $label,                          // Button text
-        ?string $icon = null,                   // Emoji or icon
-        ?string $route = null,                  // Symfony route name
-        array $routeParams = [],                // Extra route params
-        ?string $url = null,                    // Static URL
-        ?string $permission = null,             // Required role
-        ?string $voterAttribute = null,         // Admin voter constant
-        string|array|null $condition = null,    // String expression or [Service::class, 'method']
-        ?string $cssClass = null,               // Override button CSS
-        ?string $confirmMessage = null,         // Confirm dialog text
-        bool $openInNewTab = false,
-        int $priority = 100,                    // Sort order (Show=10, Edit=20)
-        ?string $method = null,                 // 'POST'/'DELETE' → renders form
-        ?string $template = null,               // Custom button template
-        bool $override = false,                 // Replace vs merge with same-name action
-    ) {}
-}
-```
-
-### AdminActionsConfig Attribute
-
-```php
-#[Attribute(Attribute::TARGET_CLASS)]
-class AdminActionsConfig
-{
-    public function __construct(
-        bool $disableDefaults = false,      // Remove default Show and Edit
-        ?array $exclude = null,             // Remove specific actions by name
-        ?array $include = null,             // Whitelist — only show these names
-    ) {}
-}
-```
+See the [Row Actions Guide](ROW_ACTIONS.md) for every `#[AdminAction]` parameter, visibility conditions, overriding defaults, and programmatic providers.
 
 ## AdminRoutes Attribute
 
@@ -524,18 +473,7 @@ class Product
 }
 ```
 
-### Available Filter Types
-
-| Constant | Description |
-|----------|-------------|
-| `TYPE_TEXT` | Text input (default for strings) |
-| `TYPE_NUMBER` | Number input |
-| `TYPE_DATE` | Date picker (matches exact day) |
-| `TYPE_DATERANGE` | Date range picker (from/to) |
-| `TYPE_BOOLEAN` | Yes/No/All dropdown |
-| `TYPE_RELATION` | Search related entities |
-
-See [Filters](./FILTERS.md) for details
+Filter types are auto-detected from Doctrine metadata, or set explicitly via `type:` — text, number, date, date range, boolean, enum, relation, and collection. See [Filters](./FILTERS.md) for what each one does, how auto-detection works, nested search fields, and the full list of `#[ColumnFilter]` options.
 
 ## Permissions
 
@@ -803,6 +741,7 @@ class User implements UserInterface
 | `AdminColumn` | Property | Column display & inline edit config | [src/Attribute/AdminColumn.php](../src/Attribute/AdminColumn.php) |
 | `AdminAction` | Class | Custom row action button | [src/Attribute/AdminAction.php](../src/Attribute/AdminAction.php) |
 | `AdminActionsConfig` | Class | Show/hide/reorder default actions | [src/Attribute/AdminActionsConfig.php](../src/Attribute/AdminActionsConfig.php) |
+| `ColumnPermission` | Property | Role-based column visibility | [src/Attribute/ColumnPermission.php](../src/Attribute/ColumnPermission.php) |
 
 **Quick Parameter Reference:**
 
@@ -832,7 +771,7 @@ class User implements UserInterface
 - `group: ?string` — Group columns together - See [Composite Columns](COMPOSITE_COLUMNS.md)
 
 **#[ColumnFilter]** — Constants:
-- `TYPE_TEXT`, `TYPE_NUMBER`, `TYPE_DATE`, `TYPE_DATERANGE`, `TYPE_BOOLEAN`, `TYPE_RELATION`
+- `TYPE_TEXT`, `TYPE_NUMBER`, `TYPE_DATE`, `TYPE_DATERANGE`, `TYPE_BOOLEAN`, `TYPE_ENUM`, `TYPE_RELATION`, `TYPE_COLLECTION`
 
 See the source files linked above for complete method signatures and constructor details.
 

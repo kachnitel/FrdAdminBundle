@@ -1,8 +1,8 @@
-## Custom Columns
+# Custom Columns
 
 Custom columns let you add **virtual, template-driven columns** to the entity list view — columns that are not backed by a Doctrine field. Use them for computed values, enriched badges, or any cell content that pulls from the entity but doesn't map 1:1 to a property.
 
-### Quick Start
+## Quick Start
 
 ```php
 use Kachnitel\AdminBundle\Attribute\Admin;
@@ -28,7 +28,7 @@ class User
 {{ entity.firstName }} {{ entity.lastName }}
 ```
 
-### The `#[AdminCustomColumn]` Attribute
+## The `#[AdminCustomColumn]` Attribute
 
 **Namespace:** `Kachnitel\AdminBundle\Attribute\AdminCustomColumn`
 
@@ -50,7 +50,7 @@ The attribute is placed on the entity **class** and can be repeated for multiple
 class Product { }
 ```
 
-### Parameters
+## Parameters
 
 | Parameter  | Type     | Default      | Description |
 |------------|----------|--------------|-------------|
@@ -59,7 +59,7 @@ class Product { }
 | `label`    | `?string`| `null`       | Column header label (humanised from `name` when null) |
 | `sortable` | `bool`   | `false`      | Whether a sort link is rendered (no DB field = false by default) |
 
-### Column Ordering
+## Column Ordering
 
 **When `columns:` is set in `#[Admin]`** — include the custom column name wherever you want it:
 
@@ -79,7 +79,7 @@ class User { }
 // Result order: [id, name, email, ..., badge1, badge2]
 ```
 
-### Template Variables
+## Template Variables
 
 Inside a custom column template, you have access to:
 
@@ -98,7 +98,7 @@ Inside a custom column template, you have access to:
 </span>
 ```
 
-### Multiple Custom Columns
+## Multiple Custom Columns
 
 Stack as many `#[AdminCustomColumn]` attributes as needed:
 
@@ -112,6 +112,6 @@ Stack as many `#[AdminCustomColumn]` attributes as needed:
 class Order { }
 ```
 
-### API Reference
+## API Reference
 
 See the source code for [`AdminCustomColumn`](../src/Attribute/AdminCustomColumn.php) for the complete definition.

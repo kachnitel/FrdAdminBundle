@@ -123,6 +123,8 @@ button is automatically added to the batch actions bar. No additional code neede
 
 ## Custom Batch Actions
 
+See [Row Actions](ROW_ACTIONS.md) `#[AdminAction]` details for the full parameter reference (conditions, permissions, contexts, overriding defaults). This section covers what's specific to batch actions: `actionType` and the handler modes below.
+
 ### Declaring with `#[AdminAction]`
 
 Use the `#[AdminAction]` attribute on the entity class with `actionType` set to `ACTION_TYPE_BATCH`:

@@ -12,7 +12,7 @@
 ![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0|^8.0-000000?logo=symfony&logoColor=white>)
 <!-- BADGES -->
 
-A modern Symfony admin bundle powered by [LiveComponents](https://symfony.com/bundles/ux-live-component/current/index.html). Add one attribute to your entity and get a full CRUD interface with search, filters, pagination, and batch actions.
+A modern Symfony admin bundle powered by [LiveComponents](https://symfony.com/bundles/ux-live-component/current/index.html). Add the `#[Admin]` attribute to your entity and get a full CRUD interface with search, filters, pagination, and batch actions.
 
 <details>
 <summary><strong>Why another admin bundle?</strong></summary>
@@ -72,6 +72,8 @@ kachnitel_admin:
 kachnitel_admin:
     base_layout: 'base.html.twig'  # Your app's base template
 ```
+
+4. Add assets to your controllers.json (AssetMapper) or import them in your main JS file (Webpack Encore). See [Assets Guide](docs/ASSETS.md) for details.
 
 </details>
 
@@ -190,7 +192,7 @@ final class PurchaseOrderForm extends AdminEntityForm { /* ... */ }
 
 **Level 4:** Control which fields appear:
 ```php
-#[AdminColumn(editable: false)]                        // exclude from the form
+#[AdminColumn(editable: false)]                         // exclude from the form
 #[AdminColumn(editable: 'entity.status != "locked"')]   // conditional
 ```
 
@@ -238,34 +240,56 @@ kachnitel_admin:
 
 ## Features
 
-- **Multi-Layer Permissions** - Entity, action, and column-level control
+**Core**
 - **Easy start** - Add `#[Admin]` to entity, auto-detects columns
-- **Highly Customizable** - From [cell level templates](docs/TEMPLATE_OVERRIDES.md#common-override-scenarios) to entire layout overrides using [Symfony's Twig inheritance](https://symfony.com/doc/current/bundles/override.html#templates)
 - **Auto-Generated Forms** - Zero-config create/edit forms from Doctrine metadata via [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle), including associations and collections; drop in a hand-written FormType any time you need more control
-- **Inline Editing** - Edit any field in-place, with type-aware inputs and per-column permission guards
-- **Column Visibility** - Show/hide columns with session or database-backed preferences
-- **Row Actions** — Per-row buttons with conditions, permissions, and priority ordering; extend defaults or replace them
-- **Composite Columns** — Group related properties into a single stacked table cell with `#[AdminColumn(group: '...')]`
-- **Archive / Soft-Delete** — Hide archived rows by default with a live toggle; works with boolean flags and nullable-datetime fields; no Doctrine filter needed
-- **DataSource Abstraction** - Display data from external APIs, audit logs, or any source via [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts)
+- **Highly Customizable** - From [cell level templates](docs/TEMPLATE_OVERRIDES.md#common-override-scenarios) to entire layout overrides using [Symfony's Twig inheritance](https://symfony.com/doc/current/bundles/override.html#templates)
 - **LiveComponent-Powered** - Real-time search, filters, and updates without full page reloads
 
+**Advanced** — opt in per entity
+- **Multi-Layer Permissions** - Entity, action, and column-level control
+- **Row Actions** — Per-row buttons with conditions, permissions, and priority ordering; extend defaults or replace them
+- **Inline Editing** - Edit any field in-place, with type-aware inputs and per-column permission guards
+- **Archive / Soft-Delete** — Hide archived rows by default with a live toggle; works with boolean flags and nullable-datetime fields; no Doctrine filter needed
+- **Column Visibility** - Show/hide columns with session or database-backed preferences
+- **Composite Columns** — Group related properties into a single stacked table cell with `#[AdminColumn(group: '...')]`
+- **DataSource Abstraction** - Display data from external APIs, audit logs, or any source via [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts)
+
 ## Documentation
+
+#### Getting Started
 
 | Guide | Description |
 |-------|-------------|
 | [Configuration](docs/CONFIGURATION.md) | Entity attributes and bundle config |
-| [Column Visibility](docs/COLUMN_VISIBILITY.md) | Permissions and user preferences |
 | [Filters](docs/FILTERS.md) | Automatic filtering and customization |
-| [Row Actions](docs/ROW_ACTIONS.md) | Custom action buttons per row — conditions, ordering, providers |
 | [Forms](docs/FORMS.md) | Auto-generated and custom create/edit forms |
-| [Inline Add](docs/INLINE_ADD.md) | Create related entities without leaving the current form |
-| [Inline Editing](docs/INLINE_EDIT.md) | Per-field in-place editing in list views |
-| [Composite Columns](docs/COMPOSITE_COLUMNS.md) | Group related properties into one stacked table cell |
-| [Archive](docs/ARCHIVE.md) | Soft-delete / archive filtering with show/hide toggle |
 | [Template Overrides](docs/TEMPLATE_OVERRIDES.md) | Customize the admin appearance |
+
+#### Customizing Behavior
+
+| Guide | Description |
+|-------|-------------|
+| [Row Actions](docs/ROW_ACTIONS.md) | Custom action buttons per row — conditions, ordering, providers |
 | [Batch Actions](docs/BATCH_ACTIONS.md) | Multi-select and bulk operations |
+| [Archive](docs/ARCHIVE.md) | Soft-delete / archive filtering with show/hide toggle |
+| [Custom Columns](docs/CUSTOM_COLUMNS.md) | Virtual, template-driven columns not backed by a Doctrine field |
+
+#### Advanced
+
+| Guide | Description |
+|-------|-------------|
+| [Inline Editing](docs/INLINE_EDIT.md) | Per-field in-place editing in list views |
+| [Inline Add](docs/INLINE_ADD.md) | Create related entities without leaving the current form |
+| [Composite Columns](docs/COMPOSITE_COLUMNS.md) | Group related properties into one stacked table cell |
+| [Column Visibility](docs/COLUMN_VISIBILITY.md) | Permissions and user preferences |
 | [DataSource](docs/DATASOURCE.md) | Non-Doctrine data sources |
+| [Entity URLs](docs/ENTITY_URLS.md) | Link to related entities' admin pages from your own templates |
+
+#### Project
+
+| Guide | Description |
+|-------|-------------|
 | [Assets](docs/ASSETS.md) | AssetMapper and Webpack Encore setup |
 | [Development](docs/DEVELOPMENT.md) | Contributing and running tests |
 | [Upgrade Guide](UPGRADE.md) | Migrating between major versions |

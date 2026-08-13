@@ -542,7 +542,7 @@ class ProductController extends AbstractController
 {% block content %}
     <h1>Products</h1>
     {# Full functionality: search, filters, pagination, sorting #}
-    <twig:K:Admin:EntityList dataSourceId="Product" />
+    <twig:K:Admin:EntityList entityClass="App\Entity\Product" entityShortClass="Product" />
 {% endblock %}
 ```
 

@@ -19,12 +19,14 @@ Display data from any source (APIs, audit logs, external databases) in the admin
 
 ```php
 #[Admin(label: 'Products')]
-class Product { }  // Available as data source 'Product'
+class Product { }  // Automatically discoverable as data source 'Product'
 ```
 
 ```twig
-<twig:K:Admin:EntityList dataSourceId="Product" />
+<twig:K:Admin:EntityList entityClass="App\Entity\Product" entityShortClass="Product" />
 ```
+
+Doctrine entities are also registered under `dataSourceId` (the same value as `entityShortClass`) — that's what the dashboard and `/admin/data/{dataSourceId}` routes below use internally. When embedding the component in your own templates with Doctrine entities, pass `entityClass`/`entityShortClass` instead: archive toggling, inline editing, the batch-actions permission gate, and `#[ColumnPermission]` all key off `entityClass` being set and are silently skipped without it.
 
 **For custom data sources**, implement `DataSourceInterface`:
 
