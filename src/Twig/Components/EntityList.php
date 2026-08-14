@@ -77,6 +77,14 @@ class EntityList
     #[LiveProp]
     public ?string $dataSourceId = null;
 
+    /**
+     * Fully-qualified entity class name (e.g. App\Entity\Product).
+     *
+     * Optional when entityShortClass is set — resolveEntityClass() derives it
+     * automatically from entityShortClass + the configured
+     * kachnitel_admin.entity_namespace. Pass this explicitly only to override
+     * that default, e.g. for an entity living outside the configured namespace.
+     */
     #[LiveProp]
     public string $entityClass = '';
 
@@ -147,6 +155,31 @@ class EntityList
     public function normalizeSelectedIds(): void
     {
         $this->selectedIds = array_map('strval', $this->selectedIds);
+    }
+
+    // ── Entity Class Resolution ────────────────────────────────────────────────
+
+    /**
+     * Derive entityClass from entityShortClass and the configured entity
+     * namespace when the caller hasn't passed entityClass explicitly.
+     *
+     * Lets <twig:K:Admin:EntityList entityShortClass="Product" /> work without
+     * also passing the FQCN — the common case, since #[Admin] entities are
+     * always resolved via entityShortClass first anyway (see
+     * resolveDataSource()). Passing entityClass explicitly still works and
+     * takes priority, for the rare case of an entity living outside
+     * kachnitel_admin.entity_namespace.
+     *
+     * Declared before loadColumnVisibility() in PostHydrate order: that hook
+     * can trigger a resolveDataSource() call whose on-demand-creation fallback
+     * needs entityClass already resolved.
+     */
+    #[PostHydrate]
+    public function resolveEntityClass(): void
+    {
+        if ($this->entityClass === '' && $this->entityShortClass !== '') {
+            $this->entityClass = $this->config->entityNamespace . $this->entityShortClass;
+        }
     }
 
     // ── Data Source Resolution ─────────────────────────────────────────────────

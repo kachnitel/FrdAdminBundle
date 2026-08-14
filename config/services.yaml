@@ -120,6 +120,7 @@ services:
             $formSuffix: '%kachnitel_admin.form_suffix%'
             $defaultItemsPerPage: '%kachnitel_admin.pagination.default_items_per_page%'
             $allowedItemsPerPage: '%kachnitel_admin.pagination.allowed_items_per_page%'
+            $entityNamespace: '%kachnitel_admin.entity_namespace%'
 
     # Generic Admin Controller (auto-discovers entities via #[Admin] attribute)
     Kachnitel\AdminBundle\Controller\GenericAdminController:

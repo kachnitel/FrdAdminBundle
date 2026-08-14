@@ -399,12 +399,14 @@ Customize the page that wraps the LiveComponent:
     </div>
 
     <twig:K:Admin:EntityList
-        :entityClass="entityClass"
         :entityShortClass="entityShortClass"
         style="border: 2px solid #007bff; padding: 1rem;"
     />
 {% endblock %}
 ```
+
+`entityShortClass` is used by `EntityList` to derive the FQCN from your configured `kachnitel_admin.entity_namespace`. Pass
+`:entityClass="..."` explicitly only if this particular entity lives outside that namespace.
 
 </details>
 
@@ -542,7 +544,7 @@ class ProductController extends AbstractController
 {% block content %}
     <h1>Products</h1>
     {# Full functionality: search, filters, pagination, sorting #}
-    <twig:K:Admin:EntityList entityClass="App\Entity\Product" entityShortClass="Product" />
+    <twig:K:Admin:EntityList dataSourceId="Product" />
 {% endblock %}
 ```
 

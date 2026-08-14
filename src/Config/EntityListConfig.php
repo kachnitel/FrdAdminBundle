@@ -16,6 +16,7 @@ final readonly class EntityListConfig
         public string $formNamespace = 'App\\Form\\',
         public string $formSuffix = 'Type',
         public int $defaultItemsPerPage = 20,
-        public array $allowedItemsPerPage = [10, 20, 50, 100]
+        public array $allowedItemsPerPage = [10, 20, 50, 100],
+        public string $entityNamespace = 'App\\Entity\\',
     ) {}
 }

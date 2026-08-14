@@ -11,7 +11,8 @@ Filters are **automatically generated** from Doctrine metadata - no configuratio
 public function index(): Response
 {
     return $this->render('@KachnitelAdmin/admin/index_live.html.twig', [
-        'entityClass' => Product::class,
+        // 'entityClass'      => Product::class,
+        'entityShortClass' => 'Product',
     ]);
 }
 ```

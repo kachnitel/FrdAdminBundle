@@ -83,7 +83,7 @@ Visit `/admin/product` — list, filters, sorting, and a fully generated create/
 
 {% block content %}
     <h1>Product Management</h1>
-    <twig:K:Admin:EntityList entityClass="App\Entity\Product" entityShortClass="Product" />
+    <twig:K:Admin:EntityList entityShortClass="Product" />
 {% endblock %}
 ```
 

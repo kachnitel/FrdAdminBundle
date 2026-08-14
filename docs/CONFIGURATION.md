@@ -102,7 +102,10 @@ Admin templates will extend this layout and provide blocks like `title`, `header
 #### entity_namespace
 **Type:** `string` **Default:** `'App\\Entity\\'`
 
-Base namespace for your Doctrine entities. Used when resolving entity short names.
+Base namespace for your Doctrine entities. Used when resolving entity short
+names — including by `EntityList` itself, so
+`<twig:K:Admin:EntityList entityShortClass="Product" />` resolves to the
+right FQCN without passing `entityClass` explicitly.
 
 #### required_role
 **Type:** `string|false` **Default:** `'ROLE_ADMIN'`
