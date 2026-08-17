@@ -1,10 +1,11 @@
 <?php
-// tests/Functional/SaveButtonIntegrationTest.php
 
 declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
+use Kachnitel\AdminBundle\Tests\Fixtures\ComposedFormComponent;
+use Kachnitel\AdminBundle\Tests\Fixtures\OverridingSaveAdminEntityForm;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
@@ -25,11 +26,16 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * simulates one component RECEIVING a broadcast (it looks up the matching
  * #[LiveListener] and calls it directly), which is the real mechanism these
  * two components use to talk to each other, just without an actual browser
- * DOM event bus in between. What this suite cannot cover: the real Stimulus
- * JS wiring that delivers a browser CustomEvent from one mounted component to
- * another. That's only verifiable with a true browser test (Panther), which
- * the project's own notes mark as currently blocked — flagging it here as a
- * known gap rather than silently pretending this is full E2E coverage.
+ * DOM event bus in between. TestLiveComponent DOES go through the real HTTP
+ * kernel pipeline though (KernelBrowser requests to the component's own
+ * route), which is why it's trustworthy for the #[PreReRender]-timing and
+ * inheritance/composition questions this file covers — those aren't
+ * in-memory shortcuts. What this suite still cannot cover: the real
+ * Stimulus JS wiring that delivers a browser CustomEvent from one mounted
+ * component to another. That's only verifiable with a true browser test
+ * (Panther), which the project's own notes mark as currently blocked —
+ * flagging it here as a known gap rather than silently pretending this is
+ * full E2E coverage.
  *
  * @group save-button
  */
@@ -85,10 +91,6 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
 
     public function testInvalidStateDoesNotRenderDisabledAttribute(): void
     {
-        // Regression guard: $valid must never gate `disabled`, only $saving does.
-        // Gating on $valid would brick the button — nothing besides another
-        // save attempt could ever flip it back, and a disabled button can't
-        // be clicked to make that attempt. See SaveButton's class docblock.
         $button = $this->saveButtonComponent();
         $button->call('triggerSave');
         $button->emit('admin:form:state', ['valid' => 0]);
@@ -113,7 +115,7 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
+        $this->assertInstanceOf(TestEntity::class, $reloaded);
         $this->assertSame('Keep Me', $reloaded->getName());
     }
 
@@ -129,18 +131,12 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
+        $this->assertInstanceOf(TestEntity::class, $reloaded);
         $this->assertSame('After', $reloaded->getName());
     }
 
     public function testSaveListenerNameMatchesSaveButtonsBroadcast(): void
     {
-        // Pins the exact event-name contract: a mismatch here (e.g. someone
-        // renames 'save' on one side only) breaks the real button silently,
-        // since emit() with no matching listener just does nothing — it
-        // doesn't throw on the production code path. TestLiveComponent::emit()
-        // DOES throw if there's no matching #[LiveListener], so simply
-        // reaching the assertions below already proves the names match.
         $entity = $this->createEntity('Untouched');
         $form = $this->mountEditForm($entity);
 
@@ -149,8 +145,61 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
+        $this->assertInstanceOf(TestEntity::class, $reloaded);
         $this->assertSame('Touched', $reloaded->getName());
+    }
+
+    // ── Subclass override robustness (inheritance shape) ────────────────────
+
+    public function testOverriddenSaveStillBroadcastsFormState(): void
+    {
+        $entity = $this->createEntity('Before');
+        $form = $this->mountOverridingSaveForm($entity);
+
+        $form->set(self::FORM_NAME, ['name' => 'After']);
+        $form->emit('save');
+
+        $this->assertSame(['valid' => 1], $this->emittedEvents($form)['admin:form:state'] ?? null);
+
+        $this->em->clear();
+        $reloaded = $this->em->find(TestEntity::class, $entity->getId());
+        $this->assertInstanceOf(TestEntity::class, $reloaded);
+        $this->assertSame('After', $reloaded->getName());
+    }
+
+    public function testOverriddenSaveWithInvalidDataStillBroadcastsInvalidState(): void
+    {
+        $entity = $this->createEntity('Keep Me');
+        $form = $this->mountOverridingSaveForm($entity);
+
+        $form->set(self::FORM_NAME, ['name' => '']);
+        $form->emit('save');
+
+        $this->assertSame(['valid' => 0], $this->emittedEvents($form)['admin:form:state'] ?? null);
+    }
+
+    // ── Composed (non-inheriting) custom form component ─────────────────────
+
+    /**
+     * The recommended pattern's own coverage: a component with zero
+     * relationship to AdminEntityForm, composing AdminFormComponentTrait +
+     * AdminFormSaveTrait directly. This is what a real PurchaseOrderForm-
+     * style component should look like going forward.
+     */
+    public function testComposedFormComponentBroadcastsFormState(): void
+    {
+        $entity = $this->createEntity('Before');
+        $form = $this->mountComposedForm($entity);
+
+        $form->set(self::FORM_NAME, ['name' => 'After']);
+        $form->emit('save');
+
+        $this->assertSame(['valid' => 1], $this->emittedEvents($form)['admin:form:state'] ?? null);
+
+        $this->em->clear();
+        $reloaded = $this->em->find(TestEntity::class, $entity->getId());
+        $this->assertInstanceOf(TestEntity::class, $reloaded);
+        $this->assertSame('After', $reloaded->getName());
     }
 
     // ── Full round trip, both components ────────────────────────────────────
@@ -161,7 +210,6 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
         $form = $this->mountEditForm($entity);
         $button = $this->saveButtonComponent();
 
-        // 1. Click save with a blank (invalid) name.
         $button->call('triggerSave');
         $this->assertTrue($button->component()->saving);
 
@@ -174,7 +222,6 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
         $this->assertFalse($button->component()->saving);
         $this->assertFalse($button->component()->valid);
 
-        // 2. Fix the field and save again.
         $button->call('triggerSave');
         $form->set(self::FORM_NAME, ['name' => 'Fixed']);
         $form->emit('save');
@@ -187,7 +234,7 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
 
         $this->em->clear();
         $reloaded = $this->em->find(TestEntity::class, $entity->getId());
-        $this->assertInstanceOf(\Kachnitel\AdminBundle\Tests\Fixtures\TestEntity::class, $reloaded);
+        $this->assertInstanceOf(TestEntity::class, $reloaded);
         $this->assertSame('Fixed', $reloaded->getName());
     }
 
@@ -215,21 +262,36 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
         );
     }
 
+    private function mountOverridingSaveForm(TestEntity $entity): TestLiveComponent
+    {
+        return $this->createLiveComponent(
+            name: OverridingSaveAdminEntityForm::class,
+            data: [
+                'entityClass'   => TestEntity::class,
+                'entityId'      => $entity->getId(),
+                'formTypeClass' => TestEntityFormType::class,
+            ],
+        );
+    }
+
+    private function mountComposedForm(TestEntity $entity): TestLiveComponent
+    {
+        return $this->createLiveComponent(
+            name: ComposedFormComponent::class,
+            data: [
+                'entityClass'   => TestEntity::class,
+                'entityId'      => $entity->getId(),
+                'formTypeClass' => TestEntityFormType::class,
+            ],
+        );
+    }
+
     private function saveButtonComponent(): TestLiveComponent
     {
         return $this->createLiveComponent(name: 'K:Admin:Action:Save');
     }
 
     /**
-     * Reads a component's emitted broadcast events from its last render,
-     * keyed by event name, each value the raw 'data' payload array.
-     *
-     * symfony/ux-live-component renamed the HTML attribute carrying this data
-     * partway through the 2.x series (data-live-emit ->
-     * data-live-events-to-emit-value); composer.json only pins ^2.13, so
-     * either could be the locked version. Reading both keeps this correct
-     * regardless of which minor version is actually installed.
-     *
      * @return array<string, array<string, mixed>>
      */
     private function emittedEvents(TestLiveComponent $component): array

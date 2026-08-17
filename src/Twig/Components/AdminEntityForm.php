@@ -9,37 +9,39 @@ use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormTypeInterface;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
-use Symfony\UX\LiveComponent\Attribute\LiveAction;
-use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 
 /**
  * Generic live form component for admin edit and new entity pages.
  *
- * Composes AdminFormComponentTrait for plumbing shared with InlineEntityForm —
- * deliberately via `use`, not class inheritance. See that trait's docblock for
- * the full rationale (an inheritance relationship between two #[AsLiveComponent]
- * classes previously caused a sibling component's own LiveAction button to
- * silently fail to fire).
+ * Composes AdminFormComponentTrait (form-instantiation/submission plumbing
+ * shared with InlineEntityForm) and AdminFormSaveTrait (the standard
+ * save/persist/broadcast lifecycle, shared with any custom form component)
+ * — deliberately via `use`, not class inheritance. See AdminFormSaveTrait's
+ * docblock for the full rationale: an inheritance relationship between two
+ * #[AsLiveComponent] classes previously caused a sibling component's own
+ * LiveAction button to silently fail to fire (InlineEntityForm), and later
+ * caused a custom form component's save() override to silently never
+ * broadcast state (PurchaseOrderForm). Custom form components compose both
+ * traits directly rather than extend this class — see FORMS.md's "Custom
+ * form components" section.
  *
  * When `formTypeClass` is `DynamicEntityFormType::class`, the component
- * automatically passes the required `entity_class` and `is_root: true` options
- * so that collection associations are included in the top-level form.
- *
- * Coordinates with the K:Admin:Action:Save button (rendered separately in the
- * page header, not a child of this component) purely through the LiveComponent
- * broadcast event system — see broadcastFormState().
+ * automatically passes the required `entity_class` and `is_root: true`
+ * options so that collection associations are included in the top-level
+ * form.
  *
  * @see \Kachnitel\AdminBundle\Controller\AbstractAdminController
  * @see docs/DYNAMIC_FORM_COLLECTIONS.md
  * @see AdminFormComponentTrait
+ * @see AdminFormSaveTrait
  */
 #[AsLiveComponent(name: 'K:Admin:EntityForm', template: '@KachnitelAdmin/components/AdminEntityForm.html.twig')]
 class AdminEntityForm extends AbstractController
 {
     use AdminFormComponentTrait;
+    use AdminFormSaveTrait;
 
     /**
      * Entity primary key. Null for new entities.
@@ -94,76 +96,5 @@ class AdminEntityForm extends AbstractController
         }
 
         return $this->createForm($formTypeClass, $entity, $options);
-    }
-
-    /**
-     * Broadcasts the form's current validity to any listening
-     * K:Admin:Action:Save button, purely for a non-blocking visual hint (see
-     * SaveButton's docblock for why this doesn't gate its disabled state).
-     *
-     * K:Admin:Action:Save is a sibling, not a child (rendered in the page
-     * header block vs. this component's content block — see admin/edit.html.twig,
-     * admin/new.html.twig), so LiveProp parent/child binding isn't available;
-     * broadcast events are the only channel between the two.
-     */
-    public function broadcastFormState(): void
-    {
-        $this->emit(
-            'admin:form:state',
-            [ 'valid' => $this->isFormValid() ? 1 : 0 ],
-            'K:Admin:Action:Save'
-        );
-    }
-
-    /**
-     * Whether the form is currently valid. True for an untouched form (not
-     * yet submitted), since FormInterface::isValid() cannot be called before
-     * submission.
-     */
-    public function isFormValid(): bool
-    {
-        $form = $this->doGetForm();
-
-        return !$form->isSubmitted() || $form->isValid();
-    }
-
-    /**
-     * Persist the form data.
-     */
-    #[LiveAction]
-    #[LiveListener('save')]
-    public function save(): void
-    {
-        try {
-            $this->doSubmitForm();
-        } catch (UnprocessableEntityHttpException) {
-            $this->dispatchBrowserEvent('toast.show', ['message' => 'Please correct the errors below and try again.']);
-
-            // Form is invalid — re-render with inline validation errors.
-            $this->broadcastFormState();
-            return;
-        }
-
-        /** @var object $entity */
-        $entity = $this->doGetForm()->getData();
-
-        $this->em->persist($entity);
-        $this->em->flush();
-
-        // After persisting a new entity, update entityId so the next re-render
-        // loads the persisted record rather than creating another new instance.
-        if ($this->entityId === null) {
-            $idValues = $this->em
-                ->getClassMetadata(get_class($entity))
-                ->getIdentifierValues($entity);
-
-            $rawId = reset($idValues);
-            if ($rawId !== false) {
-                $this->entityId = (int) $rawId;
-            }
-        }
-
-        $this->broadcastFormState();
-        $this->dispatchBrowserEvent('toast.show', ['message' => 'Saved successfully!']);
     }
 }

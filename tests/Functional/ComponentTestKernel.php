@@ -20,5 +20,15 @@ class ComponentTestKernel extends TestKernel
         // Register test voter that always grants access for component tests
         $container->register(TestAdminEntityVoter::class)
             ->addTag('security.voter', ['priority' => 1000]);
+
+        $container->register(\Kachnitel\AdminBundle\Tests\Fixtures\OverridingSaveAdminEntityForm::class)
+            ->setAutowired(true)
+            ->setAutoconfigured(true)
+            ->setPublic(true);
+
+        $container->register(\Kachnitel\AdminBundle\Tests\Fixtures\ComposedFormComponent::class)
+            ->setAutowired(true)
+            ->setAutoconfigured(true)
+            ->setPublic(true);
     }
 }

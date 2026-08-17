@@ -156,17 +156,27 @@ guide for the full detail, including why `empty_data` is always `''` and never `
 
 ## Custom form components
 
-For entities that need extra LiveActions (collection management, dependent fields, computed totals), create a component that **extends `AdminEntityForm`**.
+For entities that need extra LiveActions (collection management, dependent fields, computed totals), create a component that **composes `AdminFormComponentTrait` and `AdminFormSaveTrait`** — not one that extends `AdminEntityForm`. One `#[AsLiveComponent]` class extending another risks PHP reflection not reliably discovering `#[LiveAction]`/`#[LiveListener]` on an inherited, un-overridden method (see `InlineEntityForm`'s docblock for the original case, and the note below for why this matters even if you plan to override everything anyway).
 
 ### Step 1 — Create the component
 
 ```php
 // src/Twig/Components/Form/PurchaseOrderForm.php
-use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
+use Kachnitel\AdminBundle\Twig\Components\AdminFormComponentTrait;
+use Kachnitel\AdminBundle\Twig\Components\AdminFormSaveTrait;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 #[AsLiveComponent(name: 'App:Form:PurchaseOrder')]
-final class PurchaseOrderForm extends AdminEntityForm
+final class PurchaseOrderForm extends AbstractController
 {
+    use AdminFormComponentTrait;
+    use AdminFormSaveTrait;
+
+    #[LiveProp]
+    public ?int $entityId = null;
+
+    public function __construct(protected readonly EntityManagerInterface $em) {}
+
     // Override instantiateForm() only if you need custom form options.
     protected function instantiateForm(): FormInterface
     {
@@ -185,47 +195,23 @@ final class PurchaseOrderForm extends AdminEntityForm
 }
 ```
 
-The component's root template **must** include `data-admin-form` so the header Save button can reach it:
+### What you get by composing both traits
 
-```twig
-{# templates/components/Form/PurchaseOrderForm.html.twig #}
-<div data-admin-form {{ attributes }}>
-  {{ form_start(form) }}
-    {{ form_widget(form) }}
-  {{ form_end(form) }}
-</div>
-```
-
-### Step 2 — Register on the entity
-
-```php
-use Kachnitel\AdminBundle\Attribute\Admin;
-
-#[Admin(
-    formType: PurchaseOrderFormType::class,
-    formComponent: 'App:Form:PurchaseOrder',
-)]
-class PurchaseOrder {}
-```
-
-The admin will now mount your component instead of the default one for this entity's edit and new pages.
-
-### What you inherit for free
-
-| Feature | Inherited from `AdminEntityForm` |
-|---------|----------------------------------|
-| Real-time validation | ✓ |
-| Save on header button click | ✓ (`data-admin-form` + `#[LiveListener]`) |
-| Toast on success | ✓ |
-| New → edit transition (entityId set after first save) | ✓ |
-| CSRF handled by LiveComponent | ✓ |
+| Feature | Source |
+|---------|--------|
+| Real-time validation | `AdminFormComponentTrait` |
+| Save on header button click | `AdminFormSaveTrait` (`#[LiveListener('save')]`) |
+| Toast on success | `AdminFormSaveTrait` |
+| New → edit transition (entityId set after first save) | `AdminFormSaveTrait` |
+| Save-button validity broadcast | `AdminFormSaveTrait` (`#[PreReRender]` — fires even if you override `save()` entirely) |
+| CSRF handled by LiveComponent | `AdminFormComponentTrait` |
 
 ### What you can override
 
 | Method/prop | Purpose |
 |-------------|---------|
 | `instantiateForm()` | Custom form options, e.g. `action` URL or `DynamicEntityFormType` |
-| `save()` | Full save lifecycle (call `parent::save()` to keep the standard flow, or replace entirely) |
+| `save()` | Full save lifecycle. Overriding it entirely (your own persist/flush/toast, no call back into the trait's version) is fully supported — `broadcastFormState()` keeps firing regardless, since it's a separate composed method, not something `save()` has to remember to call. |
 | Component template | Custom field layout, computed values |
 
 ---
