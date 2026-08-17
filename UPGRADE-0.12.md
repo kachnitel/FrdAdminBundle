@@ -60,8 +60,7 @@ For the button to actually work (open the dialog, auto-select the new entity),
 the `admin-inline-add` Stimulus controller must be registered in your app, the
 same way `batch-select` already needed to be. See
 [docs/ASSETS.md](docs/ASSETS.md) and [docs/INLINE_ADD.md](docs/INLINE_ADD.md)
-for AssetMapper/Encore setup — Flex will not auto-add this entry for
-symlinked or path-repository installs.
+for AssetMapper/Encore setup — Flex will auto load this if installed by Composer.
 
 If you'd rather not expose this yet: deny it per field with
 `#[AdminColumn(editable: false)]`, or restrict the `new` permission on the
