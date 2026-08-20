@@ -200,7 +200,12 @@ class EntityList
 
     public function isDoctrineEntity(): bool
     {
-        return $this->entityClass !== '';
+        if ($this->entityClass === '' && $this->entityShortClass !== '') {
+            $this->resolveEntityClass();
+        }
+
+        return empty($this->dataSourceId)
+            && ($this->entityClass !== '' || $this->entityShortClass !== '');
     }
 
     public function canBatchDelete(): bool

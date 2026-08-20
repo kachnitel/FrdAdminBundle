@@ -95,4 +95,14 @@ final class EntityListEntityClassResolutionTest extends TestCase
 
         $this->assertSame('App\\Entity\\Product', $component->entityClass);
     }
+
+    #[PHPUnit\Test]
+    public function resolvesEntityClassWhenDoctrineModeIsChecked(): void
+    {
+        $component = $this->makeComponent('App\\Entity\\');
+        $component->entityShortClass = 'Product';
+
+        $this->assertTrue($component->isDoctrineEntity());
+        $this->assertSame('App\\Entity\\Product', $component->entityClass);
+    }
 }

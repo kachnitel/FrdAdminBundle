@@ -7,10 +7,13 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Functional tests for EntityList component in dataSourceId mode.
  */
+#[Group('functional')]
+#[Group('data-source')]
 final class EntityListDataSourceTest extends ComponentTestCase
 {
     public function testComponentWorksWithDataSourceId(): void
@@ -76,6 +79,19 @@ final class EntityListDataSourceTest extends ComponentTestCase
         $component = $testComponent->component();
 
         // When using entityClass, isDoctrineEntity is true
+        $this->assertTrue($component->isDoctrineEntity());
+    }
+
+    public function testIsDoctrineEntityReturnsTrueBeforeEntityClassIsResolved(): void
+    {
+        $testComponent = $this->createLiveComponent(
+            name: 'K:Admin:EntityList',
+            data: ['entityShortClass' => 'TestEntity'],
+        );
+
+        /** @var EntityList $component */
+        $component = $testComponent->component();
+
         $this->assertTrue($component->isDoctrineEntity());
     }
 
