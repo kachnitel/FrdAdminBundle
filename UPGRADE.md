@@ -1,127 +1,59 @@
 # Upgrade Guide
 
-## Upgrading to the Datasource-Contracts Release
+**This bundle is pre-1.0.** Breaking changes are expected between minor versions. This guide covers migration paths for significant API changes.
 
-This release extracts core data-source value objects and interfaces into two
-standalone packages:
+## Table of Contents
 
-- **[`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts)**
-  — shared DTOs, interfaces, and traits
-- **[`kachnitel/entity-expression-language`](https://github.com/kachnitel/entity-expression-language)**
-  — expression-language evaluation for entity rows
+- [General Policy](#general-policy)
+- [Upgrading](#upgrading)
+- [Breaking Changes](#breaking-changes)
 
-All previously bundled classes have moved to these packages. Update your imports
-as described below.
+## General Policy
 
----
+Until 1.0 is released:
 
-### 1. Update `composer.json`
+- **Minor version bumps** (`0.x` → `0.y`) may include breaking changes. Read the [CHANGELOG](../CHANGELOG.md) before upgrading.
+- **Patch releases** (`0.x.y` → `0.x.z`) are safe — only bug fixes and documentation.
+- Doctrine ORM 3.5+, PHP 8.4+, Symfony 6.4+/7.x/8.x required.
 
-The two new packages are pulled automatically as dependencies of
-`kachnitel/admin-bundle`. Add explicit entries only if you typehint against the
-contracts package directly in your own code:
-
-```json
-"require": {
-    "kachnitel/admin-bundle": "^<next-version>",
-
-    // optional — only if you reference contracts classes in your own code:
-    "kachnitel/datasource-contracts": "^1.0"
-}
-```
-
-> **Note on stability:** Both packages are currently released from their default
-> branch. If your project sets `"minimum-stability": "stable"` you may need to
-> wait for a tagged release or add a stability flag.
-
----
-
-### 2. Replace all data-source imports
-
-Ten classes and interfaces were removed from the admin bundle and now live in
-`kachnitel/datasource-contracts`. The following applies to **all** files —
-source and tests alike.
-
-| Old FQCN | New FQCN |
-|---|---|
-| `Kachnitel\AdminBundle\DataSource\ColumnGroup` | `Kachnitel\DataSourceContracts\ColumnGroup` |
-| `Kachnitel\AdminBundle\DataSource\ColumnMetadata` | `Kachnitel\DataSourceContracts\ColumnMetadata` |
-| `Kachnitel\AdminBundle\DataSource\DataSourceInterface` | `Kachnitel\DataSourceContracts\DataSourceInterface` |
-| `Kachnitel\AdminBundle\DataSource\DataSourceProviderInterface` | `Kachnitel\DataSourceContracts\DataSourceProviderInterface` |
-| `Kachnitel\AdminBundle\DataSource\FilterEnumOptions` | `Kachnitel\DataSourceContracts\FilterEnumOptions` |
-| `Kachnitel\AdminBundle\DataSource\FilterMetadata` | `Kachnitel\DataSourceContracts\FilterMetadata` |
-| `Kachnitel\AdminBundle\DataSource\FlatColumnGroupsTrait` | `Kachnitel\DataSourceContracts\FlatColumnGroupsTrait` |
-| `Kachnitel\AdminBundle\DataSource\PaginatedResult` | `Kachnitel\DataSourceContracts\PaginatedResult` |
-| `Kachnitel\AdminBundle\DataSource\SearchAwareDataSourceInterface` | `Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface` |
-| `Kachnitel\AdminBundle\ValueObject\PaginationInfo` | `Kachnitel\DataSourceContracts\PaginationInfo` |
-
-**Bash one-liner (run from your project root):**
+## Upgrading
 
 ```bash
-find src tests -name '*.php' | xargs sed -i \
-  -e 's|Kachnitel\\AdminBundle\\DataSource\\ColumnGroup|Kachnitel\\DataSourceContracts\\ColumnGroup|g' \
-  -e 's|Kachnitel\\AdminBundle\\DataSource\\ColumnMetadata|Kachnitel\\DataSourceContracts\\ColumnMetadata|g' \
-  -e 's|Kachnitel\\AdminBundle\\DataSource\\DataSourceInterface|Kachnitel\\DataSourceContracts\\DataSourceInterface|g' \
-  -e 's|Kachnitel\\AdminBundle\\DataSource\\DataSourceProviderInterface|Kachnitel\\DataSourceContracts\\DataSourceProviderInterface|g' \
-  -e 's|Kachnitel\\AdminBundle\\DataSource\\FilterEnumOptions|Kachnitel\\DataSourceContracts\\FilterEnumOptions|g' \
-  -e 's|Kachnitel\\AdminBundle\\DataSource\\FilterMetadata|Kachnitel\\DataSourceContracts\\FilterMetadata|g' \
-  -e 's|Kachnitel\\AdminBundle\\DataSource\\FlatColumnGroupsTrait|Kachnitel\\DataSourceContracts\\FlatColumnGroupsTrait|g' \
-  -e 's|Kachnitel\\AdminBundle\\DataSource\\PaginatedResult|Kachnitel\\DataSourceContracts\\PaginatedResult|g' \
-  -e 's|Kachnitel\\AdminBundle\\DataSource\\SearchAwareDataSourceInterface|Kachnitel\\DataSourceContracts\\SearchAwareDataSourceInterface|g' \
-  -e 's|Kachnitel\\AdminBundle\\ValueObject\\PaginationInfo|Kachnitel\\DataSourceContracts\\PaginationInfo|g'
+composer update kachnitel/admin-bundle
+php bin/console cache:clear
 ```
+
+Check the CHANGELOG for your version. If breaking changes are listed, see "Breaking Changes" below.
+
+## Breaking Changes
+
+### Extracting Packages (0.x → 0.y)
+
+Several internal packages were extracted into standalone repositories with their own release cycles:
+
+| Moved | Repository | Namespace Change |
+|-------|-----------|---------|
+| Form auto-generation engine | [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle) | `Kachnitel\AdminBundle\Form\DynamicEntityFormType` → `Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType` |
+| Data source contracts | [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts) | `Kachnitel\AdminBundle\ValueObject\ColumnGroup` → `Kachnitel\DataSourceContracts\ColumnGroup`; `DataSourceInterface` etc. moved similarly |
+| Expression language evaluator | [`kachnitel/entity-expression-language`](https://github.com/kachnitel/entity-expression-language) | Internal only; no user-facing API changes |
+
+**Action:** If you implemented custom `DataSourceInterface`, used `DynamicEntityFormType` directly, or referenced value objects from the bundle's `ValueObject\` namespace, update the namespace references. The admin bundle includes these packages as composer dependencies automatically.
 
 ---
 
-### 3. Manual service tags (uncommon)
+## No Action Needed
 
-If you manually tag a data-source service in `services.yaml`, update the tag to
-the contracts FQCN:
+The following are **not** breaking changes, just clarifications:
 
-```yaml
-# Before
-App\DataSource\MyDataSource:
-    tags:
-        - { name: 'Kachnitel\AdminBundle\DataSource\DataSourceInterface' }
-
-# After
-App\DataSource\MyDataSource:
-    tags:
-        - { name: 'Kachnitel\DataSourceContracts\DataSourceInterface' }
-```
-
-Services using **autowiring / autoconfiguration** (the default) are unaffected.
+- `#[Admin]` attributes on entities are optional — omit to exclude from admin
+- `enableInlineEdit` does **not** affect the New/Edit form, only list-view row editing
+- `dataSourceId`-only (no `entityClass`) silently disables archive toggling, inline editing, and `#[ColumnPermission]` — use `entityClass` for full functionality
+- Forms require Symfony Form 7.0+ (included with Symfony 7.x/8.x; users on 6.4 must pin `symfony/form:^7`)
 
 ---
 
-### 4. `PropertyAccessProxy` (internal — rare)
+## Getting Help
 
-`Kachnitel\AdminBundle\RowAction\PropertyAccessProxy` has moved to
-`Kachnitel\EntityExpressionLanguage\PropertyAccessProxy`. The class is
-`@internal` and should not appear in application code, but if you have a
-**voter** that type-checks its subject, update it:
-
-```php
-// Before
-if ($subject instanceof \Kachnitel\AdminBundle\RowAction\PropertyAccessProxy) {
-    $subject = $subject->getEntity();
-}
-
-// After
-if ($subject instanceof \Kachnitel\EntityExpressionLanguage\PropertyAccessProxy) {
-    $subject = $subject->getEntity();
-}
-```
-
-In practice the expression-language runtime unwraps the proxy before passing the
-subject to voters, so most voter code is unaffected.
-
----
-
-### Summary checklist
-
-- [ ] `composer update kachnitel/admin-bundle` pulls the new packages
-- [ ] Run the find-replace for all 10 moved FQCNs
-- [ ] Update any manually-tagged services in `services.yaml`
-- [ ] Update voter `instanceof` checks for `PropertyAccessProxy` if present
-- [ ] Run `composer dump-autoload` and your test suite
+- Check the [CHANGELOG](../CHANGELOG.md) for detailed breaking change notes
+- Review relevant feature guides (e.g., [Forms](FORMS.md), [Inline Editing](INLINE_EDIT.md))
+- Open an issue if you hit a migration blocker
