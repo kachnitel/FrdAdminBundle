@@ -26,6 +26,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveListener;
  * InlineEntityForm's documented history with the same shape.
  *
  * @see \Kachnitel\AdminBundle\Tests\Functional\SaveButtonIntegrationTest
+ * @extends AdminEntityForm<object|null>
  */
 #[AsLiveComponent(name: 'Test:Form:OverridingSave', template: '@KachnitelAdmin/components/AdminEntityForm.html.twig')]
 final class OverridingSaveAdminEntityForm extends AdminEntityForm

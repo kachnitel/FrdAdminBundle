@@ -227,6 +227,8 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
  *
  * Does NOT override createNamed / createForm — the mock FormFactory injected
  * via the constructor captures the call instead.
+ *
+ * @extends InlineEntityForm<object|null>
  */
 class TestableInlineEntityForm extends InlineEntityForm
 {

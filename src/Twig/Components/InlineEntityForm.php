@@ -17,15 +17,6 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
 /**
  * LiveComponent for inline entity creation inside the EntityTypeAddButton dialog.
  *
- * Composes AdminFormComponentTrait directly — deliberately NOT by extending
- * AdminEntityForm. See AdminFormComponentTrait's docblock for the full
- * rationale: this class previously extended AdminEntityForm, and the Save &
- * Close button in this component's own template intermittently fired no
- * backend request at all when clicked. That symptom is consistent with a
- * known upstream Symfony UX Live Component reflection gap affecting one
- * #[AsLiveComponent] class extending another. Composing the shared trait
- * instead removes that parent/child LiveComponent relationship entirely.
- *
  * ## Form submission — protected proxies
  *
  * doSubmitForm()/doGetForm() (declared on AdminFormComponentTrait) are used
@@ -69,6 +60,8 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
  * yet been covered by a dedicated test, though — until it is, prefer
  * #[AdminColumn(editable: false)] on OneToMany properties of the related entity
  * to exclude them from the inline dialog.
+ *
+ * @template TData of object|null
  */
 #[AsLiveComponent(
     name: 'K:Admin:EntityType:InlineForm',
@@ -76,6 +69,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
 )]
 class InlineEntityForm extends AbstractController
 {
+    /** @use AdminFormComponentTrait<TData> */
     use AdminFormComponentTrait;
 
     public function __construct(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Twig\Components\AdminFormComponentInterface;
 use Kachnitel\AdminBundle\Twig\Components\AdminFormComponentTrait;
 use Kachnitel\AdminBundle\Twig\Components\AdminFormSaveTrait;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,10 +28,13 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
  * cover, for the inheritance shape specifically).
  *
  * @see \Kachnitel\AdminBundle\Tests\Functional\SaveButtonIntegrationTest
+ * @implements AdminFormComponentInterface<object|null>
+ * @use AdminFormComponentTrait<object|null>
  */
 #[AsLiveComponent(name: 'Test:Form:Composed', template: '@KachnitelAdmin/components/AdminEntityForm.html.twig')]
-final class ComposedFormComponent extends AbstractController
+final class ComposedFormComponent extends AbstractController implements AdminFormComponentInterface
 {
+    /** @use AdminFormComponentTrait<object|null> */
     use AdminFormComponentTrait;
     use AdminFormSaveTrait;
 
@@ -40,9 +44,9 @@ final class ComposedFormComponent extends AbstractController
     public function __construct(protected readonly EntityManagerInterface $em) {}
 
     /**
-    * @return FormInterface<object|null>
+     * @return FormInterface<object|null>
      */
-    protected function instantiateForm(): FormInterface
+    public function instantiateForm(): FormInterface
     {
         /** @var class-string $entityClassName */
         $entityClassName = $this->entityClass;

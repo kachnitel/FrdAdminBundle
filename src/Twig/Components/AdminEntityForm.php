@@ -15,17 +15,8 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 /**
  * Generic live form component for admin edit and new entity pages.
  *
- * Composes AdminFormComponentTrait (form-instantiation/submission plumbing
- * shared with InlineEntityForm) and AdminFormSaveTrait (the standard
- * save/persist/broadcast lifecycle, shared with any custom form component)
- * — deliberately via `use`, not class inheritance. See AdminFormSaveTrait's
- * docblock for the full rationale: an inheritance relationship between two
- * #[AsLiveComponent] classes previously caused a sibling component's own
- * LiveAction button to silently fail to fire (InlineEntityForm), and later
- * caused a custom form component's save() override to silently never
- * broadcast state (PurchaseOrderForm). Custom form components compose both
- * traits directly rather than extend this class — see FORMS.md's "Custom
- * form components" section.
+ * Composes AdminFormComponentTrait and AdminFormSaveTrait rather than
+ * extending — see docs/FORMS.md, "Why composition, not inheritance".
  *
  * When `formTypeClass` is `DynamicEntityFormType::class`, the component
  * automatically passes the required `entity_class` and `is_root: true`
@@ -36,10 +27,14 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
  * @see docs/DYNAMIC_FORM_COLLECTIONS.md
  * @see AdminFormComponentTrait
  * @see AdminFormSaveTrait
+ *
+ * @template TData of object|null
+ * @implements AdminFormComponentInterface<TData>
  */
 #[AsLiveComponent(name: 'K:Admin:EntityForm', template: '@KachnitelAdmin/components/AdminEntityForm.html.twig')]
-class AdminEntityForm extends AbstractController
+class AdminEntityForm extends AbstractController implements AdminFormComponentInterface
 {
+    /** @use AdminFormComponentTrait<TData> */
     use AdminFormComponentTrait;
     use AdminFormSaveTrait;
 
@@ -62,9 +57,9 @@ class AdminEntityForm extends AbstractController
      * CSRF protection is disabled at the form level — LiveComponent handles
      * its own request-level CSRF separately.
      *
-     * @return FormInterface<object|null>
+    * @return FormInterface<TData>
      */
-    protected function instantiateForm(): FormInterface
+    public function instantiateForm(): FormInterface
     {
         /** @var class-string $entityClassName */
         $entityClassName = $this->entityClass;
@@ -95,7 +90,7 @@ class AdminEntityForm extends AbstractController
             $options['entity_instance'] = $entity;
         }
 
-        /** @var FormInterface<object|null> $form */
+        /** @var FormInterface<TData> $form */
         $form = $this->createForm($formTypeClass, $entity, $options);
 
         return $form;

@@ -236,6 +236,8 @@ final class AdminEntityFormInstantiateFormTest extends TestCase
 /**
  * Subclass that overrides createForm() to capture options without needing
  * the Symfony container, and exposes instantiateForm() publicly for testing.
+ *
+ * @extends AdminEntityForm<object|null>
  */
 class TestableAdminEntityForm extends AdminEntityForm
 {

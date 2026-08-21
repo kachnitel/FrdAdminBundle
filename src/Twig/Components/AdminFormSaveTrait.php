@@ -31,6 +31,8 @@ use Symfony\UX\LiveComponent\Attribute\PreReRender;
  *
  * @property-read EntityManagerInterface $em
  * @property ?int $entityId
+ *
+ * @phpstan-require-implements AdminFormComponentInterface
  */
 trait AdminFormSaveTrait
 {
