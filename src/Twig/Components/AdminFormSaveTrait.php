@@ -5,70 +5,52 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Contracts\Service\Attribute\Required;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\PreReRender;
 
 /**
  * Standard save lifecycle for admin entity-form LiveComponents: persist,
- * flush, entityId tracking for new entities, success/error toast, and the
- * validity broadcast K:Admin:Action:Save listens for.
+ * flush, entityId tracking, success/error toast, validity broadcast for
+ * K:Admin:Action:Save, and a redirect to the edit page after creating a
+ * new entity (see buildCreateRedirect()). Editing an existing entity never
+ * redirects — it re-renders in place as usual.
  *
- * Composed (via `use`), never inherited, by both AdminEntityForm and any
- * custom form component — same rationale as AdminFormComponentTrait (see
- * that trait's docblock, and InlineEntityForm's, for the full history):
- * one #[AsLiveComponent] class extending another risks PHP reflection not
- * reliably discovering #[LiveAction]/#[LiveListener] on an inherited,
- * un-overridden method. Traits don't have this problem — a trait's methods
- * are reflected as if declared directly on the consuming class, so
- * composing this trait is safe regardless of whether the consuming class
- * overrides save() or not, and regardless of which specific attribute is
- * involved (unlike relying on inheritance + hoping #[PreReRender]
- * specifically is one of the unaffected ones — see
- * AdminEntityFormPreRerenderInheritanceTest, which confirmed that for the
- * old design but doesn't generalise to every future attribute).
+ * Composed via `use`, not inherited — see FORMS.md, "Why composition, not
+ * inheritance" for why. `broadcastFormState()` stays safe even if a consuming
+ * class fully overrides save(): it's a separate `#[PreReRender]` hook, not
+ * something save() has to remember to call.
  *
- * This trait is what closed the actual production bug (PurchaseOrderForm-
- * shaped: extends AdminEntityForm, overrides save() with its own
- * persist/flush/toast, never calls broadcastFormState()). Extracting
- * save()/broadcastFormState() here means a consuming class can override
- * save() completely and broadcastFormState() still fires via
- * #[PreReRender] regardless — nothing to remember, nothing to call.
- *
- * Requires the consuming class to also compose AdminFormComponentTrait (for
- * doSubmitForm()/doGetForm() and the emit()/dispatchBrowserEvent() plumbing
- * it brings in), and to declare its own EntityManagerInterface $em and
- * ?int $entityId — exactly what AdminEntityForm does, and what any custom
- * form component composing this trait should do too. See FORMS.md's
- * "Custom form components" section for the full recommended shape.
+ * Requires the consuming class to also compose AdminFormComponentTrait,
+ * and to declare its own EntityManagerInterface $em and ?int $entityId
+ * (see AdminEntityForm, and FORMS.md's "Custom form components" section).
  *
  * @property-read EntityManagerInterface $em
  * @property ?int $entityId
  */
 trait AdminFormSaveTrait
 {
+    private AdminRouteRuntime $adminRouteRuntime;
+
+    #[Required]
+    public function setAdminRouteRuntime(AdminRouteRuntime $adminRouteRuntime): void
+    {
+        $this->adminRouteRuntime = $adminRouteRuntime;
+    }
+
     /**
-     * Broadcasts the form's current validity to any listening
-     * K:Admin:Action:Save button, purely for a non-blocking visual hint (see
-     * SaveButton's docblock for why this doesn't gate its disabled state).
+     * Broadcasts form validity to any listening K:Admin:Action:Save button
+     * (non-blocking visual hint only — see SaveButton's docblock).
      *
-     * #[PreReRender], not an explicit call inside save(): fires on every
-     * render regardless of which #[LiveAction] ran or how a consuming class
-     * implements save() — see trait docblock.
-     *
-     * priority: -10 is required, not cosmetic. It must run AFTER
-     * ComponentWithFormTrait::submitFormOnRender() (priority 0 — "higher
-     * called earlier"), which is what actually submits the live-bound form
-     * data for this render. At the default priority or higher,
-     * isFormValid() would see a not-yet-submitted form and always report
-     * valid — the exact bug this replaced when broadcastFormState() was
-     * briefly #[PostHydrate].
-     *
-     * K:Admin:Action:Save is a sibling, not a child (rendered in the page
-     * header block vs. the form component's content block), so LiveProp
-     * parent/child binding isn't available; broadcast events are the only
-     * channel between the two.
+     * priority: -10 is required: it must run after
+     * ComponentWithFormTrait::submitFormOnRender() (priority 0), which
+     * submits the live-bound form data for this render. At a higher
+     * priority, isFormValid() would see a not-yet-submitted form and
+     * always report valid.
      */
     #[PreReRender(priority: -10)]
     public function broadcastFormState(): void
@@ -81,9 +63,8 @@ trait AdminFormSaveTrait
     }
 
     /**
-     * Whether the form is currently valid. True for an untouched form (not
-     * yet submitted), since FormInterface::isValid() cannot be called before
-     * submission.
+     * True for an untouched (not-yet-submitted) form, since
+     * FormInterface::isValid() can't be called before submission.
      */
     public function isFormValid(): bool
     {
@@ -93,23 +74,21 @@ trait AdminFormSaveTrait
     }
 
     /**
-     * Persist the form data.
+     * Persist the form data. Override entirely for custom save logic —
+     * broadcastFormState() keeps firing via #[PreReRender] regardless.
      *
-     * A consuming class overrides this entirely for custom save logic by
-     * declaring its own save() — standard PHP class-overrides-trait-method
-     * rules. broadcastFormState() keeps firing via #[PreReRender]
-     * regardless of what an override does or doesn't call; there's no
-     * parent::save() to remember here.
+     * Return type is ?RedirectResponse so overrides stay covariant even
+     * if they never redirect.
      */
     #[LiveAction]
     #[LiveListener('save')]
-    public function save(): void
+    public function save(): ?RedirectResponse
     {
         try {
             $this->doSubmitForm();
         } catch (UnprocessableEntityHttpException) {
             $this->dispatchBrowserEvent('toast.show', ['message' => 'Please correct the errors below and try again.']);
-            return;
+            return null;
         }
 
         /** @var object $entity */
@@ -118,19 +97,51 @@ trait AdminFormSaveTrait
         $this->em->persist($entity);
         $this->em->flush();
 
-        // After persisting a new entity, update entityId so the next re-render
-        // loads the persisted record rather than creating another new instance.
-        if ($this->entityId === null) {
+        $wasNew = $this->entityId === null;
+
+        if ($wasNew) {
             $idValues = $this->em
                 ->getClassMetadata(get_class($entity))
                 ->getIdentifierValues($entity);
 
             $rawId = reset($idValues);
-            if (is_int($rawId) || is_numeric($rawId)) {
+            if (is_numeric($rawId)) {
                 $this->entityId = (int) $rawId;
             }
         }
 
+        if ($wasNew && $this->entityId !== null) {
+            $redirect = $this->buildCreateRedirect($entity);
+            if ($redirect !== null) {
+                return $redirect;
+            }
+        }
+
         $this->dispatchBrowserEvent('toast.show', ['message' => 'Saved successfully!']);
+
+        return null;
+    }
+
+    /**
+     * Redirect to a freshly created entity's own edit page. Returns null
+     * (falls through to the stay-in-place toast) when no edit URL can be
+     * generated, e.g. enable_generic_controller: false with no
+     * #[AdminRoutes] override.
+     *
+     * Deliberately skips AdminRouteRuntime::hasRoute() — its generic-route
+     * fallback always reports 'edit' as available, so only actually
+     * generating the URL can tell a real gap from a healthy default.
+     * Protected so a consuming class can override just the redirect
+     * target (e.g. to a show page).
+     */
+    protected function buildCreateRedirect(object $entity): ?RedirectResponse
+    {
+        try {
+            $url = $this->adminRouteRuntime->getPath($entity, 'edit');
+        } catch (\Exception) {
+            return null;
+        }
+
+        return new RedirectResponse($url);
     }
 }

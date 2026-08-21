@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -33,17 +34,25 @@ final class OverridingSaveAdminEntityForm extends AdminEntityForm
      * Deliberately duplicates AdminEntityForm::save()'s persistence logic
      * instead of calling parent::save() — this is the shape of the bug
      * being regression-tested. Deliberately does NOT call
-     * broadcastFormState(): that's the whole point.
+     * broadcastFormState(), and deliberately never redirects (no
+     * buildCreateRedirect() call either): that's the whole point — this
+     * fixture proves the parent's #[PreReRender] hook survives a save()
+     * override that ignores every one of the trait's own newer behaviours,
+     * not just the original toast/broadcast ones.
+     *
+     * Return type must stay covariant with AdminFormSaveTrait::save() —
+     * ?RedirectResponse, not void — even though this override always
+     * returns null itself.
      */
     #[LiveAction]
     #[LiveListener('save')]
-    public function save(): void
+    public function save(): ?RedirectResponse
     {
         try {
             $this->doSubmitForm();
         } catch (UnprocessableEntityHttpException) {
             $this->dispatchBrowserEvent('toast.show', ['message' => 'Fix the errors.']);
-            return;
+            return null;
         }
 
         /** @var object $entity */
@@ -53,5 +62,7 @@ final class OverridingSaveAdminEntityForm extends AdminEntityForm
         $this->em->flush();
 
         $this->dispatchBrowserEvent('toast.show', ['message' => 'Custom entity saved!']);
+
+        return null;
     }
 }
