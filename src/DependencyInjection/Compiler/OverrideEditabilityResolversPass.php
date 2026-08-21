@@ -21,16 +21,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  * (loadExtension()/load()) all run as the first step of container
  * compilation, before any compiler pass including this one, so by the time
  * process() below runs, every sibling bundle's default alias has already
- * been set. Per Symfony's own DependencyInjection docs: "If you need to
- * manipulate the configuration loaded by an extension ... use a compiler
- * pass which works with the full container after the extensions have been
- * processed." That guarantee — not registerBundles() order — is what makes
+ * been set. That guarantee — rather than registerBundles() order — is what makes
  * re-asserting both aliases here deterministic no matter which bundle a
  * consuming app (or a Flex recipe) happens to register last.
- *
- * Only the two interfaces actually in play are handled here; add a new
- * setAlias() line if a future sibling bundle introduces a third permissive
- * default this bundle needs to override.
  *
  * @see https://symfony.com/doc/current/components/dependency_injection/compilation.html
  * @see https://symfony.com/doc/current/service_container/tags.html#register-the-pass-with-the-container
