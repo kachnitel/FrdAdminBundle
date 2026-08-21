@@ -122,6 +122,11 @@ class PropertyFilterabilityService
             return null;
         }
 
-        return [$filterField => (string) $entity->getId()];
+        $entityId = $entity->getId();
+        if (!is_scalar($entityId) && !$entityId instanceof \Stringable) {
+            return null;
+        }
+
+        return [$filterField => (string) $entityId];
     }
 }

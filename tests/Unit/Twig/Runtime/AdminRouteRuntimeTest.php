@@ -254,7 +254,9 @@ final class AdminRouteRuntimeTest extends TestCase
         $this->router->method('getRouteCollection')->willReturn($collection);
 
         $this->router->expects($this->once())->method('generate')
-            ->willReturnCallback(fn ($name, $params) => '/admin/' . ($params['entitySlug'] ?? 'unknown') . '/' . ($params['id'] ?? ''));
+            ->willReturnCallback(fn (string $name, array $params): string => '/admin/'
+                . $this->stringifyParameter($params, 'entitySlug', 'unknown')
+                . '/' . $this->stringifyParameter($params, 'id', ''));
 
         $path = $this->runtime->getPath(TestEntity::class, 'show', []);
         $this->assertStringContainsString('test-entity', $path);
@@ -299,7 +301,9 @@ final class AdminRouteRuntimeTest extends TestCase
         $this->router->method('getRouteCollection')->willReturn($collection);
 
         $this->router->expects($this->once())->method('generate')
-            ->willReturnCallback(fn ($name, $params) => '/admin/' . ($params['class'] ?? 'unknown') . '/' . ($params['id'] ?? '0') . '/edit');
+            ->willReturnCallback(fn (string $name, array $params): string => '/admin/'
+                . $this->stringifyParameter($params, 'class', 'unknown')
+                . '/' . $this->stringifyParameter($params, 'id', '0') . '/edit');
 
         $path = $this->runtime->getPath($entity, 'edit', []);
         $this->assertStringContainsString('/edit', $path);
@@ -481,5 +485,13 @@ final class AdminRouteRuntimeTest extends TestCase
         $formRegistry->method('hasType')->willReturn(true);
 
         $this->assertTrue($runtime->isActionAccessible('UnknownEntity', 'new'));
+    }
+
+    /** @param array<int|string, mixed> $params */
+    private function stringifyParameter(array $params, string $key, string $default): string
+    {
+        $value = $params[$key] ?? $default;
+
+        return is_scalar($value) || $value instanceof \Stringable ? (string) $value : $default;
     }
 }

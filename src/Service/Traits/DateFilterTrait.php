@@ -29,7 +29,9 @@ trait DateFilterTrait
     {
         [, $paramName] = $this->getFilterContext($column, $metadata);
 
-        $dateValue = $value instanceof \DateTimeInterface ? $value : new \DateTime((string) $value);
+        $dateValue = $value instanceof \DateTimeInterface
+            ? $value
+            : new \DateTime(is_scalar($value) ? (string) $value : '');
 
         $startOfDay = \DateTime::createFromInterface($dateValue)->setTime(0, 0, 0);
         $endOfDay = \DateTime::createFromInterface($dateValue)->setTime(23, 59, 59);
@@ -58,18 +60,35 @@ trait DateFilterTrait
         $from = $range['from'] ?? null;
         $to = $range['to'] ?? null;
 
-        if ($from !== null && $from !== '') {
-            $fromDate = $from instanceof \DateTimeInterface ? $from : new \DateTime((string) $from);
-            $startOfDay = \DateTime::createFromInterface($fromDate)->setTime(0, 0, 0);
-            $qb->andWhere('e.' . $column . ' >= :' . $paramName . '_from')
-                ->setParameter($paramName . '_from', $startOfDay);
+        $this->applyDateRangeBoundary($qb, $column, $paramName, $from, false);
+        $this->applyDateRangeBoundary($qb, $column, $paramName, $to, true);
+    }
+
+    private function createDate(mixed $value): \DateTimeInterface
+    {
+        return $value instanceof \DateTimeInterface
+            ? $value
+            : new \DateTime(is_scalar($value) ? (string) $value : '');
+    }
+
+    private function applyDateRangeBoundary(
+        QueryBuilder $qb,
+        string $column,
+        string $paramName,
+        mixed $value,
+        bool $isEnd
+    ): void {
+        if ($value === null || $value === '') {
+            return;
         }
 
-        if ($to !== null && $to !== '') {
-            $toDate = $to instanceof \DateTimeInterface ? $to : new \DateTime((string) $to);
-            $endOfDay = \DateTime::createFromInterface($toDate)->setTime(23, 59, 59);
-            $qb->andWhere('e.' . $column . ' <= :' . $paramName . '_to')
-                ->setParameter($paramName . '_to', $endOfDay);
-        }
+        $date = $this->createDate($value);
+        $time = $isEnd ? [23, 59, 59] : [0, 0, 0];
+        $operator = $isEnd ? '<=' : '>=';
+        $suffix = $isEnd ? 'to' : 'from';
+        $date = \DateTime::createFromInterface($date)->setTime(...$time);
+
+        $qb->andWhere('e.' . $column . ' ' . $operator . ' :' . $paramName . '_' . $suffix)
+            ->setParameter($paramName . '_' . $suffix, $date);
     }
 }

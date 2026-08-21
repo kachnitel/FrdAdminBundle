@@ -325,6 +325,10 @@ TWIG;
             \RecursiveIteratorIterator::CHILD_FIRST
         );
         foreach ($files as $file) {
+            if (!$file instanceof \SplFileInfo) {
+                continue;
+            }
+
             $file->isDir() ? rmdir($file->getPathname()) : unlink($file->getPathname());
         }
         rmdir($dir);

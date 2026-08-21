@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
+use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithCustomColumns;
 use PHPUnit\Framework\Attributes\Test;
@@ -45,9 +46,10 @@ final class EntityListCustomColumnTest extends ComponentTestCase
     public function dataSourceExposesCustomColumnsViaGetColumns(): void
     {
         $factory = static::getContainer()->get(DoctrineDataSourceFactory::class);
+        self::assertInstanceOf(DoctrineDataSourceFactory::class, $factory);
         $dataSource = $factory->create(EntityWithCustomColumns::class);
 
-        $this->assertNotNull($dataSource);
+        self::assertInstanceOf(DoctrineDataSource::class, $dataSource);
         $columns = $dataSource->getColumns();
 
         // Explicit columns: list — only these appear, in this order
@@ -62,8 +64,9 @@ final class EntityListCustomColumnTest extends ComponentTestCase
     public function dataSourceReturnsNullValueForCustomColumn(): void
     {
         $factory = static::getContainer()->get(DoctrineDataSourceFactory::class);
+        self::assertInstanceOf(DoctrineDataSourceFactory::class, $factory);
         $dataSource = $factory->create(EntityWithCustomColumns::class);
-        $this->assertNotNull($dataSource);
+        self::assertInstanceOf(DoctrineDataSource::class, $dataSource);
 
         $entity = new EntityWithCustomColumns();
         $entity->setFirstName('Jane');
@@ -110,8 +113,9 @@ final class EntityListCustomColumnTest extends ComponentTestCase
         // statusBadge is NOT in Admin::columns on EntityWithCustomColumns, so it must
         // not appear in the column list at all
         $factory = static::getContainer()->get(DoctrineDataSourceFactory::class);
+        self::assertInstanceOf(DoctrineDataSourceFactory::class, $factory);
         $dataSource = $factory->create(EntityWithCustomColumns::class);
-        $this->assertNotNull($dataSource);
+        self::assertInstanceOf(DoctrineDataSource::class, $dataSource);
 
         $columns = $dataSource->getColumns();
 

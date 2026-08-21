@@ -177,8 +177,10 @@ final class FilterMetadataProviderTest extends TestCase
 
         $this->assertEquals(ColumnFilter::TYPE_RELATION, $filters['relatedEntity']['type']);
         $this->assertArrayHasKey('searchFields', $filters['relatedEntity']);
-        $this->assertContains('name', $filters['relatedEntity']['searchFields']);
-        $this->assertContains('email', $filters['relatedEntity']['searchFields']);
+        /** @var list<string> $searchFields */
+        $searchFields = $filters['relatedEntity']['searchFields'];
+        $this->assertContains('name', $searchFields);
+        $this->assertContains('email', $searchFields);
         $this->assertEquals(RelatedEntity::class, $filters['relatedEntity']['targetClass']);
     }
 
@@ -350,6 +352,7 @@ final class FilterMetadataProviderTest extends TestCase
         // ['name', 'email', 'firstName', 'lastName'], but 'name' doesn't exist as a
         // database field, so it should be filtered out. Other fields should remain.
         $searchFields = $filters['customer']['searchFields'];
+        /** @var list<string> $searchFields */
         $this->assertNotContains('name', $searchFields);
         $this->assertContains('email', $searchFields);
         $this->assertContains('firstName', $searchFields);
@@ -401,6 +404,7 @@ final class FilterMetadataProviderTest extends TestCase
 
         // Should fall back to 'id' when no valid searchFields exist
         $searchFields = $filters['customer']['searchFields'];
+        /** @var list<string> $searchFields */
         $this->assertContains('id', $searchFields);
         $this->assertCount(1, $searchFields);
     }
@@ -446,6 +450,7 @@ final class FilterMetadataProviderTest extends TestCase
         // Should auto-detect 'label' since 'name' doesn't exist
         $this->assertArrayHasKey('relatedEntity', $filters);
         $searchFields = $filters['relatedEntity']['searchFields'];
+        /** @var list<string> $searchFields */
         $this->assertContains('label', $searchFields);
         $this->assertCount(1, $searchFields);
     }
@@ -487,6 +492,7 @@ final class FilterMetadataProviderTest extends TestCase
         // Should auto-detect 'title' since 'name' and 'label' don't exist
         $this->assertArrayHasKey('relatedEntity', $filters);
         $searchFields = $filters['relatedEntity']['searchFields'];
+        /** @var list<string> $searchFields */
         $this->assertContains('title', $searchFields);
         $this->assertCount(1, $searchFields);
     }

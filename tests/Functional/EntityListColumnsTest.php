@@ -25,7 +25,7 @@ final class EntityListColumnsTest extends ComponentTestCase
             ],
         );
 
-        $columns = $testComponent->component()->getColumns();
+        $columns = $this->getEntityList($testComponent)->getColumns();
 
         // Should only include the columns specified in the #[Admin] attribute
         $this->assertSame(['id', 'name', 'active'], $columns);
@@ -48,7 +48,7 @@ final class EntityListColumnsTest extends ComponentTestCase
             ],
         );
 
-        $columns = $testComponent->component()->getColumns();
+        $columns = $this->getEntityList($testComponent)->getColumns();
 
         // Should include the configured columns
         $this->assertSame(['id', 'name', 'email', 'status', 'createdAt'], $columns);
@@ -69,7 +69,7 @@ final class EntityListColumnsTest extends ComponentTestCase
             ],
         );
 
-        $columns = $testComponent->component()->getColumns();
+        $columns = $this->getEntityList($testComponent)->getColumns();
 
         // Excluded columns should not be present
         $this->assertNotContains('password', $columns);
@@ -92,7 +92,7 @@ final class EntityListColumnsTest extends ComponentTestCase
             ],
         );
 
-        $columns = $testComponent->component()->getColumns();
+        $columns = $this->getEntityList($testComponent)->getColumns();
 
         // Columns should be in the exact order specified
         $expectedOrder = ['id', 'name', 'email', 'status', 'createdAt'];
@@ -126,7 +126,7 @@ final class EntityListColumnsTest extends ComponentTestCase
     public function testTableDataRespectsColumnConfiguration(): void
     {
         // Create test entities with data
-        $em = self::getContainer()->get('doctrine')->getManager();
+        $em = $this->getEntityManager();
 
         $entity1 = new TestEntity();
         $entity1->setName('Test Product 1');

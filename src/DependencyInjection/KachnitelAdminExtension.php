@@ -14,9 +14,25 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
  */
 class KachnitelAdminExtension extends Extension
 {
+    /**
+     * @param list<array<string, mixed>> $configs
+     */
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
+        /** @var array{
+         *     entity_namespace: string,
+         *     form_namespace: string,
+         *     form_suffix: string,
+         *     route_prefix: string,
+         *     dashboard_route: string,
+         *     required_role: string|null,
+         *     base_layout: string|null,
+         *     enable_generic_controller: bool,
+         *     pagination: array{default_items_per_page: int, allowed_items_per_page: list<int>},
+         *     theme: string
+         * } $config
+         */
         $config = $this->processConfiguration($configuration, $configs);
 
         // Store configuration as parameters

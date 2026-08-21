@@ -99,8 +99,7 @@ final class EntityListBatchActionsTest extends ComponentTestCase
     {
         $testComponent = $this->entityListComponent(['selectedIds' => [1, 2, 3]]);
 
-        /** @var EntityList $component */
-        $component = $testComponent->component();
+        $component = $this->getEntityList($testComponent);
         $this->assertSame(["1", "2", "3"], $component->selectedIds);
     }
 
@@ -120,7 +119,7 @@ final class EntityListBatchActionsTest extends ComponentTestCase
         $testComponent->set('selectedIds', [$ids[0], $ids[1]]);
 
         /** @var EntityList $component */
-        $component = $testComponent->component();
+        $component = $this->getEntityList($testComponent);
         $this->assertCount(2, $component->selectedIds);
         $this->assertContains((string) $ids[0], $component->selectedIds);
         $this->assertContains((string) $ids[1], $component->selectedIds);
@@ -144,7 +143,7 @@ final class EntityListBatchActionsTest extends ComponentTestCase
         $testComponent->call('selectAll');
 
         /** @var EntityList $component */
-        $component = $testComponent->component();
+        $component = $this->getEntityList($testComponent);
         $this->assertCount(5, $component->selectedIds);
         foreach ($ids as $id) {
             $this->assertContains((string) $id, $component->selectedIds);
@@ -157,7 +156,7 @@ final class EntityListBatchActionsTest extends ComponentTestCase
         $testComponent->call('deselectAll');
 
         /** @var EntityList $component */
-        $component = $testComponent->component();
+        $component = $this->getEntityList($testComponent);
         $this->assertEmpty($component->selectedIds);
     }
 
@@ -169,7 +168,7 @@ final class EntityListBatchActionsTest extends ComponentTestCase
         $testComponent->call('onActionCompleted', ['affectedIds' => [1, 3, 5]]);
 
         /** @var EntityList $component */
-        $component = $testComponent->component();
+        $component = $this->getEntityList($testComponent);
         $this->assertEqualsCanonicalizing([2, 4], $component->selectedIds);
     }
 
@@ -209,7 +208,7 @@ final class EntityListBatchActionsTest extends ComponentTestCase
         // Fire the listener — should invalidate cache
         $testComponent->call('onActionCompleted', ['affectedIds' => [$id]]);
 
-        $component = $testComponent->component();
+        $component = $this->getEntityList($testComponent);
         $after = count($component->getEntities());
 
         $this->assertLessThan($before, $after, 'Cache should be invalidated after action completed');

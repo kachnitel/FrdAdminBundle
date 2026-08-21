@@ -417,7 +417,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
 
         $list = $this->makeList(['editingRowId' => 1]);
 
-        $info = $list->component()->getPaginationInfo();
+        $info = $this->getEntityList($list)->getPaginationInfo();
         $this->assertGreaterThanOrEqual(5, $info->totalItems);
     }
 
@@ -441,7 +441,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
 
         $list->set('search', 'Searchable');
 
-        $results = $list->component()->getEntities();
+        $results = $this->getEntityList($list)->getEntities();
         $this->assertCount(1, $results);
     }
 

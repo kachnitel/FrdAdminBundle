@@ -131,7 +131,7 @@ class SyncTestTemplatesCommand extends Command
      * Process a single template mapping.
      *
      * @param string $source Source template path (relative to project root)
-     * @param array<string, mixed> $config Template patch configuration
+    * @param array{target: string, marker: string, insertPoint: 'prepend'|array{context: string, position: 'before'|'after'}} $config
      * @param Filesystem $filesystem Filesystem operations handler
      * @param TemplatePatcher $patcher Template patcher service
      * @param SymfonyStyle $io Console output handler
@@ -162,7 +162,7 @@ class SyncTestTemplatesCommand extends Command
             return [sprintf('Failed to read: %s', $source)];
         }
 
-        /** @var array{marker: string, insertPoint: 'prepend'|array{context: string, position: 'after'|'before'}} $config */
+        /** @var array{target: string, marker: string, insertPoint: 'prepend'|array{context: string, position: 'after'|'before'}} $config */
         $targetContent = $this->generateTargetContent($sourceContent, $config, $patcher);
         if ($targetContent === null) {
             return [
@@ -221,7 +221,7 @@ class SyncTestTemplatesCommand extends Command
     /**
      * Handle the result of template syncing.
      *
-     * @param array<string, mixed> $config Template patch configuration
+    * @param array{target: string, marker: string, insertPoint: 'prepend'|array{context: string, position: 'before'|'after'}} $config
      * @return array<int, string> Array of error messages (empty if successful)
      */
     private function handleSyncResult(

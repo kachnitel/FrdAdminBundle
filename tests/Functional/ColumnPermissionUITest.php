@@ -50,7 +50,7 @@ final class ColumnPermissionUITest extends ComponentTestCase
             ],
         );
 
-        $columns = $testComponent->component()->getColumns();
+        $columns = $this->getEntityList($testComponent)->getColumns();
 
         // Public columns should be present
         $this->assertContains('id', $columns);
@@ -102,7 +102,7 @@ final class ColumnPermissionUITest extends ComponentTestCase
             ],
         );
 
-        $filters = $testComponent->component()->getFilterMetadata();
+        $filters = $this->getEntityList($testComponent)->getFilterMetadata();
 
         // Filters for public columns should exist
         $this->assertArrayHasKey('name', $filters);

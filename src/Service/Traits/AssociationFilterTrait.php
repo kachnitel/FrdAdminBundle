@@ -37,6 +37,7 @@ trait AssociationFilterTrait
     private function applyRelationFilter(QueryBuilder $qb, string $column, mixed $value, array $metadata): void
     {
         [, $paramName] = $this->getFilterContext($column, $metadata);
+        $stringValue = is_scalar($value) ? (string) $value : '';
 
         /** @var array<string> $searchFields */
         $searchFields = $metadata['searchFields'] ?? ['id'];
@@ -66,7 +67,7 @@ trait AssociationFilterTrait
         }
 
         $qb->andWhere($orX)
-            ->setParameter($paramName, '%' . $value . '%');
+            ->setParameter($paramName, '%' . $stringValue . '%');
     }
 
     /**
@@ -210,7 +211,8 @@ trait AssociationFilterTrait
             $subqueryWhere,
         ));
 
-        $qb->setParameter($paramName, '%' . $value . '%');
+        $stringValue = is_scalar($value) ? (string) $value : '';
+        $qb->setParameter($paramName, '%' . $stringValue . '%');
     }
 
     /**

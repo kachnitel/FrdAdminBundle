@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
+use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeepEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithCollectionFilter;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithNestedFilter;
@@ -25,7 +26,6 @@ final class FilterNestedRelationTest extends ComponentTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->em = self::getContainer()->get('doctrine')->getManager();
     }
 
     // ── relation helpers ──────────────────────────────────────────────────────
@@ -94,13 +94,14 @@ final class FilterNestedRelationTest extends ComponentTestCase
         $filterProvider = self::getContainer()->get(
             'Kachnitel\AdminBundle\Service\FilterMetadataProvider'
         );
+        self::assertInstanceOf(FilterMetadataProvider::class, $filterProvider);
 
         $filters = $filterProvider->getFilters(EntityWithNestedFilter::class);
 
         $this->assertArrayHasKey('middle', $filters, 'middle column must have a filter');
-        $this->assertContains('title', $filters['middle']['searchFields'],
+        $this->assertContains('title', $this->getSearchFields($filters, 'middle'),
             'Direct field "title" must be in searchFields');
-        $this->assertContains('deep.label', $filters['middle']['searchFields'],
+        $this->assertContains('deep.label', $this->getSearchFields($filters, 'middle'),
             'Nested field "deep.label" must survive validation and be in searchFields');
     }
 
@@ -109,14 +110,31 @@ final class FilterNestedRelationTest extends ComponentTestCase
         $filterProvider = self::getContainer()->get(
             'Kachnitel\AdminBundle\Service\FilterMetadataProvider'
         );
+        self::assertInstanceOf(FilterMetadataProvider::class, $filterProvider);
 
         $filters = $filterProvider->getFilters(EntityWithCollectionFilter::class);
 
         $this->assertArrayHasKey('items', $filters, 'items column must have a filter');
-        $this->assertContains('name', $filters['items']['searchFields'],
+        $this->assertContains('name', $this->getSearchFields($filters, 'items'),
             'Direct field "name" must be in searchFields');
-        $this->assertContains('tag.name', $filters['items']['searchFields'],
+        $this->assertContains('tag.name', $this->getSearchFields($filters, 'items'),
             'Nested field "tag.name" must survive validation and be in searchFields');
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return list<string>
+     */
+    private function getSearchFields(array $filters, string $column): array
+    {
+        $filter = $filters[$column] ?? null;
+        if (!is_array($filter) || !is_array($filter['searchFields'] ?? null)) {
+            throw new \UnexpectedValueException('Expected filter search fields.');
+        }
+
+        $searchFields = array_values(array_filter($filter['searchFields'], 'is_string'));
+
+        return $searchFields;
     }
 
     // ── relation: direct field filtering ─────────────────────────────────────

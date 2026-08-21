@@ -263,7 +263,7 @@ final class EntityListLiveComponentTest extends ComponentTestCase
         $component = $testComponent->component();
         $entities = $component->getEntities();
         $this->assertCount(20, $entities);
-        $this->assertStringContainsString('Entity 025', (string) $entities[0]->getName()); // Highest ID first
+        $this->assertStringContainsString('Entity 025', $this->getTestEntity($entities[0])->getName()); // Highest ID first
 
         // Navigate to page 2
         $testComponent->set('page', 2);
@@ -271,7 +271,7 @@ final class EntityListLiveComponentTest extends ComponentTestCase
         $component = $testComponent->component();
         $entities = $component->getEntities();
         $this->assertCount(5, $entities); // Remaining 5 items
-        $this->assertStringContainsString('Entity 005', (string) $entities[0]->getName()); // Items 5-1
+        $this->assertStringContainsString('Entity 005', $this->getTestEntity($entities[0])->getName()); // Items 5-1
     }
 
     public function testPaginationWithCustomItemsPerPage(): void
@@ -345,7 +345,7 @@ final class EntityListLiveComponentTest extends ComponentTestCase
 
         // All entities should contain "Special"
         foreach ($entities as $entity) {
-            $this->assertStringContainsString('Special', (string) $entity->getName());
+            $this->assertStringContainsString('Special', $this->getTestEntity($entity)->getName());
         }
     }
 
@@ -455,7 +455,7 @@ final class EntityListLiveComponentTest extends ComponentTestCase
 
         // All returned entities should match search
         foreach ($entities as $entity) {
-            $this->assertStringContainsString('SearchMe', (string) $entity->getName());
+            $this->assertStringContainsString('SearchMe', $this->getTestEntity($entity)->getName());
         }
     }
 
@@ -493,8 +493,8 @@ final class EntityListLiveComponentTest extends ComponentTestCase
 
         $entities = $component->getEntities();
         // Should be sorted by name ASC
-        $this->assertStringContainsString('Entity 01', (string) $entities[0]->getName());
-        $this->assertStringContainsString('Entity 05', (string) $entities[4]->getName());
+        $this->assertStringContainsString('Entity 01', $this->getTestEntity($entities[0])->getName());
+        $this->assertStringContainsString('Entity 05', $this->getTestEntity($entities[4])->getName());
     }
 
     public function testComponentInitializesFromUrlPaginationParams(): void
@@ -571,7 +571,7 @@ final class EntityListLiveComponentTest extends ComponentTestCase
 
         // All entities should have Alpha in name
         foreach ($entities as $entity) {
-            $this->assertStringContainsString('Alpha', (string) $entity->getName());
+            $this->assertStringContainsString('Alpha', $this->getTestEntity($entity)->getName());
         }
     }
 

@@ -58,7 +58,7 @@ final class EntityListColumnGroupTest extends ComponentTestCase
             ],
         );
 
-        $slots = $testComponent->component()->getColumnSlots();
+        $slots = $this->getEntityList($testComponent)->getColumnSlots();
 
         $groupSlots = array_filter($slots, fn ($s) => $s instanceof ColumnGroup);
         $this->assertCount(1, $groupSlots);
@@ -75,7 +75,7 @@ final class EntityListColumnGroupTest extends ComponentTestCase
             ],
         );
 
-        $slots = $testComponent->component()->getColumnSlots();
+        $slots = $this->getEntityList($testComponent)->getColumnSlots();
 
         $stringSlots = array_filter($slots, fn ($s) => is_string($s));
         // id and email should be ungrouped strings

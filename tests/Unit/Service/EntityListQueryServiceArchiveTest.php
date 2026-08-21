@@ -52,7 +52,7 @@ final class EntityListQueryServiceArchiveTest extends TestCase
         $this->orderByCalls = [];
 
         $qb->method('andWhere')->willReturnCallback(function (mixed $clause) use ($qb): QueryBuilder {
-            $this->andWhereCalls[] = (string) $clause;
+            $this->andWhereCalls[] = is_scalar($clause) ? (string) $clause : '';
             return $qb;
         });
         $qb->method('orderBy')->willReturnCallback(function (string $col, string $dir) use ($qb): QueryBuilder {

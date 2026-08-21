@@ -138,6 +138,7 @@ final class OverrideTypeGuesserPassTest extends TestCase
         (new OverrideTypeGuesserPass())->process($container);
 
         $arg = $container->getDefinition(DoctrineFormTypeMapper::class)->getArgument('$typeGuesser');
+        self::assertInstanceOf(Reference::class, $arg);
         $this->assertSame('kachnitel_admin_bundle.form_type_guesser_chain', (string) $arg);
     }
 

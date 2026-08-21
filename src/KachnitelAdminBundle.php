@@ -118,7 +118,19 @@ class KachnitelAdminBundle extends AbstractBundle
     }
 
     /**
-     * @param array<string, mixed> $config
+        * @param array{
+        *     entity_namespace: string,
+        *     form_namespace: string,
+        *     form_suffix: string,
+        *     route_prefix: string,
+        *     dashboard_route: string,
+        *     required_role: string|null,
+        *     base_layout: string|null,
+        *     enable_generic_controller: bool,
+        *     pagination: array{default_items_per_page: int, allowed_items_per_page: list<int>},
+        *     theme: string,
+        *     archive: array{expression: string|null, role: string|null}
+        * } $config
      */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
@@ -165,6 +177,7 @@ class KachnitelAdminBundle extends AbstractBundle
             return false;
         }
 
+        /** @var array<string, array{path: string}> $bundlesMetadata */
         $bundlesMetadata = $builder->getParameter('kernel.bundles_metadata');
         if (!isset($bundlesMetadata['FrameworkBundle'])) {
             return false;

@@ -230,13 +230,19 @@ final class GenericAdminControllerFormComponentTest extends TestCase
     private function callGetFormComponentName(string $class): string
     {
         $method = new \ReflectionMethod($this->makeController(), 'getFormComponentName');
-        return $method->invoke($this->makeController(), $class);
+        $result = $method->invoke($this->makeController(), $class);
+        self::assertIsString($result);
+
+        return $result;
     }
 
     private function callGetFormType(string $class): string
     {
         $method = new \ReflectionMethod($this->makeController(), 'getFormType');
-        return $method->invoke($this->makeController(), $class);
+        $result = $method->invoke($this->makeController(), $class);
+        self::assertIsString($result);
+
+        return $result;
     }
 }
 

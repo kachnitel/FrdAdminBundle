@@ -1,10 +1,10 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1598%20passed-brightgreen>)
+![Tests](<https://img.shields.io/badge/tests-1600%20passed-brightgreen>)
 ![Coverage](<https://img.shields.io/badge/coverage-93%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-3654-blue>)
-![PHPStan](<https://img.shields.io/badge/PHPStan-8-brightgreen>)
+![Assertions](<https://img.shields.io/badge/assertions-3743-blue>)
+![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-clean-brightgreen>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
 ![Vitest](<https://img.shields.io/badge/vitest-30%20passed-brightgreen>)

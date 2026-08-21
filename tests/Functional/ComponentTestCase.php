@@ -6,8 +6,11 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
+use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 
 /**
  * Base test case for component tests with common database setup/teardown.
@@ -27,8 +30,7 @@ abstract class ComponentTestCase extends KernelTestCase
     {
         self::bootKernel();
 
-        $container = static::getContainer();
-        $this->em = $container->get('doctrine')->getManager();
+        $this->em = $this->getEntityManager();
 
         // Create database schema for all test entities
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
@@ -49,6 +51,31 @@ abstract class ComponentTestCase extends KernelTestCase
         parent::tearDown();
 
         // restore_exception_handler();
+    }
+
+    protected function getEntityManager(): EntityManagerInterface
+    {
+        $entityManager = static::getContainer()->get('doctrine')->getManager();
+        if (!$entityManager instanceof EntityManagerInterface) {
+            throw new \LogicException('The test container did not provide an entity manager.');
+        }
+
+        return $entityManager;
+    }
+
+    protected function getEntityList(TestLiveComponent $testComponent): EntityList
+    {
+        $component = $testComponent->component();
+        self::assertInstanceOf(EntityList::class, $component);
+
+        return $component;
+    }
+
+    protected function getTestEntity(mixed $entity): TestEntity
+    {
+        self::assertInstanceOf(TestEntity::class, $entity);
+
+        return $entity;
     }
 
     // ── Action rendering helpers ───────────────────────────────────────────────

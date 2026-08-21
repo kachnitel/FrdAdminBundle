@@ -303,9 +303,22 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
             return [];
         }
 
+        $decoded = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($decoded);
+
         $byName = [];
-        foreach (json_decode($raw, true, flags: JSON_THROW_ON_ERROR) as $event) {
-            $byName[$event['event']] = $event['data'];
+        foreach ($decoded as $event) {
+            if (!is_array($event) || !is_string($event['event'] ?? null)) {
+                continue;
+            }
+
+            $eventData = $event['data'] ?? null;
+            if (!is_array($eventData)) {
+                continue;
+            }
+
+            /** @var array<string, mixed> $eventData */
+            $byName[$event['event']] = $eventData;
         }
 
         return $byName;

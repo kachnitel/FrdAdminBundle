@@ -10,6 +10,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
@@ -59,8 +60,24 @@ final class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $columnAttrProvider = $this->createMock(DoctrineColumnAttributeProvider::class);
         $columnAttrProvider->method('getColumnAttributes')->willReturn($columnAttributes);
         $columnAttrProvider->method('getGroupAttributes')->willReturn($groupAttributes);
-        $columnAttrProvider->method('build')
-            ->willReturnCallback(fn (array $cols, array $attrs): array => (new DoctrineColumnAttributeProvider())->build($cols, $attrs));
+        $buildColumns = function (array $cols, array $attrs): array {
+            $typedColumns = [];
+            foreach ($cols as $name => $metadata) {
+                if (is_string($name) && $metadata instanceof ColumnMetadata) {
+                    $typedColumns[$name] = $metadata;
+                }
+            }
+
+            $typedAttributes = [];
+            foreach ($attrs as $id => $attribute) {
+                if (is_string($id) && $attribute instanceof AdminColumnGroup) {
+                    $typedAttributes[$id] = $attribute;
+                }
+            }
+
+            return (new DoctrineColumnAttributeProvider())->build($typedColumns, $typedAttributes);
+        };
+        $columnAttrProvider->method('build')->willReturnCallback($buildColumns);
 
         $columnTypeMapper = $this->createMock(DoctrineColumnTypeMapper::class);
         $columnTypeMapper->method('getColumnType')->willReturn('string');

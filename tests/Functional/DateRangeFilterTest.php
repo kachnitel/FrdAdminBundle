@@ -140,6 +140,7 @@ final class DateRangeFilterTest extends ComponentTestCase
         $this->assertSame('2024-12-31', $component->to);
 
         $decoded = json_decode($component->value, true);
+        self::assertIsArray($decoded);
         $this->assertSame('2024-01-15', $decoded['from']);
         $this->assertSame('2024-12-31', $decoded['to']);
     }
@@ -166,6 +167,7 @@ final class DateRangeFilterTest extends ComponentTestCase
         $this->assertSame('2024-12-31', $component->to);
 
         $decoded = json_decode($component->value, true);
+        self::assertIsArray($decoded);
         $this->assertNull($decoded['from']);
         $this->assertSame('2024-12-31', $decoded['to']);
     }

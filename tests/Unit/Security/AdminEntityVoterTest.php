@@ -61,7 +61,9 @@ final class AdminEntityVoterTest extends TestCase
 
         // Tell the decision manager to return true if it's asked for any of these roles
         $this->decisionManager->method('decide')
-            ->willReturnCallback(fn($token, array $attributes): bool => count(array_intersect($attributes, $roles)) > 0);
+            ->willReturnCallback(fn($token, array $attributes): bool => count(
+                array_intersect(array_filter($attributes, 'is_string'), $roles)
+            ) > 0);
     }
 
     // -------------------------------------------------------------------------

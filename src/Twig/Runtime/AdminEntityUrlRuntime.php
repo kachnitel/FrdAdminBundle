@@ -124,7 +124,7 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
         $mapping     = $metadata->getAssociationMapping($property);
         $filterField = $mapping->mappedBy ?? $mapping->inversedBy ?? null;
 
-        if ($filterField === null) {
+        if (!is_string($filterField)) {
             return $parameters;
         }
 
@@ -177,7 +177,9 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
 
         $parameters = ['entitySlug' => $entitySlug];
         if ($entityId !== null) {
-            $parameters['columnFilters'] = ['id' => (string) $entityId];
+            $parameters['columnFilters'] = [
+                'id' => is_scalar($entityId) ? (string) $entityId : '',
+            ];
         }
 
         return $this->router->generate($indexRoute, $parameters);

@@ -18,7 +18,7 @@ final class EntityListRowActionsTest extends ComponentTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->entityManager = self::getContainer()->get('doctrine')->getManager();
+        $this->entityManager = $this->getEntityManager();
     }
 
     // -------------------------------------------------------------------------

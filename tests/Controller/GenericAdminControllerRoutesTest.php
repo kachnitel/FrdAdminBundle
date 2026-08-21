@@ -94,10 +94,12 @@ final class GenericAdminControllerRoutesTest extends TestCase
         $controller->new('deletable-entity');
 
         $this->assertNotNull($controller->lastRender);
-        $this->assertSame('@KachnitelAdmin/admin/new.html.twig', $controller->lastRender['view']);
-        $this->assertSame('K:Admin:EntityForm', $controller->lastRender['parameters']['formComponentName']);
-        $this->assertCount(1, $controller->lastRender['parameters']['breadcrumbs']);
-        $this->assertSame('DeletableEntity', $controller->lastRender['parameters']['breadcrumbs'][0]['label']);
+        /** @var array{view: string, parameters: array{formComponentName: string, breadcrumbs: list<array{label: string}>}} $lastRender */
+        $lastRender = $controller->lastRender;
+        $this->assertSame('@KachnitelAdmin/admin/new.html.twig', $lastRender['view']);
+        $this->assertSame('K:Admin:EntityForm', $lastRender['parameters']['formComponentName']);
+        $this->assertCount(1, $lastRender['parameters']['breadcrumbs']);
+        $this->assertSame('DeletableEntity', $lastRender['parameters']['breadcrumbs'][0]['label']);
     }
 
     // ── delete() ─────────────────────────────────────────────────────────

@@ -24,11 +24,12 @@ trait DeleteEntityTrait
         $this->validateCsrfEntityRequest($request, $entity);
         $shortName = (new \ReflectionClass($entity))->getShortName();
         $entityId = method_exists($entity, 'getId') ? $entity->getId() : null;
+        $entityIdLabel = is_int($entityId) || is_string($entityId) ? (string) $entityId : '?';
 
         try {
             $em->remove($entity);
             $em->flush();
-            $this->addFlash('success', $shortName . ' #' . $entityId . ' deleted.');
+            $this->addFlash('success', $shortName . ' #' . $entityIdLabel . ' deleted.');
         } catch (ForeignKeyConstraintViolationException) {
             $this->addFlash('error', 'Cannot delete ' . $shortName . ' because it is in use.');
 
@@ -46,7 +47,10 @@ trait DeleteEntityTrait
     protected function validateCsrfEntityRequest(Request $request, object $entity): void
     {
         $entityId = method_exists($entity, 'getId') ? $entity->getId() : null;
-        $csrfKey = $request->attributes->get('_route') . '-' . $entityId;
+        $route = $request->attributes->get('_route');
+        $routeName = is_string($route) ? $route : '';
+        $entityIdLabel = is_int($entityId) || is_string($entityId) ? (string) $entityId : '?';
+        $csrfKey = $routeName . '-' . $entityIdLabel;
         $token = $request->request->get('_token');
         if (!$this->isCsrfTokenValid($csrfKey, is_string($token) ? $token : null)) {
             throw new \InvalidArgumentException('Invalid CSRF token ' . $csrfKey);

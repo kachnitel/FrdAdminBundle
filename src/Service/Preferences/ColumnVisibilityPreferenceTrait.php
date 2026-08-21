@@ -56,7 +56,18 @@ trait ColumnVisibilityPreferenceTrait
         $value = $this->getPreferencesStorage()->get($key, []);
 
         // Ensure we always return an array (defensive programming for custom storage implementations)
-        return is_array($value) ? $value : [];
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $hiddenColumns = [];
+        foreach ($value as $column) {
+            if (is_string($column)) {
+                $hiddenColumns[] = $column;
+            }
+        }
+
+        return $hiddenColumns;
     }
 
     /**

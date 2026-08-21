@@ -46,7 +46,7 @@ class DebugDataSourceCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $identifier = $input->getOption('identifier');
 
-        if ($identifier !== null) {
+        if (is_string($identifier)) {
             return $this->showDataSourceDetails($io, $identifier);
         }
 
@@ -82,7 +82,9 @@ class DebugDataSourceCommand extends Command
         $identifiers = $this->registry->getIdentifiers();
         $selectedIdentifier = $io->choice('Select a data source to see details:', $identifiers);
 
-        return $this->showDataSourceDetails($io, $selectedIdentifier);
+        return is_string($selectedIdentifier)
+            ? $this->showDataSourceDetails($io, $selectedIdentifier)
+            : Command::FAILURE;
     }
 
     private function showDataSourceDetails(SymfonyStyle $io, string $identifier): int

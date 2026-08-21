@@ -107,16 +107,19 @@ class CustomTemplateDataSource implements DataSourceInterface
         if ($search !== '') {
             $items = array_filter($items, function (object $item) use ($search): bool {
                 /** @var \stdClass $item */
-                return str_contains(strtolower((string) ($item->name ?? '')), strtolower($search));
+                $name = $item->name ?? '';
+                return str_contains(strtolower(is_scalar($name) ? (string) $name : ''), strtolower($search));
             });
         }
 
         // Apply name filter
         if (!empty($filters['name'])) {
-            $nameFilter = (string) $filters['name'];
+            $nameFilterValue = $filters['name'];
+            $nameFilter = is_scalar($nameFilterValue) ? (string) $nameFilterValue : '';
             $items = array_filter($items, function (object $item) use ($nameFilter): bool {
                 /** @var \stdClass $item */
-                return str_contains(strtolower((string) ($item->name ?? '')), strtolower($nameFilter));
+                $name = $item->name ?? '';
+                return str_contains(strtolower(is_scalar($name) ? (string) $name : ''), strtolower($nameFilter));
             });
         }
 
@@ -168,7 +171,12 @@ class CustomTemplateDataSource implements DataSourceInterface
     public function getItemId(object $item): string|int
     {
         /** @var \stdClass $item */
-        return $item->id;
+        $id = $item->id;
+        if (!is_int($id) && !is_string($id)) {
+            throw new \UnexpectedValueException('Fixture item ID must be an integer or string.');
+        }
+
+        return $id;
     }
 
     public function getItemValue(object $item, string $field): mixed

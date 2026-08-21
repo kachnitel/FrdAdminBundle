@@ -104,8 +104,10 @@ class TestEntityDataSource implements DataSourceInterface
 
         // Apply name filter
         if (!empty($filters['name'])) {
+            $nameFilterValue = $filters['name'];
+            $nameFilter = is_scalar($nameFilterValue) ? (string) $nameFilterValue : '';
             $qb->andWhere('LOWER(e.name) LIKE LOWER(:nameFilter)')
-                ->setParameter('nameFilter', '%' . $filters['name'] . '%');
+                ->setParameter('nameFilter', '%' . $nameFilter . '%');
         }
 
         // Apply active filter
@@ -128,8 +130,11 @@ class TestEntityDataSource implements DataSourceInterface
         $qb->setFirstResult(($page - 1) * $itemsPerPage)
             ->setMaxResults($itemsPerPage);
 
+        /** @var array<object> $items */
+        $items = $qb->getQuery()->getResult();
+
         return new PaginatedResult(
-            items: $qb->getQuery()->getResult(),
+            items: $items,
             totalItems: $total,
             currentPage: $page,
             itemsPerPage: $itemsPerPage,

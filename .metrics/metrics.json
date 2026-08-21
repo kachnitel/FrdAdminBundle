@@ -1,17 +1,17 @@
 {
-    "generated_at": "2026-08-17 17:58:57",
+    "generated_at": "2026-08-21 06:31:56",
     "tests": {
-        "count": 1598,
-        "assertions": 3654,
+        "count": 1600,
+        "assertions": 3743,
         "status": "passing"
     },
     "coverage": {
-        "lines": 93.02,
+        "lines": 92.72,
         "percentage": 93,
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {
-        "level": 8,
+        "level": 10,
         "status": "pass"
     },
     "phpmd": {

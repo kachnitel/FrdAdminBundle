@@ -95,6 +95,9 @@ class AdminEntityForm extends AbstractController
             $options['entity_instance'] = $entity;
         }
 
-        return $this->createForm($formTypeClass, $entity, $options);
+        /** @var FormInterface<object|null> $form */
+        $form = $this->createForm($formTypeClass, $entity, $options);
+
+        return $form;
     }
 }

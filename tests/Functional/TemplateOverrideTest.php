@@ -308,9 +308,9 @@ final class TemplateOverrideTest extends ComponentTestCase
         );
 
         $testComponent->set('search', 'Entity 1');
-        $entities = $testComponent->component()->getEntities();
+        $entities = $this->getEntityList($testComponent)->getEntities();
         $this->assertCount(1, $entities);
-        $this->assertStringContainsString('Entity 1', (string) $entities[0]->getName());
+        $this->assertStringContainsString('Entity 1', $this->getTestEntity($entities[0])->getName());
 
         $testComponent->set('sortBy', 'name');
         $testComponent->set('sortDirection', 'ASC');

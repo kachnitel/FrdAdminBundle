@@ -11,7 +11,6 @@ use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
-use Kachnitel\DataSourceContracts\PaginatedResult;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
@@ -108,7 +107,7 @@ class EntityList
 
     /**
      * @var array{
-     *     queryResult?: PaginatedResult,
+    *     queryResult?: \Kachnitel\DataSourceContracts\PaginatedResult,
      *     filterMetadata?: array<string, array<string, mixed>>,
      *     columns?: array<int|string, string>,
      *     columnSlots?: list<string|ColumnGroup>,

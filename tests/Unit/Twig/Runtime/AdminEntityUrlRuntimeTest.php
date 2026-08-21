@@ -62,8 +62,11 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $provider = $this->createMock(PropertyFilterabilityService::class);
         $provider->method('buildCollectionFilterEntry')
             ->willReturnCallback(function (object $entity, string $field, string $class): ?array {
-                if (method_exists($entity, 'getId') && $entity->getId() !== null) {
-                    return [$field => (string) $entity->getId()];
+                if (method_exists($entity, 'getId')) {
+                    $id = $entity->getId();
+                    if (is_scalar($id) || $id instanceof \Stringable) {
+                        return [$field => (string) $id];
+                    }
                 }
                 return null;
             });
@@ -175,10 +178,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
             ->method('generate')
             ->with(
                 'app_admin_entity_index',
-                $this->callback(fn (array $params) =>
-                    isset($params['entitySlug'], $params['columnFilters']['id'])
-                    && $params['columnFilters']['id'] === '7'
-                )
+                $this->callback(fn (array $params): bool => $this->hasColumnFilter($params, 'id', '7'))
             )
             ->willReturn('/admin/test-entity?columnFilters%5Bid%5D=7');
 
@@ -254,10 +254,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
             ->method('generate')
             ->with(
                 'app_admin_entity_index',
-                $this->callback(fn (array $params) =>
-                    isset($params['columnFilters']['testEntity'])
-                    && $params['columnFilters']['testEntity'] === '1'
-                )
+                $this->callback(fn (array $params): bool => $this->hasColumnFilter($params, 'testEntity', '1'))
             )
             ->willReturn('/admin/tag-entity?columnFilters[testEntity]=1');
 
@@ -294,10 +291,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
             ->method('generate')
             ->with(
                 'app_admin_entity_index',
-                $this->callback(fn (array $params) =>
-                    isset($params['columnFilters']['testEntities'])
-                    && $params['columnFilters']['testEntities'] === '1'
-                )
+                $this->callback(fn (array $params): bool => $this->hasColumnFilter($params, 'testEntities', '1'))
             )
             ->willReturn('/admin/tag-entity?columnFilters[testEntities]=1');
 
@@ -334,10 +328,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
             ->method('generate')
             ->with(
                 'app_admin_entity_index',
-                $this->callback(fn (array $params) =>
-                    $params['entitySlug'] === 'tag-entity'
-                    && !isset($params['columnFilters'])
-                )
+                $this->callback(fn (array $params): bool => $this->hasNoColumnFilters($params, 'tag-entity'))
             )
             ->willReturn('/admin/tag-entity');
 
@@ -401,10 +392,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
             ->method('generate')
             ->with(
                 'app_admin_entity_index',
-                $this->callback(fn (array $params) =>
-                    isset($params['columnFilters']['name'])
-                    && $params['columnFilters']['name'] === '1'
-                )
+                $this->callback(fn (array $params): bool => $this->hasColumnFilter($params, 'name', '1'))
             )
             ->willReturn('/admin/target?columnFilters[name]=1');
 
@@ -418,6 +406,21 @@ class AdminEntityUrlRuntimeTest extends TestCase
 
         $result = $runtime->getCollectionAdminUrl($entity, 'items');
         $this->assertNotNull($result);
+    }
+
+    /** @param array<int|string, mixed> $params */
+    private function hasColumnFilter(array $params, string $field, string $expected): bool
+    {
+        $filters = $params['columnFilters'] ?? null;
+
+        return is_array($filters) && ($filters[$field] ?? null) === $expected;
+    }
+
+    /** @param array<int|string, mixed> $params */
+    private function hasNoColumnFilters(array $params, string $expectedSlug): bool
+    {
+        return ($params['entitySlug'] ?? null) === $expectedSlug
+            && !isset($params['columnFilters']);
     }
 }
 class SourceEntityStub

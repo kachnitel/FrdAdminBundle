@@ -49,12 +49,12 @@ class DebugFiltersCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $entityClass = $input->getArgument('entityClass');
-        $showAll = $input->getOption('all');
+        $showAll = !!$input->getOption('all');
         $verbose = $io->isVerbose();
 
         if (!$entityClass) {
             $this->listEntities($io, $showAll, $verbose);
-        } else {
+        } elseif (is_string($entityClass)) {
             $this->showEntityFilters($io, $entityClass, $verbose);
         }
 
@@ -101,7 +101,9 @@ class DebugFiltersCommand extends Command
 
         $shortNames = array_column($entities, 'shortName');
         $selectedClass = $io->choice('Select an entity to inspect:', $shortNames);
-        $this->showEntityFilters($io, $selectedClass, $verbose);
+        if (is_string($selectedClass)) {
+            $this->showEntityFilters($io, $selectedClass, $verbose);
+        }
     }
 
     private function showEntityFilters(SymfonyStyle $io, string $entityClass, bool $verbose): void
@@ -160,8 +162,8 @@ class DebugFiltersCommand extends Command
         string $entityClass,
         bool $verbose
     ): void {
-        $type = $config['type'] ?? 'unknown';
-        $enabled = $config['enabled'] ?? true;
+        $type = is_string($config['type'] ?? null) ? $config['type'] : 'unknown';
+        $enabled = ($config['enabled'] ?? true) === true;
 
         $io->section(sprintf('%s (%s)%s', $column, $type, $enabled ? '' : ' [DISABLED]'));
 
@@ -188,16 +190,16 @@ class DebugFiltersCommand extends Command
         $details = [];
 
         if (isset($config['operator'])) {
-            $details[] = ['Operator', $config['operator']];
+            $details[] = ['Operator', $this->stringifyConfigValue($config['operator'])];
         }
         if (isset($config['label'])) {
-            $details[] = ['Label', $config['label']];
+            $details[] = ['Label', $this->stringifyConfigValue($config['label'])];
         }
         if (isset($config['placeholder'])) {
-            $details[] = ['Placeholder', $config['placeholder']];
+            $details[] = ['Placeholder', $this->stringifyConfigValue($config['placeholder'])];
         }
         if (isset($config['priority'])) {
-            $details[] = ['Priority', (string) $config['priority']];
+            $details[] = ['Priority', $this->stringifyConfigValue($config['priority'])];
         }
 
         return $details;
@@ -236,10 +238,10 @@ class DebugFiltersCommand extends Command
         $details = [];
 
         if (isset($config['enumClass'])) {
-            $details[] = ['Enum Class', $config['enumClass']];
+            $details[] = ['Enum Class', $this->stringifyConfigValue($config['enumClass'])];
         }
-        $details[] = ['Multiple', ($config['multiple'] ?? false) ? 'Yes' : 'No'];
-        $details[] = ['Show All Option', ($config['showAllOption'] ?? true) ? 'Yes' : 'No'];
+        $details[] = ['Multiple', ($config['multiple'] ?? false) === true ? 'Yes' : 'No'];
+        $details[] = ['Show All Option', ($config['showAllOption'] ?? true) === true ? 'Yes' : 'No'];
 
         return $details;
     }
@@ -261,13 +263,13 @@ class DebugFiltersCommand extends Command
         $details = [];
 
         if (isset($config['targetEntity'])) {
-            $details[] = ['Target Entity', $config['targetEntity']];
+            $details[] = ['Target Entity', $this->stringifyConfigValue($config['targetEntity'])];
         }
         if (isset($config['targetClass'])) {
-            $details[] = ['Target Class', $config['targetClass']];
+            $details[] = ['Target Class', $this->stringifyConfigValue($config['targetClass'])];
         }
         if (isset($config['searchFields'])) {
-            $searchFields = $config['searchFields'];
+            $searchFields = $this->getStringList($config['searchFields']);
             $details[] = [
                 '<options=bold>Search Fields</>',
                 sprintf('<info>%s</info>', implode(', ', $searchFields)),
@@ -295,7 +297,7 @@ class DebugFiltersCommand extends Command
         ClassMetadata $metadata,
         string $entityClass
     ): void {
-        $type = $config['type'] ?? 'unknown';
+        $type = is_string($config['type'] ?? null) ? $config['type'] : 'unknown';
         [$hasAttribute, $attributeType] = $this->getColumnFilterAttributeInfo($entityClass, $column);
 
         $reasons = $this->buildTypeDetectionReasons($hasAttribute, $attributeType, $metadata, $column, $type, $config);
@@ -396,7 +398,10 @@ class DebugFiltersCommand extends Command
         $reasons[] = sprintf('<info>✓</info> Doctrine field type "%s" → filter type "%s"', $doctrineType, $type);
 
         if ($type === 'enum' && isset($config['enumClass'])) {
-            $reasons[] = sprintf('<info>✓</info> Property type is PHP enum: %s', $config['enumClass']);
+            $reasons[] = sprintf(
+                '<info>✓</info> Property type is PHP enum: %s',
+                $this->stringifyConfigValue($config['enumClass'])
+            );
         }
 
         return $reasons;
@@ -417,28 +422,19 @@ class DebugFiltersCommand extends Command
         }
 
         $targetClass = $config['targetClass'];
+        if (!is_string($targetClass) || !class_exists($targetClass)) {
+            return;
+        }
         $targetMetadata = $this->entityManager->getClassMetadata($targetClass);
         $targetFields = $targetMetadata->getFieldNames();
-        $searchFields = $config['searchFields'] ?? [];
+        $searchFields = $this->getStringList($config['searchFields'] ?? []);
 
         $io->newLine();
         $io->text('<options=bold>Search field detection:</options>');
 
         // Check if explicitly configured
-        $reflection = new ReflectionClass($metadata->getName());
-        if ($reflection->hasProperty($column)) {
-            $property = $reflection->getProperty($column);
-            $attributes = $property->getAttributes(ColumnFilter::class);
-            if (!empty($attributes)) {
-                $instance = $attributes[0]->newInstance();
-                if (!empty($instance->searchFields)) {
-                    $io->text(sprintf(
-                        '  <info>✓</info> Explicitly set via #[ColumnFilter(searchFields: ["%s"])]',
-                        implode('", "', $instance->searchFields)
-                    ));
-                    return;
-                }
-            }
+        if ($this->showExplicitSearchFields($io, $metadata, $column)) {
+            return;
         }
 
         // Show auto-detection process
@@ -448,6 +444,49 @@ class DebugFiltersCommand extends Command
         ));
         $io->text(sprintf('  <comment>○</comment> Available fields: %s', implode(', ', $targetFields)));
 
+        if ($this->showPrioritySearchField($io, $targetFields)) {
+            return;
+        }
+
+        // Fallback to id
+        if ($searchFields === ['id']) {
+            $io->text('  <comment>!</comment> No priority field found → falling back to "id"');
+        }
+    }
+
+    /**
+     * @param ClassMetadata<object> $metadata
+     */
+    private function showExplicitSearchFields(SymfonyStyle $io, ClassMetadata $metadata, string $column): bool
+    {
+        $reflection = new ReflectionClass($metadata->getName());
+        if (!$reflection->hasProperty($column)) {
+            return false;
+        }
+
+        $attributes = $reflection->getProperty($column)->getAttributes(ColumnFilter::class);
+        if (empty($attributes)) {
+            return false;
+        }
+
+        $searchFields = $attributes[0]->newInstance()->searchFields;
+        if (empty($searchFields)) {
+            return false;
+        }
+
+        $io->text(sprintf(
+            '  <info>✓</info> Explicitly set via #[ColumnFilter(searchFields: ["%s"])]',
+            implode('", "', $searchFields)
+        ));
+
+        return true;
+    }
+
+    /**
+        * @param array<int, string> $targetFields
+     */
+    private function showPrioritySearchField(SymfonyStyle $io, array $targetFields): bool
+    {
         foreach (self::DISPLAY_FIELD_PRIORITY as $priorityField) {
             if (in_array($priorityField, $targetFields, true)) {
                 $io->text(sprintf(
@@ -455,19 +494,17 @@ class DebugFiltersCommand extends Command
                     $priorityField,
                     implode(', ', self::DISPLAY_FIELD_PRIORITY)
                 ));
-                return;
-            } else {
-                $io->text(sprintf(
-                    '  <comment>○</comment> Field "%s" not found in target entity',
-                    $priorityField
-                ));
+
+                return true;
             }
+
+            $io->text(sprintf(
+                '  <comment>○</comment> Field "%s" not found in target entity',
+                $priorityField
+            ));
         }
 
-        // Fallback to id
-        if ($searchFields === ['id']) {
-            $io->text('  <comment>!</comment> No priority field found → falling back to "id"');
-        }
+        return false;
     }
 
     /**
@@ -606,5 +643,37 @@ class DebugFiltersCommand extends Command
         }
 
         return null;
+    }
+
+    private function stringifyConfigValue(mixed $value): string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_scalar($value)) {
+            return (string) $value;
+        }
+
+        return '';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getStringList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $strings = [];
+        foreach ($value as $item) {
+            if (is_string($item)) {
+                $strings[] = $item;
+            }
+        }
+
+        return $strings;
     }
 }

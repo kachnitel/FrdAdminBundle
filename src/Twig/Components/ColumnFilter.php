@@ -33,7 +33,9 @@ class ColumnFilter
 
     public function getType(): string
     {
-        return $this->filterMetadata['type'] ?? 'text';
+        $type = $this->filterMetadata['type'] ?? null;
+
+        return is_string($type) ? $type : 'text';
     }
 
     public function onUpdated(): void

@@ -27,10 +27,11 @@ trait ScalarFilterTrait
     private function applyTextFilter(QueryBuilder $qb, string $column, mixed $value, array $metadata): void
     {
         [$operator, $paramName] = $this->getFilterContext($column, $metadata);
+        $stringValue = is_scalar($value) ? (string) $value : '';
 
         if ($operator === 'LIKE') {
             $qb->andWhere($qb->expr()->like('e.' . $column, ':' . $paramName))
-                ->setParameter($paramName, '%' . $value . '%');
+            ->setParameter($paramName, '%' . $stringValue . '%');
         } else {
             $qb->andWhere('e.' . $column . ' ' . $operator . ' :' . $paramName)
                 ->setParameter($paramName, $value);
@@ -69,17 +70,45 @@ trait ScalarFilterTrait
     private function parseMultiSelectValue(mixed $value): array
     {
         if (is_array($value)) {
-            return $value;
+            return $this->filterMultiSelectItems($value);
         }
 
-        if (is_string($value) && $value !== '') {
-            $decoded = json_decode($value, true);
-            if (is_array($decoded)) {
-                return $decoded;
+        if (!is_string($value) || $value === '') {
+            return [];
+        }
+
+        return $this->parseMultiSelectString($value);
+    }
+
+    /**
+     * @param array<mixed> $items
+     * @return array<string|int>
+     */
+    private function filterMultiSelectItems(array $items): array
+    {
+        $values = [];
+        foreach ($items as $item) {
+            if (is_int($item) || is_string($item)) {
+                $values[] = $item;
+            } elseif (is_scalar($item)) {
+                $values[] = (string) $item;
             }
-            return [$value];
+            // arrays/objects: dropped — never valid IN() values
         }
 
-        return [];
+        return $values;
+    }
+
+    /**
+     * @return array<string|int>
+     */
+    private function parseMultiSelectString(string $value): array
+    {
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return $this->filterMultiSelectItems($decoded);
+        }
+
+        return [$value];
     }
 }

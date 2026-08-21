@@ -9,10 +9,8 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
-use Kachnitel\DataSourceContracts\FilterMetadata;
 use Kachnitel\DataSourceContracts\PaginatedResult;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 
@@ -29,10 +27,10 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     /** @var array<string, ColumnMetadata>|null */
     private ?array $columnsCache = null;
 
-    /** @var array<string, FilterMetadata>|null */
+    /** @var array<string, \Kachnitel\DataSourceContracts\FilterMetadata>|null */
     private ?array $filtersCache = null;
 
-    /** @var list<string|ColumnGroup>|null */
+    /** @var list<string|\Kachnitel\DataSourceContracts\ColumnGroup>|null */
     private ?array $columnGroupsCache = null;
 
     /**
@@ -143,6 +141,7 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         $this->filtersCache = [];
 
         foreach ($legacyFilters as $name => $config) {
+            /** @var array{type?: string, label?: string|null, placeholder?: string|null, operator?: string, options?: array<string>|null, enumClass?: string|null, showAllOption?: bool, multiple?: bool, searchFields?: array<string>|null, priority?: int, enabled?: bool, excludeFromGlobalSearch?: bool, targetClass?: string|null} $config */
             if ($filterableColumns !== null && !in_array($name, $filterableColumns, true)) {
                 continue;
             }
@@ -227,7 +226,13 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         $metadata = $this->em->getClassMetadata($this->entityClass);
         $idField  = $metadata->getSingleIdentifierFieldName();
 
-        return $metadata->getFieldValue($item, $idField);
+        $value = $metadata->getFieldValue($item, $idField);
+
+        if (!is_int($value) && !is_string($value)) {
+            throw new \UnexpectedValueException('Entity identifier must be an integer or string.');
+        }
+
+        return $value;
     }
 
     public function getItemValue(object $item, string $field): mixed

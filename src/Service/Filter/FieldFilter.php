@@ -28,11 +28,12 @@ class FieldFilter extends AbstractFilter
     public function apply(QueryBuilder $qb, mixed $value): void
     {
         $paramName = str_replace('.', '_', $this->field);
+        $stringValue = is_scalar($value) ? (string) $value : '';
 
         switch ($this->operator) {
             case 'LIKE':
                 $qb->andWhere($qb->expr()->like('e.' . $this->field, ':' . $paramName))
-                    ->setParameter($paramName, '%' . $value . '%');
+                    ->setParameter($paramName, '%' . $stringValue . '%');
                 break;
 
             case 'IN':

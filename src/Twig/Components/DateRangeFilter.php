@@ -55,8 +55,10 @@ class DateRangeFilter
 
         $decoded = json_decode($this->value, true);
         if (is_array($decoded)) {
-            $this->from = $decoded['from'] ?? '';
-            $this->to = $decoded['to'] ?? '';
+            $from = $decoded['from'] ?? '';
+            $to = $decoded['to'] ?? '';
+            $this->from = is_string($from) ? $from : '';
+            $this->to = is_string($to) ? $to : '';
         }
     }
 

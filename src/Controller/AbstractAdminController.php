@@ -206,18 +206,23 @@ abstract class AbstractAdminController extends AbstractController
     protected function getEntityLabel(object $entity): string
     {
         if (method_exists($entity, 'getName') && $entity->getName()) {
-            return (string) $entity->getName();
+            return $this->stringifyEntityValue($entity->getName());
         }
         if (method_exists($entity, 'getLabel') && $entity->getLabel()) {
-            return (string) $entity->getLabel();
+            return $this->stringifyEntityValue($entity->getLabel());
         }
         if (method_exists($entity, 'getValue') && $entity->getValue()) {
-            return (string) $entity->getValue();
+            return $this->stringifyEntityValue($entity->getValue());
         }
         if (method_exists($entity, 'getId')) {
-            return '#' . $entity->getId();
+            return '#' . $this->stringifyEntityValue($entity->getId());
         }
         return '#unknown';
+    }
+
+    private function stringifyEntityValue(mixed $value): string
+    {
+        return is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
     }
 
     // Template resolution methods (can be overridden for custom template paths)

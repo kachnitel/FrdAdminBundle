@@ -52,7 +52,9 @@ final class ShowEditPageRowActionsTest extends WebTestCase
         parent::setUp();
 
         $this->client = static::createClient();
-        $this->em     = $this->client->getContainer()->get('doctrine')->getManager();
+        $entityManager = $this->client->getContainer()->get('doctrine')->getManager();
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $this->em = $entityManager;
 
         $schemaTool = new SchemaTool($this->em);
         $metadata   = $this->em->getMetadataFactory()->getAllMetadata();

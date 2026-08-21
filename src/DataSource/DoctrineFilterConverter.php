@@ -17,7 +17,21 @@ use Kachnitel\DataSourceContracts\FilterMetadata;
 class DoctrineFilterConverter
 {
     /**
-     * @param array<string, mixed> $config
+     * @param array{
+     *     type?: string,
+     *     label?: string|null,
+     *     placeholder?: string|null,
+     *     operator?: string,
+     *     options?: array<string>|null,
+     *     enumClass?: string|null,
+     *     showAllOption?: bool,
+     *     multiple?: bool,
+     *     searchFields?: array<string>|null,
+     *     priority?: int,
+     *     enabled?: bool,
+     *     excludeFromGlobalSearch?: bool,
+     *     targetClass?: string|null,
+     * } $config
      */
     public function convert(string $name, array $config): FilterMetadata
     {
@@ -40,7 +54,12 @@ class DoctrineFilterConverter
      * Build FilterEnumOptions when any enum-related key is present.
      * Returns null for filter types that carry no enum configuration.
      *
-     * @param array<string, mixed> $config
+     * @param array{
+     *     options?: array<string>|null,
+     *     enumClass?: string|null,
+     *     showAllOption?: bool,
+     *     multiple?: bool,
+     * } $config
      */
     private function buildEnumOptions(array $config): ?FilterEnumOptions
     {

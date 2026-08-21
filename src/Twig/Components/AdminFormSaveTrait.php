@@ -126,7 +126,7 @@ trait AdminFormSaveTrait
                 ->getIdentifierValues($entity);
 
             $rawId = reset($idValues);
-            if ($rawId !== false) {
+            if (is_int($rawId) || is_numeric($rawId)) {
                 $this->entityId = (int) $rawId;
             }
         }

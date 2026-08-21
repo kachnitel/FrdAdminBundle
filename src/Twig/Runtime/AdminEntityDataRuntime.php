@@ -141,11 +141,11 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
             $method = $prop === $getter ? $getter : 'get' . ucfirst($prop);
 
             if (method_exists($entity, $method)) {
-                return (string) $entity->$method();
+                return $this->stringifyEntityValue($entity->$method());
             }
 
             if (isset($entity->$prop)) {
-                return (string) $entity->$prop;
+                return $this->stringifyEntityValue($entity->$prop);
             }
         }
 
@@ -155,14 +155,19 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 
         // Fallbacks
         if (method_exists($entity, 'getId')) {
-            return '#' . $entity->getId();
+            return '#' . $this->stringifyEntityValue($entity->getId());
         }
 
         if (isset($entity->id)) {
-            return '#' . $entity->id;
+            return '#' . $this->stringifyEntityValue($entity->id);
         }
 
         return (new \ReflectionClass($entity))->getShortName();
+    }
+
+    private function stringifyEntityValue(mixed $value): string
+    {
+        return is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────

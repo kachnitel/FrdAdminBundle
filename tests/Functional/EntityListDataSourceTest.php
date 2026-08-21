@@ -189,7 +189,7 @@ final class EntityListDataSourceTest extends ComponentTestCase
 
         $this->assertCount(5, $entities);
         foreach ($entities as $entity) {
-            $this->assertStringContainsString('Special', (string) $entity->getName());
+            $this->assertStringContainsString('Special', $this->getTestEntity($entity)->getName());
         }
     }
 
@@ -216,7 +216,7 @@ final class EntityListDataSourceTest extends ComponentTestCase
 
         $this->assertCount(5, $entities);
         foreach ($entities as $entity) {
-            $this->assertStringContainsString('Alpha', (string) $entity->getName());
+            $this->assertStringContainsString('Alpha', $this->getTestEntity($entity)->getName());
         }
     }
 

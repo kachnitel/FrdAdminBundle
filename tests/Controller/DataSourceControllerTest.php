@@ -327,7 +327,8 @@ final class DataSourceControllerTestDouble extends DataSourceController
 
     protected function isGranted(mixed $attribute, mixed $subject = null): bool
     {
-        $key = $attribute . ':' . (is_string($subject) ? $subject : 'null');
+        $attributeValue = is_scalar($attribute) ? (string) $attribute : '';
+        $key = $attributeValue . ':' . (is_string($subject) ? $subject : 'null');
 
         return $this->grantResults[$key] ?? true;
     }

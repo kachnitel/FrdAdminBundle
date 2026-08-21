@@ -156,7 +156,7 @@ final class ColumnVisibilityTest extends ComponentTestCase
         $this->assertSame(['id', 'name', 'status'], $testComponent->component()->getVisibleColumns());
 
         // Verify hiddenColumns was updated
-        $this->assertContains('description', $testComponent->component()->hiddenColumns);
+        $this->assertContains('description', $this->getEntityList($testComponent)->hiddenColumns);
     }
 
     public function testToggleColumnVisibilityShowsHiddenColumn(): void

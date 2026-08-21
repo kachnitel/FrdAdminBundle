@@ -75,8 +75,11 @@ class EntityListQueryService
             $paginator = new Paginator($qb, fetchJoinCollection: true);
         }
 
+        /** @var array<object> $entities */
+        $entities = iterator_to_array($paginator->getIterator());
+
         return [
-            'entities' => iterator_to_array($paginator->getIterator()),
+            'entities' => $entities,
             'total' => $total,
             'page' => $page,
         ];
@@ -216,7 +219,7 @@ class EntityListQueryService
      */
     protected function getFilterContext(string $column, array $metadata): array
     {
-        $operator = $metadata['operator'] ?? '=';
+        $operator = is_string($metadata['operator'] ?? null) ? $metadata['operator'] : '=';
         $paramName = 'filter_' . str_replace('.', '_', $column);
 
         return [$operator, $paramName];

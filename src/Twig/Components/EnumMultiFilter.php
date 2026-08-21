@@ -58,19 +58,31 @@ class EnumMultiFilter
     public function getChoices(): array
     {
         if ($this->enumClass !== '') {
-            $choices = [];
-            /** @var \BackedEnum $case */
-            foreach ($this->enumClass::cases() as $case) {
-                $label = method_exists($case, 'displayValue')
-                    ? $case->displayValue()
-                    : $case->name;
-                $choices[(string) $case->value] = $label;
+            if (!is_subclass_of($this->enumClass, \BackedEnum::class)) {
+                return [];
             }
 
-            return $choices;
+            return $this->getEnumChoices($this->enumClass);
         }
 
-        return array_combine($this->options, $this->options);
+        return array_combine($this->options, $this->options) ?: [];
+    }
+
+    /**
+     * @param class-string<\BackedEnum> $enumClass
+     * @return array<string, string>
+     */
+    private function getEnumChoices(string $enumClass): array
+    {
+        $choices = [];
+        foreach ($enumClass::cases() as $case) {
+            $label = method_exists($case, 'displayValue')
+                ? $case->displayValue()
+                : $case->name;
+            $choices[(string) $case->value] = is_scalar($label) ? (string) $label : '';
+        }
+
+        return $choices;
     }
 
     #[PostHydrate]
@@ -82,7 +94,17 @@ class EnumMultiFilter
         }
 
         $decoded = json_decode($this->value, true);
-        $this->selectedValues = is_array($decoded) ? $decoded : [$this->value];
+        if (!is_array($decoded)) {
+            $this->selectedValues = [$this->value];
+            return;
+        }
+
+        $this->selectedValues = [];
+        foreach ($decoded as $value) {
+            if (is_int($value) || is_string($value)) {
+                $this->selectedValues[] = $value;
+            }
+        }
     }
 
     public function mount(string $value = ''): void

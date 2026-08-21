@@ -40,7 +40,7 @@ final class ComposedFormComponent extends AbstractController
     public function __construct(protected readonly EntityManagerInterface $em) {}
 
     /**
-     * @return FormInterface<object>|FormInterface<object|null>
+    * @return FormInterface<object|null>
      */
     protected function instantiateForm(): FormInterface
     {
@@ -51,6 +51,9 @@ final class ComposedFormComponent extends AbstractController
             ? $this->em->find($entityClassName, $this->entityId)
             : null;
 
-        return $this->createForm($this->formTypeClass, $entity, ['csrf_protection' => false]);
+        /** @var FormInterface<object|null> $form */
+        $form = $this->createForm($this->formTypeClass, $entity, ['csrf_protection' => false]);
+
+        return $form;
     }
 }

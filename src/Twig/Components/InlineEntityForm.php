@@ -146,7 +146,7 @@ class InlineEntityForm extends AbstractController
             ->getIdentifierValues($entity);
 
         $rawId    = reset($idValues);
-        $entityId = $rawId !== false ? (int) $rawId : 0;
+        $entityId = is_int($rawId) || is_numeric($rawId) ? (int) $rawId : 0;
 
         $this->dispatchBrowserEvent('admin:inline:entity:saved', [
             'entityClass' => $this->entityClass,
@@ -230,6 +230,6 @@ class InlineEntityForm extends AbstractController
         $idValues = $this->em->getClassMetadata($entity::class)->getIdentifierValues($entity);
         $id       = reset($idValues);
 
-        return '#' . ($id !== false ? (string) $id : '?');
+        return '#' . (is_int($id) || is_string($id) ? $id : '?');
     }
 }
