@@ -84,7 +84,7 @@ class InlineEntityForm extends AbstractController
      * component; inline add is creation-only. DynamicEntityFormType receives
      * is_root: true so ManyToMany multi-selects are included.
      *
-     * @return FormInterface<object|null>
+     * @return FormInterface<TData>
      */
     protected function instantiateForm(): FormInterface
     {
@@ -110,6 +110,7 @@ class InlineEntityForm extends AbstractController
         $formName  = 'inline_' . mb_strtolower($sanitized);
 
         // null data → always a "new entity" form; there is no entityId to look up.
+        /** @var FormInterface<TData> */
         return $this->formFactory->createNamed($formName, $formTypeClass, null, $options);
     }
 
