@@ -270,9 +270,24 @@ final class LiveFormEmptyDataRegressionTest extends ComponentTestCase
     }
 
     // ── Genuinely optional fields must never show a required-field error ───────
+
+    /**
+     * Edit flow, not new: a successful save of a brand-new entity now
+     * redirects to its own edit page (see AdminFormSaveTrait::save()), so
+     * the component's last response is a redirect stub with no form markup
+     * left to crawl at all — not a wrong-selector problem, there's simply
+     * no DOM to inspect after a create succeeds. Editing an existing entity
+     * never redirects, so the form still re-renders in place here, exactly
+     * as fieldRowErrors() needs.
+     *
+     * See testSavingNewWithBlankOptionalDateFieldRedirectsAndPersistsNull()
+     * below for the same claim on the create path, checked without relying
+     * on any post-save DOM.
+     */
     public function testSavingWithBlankGenuinelyOptionalDateFieldShowsNoErrorForIt(): void
     {
-        $component = $this->mountNewForm();
+        $entity = $this->createEntity('Existing', 3, new \DateTimeImmutable('2030-06-15'));
+        $component = $this->mountEditForm($entity);
 
         $component->set(self::FORM_NAME, [
             'name'        => 'Valid, completedAt left blank on purpose',
@@ -289,5 +304,35 @@ final class LiveFormEmptyDataRegressionTest extends ComponentTestCase
             $errors,
             'completedAt is nullable at both the Doctrine and PHP level; leaving it blank must not produce a validation error.'
         );
+    }
+
+    /**
+     * Create-flow counterpart: a blank completedAt must not block a brand
+     * new entity from saving either. Checked via the redirect and the
+     * persisted value instead of the rendered DOM, since a successful
+     * create leaves no form markup in the response to crawl.
+     */
+    public function testSavingNewWithBlankOptionalDateFieldRedirectsAndPersistsNull(): void
+    {
+        $component = $this->mountNewForm();
+
+        $component->set(self::FORM_NAME, [
+            'name'        => 'New, completedAt left blank on purpose',
+            'priority'    => '3',
+            'scheduledAt' => '2030-06-15T10:00:00',
+            'completedAt' => '',
+        ]);
+        $component->call('save');
+
+        $this->assertTrue(
+            $component->response()->isRedirect(),
+            'A blank-but-optional completedAt must not block the save — this create should succeed and redirect exactly like any other valid new entity.'
+        );
+
+        $entity = $this->em->getRepository(RequiredFieldsEntity::class)
+            ->findOneBy(['name' => 'New, completedAt left blank on purpose']);
+
+        $this->assertNotNull($entity);
+        $this->assertNull($entity->getCompletedAt());
     }
 }
