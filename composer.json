@@ -26,7 +26,6 @@
         "kachnitel/datasource-contracts": "^0.1.0",
         "kachnitel/dynamic-form-bundle": "~0.0.2",
         "kachnitel/entity-components-bundle": "^0.0.3",
-        "kachnitel/entity-expression-language": "^0.1.0",
         "symfony/expression-language": "^6.4|^7.0|^8.0",
         "symfony/form": "^6.4|^7.0|^8.0",
         "symfony/framework-bundle": "^6.4|^7.0|^8.0",

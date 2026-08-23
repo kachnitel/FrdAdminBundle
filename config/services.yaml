@@ -160,6 +160,10 @@ services:
     Kachnitel\AdminBundle\BatchAction\:
         resource: '../src/BatchAction'
 
+    Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage:
+        arguments:
+            $expressionLanguage: '@security.expression_language'
+
     # RowActionRuntime needs the service container to resolve DI-tuple conditions
     Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime:
         arguments:

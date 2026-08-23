@@ -115,7 +115,7 @@ button is automatically added to the batch actions bar. No additional code neede
 ```
 #[Admin(
     enableBatchActions: true,   // ← required for the bar to render at all
-    archiveExpression: 'item.archived',  // ← required for ArchiveBatchActionProvider to register the action
+    archiveExpression: 'item.isArchived()',  // ← required for ArchiveBatchActionProvider to register the action
 )]
 ```
 

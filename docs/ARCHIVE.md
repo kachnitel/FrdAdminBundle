@@ -28,13 +28,18 @@ The archive feature adds a show/hide toggle to the entity list for soft-deleted 
 ```php
 use Kachnitel\AdminBundle\Attribute\Admin;
 
-#[Admin(label: 'Products', archiveExpression: 'item.archived')]
+#[Admin(label: 'Products', archiveExpression: 'item.isArchived()')]
 class Product
 {
     #[ORM\Column]
     private bool $archived = false;
 
     // ...
+
+    public function isArchived(): bool
+    {
+        return $this->archived;
+    }
 }
 ```
 
@@ -48,7 +53,7 @@ class Product
 
 ## How It Works
 
-When `archiveExpression` resolves to a simple `item.fieldName` or `entity.fieldName` expression pointing to a Doctrine-mapped boolean or nullable-datetime field, the bundle:
+When `archiveExpression` resolves to a simple `item.getFieldName()` or `entity.getFieldName()` expression pointing to a Doctrine-mapped boolean or nullable-datetime field, the bundle:
 
 1. Builds a DQL `WHERE` fragment at query time to hide archived rows by default.
 2. Evaluates the expression per-row for the archive/unarchive button visibility.
@@ -68,7 +73,7 @@ Apply one expression to every entity in the admin without touching each class:
 # config/packages/kachnitel_admin.yaml
 kachnitel_admin:
     archive:
-        expression: 'item.deletedAt'   # simple item.field or entity.field
+        expression: 'item.getDeletedAt()'   # simple item/entity getter or boolean accessor call
         role: 'ROLE_ADMIN'             # optional — who may toggle; null = everyone
 ```
 
@@ -79,7 +84,7 @@ Entities that have no per-entity `archiveExpression` will inherit this global se
 ```php
 #[Admin(
     label: 'Orders',
-    archiveExpression: 'item.cancelledAt',  // overrides global
+    archiveExpression: 'item.getCancelledAt()',  // overrides global
     archiveRole: 'ROLE_MANAGER',            // overrides global role
     permissions: [
         'archive' => 'ROLE_MANAGER',        // who can archive/unarchive
@@ -144,7 +149,7 @@ The archive and unarchive actions are guarded by the `ADMIN_ARCHIVE` voter attri
 ```php
 #[Admin(
     label: 'Articles',
-    archiveExpression: 'item.archived',
+    archiveExpression: 'item.isArchived()',
     permissions: [
         'index'   => 'ROLE_USER',
         'show'    => 'ROLE_USER',
@@ -183,7 +188,7 @@ Override the defaults via `#[AdminAction]` with `override: true`:
 
 | Doctrine type | "Hide archived" DQL condition |
 |---|---|
-| `boolean` | `e.field = false` |
+| `boolean` | `(e.field IS NULL OR e.field = false)` |
 | `datetime` | `e.field IS NULL` |
 | `datetime_immutable` | `e.field IS NULL` |
 | `datetimetz` | `e.field IS NULL` |
@@ -201,7 +206,7 @@ By default anyone with access to the admin list can toggle archive visibility. R
 
 ```php
 // Per-entity
-#[Admin(archiveExpression: 'item.archived', archiveRole: 'ROLE_ADMIN')]
+#[Admin(archiveExpression: 'item.isArchived()', archiveRole: 'ROLE_ADMIN')]
 
 // Global (applies to all entities without a per-entity archiveRole)
 kachnitel_admin:
@@ -266,7 +271,9 @@ Variables available:
 
 ## Limitations
 
-- **Simple expressions only for DQL.** The archive filter in the list view only works when the expression is exactly `item.fieldName` or `entity.fieldName`. Complex expressions (e.g. `item.status == "archived"`) are evaluated per-row via the expression language but **do not produce a DQL WHERE clause**, so the list is not pre-filtered — `resolveConfig()` returns null and the toggle/buttons do not appear. Use a dedicated boolean or nullable-datetime field for reliable list filtering.
+- **Simple expressions only for DQL.** The archive filter in the list view only works when the expression is exactly `item.getFieldName()`, `item.isFieldName()`, `entity.getFieldName()`, or `entity.isFieldName()`. Complex expressions (e.g. `item.getStatus() == "archived"`) are evaluated per-row via the expression language but **do not produce a DQL WHERE clause**, so the list is not pre-filtered — `resolveConfig()` returns null and the toggle/buttons do not appear. Use a dedicated boolean or nullable-datetime field for reliable list filtering.
+
+- **Use public properties or method calls.** Symfony's native expression evaluator does not resolve private entity properties through getters. Use an explicit public getter or boolean accessor, such as `item.getDeletedAt()` or `item.isArchived()`.
 
 - **No Doctrine filter.** The bundle deliberately does not register a global Doctrine filter. This keeps the feature opt-in and avoids side effects in repositories, console commands, or non-admin code that queries the same entities.
 

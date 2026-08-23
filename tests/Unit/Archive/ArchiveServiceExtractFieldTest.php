@@ -15,6 +15,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
 /**
  * Covers edge cases in the ArchiveServiceTest:
@@ -54,7 +55,7 @@ final class ArchiveServiceExtractFieldTest extends TestCase
         return new ArchiveService(
             $this->em,
             $this->entityDiscovery,
-            new RowActionExpressionLanguage(),
+            new RowActionExpressionLanguage(new ExpressionLanguage()),
             null,
             null,
         );
@@ -101,10 +102,9 @@ final class ArchiveServiceExtractFieldTest extends TestCase
     // @see docs/ARCHIVE.md#Limitations
 
     #[Test]
-    public function extractFieldReturnNullForEntityMethodCall(): void
+    public function extractFieldParsesEntityMethodCall(): void
     {
-        // Looks simple but has parens → complex
-        $this->assertNull($this->makeService()->extractField('entity.isDeleted()'));
+        $this->assertSame('deleted', $this->makeService()->extractField('entity.isDeleted()'));
     }
 
     #[Test]
@@ -131,7 +131,7 @@ final class ArchiveServiceExtractFieldTest extends TestCase
     public function resolveConfigWorksWithEntityPrefixExpression(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(archiveExpression: 'entity.archived'));
+            ->willReturn(new Admin(archiveExpression: 'entity.isArchived()'));
 
         $this->metadata->method('hasField')->willReturn(true);
         $this->metadata->method('getTypeOfField')->willReturn('boolean');
@@ -139,7 +139,7 @@ final class ArchiveServiceExtractFieldTest extends TestCase
         $service = new ArchiveService(
             $this->em,
             $this->entityDiscovery,
-            new RowActionExpressionLanguage(),
+            new RowActionExpressionLanguage(new ExpressionLanguage()),
             null,
             null,
         );
@@ -147,7 +147,7 @@ final class ArchiveServiceExtractFieldTest extends TestCase
         $config = $service->resolveConfig('App\\Entity\\Product'); // @phpstan-ignore argument.type
 
         $this->assertInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
-        $this->assertSame('entity.archived', $config->expression);
+        $this->assertSame('entity.isArchived()', $config->expression);
         $this->assertSame('archived', $config->field);
         $this->assertSame('boolean', $config->doctrineType);
     }
@@ -156,7 +156,7 @@ final class ArchiveServiceExtractFieldTest extends TestCase
     public function resolveConfigReturnsNullForUnsupportedFieldTypeString(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(archiveExpression: 'item.status'));
+            ->willReturn(new Admin(archiveExpression: 'item.getStatus()'));
 
         $this->metadata->method('hasField')->willReturn(true);
         $this->metadata->method('getTypeOfField')->willReturn('string'); // unsupported
@@ -171,7 +171,7 @@ final class ArchiveServiceExtractFieldTest extends TestCase
     public function resolveConfigReturnsNullForIntegerFieldType(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(archiveExpression: 'item.deletedFlag'));
+            ->willReturn(new Admin(archiveExpression: 'item.getDeletedFlag()'));
 
         $this->metadata->method('hasField')->willReturn(true);
         $this->metadata->method('getTypeOfField')->willReturn('integer');

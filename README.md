@@ -1,9 +1,9 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1606%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-93%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-3752-blue>)
+![Tests](<https://img.shields.io/badge/tests-1602%20passed-red>)
+![Coverage](<https://img.shields.io/badge/coverage-92%25-brightgreen>)
+![Assertions](<https://img.shields.io/badge/assertions-3743-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-clean-brightgreen>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
@@ -205,19 +205,29 @@ final class PurchaseOrderForm extends AdminEntityForm { /* ... */ }
 
 **Level 1:** Point at a boolean field — the list hides archived rows by default, with a toggle to reveal them:
 ```php
-#[Admin(label: 'Products', archiveExpression: 'item.archived')]
+#[Admin(label: 'Products', archiveExpression: 'item.isArchived()')]
 class Product
 {
     private bool $archived = false;
+
+    public function isArchived(): bool
+    {
+        return $this->archived;
+    }
 }
 ```
 
 **Level 2:** Nullable-datetime (soft-delete pattern):
 ```php
-#[Admin(archiveExpression: 'item.deletedAt')]
+#[Admin(archiveExpression: 'item.getDeletedAt()')]
 class Order
 {
     private ?\DateTimeImmutable $deletedAt = null;
+
+    public function getDeletedAt(): ?\DateTimeImmutable
+    {
+        return $this->deletedAt;
+    }
 }
 ```
 
@@ -225,7 +235,7 @@ class Order
 ```yaml
 kachnitel_admin:
     archive:
-        expression: 'item.deletedAt'
+        expression: 'item.getDeletedAt()'
         role: 'ROLE_ADMIN'
 ```
 
@@ -309,7 +319,6 @@ EasyAdmin and SonataAdmin use PHP configuration, while this bundle leans heavily
 - Symfony 6.4 / 7.0 / 8.0
 - Doctrine ORM 3.5+
 - [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts) (pulled automatically by Composer)
-- [`kachnitel/entity-expression-language`](https://github.com/kachnitel/entity-expression-language) (pulled automatically by Composer)
 - [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle) (pulled automatically by Composer — licensed MPL-2.0, a file-level copyleft compatible with this bundle's MIT license and with closed-source deployments)
 
 ## License

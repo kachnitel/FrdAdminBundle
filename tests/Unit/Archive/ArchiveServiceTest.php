@@ -14,6 +14,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
 /**
  * @group archive
@@ -37,7 +38,7 @@ final class ArchiveServiceTest extends TestCase
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->entityDiscovery = $this->createMock(EntityDiscoveryService::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
-        $this->expressionLanguage = new RowActionExpressionLanguage();
+        $this->expressionLanguage = new RowActionExpressionLanguage(new ExpressionLanguage());
 
         $this->em->method('getClassMetadata')->willReturn($this->metadata);
     }
@@ -76,10 +77,10 @@ final class ArchiveServiceTest extends TestCase
         $this->metadata->method('hasField')->willReturn(true);
         $this->metadata->method('getTypeOfField')->willReturn('boolean');
 
-        $config = $this->makeService(globalExpression: 'item.archived')->resolveConfig(TestEntity::class);
+        $config = $this->makeService(globalExpression: 'item.isArchived()')->resolveConfig(TestEntity::class);
 
         $this->assertInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
-        $this->assertSame('item.archived', $config->expression);
+        $this->assertSame('item.isArchived()', $config->expression);
         $this->assertSame('archived', $config->field);
         $this->assertSame('boolean', $config->doctrineType);
         $this->assertNull($config->role);
@@ -89,15 +90,15 @@ final class ArchiveServiceTest extends TestCase
     public function resolveConfigUsesEntityExpressionOverGlobal(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
-            ->willReturn(new Admin(archiveExpression: 'item.deletedAt'));
+            ->willReturn(new Admin(archiveExpression: 'item.getDeletedAt()'));
 
         $this->metadata->method('hasField')->willReturn(true);
         $this->metadata->method('getTypeOfField')->willReturn('datetime_immutable');
 
-        $config = $this->makeService(globalExpression: 'item.archived')->resolveConfig(TestEntity::class);
+        $config = $this->makeService(globalExpression: 'item.isArchived()')->resolveConfig(TestEntity::class);
 
         $this->assertInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
-        $this->assertSame('item.deletedAt', $config->expression);
+        $this->assertSame('item.getDeletedAt()', $config->expression);
         $this->assertSame('deletedAt', $config->field);
     }
 
@@ -107,7 +108,7 @@ final class ArchiveServiceTest extends TestCase
         $this->entityDiscovery->method('getAdminAttribute')
             ->willReturn(new Admin(archiveDisabled: true));
 
-        $config = $this->makeService(globalExpression: 'item.archived')->resolveConfig(TestEntity::class);
+        $config = $this->makeService(globalExpression: 'item.isArchived()')->resolveConfig(TestEntity::class);
 
         $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
     }
@@ -120,7 +121,7 @@ final class ArchiveServiceTest extends TestCase
         $this->metadata->method('getTypeOfField')->willReturn('boolean');
 
         $config = $this->makeService(
-            globalExpression: 'item.archived',
+            globalExpression: 'item.isArchived()',
             globalRole: 'ROLE_ADMIN',
         )->resolveConfig(TestEntity::class);
 
@@ -138,7 +139,7 @@ final class ArchiveServiceTest extends TestCase
         $this->metadata->method('getTypeOfField')->willReturn('boolean');
 
         $config = $this->makeService(
-            globalExpression: 'item.archived',
+            globalExpression: 'item.isArchived()',
             globalRole: 'ROLE_ADMIN',
         )->resolveConfig(TestEntity::class);
 
@@ -152,7 +153,7 @@ final class ArchiveServiceTest extends TestCase
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
         $this->metadata->method('hasField')->willReturn(false);
 
-        $config = $this->makeService(globalExpression: 'item.archived')->resolveConfig(TestEntity::class);
+        $config = $this->makeService(globalExpression: 'item.isArchived()')->resolveConfig(TestEntity::class);
 
         $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
     }
@@ -164,9 +165,9 @@ final class ArchiveServiceTest extends TestCase
     {
         $service = $this->makeService();
 
-        $this->assertSame('archived', $service->extractField('item.archived'));
-        $this->assertSame('deletedAt', $service->extractField('item.deletedAt'));
-        $this->assertSame('isDeleted', $service->extractField('entity.isDeleted'));
+        $this->assertSame('archived', $service->extractField('item.isArchived()'));
+        $this->assertSame('deletedAt', $service->extractField('item.getDeletedAt()'));
+        $this->assertSame('deleted', $service->extractField('entity.isDeleted()'));
     }
 
     #[Test]
@@ -174,9 +175,9 @@ final class ArchiveServiceTest extends TestCase
     {
         $service = $this->makeService();
 
-        $this->assertNull($service->extractField('item.archived == true'));
-        $this->assertNull($service->extractField('!item.active'));
-        $this->assertNull($service->extractField('item.archived != null'));
+        $this->assertNull($service->extractField('item.isArchived() == true'));
+        $this->assertNull($service->extractField('!item.isActive()'));
+        $this->assertNull($service->extractField('item.isArchived() != null'));
         $this->assertNull($service->extractField('is_granted("ROLE_ADMIN")'));
     }
 
@@ -260,31 +261,34 @@ final class ArchiveServiceTest extends TestCase
     #[Test]
     public function isArchivedReturnsTrueForArchivedEntity(): void
     {
-        $entity = new class { public bool $archived = true; };
+        $entity = new class {
+            public function isArchived(): bool { return true; }
+        };
         $service = $this->makeService();
 
-        $this->assertTrue($service->isArchived($entity, 'item.archived'));
+        $this->assertTrue($service->isArchived($entity, 'item.isArchived()'));
     }
 
     #[Test]
     public function isArchivedReturnsFalseForNonArchivedEntity(): void
     {
-        $entity = new class { public bool $archived = false; };
+        $entity = new class {
+            public function isArchived(): bool { return false; }
+        };
         $service = $this->makeService();
 
-        $this->assertFalse($service->isArchived($entity, 'item.archived'));
+        $this->assertFalse($service->isArchived($entity, 'item.isArchived()'));
     }
 
     #[Test]
     public function isArchivedReturnsTrueForNonNullDeletedAt(): void
     {
         $entity = new class {
-            public ?\DateTimeImmutable $deletedAt;
-            public function __construct() { $this->deletedAt = new \DateTimeImmutable(); }
+            public function getDeletedAt(): \DateTimeImmutable { return new \DateTimeImmutable(); }
         };
         $service = $this->makeService();
 
-        $this->assertTrue($service->isArchived($entity, 'item.deletedAt != null'));
+        $this->assertTrue($service->isArchived($entity, 'item.getDeletedAt() != null'));
     }
 
     #[Test]

@@ -125,8 +125,8 @@ Available variables:
 
 | Variable | Type | Description |
 |----------|------|-------------|
-| `entity` | proxy | The entity row being evaluated. Property access via `entity.fieldName`. |
-| `item` | proxy | Alias for `entity`. |
+| `entity` | object | The entity row being evaluated. Use public properties or explicit method calls such as `entity.getStatus()`. |
+| `item` | object | Alias for `entity`. Use public properties or explicit method calls. |
 | `auth` | `AuthorizationCheckerInterface\|null` | For `is_granted()` inside expressions. |
 
 ```php

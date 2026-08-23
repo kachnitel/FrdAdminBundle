@@ -91,8 +91,8 @@ final class AttributeRowActionProviderTest extends TestCase
             $byName[$action->name] = $action;
         }
 
-        $this->assertSame('entity.status == "pending"', $byName['approve']->condition);
-        $this->assertSame('entity.status != "archived"', $byName['archive']->condition);
+        $this->assertSame('entity.getStatus() == "pending"', $byName['approve']->condition);
+        $this->assertSame('entity.getStatus() != "archived"', $byName['archive']->condition);
     }
 
     #[Test]

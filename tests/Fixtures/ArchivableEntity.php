@@ -10,12 +10,12 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 /**
  * Test fixture entity for archive/unarchive feature tests.
  *
- * Uses a boolean 'archived' field matching archiveExpression: 'item.archived'.
+ * Uses a boolean 'archived' field matching archiveExpression: 'item.isArchived()'.
  */
 #[ORM\Entity]
 #[Admin(
     label: 'Archivable Items',
-    archiveExpression: 'item.archived',
+    archiveExpression: 'item.isArchived()',
 )]
 class ArchivableEntity
 {

@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
 #[AllowMockObjectsWithoutExpectations]
 #[Group('row-actions')]
@@ -43,7 +44,7 @@ final class RowActionRuntimeTest extends TestCase
         $this->routeRuntime = $this->createMock(AdminRouteRuntime::class);
         $this->authChecker = $this->createMock(AuthorizationCheckerInterface::class);
         $this->conditionLocator = $this->createMock(ServiceLocator::class);
-        $this->expressionLanguage = new RowActionExpressionLanguage();
+        $this->expressionLanguage = new RowActionExpressionLanguage(new ExpressionLanguage());
     }
 
     private function createRuntime(

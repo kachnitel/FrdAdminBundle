@@ -35,9 +35,25 @@ Several internal packages were extracted into standalone repositories with their
 |-------|-----------|---------|
 | Form auto-generation engine | [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle) | `Kachnitel\AdminBundle\Form\DynamicEntityFormType` → `Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType` |
 | Data source contracts | [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts) | `Kachnitel\AdminBundle\ValueObject\ColumnGroup` → `Kachnitel\DataSourceContracts\ColumnGroup`; `DataSourceInterface` etc. moved similarly |
-| Expression language evaluator | [`kachnitel/entity-expression-language`](https://github.com/kachnitel/entity-expression-language) | Internal only; no user-facing API changes |
 
 **Action:** If you implemented custom `DataSourceInterface`, used `DynamicEntityFormType` directly, or referenced value objects from the bundle's `ValueObject\` namespace, update the namespace references. The admin bundle includes these packages as composer dependencies automatically.
+
+### Native Symfony Expression Language (0.x → 0.y)
+
+The internal expression evaluator no longer depends on
+`kachnitel/entity-expression-language`. It now uses Symfony's native
+`ExpressionLanguage` component. Expressions that access entity state must use
+public properties or explicit method calls, for example:
+
+```text
+item.getStatus() == "pending"
+item.isArchived()
+```
+
+Property-style access to private entity properties, such as `item.status`, is
+not supported by Symfony's native evaluator. Update custom row-action,
+editability, and archive expressions to call the entity's getter or boolean
+accessor directly.
 
 ---
 

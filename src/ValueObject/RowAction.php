@@ -12,7 +12,7 @@ namespace Kachnitel\AdminBundle\ValueObject;
  *
  *   1. String expression (simple property checks):
  *      condition: 'entity.status == "pending"'
- *      condition: '!entity.archived'
+ *      condition: '!entity.isArchived()'
  *
  *   2. DI tuple (complex logic with injected dependencies):
  *      condition: [ApprovalService::class, 'canApprove']

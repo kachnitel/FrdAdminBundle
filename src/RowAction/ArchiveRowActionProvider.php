@@ -15,9 +15,9 @@ use Kachnitel\AdminBundle\ValueObject\RowAction;
  * the entity class. Both buttons appear in all three contexts (index, show, edit).
  *
  * Visibility is controlled via string ExpressionLanguage conditions derived from the
- * entity's archiveExpression (e.g. 'item.archived'):
- *   - Archive:   !(item.archived)  — show when NOT yet archived
- *   - Unarchive: item.archived     — show when IS already archived
+ * entity's archiveExpression (e.g. 'item.isArchived()'):
+ *   - Archive:   !(item.isArchived())  — show when NOT yet archived
+ *   - Unarchive: item.isArchived()     — show when IS already archived
  *
  * Both require ADMIN_ARCHIVE voter attribute (checked via isActionAccessible in
  * RowActionRuntime, which maps ADMIN_ARCHIVE → 'archive' route).

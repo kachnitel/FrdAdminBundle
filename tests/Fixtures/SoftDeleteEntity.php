@@ -13,7 +13,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 #[ORM\Entity]
 #[Admin(
     label: 'Soft Delete Items',
-    archiveExpression: 'item.deletedAt',
+    archiveExpression: 'item.getDeletedAt()',
 )]
 class SoftDeleteEntity
 {

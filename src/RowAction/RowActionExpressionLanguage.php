@@ -4,20 +4,28 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\RowAction;
 
-use Kachnitel\EntityExpressionLanguage\EntityExpressionLanguage;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
-/**
- * Evaluates row-action visibility and inline-edit editability expressions.
- *
- * Named subclass of {@see EntityExpressionLanguage} for bundle-specific DI injection.
- *
- * ## Supported syntax
- *
- *   entity.status == "pending"
- *   entity.stock > 0 && is_granted("ROLE_EDITOR")
- *   item.active                       // "item" is an alias for "entity"
- *   is_granted("ADMIN_EDIT", entity)  // passes unwrapped entity to voter
- *
- * Returns `false` on any parse or runtime error.
- */
-class RowActionExpressionLanguage extends EntityExpressionLanguage {}
+class RowActionExpressionLanguage
+{
+    public function __construct(
+        private readonly ExpressionLanguage $expressionLanguage,
+    ) {}
+
+    public function evaluate(
+        string $expression,
+        object $entity,
+        ?AuthorizationCheckerInterface $authChecker = null,
+    ): bool {
+        try {
+            return (bool) $this->expressionLanguage->evaluate($expression, [
+                'entity'       => $entity,
+                'item'         => $entity,      // alias
+                'auth_checker' => $authChecker, // used by the built-in is_granted()
+            ]);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+}

@@ -12,8 +12,8 @@ use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
  * Resolves archive/soft-delete configuration and provides helpers for
  * archive-aware filtering.
  *
- * Supports simple field expressions of the form `item.fieldName` or
- * `entity.fieldName`. Complex expressions are supported for per-entity
+ * Supports simple field expressions of the form `item.getFieldName()` or
+ * `entity.isFieldName()`. Complex expressions are supported for per-entity
  * row evaluation but cannot be translated to a DQL WHERE clause —
  * in that case resolveConfig() returns null.
  */
@@ -105,18 +105,22 @@ class ArchiveService
     }
 
     /**
-     * Extract the Doctrine field name from a simple `item.fieldName` expression.
+    * Extract the Doctrine field name from a simple getter expression.
      * Returns null for complex expressions that cannot be trivially mapped to DQL.
      */
     public function extractField(string $expression): ?string
     {
         $expression = trim($expression);
 
-        if (!preg_match('/^(?:item|entity)\.([a-zA-Z_][a-zA-Z0-9_]*)$/', $expression, $matches)) {
+        if (preg_match('/^(?:item|entity)\.([a-zA-Z_][a-zA-Z0-9_]*)$/', $expression, $matches)) {
+            return $matches[1];
+        }
+
+        if (!preg_match('/^(?:item|entity)\.(?:get|is)([A-Z][a-zA-Z0-9_]*)\(\)$/', $expression, $matches)) {
             return null;
         }
 
-        return $matches[1];
+        return lcfirst($matches[1]);
     }
 
     /**

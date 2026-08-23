@@ -86,7 +86,7 @@ kachnitel_admin:
 
     # Archive / soft-delete filtering
     archive:
-        expression: 'item.deletedAt'    # field expression applied to every entity
+        expression: 'item.getDeletedAt()'    # field expression applied to every entity
         role: ~                         # role required to toggle; ~ = everyone
 ```
 
@@ -222,14 +222,15 @@ per-column opt-in/opt-out, expression-based editability, and supported field typ
 **Type:** `?string` **Default:** `null`
 
 Expression that evaluates to `true` when a row is archived or soft-deleted.
-Must be of the form `item.fieldName` or `entity.fieldName` for list-level
-DQL filtering to work. Supported backing field types: `boolean` and all
+Must be a simple `item.getFieldName()` or `item.isFieldName()` call (the
+`entity.` prefix is also supported) for list-level DQL filtering to work.
+Supported backing field types: `boolean` and all
 Doctrine datetime variants (`datetime`, `datetime_immutable`, `date`,
 `date_immutable`, `datetimetz`, `datetimetz_immutable`).
 
 ```php
-#[Admin(archiveExpression: 'item.archived')]   // boolean flag
-#[Admin(archiveExpression: 'item.deletedAt')]  // nullable datetime (soft-delete)
+#[Admin(archiveExpression: 'item.isArchived()')]   // boolean flag
+#[Admin(archiveExpression: 'item.getDeletedAt()')]  // nullable datetime (soft-delete)
 ```
 
 When set, a **Show archived** toggle appears in the entity list next to the
@@ -249,7 +250,7 @@ all users who can view the list may toggle it. The underlying DQL restriction
 still applies for users who lack the role — they always see the non-archived view.
 
 ```php
-#[Admin(archiveExpression: 'item.archived', archiveRole: 'ROLE_ADMIN')]
+#[Admin(archiveExpression: 'item.isArchived()', archiveRole: 'ROLE_ADMIN')]
 ```
 
 Can also be set globally via `kachnitel_admin.archive.role`.
@@ -578,7 +579,7 @@ class AuditLog { }
 // Soft-delete with role-gated toggle
 #[Admin(
     label: 'Orders',
-    archiveExpression: 'item.deletedAt',
+    archiveExpression: 'item.getDeletedAt()',
     archiveRole: 'ROLE_ADMIN',
 )]
 class Order { }

@@ -15,6 +15,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
 /**
  * @group archive
@@ -37,7 +38,7 @@ final class RowActionRuntimeArchiveTest extends TestCase
         $this->runtime = new RowActionRuntime(
             registry: $registry,
             routeRuntime: $this->routeRuntime,
-            expressionLanguage: new RowActionExpressionLanguage(),
+            expressionLanguage: new RowActionExpressionLanguage(new ExpressionLanguage()),
         );
     }
 

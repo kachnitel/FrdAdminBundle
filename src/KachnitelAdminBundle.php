@@ -101,7 +101,7 @@ class KachnitelAdminBundle extends AbstractBundle
                     ->children()
                         ->scalarNode('expression')
                             ->defaultNull()
-                            ->info('ExpressionLanguage expression identifying archived rows (e.g. "item.archived", "item.deletedAt"). Must use item.fieldName format for DB-level filtering.')
+                            ->info('ExpressionLanguage expression identifying archived rows (e.g. "item.isArchived()", "item.getDeletedAt()"). Must use a simple getter or boolean accessor call for DB-level filtering.')
                         ->end()
                         ->scalarNode('role')
                             ->defaultNull()

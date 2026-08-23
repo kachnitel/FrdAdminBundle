@@ -18,6 +18,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
 #[UsesClass(Admin::class)]
 #[UsesClass(AdminColumn::class)]
@@ -41,7 +42,7 @@ final class AdminEditabilityResolverTest extends TestCase
         $this->attributeHelper    = $this->createMock(AttributeHelper::class);
         $this->authChecker        = $this->createMock(AuthorizationCheckerInterface::class);
         $this->propertyAccessor   = $this->createMock(PropertyAccessorInterface::class);
-        $expressionLanguage = new RowActionExpressionLanguage();
+        $expressionLanguage = new RowActionExpressionLanguage(new ExpressionLanguage());
 
         $this->resolver = new AdminEditabilityResolver(
             $this->attributeHelper,

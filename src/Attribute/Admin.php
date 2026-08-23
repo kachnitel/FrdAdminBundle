@@ -12,7 +12,7 @@ use Attribute;
  * For per-column role-based visibility, @see ColumnPermission
  * For user-toggleable column visibility, use enableColumnVisibility: true
  * For inline editing in list views, use enableInlineEdit: true
- * For archive/soft-delete filtering, use archiveExpression: 'item.fieldName'
+ * For archive/soft-delete filtering, use archiveExpression: 'item.getFieldName()'
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 class Admin
@@ -35,9 +35,11 @@ class Admin
      * @param string|null $sortBy Default sort column (null = 'id')
      * @param string|null $sortDirection Default sort direction 'ASC' or 'DESC' (null = 'DESC')
      * @param string|null $archiveExpression ExpressionLanguage expression evaluated against
-     *   the entity to determine whether it is archived (e.g. 'item.archived', 'item.deletedAt').
+     *   the entity to determine whether it is archived (e.g. 'item.isArchived()',
+     *   'item.getDeletedAt()').
      *   Overrides the global `kachnitel_admin.archive.expression` YAML setting for this entity.
-     *   Must use `item.fieldName` convention for the DB-level hide condition to work.
+     *   Must use a simple `item.getFieldName()` or `item.isFieldName()` call for the
+     *   DB-level hide condition to work. The `entity.` prefix is also supported.
      * @param string|null $archiveRole Role required to see and use the archive toggle.
      *   Overrides the global `kachnitel_admin.archive.role` for this entity.
      *   Null means any authenticated user can toggle (default).

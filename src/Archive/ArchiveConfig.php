@@ -15,7 +15,7 @@ namespace Kachnitel\AdminBundle\Archive;
 final readonly class ArchiveConfig
 {
     /**
-     * @param string      $expression   ExpressionLanguage expression, e.g. 'item.archived'
+     * @param string      $expression   ExpressionLanguage expression, e.g. 'item.isArchived()'
      * @param string      $field        Extracted Doctrine field name, e.g. 'archived'
      * @param string      $doctrineType Doctrine column type ('boolean', 'datetime', etc.)
      * @param string|null $role         Role required to toggle the filter; null = anyone
