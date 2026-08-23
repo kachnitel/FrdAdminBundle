@@ -95,6 +95,23 @@
     </div>
 
     <div class="{{ css.dialog_body() }}">
+      {#
+       # REVIEW: loading: "lazy" is REQUIRED here:
+       #
+       # This component is mounted inside a closed native <dialog> (dialogs
+       # start closed and only open via showModal() on user interaction).
+       # Eagerly mounting a LiveComponent in that state causes the FIRST
+       # inline-add dialog rendered on a page to permanently fail: its form
+       # area never renders, and reopening the dialog later does not
+       # recover it. A second, different dialog opened afterwards mounts
+       # fine — which is what makes this easy to miss without knowing to
+       # look for it.
+       #
+       # Do not remove this attribute.
+       #
+       # @see \Kachnitel\AdminBundle\Twig\Components\InlineEntityForm
+       # @see https://github.com/kachnitel/FrdAdminBundle/issues/12
+      #}
       {{ component('K:Admin:EntityType:InlineForm', {
         entityClass: targetEntityClass,
         formTypeClass: formTypeClass,

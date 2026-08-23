@@ -61,6 +61,29 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
  * #[AdminColumn(editable: false)] on OneToMany properties of the related entity
  * to exclude them from the inline dialog.
  *
+ * ## REVIEW: loading: "lazy" is required for LiveComponent inside a closed <dialog>
+ *
+ * EntityTypeAddButton.html.twig renders this component inside a closed
+ * native <dialog> element and deliberately passes `loading: "lazy"` to
+ * component(). This is NOT an optional performance tweak — eagerly
+ * mounting a LiveComponent inside a closed <dialog> (dialogs start closed;
+ * they only open via showModal() on user interaction) causes the first
+ * inline-add dialog rendered on a page to permanently fail: its form area
+ * never mounts, and reopening that same dialog later does not recover it.
+ * A *second*, different dialog opened afterwards mounts correctly, which
+ * is what makes this bug easy to miss in ad-hoc manual testing.
+ *
+ * Suspected mechanism (not yet root-caused inside the upstream package):
+ * a closed <dialog> is removed from the normal document flow, and UX
+ * LiveComponent's eager (non-lazy) mount path appears to depend on
+ * layout/visibility that isn't available for content inside a closed
+ * <dialog>. `loading: "lazy"` defers the mount until the dialog is
+ * actually opened, sidestepping the problematic phase entirely.
+ *
+ * @see \Kachnitel\AdminBundle\Tests\Twig\Components\EntityTypeAddButtonLazyLoadingRegressionTest
+ * @see \Kachnitel\AdminBundle\Twig\Components\EntityTypeAddButton the caller that sets loading: "lazy"
+ * @see https://github.com/kachnitel/FrdAdminBundle/issues/12 full investigation, repro steps, resolution plan
+ *
  * @template TData of object|null
  */
 #[AsLiveComponent(
