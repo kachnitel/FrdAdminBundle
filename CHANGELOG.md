@@ -7,7 +7,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.12.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.11.0...v0.12.0) (2026-07-25)
+## [0.13.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.12.0...v0.13.0) (2026-08-23)
+
+### ⚠ BREAKING CHANGES
+
+* Remove the kachnitel/entity-expression-language dependency and use Symfony's ([4e52ab](https://github.com/kachnitel/FrdAdminBundle/commit/4e52ab72ea6cda2bb10e5a4b4c14ba907fbdde7b))
+* Replace entity expression language with Symfony native evaluator ([4e52ab](https://github.com/kachnitel/FrdAdminBundle/commit/4e52ab72ea6cda2bb10e5a4b4c14ba907fbdde7b)) *[*[*@see*](https://github.com/see)*]*
+
+### Features
+
+* Introduce AdminFormComponentInterface and refactor form components for better composition ([5863cb](https://github.com/kachnitel/FrdAdminBundle/commit/5863cb72d5f7f60fbe5dfa29718bdf080dd2863b))
+
+##### DX
+
+* Simplify EntityList parameters - make entityClass optional ([6c8854](https://github.com/kachnitel/FrdAdminBundle/commit/6c88549edca51a2470fdcc2446e031355470e348))
+
+##### Forms
+
+* Redirect to "edit" when a new entity is saved ([6c27d2](https://github.com/kachnitel/FrdAdminBundle/commit/6c27d22766977a1e9f450ffede01557d0c2ca4c6))
+
+##### Tests
+
+* Add regression tests for optional date field handling in new entity save flow ([facf4a](https://github.com/kachnitel/FrdAdminBundle/commit/facf4a15d3660e9ee4a9d0a8d42dc6ff1372b313))
+
+### Bug Fixes
+
+
+##### Docs
+
+* Use <TData> template in InlineEntityForm ([8bb102](https://github.com/kachnitel/FrdAdminBundle/commit/8bb102f85e3532ea7c18356e6eb24ed6e9c3851b))
+
+##### Entity-list
+
+* Resolve entity class before archive rendering ([4adbc6](https://github.com/kachnitel/FrdAdminBundle/commit/4adbc6307bfb8f26aafd724c5e3d12cc3aeb5a5e))
+
+##### Tests
+
+* Add regression test for loading: "lazy" requirement in inline-add dialog ([fba45a](https://github.com/kachnitel/FrdAdminBundle/commit/fba45a737d94681aa794d69aef0fb476d2693815)) *[*[*@see*](https://github.com/see)*]*
+* Missed UsesClass in tests touching updated RowActionExpressionLanguage ([b7e41a](https://github.com/kachnitel/FrdAdminBundle/commit/b7e41ab5dcb5df06ccbf84cda0b326d5ae71334f))
+
+### Code Refactoring
+
+* AdminFormSaveTrait over inheritance in AdminEntityForm ([bd97c2](https://github.com/kachnitel/FrdAdminBundle/commit/bd97c23f325e0a4ef4a36b100ed1fcb740fb03eb))
+
+### Documentation
+
+* Clean up UPGRADE files ([3ebb15](https://github.com/kachnitel/FrdAdminBundle/commit/3ebb15cd5e47a924a95fac13f4a19e0af014db59))
+* Remove obsolete comments from compiler passes ([61d0d3](https://github.com/kachnitel/FrdAdminBundle/commit/61d0d3f5ed9e80840d773d541f5688bbed248de8))
+* Review and update docs ([506cd9](https://github.com/kachnitel/FrdAdminBundle/commit/506cd90dbacdfb8c7046cd3301aeb7fb7f7ee390))
+* Shorter and objective COMPARISON.md ([ede54b](https://github.com/kachnitel/FrdAdminBundle/commit/ede54bb7b58a16b0be10442054ce6f6f32691018))
+
+
+---
+
+## [0.12.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.11.0...v0.12.0) (2026-07-24)
 
 ### Features
 
