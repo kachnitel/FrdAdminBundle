@@ -1,13 +1,13 @@
 {
-    "generated_at": "2026-08-23 18:32:04",
+    "generated_at": "2026-08-23 18:48:47",
     "tests": {
         "count": 1602,
         "assertions": 3743,
-        "status": "failing(risky)"
+        "status": "passing"
     },
     "coverage": {
-        "lines": 92.41,
-        "percentage": 92,
+        "lines": 89.53,
+        "percentage": 90,
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {

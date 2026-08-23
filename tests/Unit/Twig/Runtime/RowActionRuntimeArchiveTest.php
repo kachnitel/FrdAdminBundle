@@ -10,9 +10,7 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
@@ -21,8 +19,9 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
  * @group archive
  * @covers \Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime
  */
-#[CoversClass(RowActionRuntime::class)]
-#[UsesClass(RowAction::class)]
+#[PHPUnit\CoversClass(RowActionRuntime::class)]
+#[PHPUnit\UsesClass(RowAction::class)]
+#[PHPUnit\UsesClass(RowActionExpressionLanguage::class)]
 final class RowActionRuntimeArchiveTest extends TestCase
 {
     /** @var AdminRouteRuntime&MockObject */
@@ -47,7 +46,7 @@ final class RowActionRuntimeArchiveTest extends TestCase
         return new \stdClass();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveActionIsVisibleWhenRouteAccessible(): void
     {
         $this->routeRuntime
@@ -64,7 +63,7 @@ final class RowActionRuntimeArchiveTest extends TestCase
         $this->assertTrue($this->runtime->isActionVisible($action, $this->makeEntity(), 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveActionIsHiddenWhenRouteNotAccessible(): void
     {
         $this->routeRuntime
@@ -81,7 +80,7 @@ final class RowActionRuntimeArchiveTest extends TestCase
         $this->assertFalse($this->runtime->isActionVisible($action, $this->makeEntity(), 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unarchiveActionRoutesUnderArchivePermission(): void
     {
         // Both archive and unarchive use ADMIN_ARCHIVE voter, which maps to 'archive' action name
@@ -100,7 +99,7 @@ final class RowActionRuntimeArchiveTest extends TestCase
         $this->assertTrue($this->runtime->isActionVisible($action, $this->makeEntity(), 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function adminArchiveVoterAttributeDoesNotFallThroughToStrtolower(): void
     {
         // If mapVoterAttributeToActionName falls through to strtolower, it would call
