@@ -88,7 +88,7 @@ class Order
 
     // Expression-based: editable only when the order is a draft
     #[ORM\Column]
-    #[AdminColumn(editable: 'entity.status == "draft"')]
+    #[AdminColumn(editable: 'entity.getStatus() == "draft"')]
     private string $description = '';
 }
 ```
@@ -131,11 +131,11 @@ Available variables:
 
 ```php
 // Editable only while unlocked
-#[AdminColumn(editable: 'entity.status != "locked"')]
+#[AdminColumn(editable: 'entity.getStatus() != "locked"')]
 private string $title = '';
 
 // Editable only by editors — combines state + permission
-#[AdminColumn(editable: 'entity.active && is_granted("ROLE_EDITOR")')]
+#[AdminColumn(editable: 'entity.isActive() && is_granted("ROLE_EDITOR")')]
 private string $internalNotes = '';
 ```
 
@@ -324,7 +324,7 @@ class Order
 
     // Only editable while pending
     #[ORM\Column]
-    #[AdminColumn(editable: 'entity.status == "pending"')]
+    #[AdminColumn(editable: 'entity.getStatus() == "pending"')]
     #[Assert\NotBlank]
     private string $deliveryAddress = '';
 

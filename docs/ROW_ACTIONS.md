@@ -38,7 +38,7 @@ use Kachnitel\AdminBundle\Attribute\AdminAction;
     label: 'Approve',
     icon: '✅',
     route: 'app_order_approve',
-    condition: 'entity.status == "pending"',
+    condition: 'entity.getStatus() == "pending"',
 )]
 class Order
 {
@@ -60,7 +60,7 @@ The attribute is placed on the entity class and can be repeated for multiple act
 #[AdminAction(name: 'duplicate', label: 'Duplicate', icon: '📋', route: 'app_product_duplicate', priority: 30)]
 #[AdminAction(name: 'archive',   label: 'Archive',   icon: '📦', route: 'app_product_archive',   priority: 40,
     confirmMessage: 'Archive this product?',
-    condition: 'entity.status != "archived"',
+    condition: 'entity.getStatus() != "archived"',
 )]
 class Product
 {
@@ -102,19 +102,19 @@ Uses Symfony's ExpressionLanguage with `entity` as the root variable:
 
 ```php
 // Show only when status is pending
-#[AdminAction(name: 'approve', condition: 'entity.status == "pending"')]
+#[AdminAction(name: 'approve', condition: 'entity.getStatus() == "pending"')]
 
 // Show only for active items
-#[AdminAction(name: 'deactivate', condition: 'entity.active == true')]
+#[AdminAction(name: 'deactivate', condition: 'entity.isActive() == true')]
 
 // Role-based condition
 #[AdminAction(name: 'impersonate', condition: 'is_granted("ROLE_SUPER_ADMIN")')]
 ```
 
-PropertyAccess syntax works for nested properties:
+Explicit method calls work for nested objects:
 
 ```php
-#[AdminAction(name: 'contact', condition: 'entity.owner.isActive')]
+#[AdminAction(name: 'contact', condition: 'entity.getOwner().isActive()')]
 ```
 
 ### DI Tuple Conditions (Complex)
@@ -197,7 +197,7 @@ To completely replace a default action (e.g., change the Show button), use `over
 
 ```php
 // Merge (default) — add a condition to the existing Show action, keep its voter check
-#[AdminAction(name: 'show', label: 'Preview', condition: 'entity.isPublished')]
+#[AdminAction(name: 'show', label: 'Preview', condition: 'entity.isPublished()')]
 
 // Full override — replace Show entirely; no voter attribute unless you specify one
 #[AdminAction(name: 'show', label: 'Preview', icon: '🔍', route: 'app_preview', override: true)]
@@ -337,9 +337,9 @@ show/edit page header loops use. The show/edit templates additionally filter `by
 #[ORM\Entity]
 #[Admin(label: 'Support Tickets')]
 #[AdminAction(name: 'close',    label: 'Close',    icon: '🔒', route: 'app_ticket_close',
-    condition: 'entity.status != "closed"')]
+    condition: 'entity.getStatus() != "closed"')]
 #[AdminAction(name: 'escalate', label: 'Escalate', icon: '🔺', route: 'app_ticket_escalate',
-    condition: 'entity.priority < 3')]
+    condition: 'entity.getPriority() < 3')]
 class Ticket { }
 ```
 
@@ -353,7 +353,7 @@ class Ticket { }
     route: 'app_post_publish',
     method: 'POST',
     confirmMessage: 'Publish this post? It will be visible to all users.',
-    condition: 'entity.status == "draft"',
+    condition: 'entity.getStatus() == "draft"',
 )]
 ```
 
@@ -392,7 +392,7 @@ class Product { }
 
 ```php
 // Adds condition while keeping ADMIN_EDIT voter check
-#[AdminAction(name: 'edit', label: 'Edit', condition: '!entity.isLocked')]
+#[AdminAction(name: 'edit', label: 'Edit', condition: '!entity.isLocked()')]
 ```
 
 ### Level 4: Remove or replace default Show/Edit
