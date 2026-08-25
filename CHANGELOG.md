@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.13.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.13.0...v0.13.1) (2026-08-25)
+
+### Bug Fixes
+
+
+##### Docs
+
+* Stale property access examples in ROW_ACTIONS/INLINE_EDIT ([de9711](https://github.com/kachnitel/FrdAdminBundle/commit/de9711386c5dec9696ac46c0c7b546fbff5d38a7))
+
+
+---
+
 ## [0.13.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.12.0...v0.13.0) (2026-08-23)
 
 ### ⚠ BREAKING CHANGES
