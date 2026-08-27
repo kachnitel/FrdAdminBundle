@@ -42,6 +42,7 @@ EasyAdmin auto-detects scalar fields the same way when `configureFields()` is om
 | [Batch actions](BATCH_ACTIONS.md) | ✅ Built-in delete/archive + custom | ✅ Built-in delete + custom | ✅ Rich, long-standing built-in system |
 | Object-level (per-row) ACL | ❌ | ❌ | ✅ OWNER/MASTER/OPERATOR-style |
 | Built-in field/widget types | ~12, plus constraint/naming-based guessing | 30+ explicit `Field` classes | Symfony Form types directly |
+| INTL / i18n support | ❌ | ✅ via `trans()` | ✅ via `trans()` |
 
 A ❌ means no first-party feature — EasyAdmin and Sonata users commonly cover some of these with third-party packages (e.g. Gedmo `SoftDeleteable` for archiving) or custom code instead.
 
