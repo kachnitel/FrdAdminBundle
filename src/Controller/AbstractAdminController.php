@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Controller;
 
 use Kachnitel\AdminBundle\Controller\Trait\DeleteEntityTrait;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * Abstract base controller for entity CRUD operations.
@@ -23,7 +26,24 @@ abstract class AbstractAdminController extends AbstractController
 {
     use DeleteEntityTrait;
 
+    /**
+     * Injected via #[Required] setter rather than the constructor so this
+     * class's (and GenericAdminController's) constructor signature doesn't
+     * change — consistent with how AdminFormSaveTrait injects AdminRouteRuntime.
+     * Test doubles that bypass the container (e.g. GenericAdminControllerTestDouble)
+     * must call setObjectAuthorizationChecker() themselves before exercising
+     * doShow()/doEdit()/doDeleteEntity() or any GenericAdminController method
+     * that reads it, since #[Required] setters only fire through real DI.
+     */
+    protected ObjectAuthorizationChecker $objectAuthChecker;
+
     public function __construct(protected EntityManagerInterface $em) {}
+
+    #[Required]
+    public function setObjectAuthorizationChecker(ObjectAuthorizationChecker $objectAuthChecker): void
+    {
+        $this->objectAuthChecker = $objectAuthChecker;
+    }
 
     /**
      * List all entities of the given class.
@@ -71,6 +91,8 @@ abstract class AbstractAdminController extends AbstractController
             throw $this->createNotFoundException('No ' . $class . ' found for id ' . $id);
         }
 
+        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_SHOW, $entity);
+
         return $this->render($this->getShowTemplate($class), [
             'entity' => $entity,
             'entityClass' => $this->getEntityNamespace() . $class,
@@ -93,6 +115,8 @@ abstract class AbstractAdminController extends AbstractController
             throw $this->createNotFoundException('No ' . $class . ' found for id ' . $id);
         }
 
+        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_EDIT, $entity);
+
         return $this->render($this->getEditTemplate($class), [
             'entity'            => $entity,
             'entityClass'       => $this->getEntityNamespace() . $class,
@@ -114,6 +138,8 @@ abstract class AbstractAdminController extends AbstractController
         if (!$entity) {
             throw $this->createNotFoundException('No ' . $class . ' found for id ' . $id);
         }
+
+        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_DELETE, $entity);
 
         // Convert class name to entitySlug format (PascalCase -> kebab-case)
         $entitySlug = strtolower((string) preg_replace('/[A-Z]/', '-$0', lcfirst($class)));

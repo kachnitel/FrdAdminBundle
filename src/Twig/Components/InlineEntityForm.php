@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -37,6 +39,16 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
  * AbstractController::createForm() is not used here because AbstractController
  * has no createNamedForm() shortcut; FormFactoryInterface is injected directly
  * so PHPStan can verify the call at level 8.
+ *
+ * ## Object-level authorization
+ *
+ * save() denies via ObjectAuthorizationChecker (ADMIN_NEW, since inline
+ * creation is always a new entity) after doSubmitForm() has bound the
+ * submitted data onto the entity and before persist(). This is a no-op for
+ * entities without #[Admin(enableObjectAuthorization: true)] — see that
+ * flag's docblock and docs/OBJECT_AUTHORIZATION.md. Without this check,
+ * object-level create authorization enforced on the main New page could be
+ * bypassed entirely by going through this dialog instead.
  *
  * ## After-save flow
  *
@@ -98,6 +110,7 @@ class InlineEntityForm extends AbstractController
     public function __construct(
         protected readonly EntityManagerInterface $em,
         private readonly FormFactoryInterface $formFactory,
+        private readonly ObjectAuthorizationChecker $objectAuthChecker,
     ) {}
 
     /**
@@ -155,6 +168,8 @@ class InlineEntityForm extends AbstractController
 
         /** @var object $entity */
         $entity = $this->doGetForm()->getData();
+
+        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_NEW, $entity);
 
         $this->em->persist($entity);
         $this->em->flush();

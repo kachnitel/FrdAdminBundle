@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
+use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -21,6 +24,15 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * NotFoundHttpException — container-free — so it's deliberately not
  * overridden. redirectToRoute() IS container-free too, but is overridden
  * anyway purely to capture the route/params for assertions.
+ *
+ * Declares its own constructor (mirroring GenericAdminController's exactly,
+ * argument-for-argument) purely to install a PermissiveObjectAuthorizationChecker
+ * default afterward — #[Required] setter injection (how the real
+ * ObjectAuthorizationChecker reaches AbstractAdminController) only fires
+ * through the DI container, which direct `new` construction here bypasses.
+ * Tests that need to exercise object-level authorization call
+ * setObjectAuthorizationChecker() again after construction with their own
+ * double — see GenericAdminControllerObjectAuthorizationTest.
  */
 final class GenericAdminControllerTestDouble extends GenericAdminController
 {
@@ -42,6 +54,32 @@ final class GenericAdminControllerTestDouble extends GenericAdminController
     public bool $csrfValid = true;
     /** @var list<array{string, ?string}> */
     public array $csrfChecks = [];
+
+    public function __construct(
+        EntityManagerInterface $em,
+        EntityDiscoveryService $entityDiscovery,
+        string $entityNamespace,
+        string $formNamespace,
+        string $formSuffix,
+        FormRegistryInterface $formRegistry,
+        string $routePrefix = 'app_admin_entity',
+        string $dashboardRoute = 'app_admin_dashboard',
+        ?string $requiredRole = 'ROLE_ADMIN',
+    ) {
+        parent::__construct(
+            em: $em,
+            entityDiscovery: $entityDiscovery,
+            entityNamespace: $entityNamespace,
+            formNamespace: $formNamespace,
+            formSuffix: $formSuffix,
+            formRegistry: $formRegistry,
+            routePrefix: $routePrefix,
+            dashboardRoute: $dashboardRoute,
+            requiredRole: $requiredRole,
+        );
+
+        $this->setObjectAuthorizationChecker(new PermissiveObjectAuthorizationChecker());
+    }
 
     protected function isGranted(mixed $attribute, mixed $subject = null): bool
     {

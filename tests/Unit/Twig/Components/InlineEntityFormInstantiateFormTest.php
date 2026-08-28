@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Components;
 
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -216,7 +217,11 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
                 }
             );
 
-        return new TestableInlineEntityForm($this->createStub(\Doctrine\ORM\EntityManagerInterface::class), $formFactory);
+        return new TestableInlineEntityForm(
+            $this->createStub(\Doctrine\ORM\EntityManagerInterface::class),
+            $formFactory,
+            $this->createStub(ObjectAuthorizationChecker::class),
+        );
     }
 }
 

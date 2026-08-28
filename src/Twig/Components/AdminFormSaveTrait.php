@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
@@ -37,11 +39,18 @@ use Symfony\UX\LiveComponent\Attribute\PreReRender;
 trait AdminFormSaveTrait
 {
     private AdminRouteRuntime $adminRouteRuntime;
+    private ObjectAuthorizationChecker $objectAuthChecker;
 
     #[Required]
     public function setAdminRouteRuntime(AdminRouteRuntime $adminRouteRuntime): void
     {
         $this->adminRouteRuntime = $adminRouteRuntime;
+    }
+
+    #[Required]
+    public function setObjectAuthorizationChecker(ObjectAuthorizationChecker $objectAuthChecker): void
+    {
+        $this->objectAuthChecker = $objectAuthChecker;
     }
 
     /**
@@ -96,10 +105,18 @@ trait AdminFormSaveTrait
         /** @var object $entity */
         $entity = $this->doGetForm()->getData();
 
+        // Checked here — after doSubmitForm() has bound the submitted data onto
+        // $entity, and before persist() — so an edit that changes the entity into
+        // a state/type the current user isn't allowed to manage is caught using
+        // its post-submission state, not the state it had when the page loaded.
+        $wasNew = $this->entityId === null;
+        $this->objectAuthChecker->denyAccessUnlessGranted(
+            $wasNew ? AdminEntityVoter::ADMIN_NEW : AdminEntityVoter::ADMIN_EDIT,
+            $entity,
+        );
+
         $this->em->persist($entity);
         $this->em->flush();
-
-        $wasNew = $this->entityId === null;
 
         if ($wasNew) {
             $idValues = $this->em

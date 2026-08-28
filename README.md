@@ -1,9 +1,9 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1604%20passed-brightgreen>)
+![Tests](<https://img.shields.io/badge/tests-1634%20passed-red>)
 ![Coverage](<https://img.shields.io/badge/coverage-93%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-3747-blue>)
+![Assertions](<https://img.shields.io/badge/assertions-3817-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-clean-brightgreen>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
@@ -263,6 +263,7 @@ kachnitel_admin:
 - **Archive / Soft-Delete** — Hide archived rows by default with a live toggle; works with boolean flags and nullable-datetime fields; no Doctrine filter needed
 - **Column Visibility** - Show/hide columns with session or database-backed preferences
 - **Composite Columns** — Group related properties into a single stacked table cell with `#[AdminColumn(group: '...')]`
+- **Object-Level Authorization** — Instance-level checks (not just class-level) for show/edit/new/delete/archive via a plain Symfony voter — e.g. let `ROLE_SALES` edit customer contacts and `ROLE_PURCHASING` edit vendor contacts
 - **DataSource Abstraction** - Display data from external APIs, audit logs, or any source via [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts)
 
 ## Documentation
@@ -291,6 +292,7 @@ kachnitel_admin:
 |-------|-------------|
 | [Inline Editing](docs/INLINE_EDIT.md) | Per-field in-place editing in list views |
 | [Inline Add](docs/INLINE_ADD.md) | Create related entities without leaving the current form |
+| [Object-Level Authorization](docs/OBJECT_AUTHORIZATION.md) | Instance-level (not just class-level) permission checks via a plain Symfony voter |
 | [Composite Columns](docs/COMPOSITE_COLUMNS.md) | Group related properties into one stacked table cell |
 | [Column Visibility](docs/COLUMN_VISIBILITY.md) | Permissions and user preferences |
 | [DataSource](docs/DATASOURCE.md) | Non-Doctrine data sources |

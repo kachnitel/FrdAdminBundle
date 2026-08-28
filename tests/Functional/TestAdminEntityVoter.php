@@ -12,13 +12,20 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  * Test voter that always grants access for functional tests.
  * This allows testing component functionality without fighting authentication in test environment.
  *
+ * Only supports string subjects, matching the real AdminEntityVoter::supports().
+ * Object-subject authorization (ObjectAuthorizationChecker) is intentionally left
+ * to whichever voter a given test registers for that purpose — see
+ * ObjectAuthorizationTestKernel / ObjectAuthVoter — since an unconditional grant
+ * here for object subjects too would always outvote it under the affirmative
+ * strategy, making object-level denial impossible to test.
+ *
  * @extends Voter<string, string>
  */
 class TestAdminEntityVoter extends Voter
 {
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [
+        return is_string($subject) && in_array($attribute, [
             AdminEntityVoter::ADMIN_INDEX,
             AdminEntityVoter::ADMIN_SHOW,
             AdminEntityVoter::ADMIN_NEW,
