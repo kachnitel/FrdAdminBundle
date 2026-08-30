@@ -119,6 +119,8 @@ button is automatically added to the batch actions bar. No additional code neede
 )]
 ```
 
+If the entity also has `#[Admin(enableObjectAuth: true)]`, both built-in batch actions check object-level authorization per selected row: a row the current user isn't authorized for is silently skipped rather than failing the whole batch, and stays selected afterward so it doesn't just silently disappear from the count. See [Object-Level Authorization → Batch Actions](OBJECT_AUTHORIZATION.md#batch-actions) for the full behavior.
+
 ---
 
 ## Custom Batch Actions

@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Tests\Unit\ValueObject\ApprovalService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime;
@@ -50,13 +51,15 @@ final class RowActionRuntimeTest extends TestCase
     private function createRuntime(
         bool $withAuthChecker = true,
         bool $withContainer = true,
+        ?ObjectAuthorizationChecker $objectAuthChecker = null,
     ): RowActionRuntime {
         return new RowActionRuntime(
             registry: $this->registry,
             routeRuntime: $this->routeRuntime,
             expressionLanguage: $this->expressionLanguage,
             authChecker: $withAuthChecker ? $this->authChecker : null,
-            conditionLocator: $withContainer ? $this->conditionLocator : null
+            conditionLocator: $withContainer ? $this->conditionLocator : null,
+            objectAuthChecker: $objectAuthChecker,
         );
     }
 
@@ -452,6 +455,99 @@ final class RowActionRuntimeTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // Object-level authorization
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function objectAuthorizationHidesActionWhenDeniedForThisEntity(): void
+    {
+        $entity = $this->makeEntity();
+        $this->routeRuntime->method('isActionAccessible')->willReturn(true); // class-level passes
+
+        $objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $objectAuthChecker->expects($this->once())
+            ->method('isGranted')
+            ->with('ADMIN_EDIT', $entity)
+            ->willReturn(false);
+
+        $action = new RowAction(name: 'edit', label: 'Edit', voterAttribute: 'ADMIN_EDIT');
+
+        $runtime = $this->createRuntime(objectAuthChecker: $objectAuthChecker);
+        $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
+    }
+
+    #[Test]
+    public function objectAuthorizationShowsActionWhenGrantedForThisEntity(): void
+    {
+        $entity = $this->makeEntity();
+        $this->routeRuntime->method('isActionAccessible')->willReturn(true);
+
+        $objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $objectAuthChecker->expects($this->once())
+            ->method('isGranted')
+            ->with('ADMIN_EDIT', $entity)
+            ->willReturn(true);
+
+        $action = new RowAction(name: 'edit', label: 'Edit', voterAttribute: 'ADMIN_EDIT');
+
+        $runtime = $this->createRuntime(objectAuthChecker: $objectAuthChecker);
+        $this->assertTrue($runtime->isActionVisible($action, $entity, 'Product'));
+    }
+
+    #[Test]
+    public function objectAuthorizationIsSkippedWhenActionHasNoVoterAttribute(): void
+    {
+        $entity = $this->makeEntity();
+
+        $objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $objectAuthChecker->expects($this->never())->method('isGranted');
+
+        // No voterAttribute — nothing to check ObjectAuthorizationChecker against.
+        $action = new RowAction(name: 'custom', label: 'Custom');
+
+        $runtime = $this->createRuntime(objectAuthChecker: $objectAuthChecker);
+        $this->assertTrue($runtime->isActionVisible($action, $entity, 'Product'));
+    }
+
+    /**
+     * Backward-compatibility guard: a runtime constructed the old way — no
+     * objectAuthorizationChecker at all, which is what every other test in
+     * this file does via the bare createRuntime() call — must keep behaving
+     * exactly as it did before this dependency existed.
+     */
+    #[Test]
+    public function objectAuthorizationIsSkippedWhenCheckerNotProvided(): void
+    {
+        $entity = $this->makeEntity();
+        $this->routeRuntime->method('isActionAccessible')->willReturn(true);
+
+        $action = new RowAction(name: 'edit', label: 'Edit', voterAttribute: 'ADMIN_EDIT');
+
+        $runtime = $this->createRuntime();
+        $this->assertTrue($runtime->isActionVisible($action, $entity, 'Product'));
+    }
+
+    /**
+     * Proves the two gates are independent, ordered, AND'ed checks rather
+     * than a single merged decision: a class-level denial short-circuits
+     * before object-level authorization is ever consulted.
+     */
+    #[Test]
+    public function classLevelDenialShortCircuitsBeforeObjectLevelIsConsulted(): void
+    {
+        $entity = $this->makeEntity();
+        $this->routeRuntime->method('isActionAccessible')->willReturn(false);
+
+        $objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $objectAuthChecker->expects($this->never())->method('isGranted');
+
+        $action = new RowAction(name: 'edit', label: 'Edit', voterAttribute: 'ADMIN_EDIT');
+
+        $runtime = $this->createRuntime(objectAuthChecker: $objectAuthChecker);
+        $this->assertFalse($runtime->isActionVisible($action, $entity, 'Product'));
+    }
+
+    // -------------------------------------------------------------------------
     // getVisibleRowActions
     // -------------------------------------------------------------------------
 
@@ -593,7 +689,7 @@ final class RowActionRuntimeTest extends TestCase
 
         try {
             $runtime->isActionVisible($action, $entity, 'Product');
-            $this->fail('Expected RuntimeException was not thrown');
+            $this->fail('Expected \RuntimeException was not thrown');
         } catch (\RuntimeException $e) {
             $this->assertSame($original, $e->getPrevious());
         }

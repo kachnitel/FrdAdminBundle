@@ -144,7 +144,7 @@ services:
             $requiredRole: '%kachnitel_admin.required_role%'
 
     # Object-level authorization on top of AdminEntityVoter's class-level checks.
-    # Opt-in per entity via #[Admin(enableObjectAuthorization: true)] — see docs/OBJECT_AUTHORIZATION.md.
+    # Opt-in per entity via #[Admin(enableObjectAuth: true)] — see docs/OBJECT_AUTHORIZATION.md.
     Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker: ~
 
     # Security Voter for entity admin access control

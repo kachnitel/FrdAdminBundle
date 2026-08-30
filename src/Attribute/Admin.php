@@ -27,7 +27,7 @@ class Admin
      * @param bool $enableInlineEdit Enable per-field inline editing in the list view.
      *   Defaults to false — opt in per entity. Individual columns can be further
      *   controlled with #[AdminColumn(editable: true|false|'expr')].
-     * @param bool $enableObjectAuthorization Run object-subject authorization checks
+     * @param bool $enableObjectAuth Run object-subject authorization checks
      *   (via ObjectAuthorizationChecker) on show/edit/new/delete/archive/unarchive, in
      *   addition to the class-level AdminEntityVoter checks. Defaults to false — opt in
      *   per entity. Requires an application-registered Symfony voter whose supports()
@@ -53,7 +53,6 @@ class Admin
      *   when a global `kachnitel_admin.archive.expression` is configured.
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-     * @SuppressWarnings(PHPMD.LongVariable)
      */
     public function __construct(
         private ?string $label = null,
@@ -64,7 +63,7 @@ class Admin
         private bool $enableBatchActions = false,
         private bool $enableColumnVisibility = false,
         private bool $enableInlineEdit = false,
-        private bool $enableObjectAuthorization = false,
+        private bool $enableObjectAuth = false,
         private ?array $columns = null,
         private ?array $excludeColumns = null,
         private ?array $filterableColumns = null,
@@ -112,9 +111,9 @@ class Admin
         return $this->enableInlineEdit;
     }
 
-    public function isEnableObjectAuthorization(): bool
+    public function isenableObjectAuth(): bool
     {
-        return $this->enableObjectAuthorization;
+        return $this->enableObjectAuth;
     }
 
     /**

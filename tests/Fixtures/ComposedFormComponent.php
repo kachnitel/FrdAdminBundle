@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Twig\Components\AdminFormComponentInterface;
 use Kachnitel\AdminBundle\Twig\Components\AdminFormComponentTrait;
 use Kachnitel\AdminBundle\Twig\Components\AdminFormSaveTrait;
+use Kachnitel\AdminBundle\Twig\Components\ObjectAuthorizedFormInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -32,11 +34,16 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
  * @use AdminFormComponentTrait<object|null>
  */
 #[AsLiveComponent(name: 'Test:Form:Composed', template: '@KachnitelAdmin/components/AdminEntityForm.html.twig')]
-final class ComposedFormComponent extends AbstractController implements AdminFormComponentInterface
+final class ComposedFormComponent extends AbstractController implements AdminFormComponentInterface, ObjectAuthorizedFormInterface
 {
     /** @use AdminFormComponentTrait<object|null> */
     use AdminFormComponentTrait;
     use AdminFormSaveTrait;
+
+    public function getObjectAuthorizationAttribute(): string
+    {
+        return $this->entityId === null ? AdminEntityVoter::ADMIN_NEW : AdminEntityVoter::ADMIN_EDIT;
+    }
 
     #[LiveProp]
     public ?int $entityId = null;

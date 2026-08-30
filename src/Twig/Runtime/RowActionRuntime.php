@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Twig\Runtime;
 use Kachnitel\AdminBundle\RowAction\RowActionConditionInterface;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -34,6 +35,7 @@ class RowActionRuntime implements RuntimeExtensionInterface
         private readonly ?ServiceLocator $conditionLocator = null,
         ?LoggerInterface $logger = null,
         private readonly bool $debug = false,
+        private readonly ?ObjectAuthorizationChecker $objectAuthChecker = null,
     ) {
         $this->logger = $logger ?? new NullLogger();
     }
@@ -76,8 +78,21 @@ class RowActionRuntime implements RuntimeExtensionInterface
      */
     public function isActionVisible(RowAction $action, object $entity, string $entityShortClass): bool
     {
-        // 1. Voter / route check
+        // 1. Voter / route check (class-level)
         if (!$this->checkVoterAccess($action, $entityShortClass)) {
+            return false;
+        }
+
+        // 1b. Object-level authorization (this specific entity instance).
+        // Reuses the action's own voterAttribute — the same ADMIN_* constant
+        // ObjectAuthorizationChecker itself expects — so no separate mapping
+        // is needed. A no-op for entities without
+        // #[Admin(enableObjectAuth: true)]; see that service.
+        if (
+            $action->voterAttribute !== null
+            && $this->objectAuthChecker !== null
+            && !$this->objectAuthChecker->isGranted($action->voterAttribute, $entity)
+        ) {
             return false;
         }
 

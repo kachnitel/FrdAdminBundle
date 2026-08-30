@@ -17,7 +17,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * Covers ObjectAuthorizationChecker in isolation: the opt-in short-circuit
- * (no #[Admin] attribute, or enableObjectAuthorization: false), delegation
+ * (no #[Admin] attribute, or enableObjectAuth: false), delegation
  * to AuthorizationCheckerInterface once enabled, and denyAccessUnlessGranted()'s
  * no-op-vs-throw behaviour.
  *
@@ -58,7 +58,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
     #[Test]
     public function isEnabledForIsFalseWhenFlagNotSetOnAdminAttribute(): void
     {
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuthorization: false));
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: false));
 
         $this->assertFalse($this->makeChecker()->isEnabledFor(new \stdClass()));
     }
@@ -66,7 +66,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
     #[Test]
     public function isEnabledForIsTrueWhenFlagSet(): void
     {
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuthorization: true));
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
 
         $this->assertTrue($this->makeChecker()->isEnabledFor(new \stdClass()));
     }
@@ -85,7 +85,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
     #[Test]
     public function isGrantedIsTrueWhenNotEnabledEvenWhenAuthorizationCheckerWouldDeny(): void
     {
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuthorization: false));
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: false));
         $this->authorizationChecker->method('isGranted')->willReturn(false);
 
         $this->assertTrue($this->makeChecker()->isGranted('ADMIN_EDIT', new \stdClass()));
@@ -112,7 +112,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
         $entity = new \stdClass();
 
         $entityDiscovery = $this->createStub(EntityDiscoveryService::class);
-        $entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuthorization: true));
+        $entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
 
         $authorizationChecker = $this->createMock(AuthorizationCheckerInterface::class);
         $authorizationChecker->expects($this->once())
@@ -128,7 +128,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
     #[Test]
     public function isGrantedReturnsFalseWhenAuthorizationCheckerDeniesAndEnabled(): void
     {
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuthorization: true));
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
         $this->authorizationChecker->method('isGranted')->willReturn(false);
 
         $this->assertFalse($this->makeChecker()->isGranted('ADMIN_EDIT', new \stdClass()));
@@ -137,20 +137,20 @@ final class ObjectAuthorizationCheckerTest extends TestCase
     /**
      * Pins down the specific real-world failure mode this class exists to make
      * safe rather than silent: an entity opts in via
-     * #[Admin(enableObjectAuthorization: true)] but the application never
+     * #[Admin(enableObjectAuth: true)] but the application never
      * registers a voter whose supports() accepts that entity as an object
      * subject. Symfony's AccessDecisionManager denies when every voter
      * abstains (allow_if_all_abstain defaults to false), so
      * AuthorizationCheckerInterface::isGranted() returns false here — not
      * because a voter said no, but because nothing said yes. This must stay
      * false: a future "fix" that made an all-abstain vote grant would make
-     * enableObjectAuthorization a no-op security theater flag for anyone who
+     * enableObjectAuth a no-op security theater flag for anyone who
      * forgets to also write a voter, with no error at boot or at request time.
      */
     #[Test]
     public function isGrantedDeniesWhenEnabledButNoVoterSupportsTheObjectSubject(): void
     {
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuthorization: true));
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
         // Simulates Symfony's real AccessDecisionManager output for an
         // all-abstain vote (allow_if_all_abstain: false) — not a mock of a
         // specific voter's decision, but of what isGranted() returns in that
@@ -175,7 +175,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
     #[Test]
     public function denyAccessUnlessGrantedIsNoOpWhenEnabledAndGranted(): void
     {
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuthorization: true));
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
         $this->authorizationChecker->method('isGranted')->willReturn(true);
 
         $this->makeChecker()->denyAccessUnlessGranted('ADMIN_EDIT', new \stdClass());
@@ -186,7 +186,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
     #[Test]
     public function denyAccessUnlessGrantedThrowsAccessDeniedExceptionWhenEnabledAndDenied(): void
     {
-        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuthorization: true));
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
         $this->authorizationChecker->method('isGranted')->willReturn(false);
 
         $this->expectException(AccessDeniedException::class);

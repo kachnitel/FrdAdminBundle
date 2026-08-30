@@ -17,7 +17,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 
 /**
  * Covers AdminFormSaveTrait::save()'s object-level authorization gate for
- * the new/edit form flow, using ObjectAuthEntity (enableObjectAuthorization:
+ * the new/edit form flow, using ObjectAuthEntity (enableObjectAuth:
  * true) and ObjectAuthVoter (grants only when kind === KIND_ALLOWED),
  * registered by ObjectAuthorizationTestKernel.
  *
@@ -131,6 +131,52 @@ final class AdminEntityFormObjectAuthorizationTest extends ComponentTestCase
                 'A denied save must not persist the kind change.',
             );
             $this->assertSame('Existing', $reloaded->getName(), 'A denied save must not persist any field change.');
+        }
+    }
+
+    // ── The critical case: object authorization survives an overridden save() ──
+
+    /**
+     * OverridingSaveAdminEntityForm fully overrides save() — its own
+     * persist/flush, no call back into AdminFormSaveTrait's implementation —
+     * which is exactly the documented, supported pattern FORMS.md describes
+     * ("Custom form components" — overriding save() entirely is supported).
+     *
+     * Before ObjectAuthorizedFormInterface existed, an inline check in
+     * AdminFormSaveTrait::save()'s own body would have been silently
+     * skipped by this exact override, since the override never runs that
+     * method's body at all — it has its own. This proves the check now
+     * survives it, because it lives in doSubmitForm() instead, which even
+     * this override still calls: there's no other way to retrieve the
+     * bound entity at all.
+     */
+    #[Test]
+    public function objectAuthorizationSurvivesAFullyOverriddenSave(): void
+    {
+        $component = $this->createLiveComponent(
+            name: 'Test:Form:OverridingSave',
+            data: [
+                'entityClass'   => ObjectAuthEntity::class,
+                'formTypeClass' => ObjectAuthEntityFormType::class,
+            ],
+        );
+
+        $component->set(self::FORM_NAME, ['name' => 'Snuck In', 'kind' => ObjectAuthEntity::KIND_FORBIDDEN]);
+
+        $this->expectException(AccessDeniedException::class);
+
+        try {
+            $component->call('save');
+        } finally {
+            // Proves the override's own persist()/flush() calls never ran —
+            // the exception is thrown inside doSubmitForm(), before save()'s
+            // body gets anywhere near persisting the entity.
+            $all = $this->em->getRepository(ObjectAuthEntity::class)->findBy(['name' => 'Snuck In']);
+            $this->assertCount(
+                0,
+                $all,
+                'An overridden save() must not be able to bypass object-level authorization.',
+            );
         }
     }
 

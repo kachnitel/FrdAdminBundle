@@ -8,6 +8,7 @@ use Kachnitel\AdminBundle\Archive\ArchiveEntityService;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\BatchAction\BatchActionComponentInterface;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -24,9 +25,13 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
  * On execute():
  *   1. Checks ADMIN_ARCHIVE permission (AccessDeniedException on denial)
  *   2. Resolves the ArchiveConfig for the entity
- *   3. Loads each entity by ID and calls ArchiveEntityService::archive()
+ *   3. Loads each entity by ID, skips it if object-level authorization
+ *      denies ADMIN_ARCHIVE on that specific instance, otherwise calls
+ *      ArchiveEntityService::archive()
  *   4. Emits 'admin:action:completed' with the affected IDs so EntityList
- *      removes them from the selection and refreshes the query
+ *      removes them from the selection and refreshes the query — a denied
+ *      row is never added to $affected, so it stays selected/visible
+ *      rather than being silently reported as archived
  *
  * ArchiveEntityService handles the actual field mutation (boolean → true,
  * datetime → now) and flushes; see its docblock for supported field types.
@@ -43,6 +48,7 @@ class ArchiveButton implements BatchActionComponentInterface
         private readonly ArchiveEntityService $archiveEntityService,
         private readonly EntityManagerInterface $em,
         private readonly AuthorizationCheckerInterface $authChecker,
+        private readonly ObjectAuthorizationChecker $objectAuthChecker,
     ) {}
 
     #[LiveAction]
@@ -73,10 +79,16 @@ class ArchiveButton implements BatchActionComponentInterface
 
         foreach ($this->selectedIds as $id) {
             $entity = $repository->find($id);
-            if ($entity !== null) {
-                $this->archiveEntityService->archive($entity, $config);
-                $affected[] = $id;
+            if ($entity === null) {
+                continue;
             }
+
+            if (!$this->objectAuthChecker->isGranted(AdminEntityVoter::ADMIN_ARCHIVE, $entity)) {
+                continue;
+            }
+
+            $this->archiveEntityService->archive($entity, $config);
+            $affected[] = $id;
         }
 
         $this->completeAction('archive', $affected);

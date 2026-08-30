@@ -176,9 +176,9 @@ class GenericAdminController extends AbstractAdminController
             throw $this->createNotFoundException('No ' . $entityName . ' found for id ' . $id);
         }
 
-        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_ARCHIVE, $entity);
-
         $this->validateArchiveCsrf($request, 'archive', $id);
+
+        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_ARCHIVE, $entity);
 
         $entityClassName = $this->entityNamespace . $entityName;
         if (!class_exists($entityClassName)) {
@@ -216,9 +216,9 @@ class GenericAdminController extends AbstractAdminController
             throw $this->createNotFoundException('No ' . $entityName . ' found for id ' . $id);
         }
 
-        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_ARCHIVE, $entity);
-
         $this->validateArchiveCsrf($request, 'unarchive', $id);
+
+        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_ARCHIVE, $entity);
 
         $entityClassName = $this->entityNamespace . $entityName;
         if (!class_exists($entityClassName)) {

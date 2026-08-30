@@ -139,6 +139,18 @@ abstract class AbstractAdminController extends AbstractController
             throw $this->createNotFoundException('No ' . $class . ' found for id ' . $id);
         }
 
+        // Validated here, before object-level authorization, so a request
+        // with an invalid CSRF token always yields the same
+        // InvalidArgumentException regardless of whether the current user
+        // has object-level access to this entity — otherwise a 403-vs-400
+        // split would let a request with no valid token at all be used to
+        // probe which specific rows a session can access. doDelete() below
+        // re-validates the same (already-known-valid) token; that's cheap,
+        // and keeps doDelete() itself safe to call on its own from anywhere
+        // else that composes DeleteEntityTrait, without depending on a
+        // caller having already checked CSRF first.
+        $this->validateCsrfEntityRequest($request, $entity);
+
         $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_DELETE, $entity);
 
         // Convert class name to entitySlug format (PascalCase -> kebab-case)

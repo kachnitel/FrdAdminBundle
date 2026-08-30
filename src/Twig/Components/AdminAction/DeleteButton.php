@@ -48,13 +48,13 @@ class DeleteButton implements BatchActionComponentInterface
 
         $dataSource = $this->registry->resolve(null, $this->entityShortClass, $this->entityClass);
 
-        $this->batchService->batchDelete(
+        $removedIds = $this->batchService->batchDelete(
             $this->selectedIds,
             $dataSource,
             $this->entityClass,
             $this->entityShortClass,
         );
 
-        $this->completeAction('delete', $this->selectedIds);
+        $this->completeAction('delete', $removedIds);
     }
 }

@@ -6,7 +6,6 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -176,11 +175,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
 
     private function resolveLabel(object $entity): string
     {
-        $form = new InlineEntityForm(
-            $this->em,
-            $this->createStub(FormFactoryInterface::class),
-            $this->createStub(ObjectAuthorizationChecker::class),
-        );
+        $form = new InlineEntityForm($this->em, $this->createStub(FormFactoryInterface::class));
 
         $method = new \ReflectionMethod($form, 'resolveEntityLabel');
 

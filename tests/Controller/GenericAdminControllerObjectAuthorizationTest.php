@@ -255,18 +255,26 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
     }
 
     #[Test]
-    public function archiveDeniesBeforeCsrfValidationWhenObjectAuthorizationDenies(): void
+    public function archiveValidatesCsrfBeforeCheckingObjectAuthorization(): void
     {
         $entity = new DeletableEntity(5);
         $this->repository->method('find')->willReturn($entity);
 
-        $controller = $this->makeController();
-        $controller->csrfValid = false; // would throw InvalidArgumentException if reached
-        $controller->setObjectAuthorizationChecker($this->denyingChecker(AdminEntityVoter::ADMIN_ARCHIVE, $entity));
+        $checker = $this->createMock(ObjectAuthorizationChecker::class);
+        $checker->expects($this->never())->method('denyAccessUnlessGranted');
 
-        // AccessDeniedException, not InvalidArgumentException, proves object
-        // authorization is checked before — not after — CSRF validation.
-        $this->expectException(AccessDeniedException::class);
+        $controller = $this->makeController();
+        $controller->csrfValid = false;
+        $controller->setObjectAuthorizationChecker($checker);
+
+        // InvalidArgumentException (CSRF), not AccessDeniedException, proves
+        // CSRF is validated before — not after — object-level authorization.
+        // This closes a permission-oracle leak: under the old ordering, a
+        // request with a bad CSRF token still revealed (via 403 vs 400)
+        // whether the current user had object-level access to this specific
+        // row. The never() expectation above additionally proves the auth
+        // checker isn't just denied-and-ignored — it's never consulted at all.
+        $this->expectException(\InvalidArgumentException::class);
 
         $controller->archive(
             $this->archiveRequest('archive', 5, 'irrelevant'),
@@ -275,6 +283,27 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
             $this->archiveService,
             $this->archiveEntityService,
         );
+    }
+
+    #[Test]
+    public function deleteValidatesCsrfBeforeCheckingObjectAuthorization(): void
+    {
+        $entity = new DeletableEntity(5);
+        $this->repository->method('find')->willReturn($entity);
+
+        $checker = $this->createMock(ObjectAuthorizationChecker::class);
+        $checker->expects($this->never())->method('denyAccessUnlessGranted');
+
+        $controller = $this->makeController();
+        $controller->csrfValid = false;
+        $controller->setObjectAuthorizationChecker($checker);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $request = Request::create('/admin/deletable-entity/5', 'POST');
+        $request->request->set('_token', 'irrelevant');
+
+        $controller->delete($request, 'deletable-entity', 5);
     }
 
     #[Test]

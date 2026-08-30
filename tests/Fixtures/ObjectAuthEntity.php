@@ -20,7 +20,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 #[Admin(
     label: 'Object Auth Entities',
     columns: ['id', 'name', 'kind'],
-    enableObjectAuthorization: true,
+    enableObjectAuth: true,
 )]
 class ObjectAuthEntity
 {

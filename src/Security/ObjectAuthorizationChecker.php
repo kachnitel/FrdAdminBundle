@@ -25,7 +25,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * ## Opt-in, not automatic
  *
  * Object-level checks only run for entities carrying
- * #[Admin(enableObjectAuthorization: true)]. For every other entity,
+ * #[Admin(enableObjectAuth: true)]. For every other entity,
  * isGranted() short-circuits to true and denyAccessUnlessGranted() is a
  * no-op — existing class-level-only behaviour is unchanged for anyone who
  * doesn't opt in.
@@ -34,7 +34,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  *
  * Symfony's default AccessDecisionManager (affirmative strategy,
  * allow_if_all_abstain: false) denies when every voter abstains. Once
- * enableObjectAuthorization is true for an entity, isGranted() calls
+ * enableObjectAuth is true for an entity, isGranted() calls
  * AuthorizationCheckerInterface::isGranted($attribute, $entity) for real —
  * if no application voter's supports() matches that object subject, every
  * request for that entity is denied, not silently allowed. Turning this
@@ -72,7 +72,7 @@ class ObjectAuthorizationChecker
     {
         $adminAttribute = $this->entityDiscovery->getAdminAttribute(ObjectHelper::getRealClass($entity));
 
-        return $adminAttribute !== null && $adminAttribute->isEnableObjectAuthorization();
+        return $adminAttribute !== null && $adminAttribute->isenableObjectAuth();
     }
 
     /**

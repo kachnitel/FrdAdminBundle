@@ -218,7 +218,7 @@ Individual columns can override this setting via `#[AdminColumn(editable: ...)]`
 See the full [Inline Editing Guide](INLINE_EDIT.md) for details, including
 per-column opt-in/opt-out, expression-based editability, and supported field types.
 
-#### enableObjectAuthorization
+#### enableObjectAuth
 **Type:** `bool` **Default:** `false`
 
 Runs an additional authorization check against the actual entity **instance**
@@ -226,7 +226,7 @@ Runs an additional authorization check against the actual entity **instance**
 existing class-level `#[Admin(permissions: ...)]` / `AdminEntityVoter` check.
 
 ```php
-#[Admin(label: 'Contacts', enableObjectAuthorization: true)]
+#[Admin(label: 'Contacts', enableObjectAuth: true)]
 class Contact { }
 ```
 
@@ -778,7 +778,7 @@ class User implements UserInterface
 - `enableBatchActions: bool = false`
 - `enableColumnVisibility: bool = false` — user-toggleable column show/hide (see [Column Visibility](COLUMN_VISIBILITY.md))
 - `enableInlineEdit: bool = false`
-- `enableObjectAuthorization: bool = false` — instance-level authorization on top of class-level permissions; requires a supporting voter (see [Object-Level Authorization](OBJECT_AUTHORIZATION.md))
+- `enableObjectAuth: bool = false` — instance-level authorization on top of class-level permissions; requires a supporting voter (see [Object-Level Authorization](OBJECT_AUTHORIZATION.md))
 - `formComponent: ?string = null` — override the LiveComponent used for new/edit forms (see [Forms](FORMS.md#custom-form-components))
 - `itemsPerPage: ?int = null`
 - `sortBy: ?string = null`

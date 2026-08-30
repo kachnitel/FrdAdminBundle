@@ -6,7 +6,6 @@ namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
-use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -42,13 +41,14 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
  *
  * ## Object-level authorization
  *
- * save() denies via ObjectAuthorizationChecker (ADMIN_NEW, since inline
- * creation is always a new entity) after doSubmitForm() has bound the
- * submitted data onto the entity and before persist(). This is a no-op for
- * entities without #[Admin(enableObjectAuthorization: true)] — see that
- * flag's docblock and docs/OBJECT_AUTHORIZATION.md. Without this check,
- * object-level create authorization enforced on the main New page could be
- * bypassed entirely by going through this dialog instead.
+ * Implements ObjectAuthorizedFormInterface (ADMIN_NEW — inline creation is
+ * always a new entity), so AdminFormComponentTrait::doSubmitForm() enforces
+ * object-level authorization (see docs/OBJECT_AUTHORIZATION.md) on the
+ * bound entity right after form binding and before persist(), the same way
+ * AdminEntityForm's New page does. This is a no-op for entities without
+ * #[Admin(enableObjectAuth: true)]. Without it, object-level
+ * create authorization enforced on the main New page could be bypassed
+ * entirely by going through this dialog instead.
  *
  * ## After-save flow
  *
@@ -95,6 +95,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
  * @see \Kachnitel\AdminBundle\Tests\Twig\Components\EntityTypeAddButtonLazyLoadingRegressionTest
  * @see \Kachnitel\AdminBundle\Twig\Components\EntityTypeAddButton the caller that sets loading: "lazy"
  * @see https://github.com/kachnitel/FrdAdminBundle/issues/12 full investigation, repro steps, resolution plan
+ * @see ObjectAuthorizedFormInterface
  *
  * @template TData of object|null
  */
@@ -102,7 +103,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
     name: 'K:Admin:EntityType:InlineForm',
     template: '@KachnitelAdmin/components/InlineEntityForm.html.twig',
 )]
-class InlineEntityForm extends AbstractController
+class InlineEntityForm extends AbstractController implements ObjectAuthorizedFormInterface
 {
     /** @use AdminFormComponentTrait<TData> */
     use AdminFormComponentTrait;
@@ -110,8 +111,16 @@ class InlineEntityForm extends AbstractController
     public function __construct(
         protected readonly EntityManagerInterface $em,
         private readonly FormFactoryInterface $formFactory,
-        private readonly ObjectAuthorizationChecker $objectAuthChecker,
     ) {}
+
+    /**
+     * Always ADMIN_NEW — inline creation is always a new entity, there is
+     * no entityId prop on this component to distinguish an edit.
+     */
+    public function getObjectAuthorizationAttribute(): string
+    {
+        return AdminEntityVoter::ADMIN_NEW;
+    }
 
     /**
      * Build the form with a unique name to prevent HTML id conflicts.
@@ -169,7 +178,9 @@ class InlineEntityForm extends AbstractController
         /** @var object $entity */
         $entity = $this->doGetForm()->getData();
 
-        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_NEW, $entity);
+        // Object-level authorization for this save already ran inside the
+        // doSubmitForm() call above (AdminFormComponentTrait, via
+        // ObjectAuthorizedFormInterface) — see this class's docblock.
 
         $this->em->persist($entity);
         $this->em->flush();

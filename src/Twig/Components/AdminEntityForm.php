@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
@@ -23,16 +24,22 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
  * options so that collection associations are included in the top-level
  * form.
  *
+ * Implements ObjectAuthorizedFormInterface so object-level authorization
+ * (see docs/OBJECT_AUTHORIZATION.md) is enforced by
+ * AdminFormComponentTrait::doSubmitForm() on every save — including a
+ * fully-overridden save(), which is why the check isn't in save() itself.
+ *
  * @see \Kachnitel\AdminBundle\Controller\AbstractAdminController
  * @see docs/DYNAMIC_FORM_COLLECTIONS.md
  * @see AdminFormComponentTrait
  * @see AdminFormSaveTrait
+ * @see ObjectAuthorizedFormInterface
  *
  * @template TData of object|null
  * @implements AdminFormComponentInterface<TData>
  */
 #[AsLiveComponent(name: 'K:Admin:EntityForm', template: '@KachnitelAdmin/components/AdminEntityForm.html.twig')]
-class AdminEntityForm extends AbstractController implements AdminFormComponentInterface
+class AdminEntityForm extends AbstractController implements AdminFormComponentInterface, ObjectAuthorizedFormInterface
 {
     /** @use AdminFormComponentTrait<TData> */
     use AdminFormComponentTrait;
@@ -45,6 +52,18 @@ class AdminEntityForm extends AbstractController implements AdminFormComponentIn
     public ?int $entityId = null;
 
     public function __construct(protected readonly EntityManagerInterface $em) {}
+
+    /**
+     * ADMIN_NEW when this component was mounted without an entityId,
+     * ADMIN_EDIT otherwise. Read at the point doSubmitForm() calls it —
+     * i.e. before save()'s own post-persist entityId reassignment for a
+     * freshly-created entity — so this always reflects what the save is
+     * actually authorizing: creating a new row, or editing an existing one.
+     */
+    public function getObjectAuthorizationAttribute(): string
+    {
+        return $this->entityId === null ? AdminEntityVoter::ADMIN_NEW : AdminEntityVoter::ADMIN_EDIT;
+    }
 
     /**
      * Build the Symfony form bound to the entity.
