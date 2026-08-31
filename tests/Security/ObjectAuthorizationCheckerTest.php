@@ -7,9 +7,8 @@ namespace Kachnitel\AdminBundle\Tests\Security;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -26,9 +25,11 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * GenericAdminControllerObjectAuthorizationTest, AdminEntityFormObjectAuthorizationTest,
  * and InlineEntityFormObjectAuthorizationTest.
  */
-#[CoversClass(ObjectAuthorizationChecker::class)]
-#[Group('security')]
-#[Group('object-authorization')]
+#[PHPUnit\CoversClass(ObjectAuthorizationChecker::class)]
+#[PHPUnit\UsesClass(ObjectHelper::class)]
+#[PHPUnit\UsesClass(Admin::class)]
+#[PHPUnit\Group('security')]
+#[PHPUnit\Group('object-authorization')]
 final class ObjectAuthorizationCheckerTest extends TestCase
 {
     private Stub&EntityDiscoveryService $entityDiscovery;
@@ -47,7 +48,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
 
     // ── isEnabledFor() ───────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isEnabledForIsFalseWithNoAdminAttribute(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
@@ -55,7 +56,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
         $this->assertFalse($this->makeChecker()->isEnabledFor(new \stdClass()));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isEnabledForIsFalseWhenFlagNotSetOnAdminAttribute(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: false));
@@ -63,7 +64,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
         $this->assertFalse($this->makeChecker()->isEnabledFor(new \stdClass()));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isEnabledForIsTrueWhenFlagSet(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
@@ -73,7 +74,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
 
     // ── isGranted(): opt-in short-circuit ────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedIsTrueWithNoAdminAttributeEvenWhenAuthorizationCheckerWouldDeny(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
@@ -82,7 +83,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
         $this->assertTrue($this->makeChecker()->isGranted('ADMIN_EDIT', new \stdClass()));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedIsTrueWhenNotEnabledEvenWhenAuthorizationCheckerWouldDeny(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: false));
@@ -91,7 +92,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
         $this->assertTrue($this->makeChecker()->isGranted('ADMIN_EDIT', new \stdClass()));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedDoesNotCallAuthorizationCheckerWhenNotEnabled(): void
     {
         $entityDiscovery = $this->createStub(EntityDiscoveryService::class);
@@ -106,7 +107,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
 
     // ── isGranted(): delegation once enabled ─────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedDelegatesToAuthorizationCheckerWithSameAttributeAndEntityWhenEnabled(): void
     {
         $entity = new \stdClass();
@@ -125,7 +126,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
         $this->assertTrue($checker->isGranted('ADMIN_EDIT', $entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedReturnsFalseWhenAuthorizationCheckerDeniesAndEnabled(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
@@ -147,7 +148,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
      * enableObjectAuth a no-op security theater flag for anyone who
      * forgets to also write a voter, with no error at boot or at request time.
      */
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedDeniesWhenEnabledButNoVoterSupportsTheObjectSubject(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
@@ -162,7 +163,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
 
     // ── denyAccessUnlessGranted() ─────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function denyAccessUnlessGrantedIsNoOpWhenNotEnabled(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
@@ -172,7 +173,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
         $this->addToAssertionCount(1); // success criterion: no exception thrown
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function denyAccessUnlessGrantedIsNoOpWhenEnabledAndGranted(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
@@ -183,7 +184,7 @@ final class ObjectAuthorizationCheckerTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function denyAccessUnlessGrantedThrowsAccessDeniedExceptionWhenEnabledAndDenied(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(enableObjectAuth: true));
