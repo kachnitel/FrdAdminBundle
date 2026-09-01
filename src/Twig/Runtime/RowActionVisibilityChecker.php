@@ -106,7 +106,7 @@ class RowActionVisibilityChecker
      * needed. A no-op (returns true) when the action has no voterAttribute,
      * or when this checker wasn't given an ObjectAuthorizationChecker at
      * all; ObjectAuthorizationChecker itself is a further no-op for
-     * entities without #[Admin(enableObjectAuthorization: true)].
+     * entities without #[Admin(enableObjectAuth: true)].
      */
     private function checkObjectAuthorization(RowAction $action, object $entity): bool
     {

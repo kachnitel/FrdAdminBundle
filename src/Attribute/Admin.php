@@ -111,7 +111,7 @@ class Admin
         return $this->enableInlineEdit;
     }
 
-    public function isenableObjectAuth(): bool
+    public function isEnableObjectAuth(): bool
     {
         return $this->enableObjectAuth;
     }

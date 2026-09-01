@@ -21,6 +21,7 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 #[PHPUnit\UsesClass(RowActionExpressionLanguage::class)]
 #[PHPUnit\UsesClass(RowActionVisibilityChecker::class)]
 #[PHPUnit\Group('row-actions')]
+#[PHPUnit\Group('archive')]
 final class RowActionRuntimeArchiveTest extends TestCase
 {
     /** @var AdminRouteRuntime&MockObject */

@@ -72,7 +72,7 @@ class ObjectAuthorizationChecker
     {
         $adminAttribute = $this->entityDiscovery->getAdminAttribute(ObjectHelper::getRealClass($entity));
 
-        return $adminAttribute !== null && $adminAttribute->isenableObjectAuth();
+        return $adminAttribute !== null && $adminAttribute->isEnableObjectAuth();
     }
 
     /**

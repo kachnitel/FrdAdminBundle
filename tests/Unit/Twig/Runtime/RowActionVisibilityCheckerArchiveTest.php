@@ -10,7 +10,6 @@ use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionVisibilityChecker;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use PHPUnit\Framework\Attributes as PHPUnit;
-use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
@@ -18,7 +17,8 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 #[PHPUnit\CoversClass(RowActionVisibilityChecker::class)]
 #[PHPUnit\UsesClass(RowAction::class)]
 #[PHPUnit\UsesClass(RowActionExpressionLanguage::class)]
-#[Group('row-actions')]
+#[PHPUnit\Group('archive')]
+#[PHPUnit\Group('row-actions')]
 final class RowActionVisibilityCheckerArchiveTest extends TestCase
 {
     /** @var AdminRouteRuntime&MockObject */
