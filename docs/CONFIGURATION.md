@@ -222,8 +222,9 @@ per-column opt-in/opt-out, expression-based editability, and supported field typ
 **Type:** `bool` **Default:** `false`
 
 Runs an additional authorization check against the actual entity **instance**
-(not just its class) on show/edit/new/delete/archive/unarchive, on top of the
-existing class-level `#[Admin(permissions: ...)]` / `AdminEntityVoter` check.
+(not just its class) on show/edit/new/delete/archive/unarchive and inline
+field edits, on top of the existing class-level `#[Admin(permissions: ...)]` /
+`AdminEntityVoter` check.
 
 ```php
 #[Admin(label: 'Contacts', enableObjectAuth: true)]
@@ -232,7 +233,7 @@ class Contact { }
 
 **Requires a supporting Symfony voter.** Turning this on for an entity with no
 registered voter whose `supports()` accepts that entity as subject results in
-every show/edit/new/delete/archive for it being denied — not a silent
+every show/edit/new/delete/archive, and every inline field edit, for it being denied — not a silent
 allow. See the full [Object-Level Authorization Guide](OBJECT_AUTHORIZATION.md)
 for the mechanism, a worked voter example, and this gotcha in detail before
 enabling it.

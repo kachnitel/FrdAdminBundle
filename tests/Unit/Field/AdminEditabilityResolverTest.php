@@ -8,6 +8,8 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Field\AdminEditabilityResolver;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -21,6 +23,7 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 #[PHPUnit\UsesClass(RowActionExpressionLanguage::class)]
 #[PHPUnit\CoversClass(AdminEditabilityResolver::class)]
 #[PHPUnit\Group('inline-edit')]
+#[PHPUnit\Group('object-authorization')]
 #[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class AdminEditabilityResolverTest extends TestCase
 {
@@ -32,20 +35,37 @@ final class AdminEditabilityResolverTest extends TestCase
 
     /** @var PropertyAccessorInterface&MockObject */
     private PropertyAccessorInterface $propertyAccessor;
+
+    /** @var ObjectAuthorizationChecker&MockObject */
+    private ObjectAuthorizationChecker $objectAuthChecker;
+
     private AdminEditabilityResolver $resolver;
 
     protected function setUp(): void
     {
-        $this->attributeHelper    = $this->createMock(AttributeHelper::class);
-        $this->authChecker        = $this->createMock(AuthorizationCheckerInterface::class);
-        $this->propertyAccessor   = $this->createMock(PropertyAccessorInterface::class);
-        $expressionLanguage = new RowActionExpressionLanguage(new ExpressionLanguage());
+        $this->attributeHelper  = $this->createMock(AttributeHelper::class);
+        $this->authChecker      = $this->createMock(AuthorizationCheckerInterface::class);
+        $this->propertyAccessor = $this->createMock(PropertyAccessorInterface::class);
 
-        $this->resolver = new AdminEditabilityResolver(
+        // Permissive by default so every pre-existing test below — none of which
+        // are about object-level authorization — is unaffected. Tests that ARE
+        // about it call stubObjectAuthGranted()/expectObjectAuthNeverCalled(),
+        // which each install a fresh mock (rather than layering a further
+        // expectation on this one) and rebuild $this->resolver against it.
+        $this->objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $this->objectAuthChecker->method('isGranted')->willReturn(true);
+
+        $this->resolver = $this->buildResolver();
+    }
+
+    private function buildResolver(): AdminEditabilityResolver
+    {
+        return new AdminEditabilityResolver(
             $this->attributeHelper,
-            $expressionLanguage,
+            new RowActionExpressionLanguage(new ExpressionLanguage()),
             $this->authChecker,
             $this->propertyAccessor,
+            $this->objectAuthChecker,
         );
     }
 
@@ -68,6 +88,20 @@ final class AdminEditabilityResolverTest extends TestCase
         $this->authChecker
             ->method('isGranted')
             ->willReturn($granted);
+    }
+
+    private function stubObjectAuthGranted(bool $granted): void
+    {
+        $this->objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $this->objectAuthChecker->method('isGranted')->willReturn($granted);
+        $this->resolver = $this->buildResolver();
+    }
+
+    private function expectObjectAuthNeverCalled(): void
+    {
+        $this->objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $this->objectAuthChecker->expects($this->never())->method('isGranted');
+        $this->resolver = $this->buildResolver();
     }
 
     private function stubWritable(bool $writable = true): void
@@ -334,6 +368,72 @@ final class AdminEditabilityResolverTest extends TestCase
             ->method('isGranted')
             ->with('ADMIN_EDIT', $shortClass)
             ->willReturn(true);
+
+        $this->resolver->canEdit($entity, 'title');
+    }
+
+    // ── Object-level authorization (ObjectAuthorizationChecker) ────────────────
+
+    #[PHPUnit\Test]
+    public function objectAuthorizationDenialBlocksEditingEvenWhenEverythingElsePasses(): void
+    {
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(true);
+        $this->stubWritable(true);
+        $this->stubObjectAuthGranted(false);
+
+        $this->assertFalse(
+            $this->resolver->canEdit($this->makeEntity(), 'title'),
+            'Object-level authorization denial must block editing even when the '
+            . 'attribute eligibility, class-level voter, and writability all pass.',
+        );
+    }
+
+    #[PHPUnit\Test]
+    public function objectAuthorizationIsNotConsultedWhenClassLevelVoterDenies(): void
+    {
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(false); // class-level voter denies first
+
+        $this->expectObjectAuthNeverCalled();
+
+        $this->assertFalse($this->resolver->canEdit($this->makeEntity(), 'title'));
+    }
+
+    #[PHPUnit\Test]
+    public function objectAuthorizationGrantedStillRequiresWritability(): void
+    {
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(true);
+        $this->stubObjectAuthGranted(true);
+        $this->stubWritable(false); // ← no setter
+
+        $this->assertFalse(
+            $this->resolver->canEdit($this->makeEntity(), 'title'),
+            'An object-level grant must not bypass the property-writability check.',
+        );
+    }
+
+    #[PHPUnit\Test]
+    public function objectAuthCheckerIsCalledWithAdminEditAttributeAndTheExactEntityInstance(): void
+    {
+        $entity = $this->makeEntity();
+
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(true);
+        $this->stubWritable(true);
+
+        $this->objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $this->objectAuthChecker
+            ->expects($this->once())
+            ->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_EDIT, $this->identicalTo($entity))
+            ->willReturn(true);
+        $this->resolver = $this->buildResolver();
 
         $this->resolver->canEdit($entity, 'title');
     }

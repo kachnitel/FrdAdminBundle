@@ -17,6 +17,8 @@ use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\Preferences\ColumnVisibilityPreferenceTrait;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\DataSourceContracts\PaginationInfo;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -125,6 +127,7 @@ class EntityList
         private AdminPreferencesStorageInterface $preferencesStorage,
         private EntityListColumnService $columnService,
         private ArchiveService $archiveService,
+        private ObjectAuthorizationChecker $objectAuthChecker,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -467,10 +470,29 @@ class EntityList
         return $this->permissionService->canInlineEdit($this->entityClass, $this->entityShortClass);
     }
 
+    /**
+     * This is a UX gate only — the security boundary for every inline-edit
+     * save is AdminEditabilityResolver::canEdit(), consulted independently by
+     * each field component regardless of $editingRowId (see
+     * docs/OBJECT_AUTHORIZATION.md#inline-editing). This check just stops a
+     * row the user has no object-level access to from visually entering an
+     * edit state with nothing actually editable in it, and fails with a clear
+     * AccessDeniedException at the point of intent rather than a silently
+     * inert UI.
+     *
+     * Falls back to canEditRow()-only behaviour when $id doesn't resolve to
+     * an entity, matching this method's pre-existing tolerance of an
+     * unresolvable id — it has never validated $id against the current query.
+     */
     #[LiveAction]
     public function editRow(#[LiveArg] int $id): void
     {
         if (!$this->canEditRow()) {
+            throw new AccessDeniedException('Access denied for inline editing.');
+        }
+
+        $entity = $this->getDataSource()->find($id);
+        if ($entity !== null && !$this->objectAuthChecker->isGranted(AdminEntityVoter::ADMIN_EDIT, $entity)) {
             throw new AccessDeniedException('Access denied for inline editing.');
         }
 

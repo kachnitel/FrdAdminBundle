@@ -8,6 +8,7 @@ use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
@@ -53,6 +54,7 @@ final class EntityListArchiveToggleTest extends TestCase
             $this->createStub(AdminPreferencesStorageInterface::class),
             $this->createStub(EntityListColumnService::class),
             $this->archiveService,
+            $this->createStub(ObjectAuthorizationChecker::class),
         );
         $component->entityClass = ArchiveToggleEntity::class;
         $component->entityShortClass = 'ArchiveToggleEntity';

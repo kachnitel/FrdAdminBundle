@@ -1,12 +1,12 @@
 {
-    "generated_at": "2026-09-03 00:22:05",
+    "generated_at": "2026-09-03 12:46:31",
     "tests": {
-        "count": 1650,
-        "assertions": 3862,
+        "count": 1658,
+        "assertions": 3886,
         "status": "passing"
     },
     "coverage": {
-        "lines": 92.4,
+        "lines": 92.44,
         "percentage": 92,
         "html_report": ".coverage\/index.html"
     },

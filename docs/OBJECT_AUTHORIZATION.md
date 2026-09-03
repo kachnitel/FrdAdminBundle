@@ -13,6 +13,7 @@ Typical use case: `ROLE_SALES` may edit customer contacts, `ROLE_PURCHASING` may
 - [CSRF Runs Before Authorization](#csrf-runs-before-authorization)
 - [Batch Actions](#batch-actions)
 - [Row-Action Button Visibility](#row-action-button-visibility)
+- [Inline Editing](#inline-editing)
 - [Two Things Worth Understanding Before You Turn This On](#two-things-worth-understanding-before-you-turn-this-on)
 - [What This Does Not Cover](#what-this-does-not-cover)
 - [Testing](#testing)
@@ -67,7 +68,7 @@ Auto-registered as a service the normal Symfony way (autowire + autoconfigure pi
 
 ## Where Checks Run
 
-Object-level authorization is checked in six places. Each runs after the entity is loaded (or, for new/edit saves, after the submitted data has been bound onto it) and, where CSRF applies, after CSRF has already been validated — see [CSRF Runs Before Authorization](#csrf-runs-before-authorization).
+Object-level authorization is checked in seven places. Each runs after the entity is loaded (or, for new/edit saves, after the submitted data has been bound onto it) and, where CSRF applies, after CSRF has already been validated — see [CSRF Runs Before Authorization](#csrf-runs-before-authorization).
 
 | Location | Voter attribute | Runs against |
 |---|---|---|
@@ -77,8 +78,9 @@ Object-level authorization is checked in six places. Each runs after the entity 
 | `GenericAdminController::archive()` / `unarchive()` | `ADMIN_ARCHIVE` | The loaded entity, after CSRF validation, before the field mutation |
 | The New/Edit LiveComponent form save, and the "+ Add" inline-creation dialog | `ADMIN_NEW` or `ADMIN_EDIT` | The entity **after** form binding — see below for exactly where and why |
 | Batch archive / batch delete (`ArchiveButton`, `DeleteButton`) | `ADMIN_ARCHIVE` / `ADMIN_DELETE` | Each selected entity individually — see [Batch Actions](#batch-actions) |
+| `AdminEditabilityResolver::canEdit()` | `ADMIN_EDIT` | The entity, **before** the edited property's new value is written — see [Inline Editing](#inline-editing) |
 
-Row-action buttons in list views and show/edit page headers are also filtered by object-level authorization — see [Row-Action Button Visibility](#row-action-button-visibility). That's UI-only, not a security boundary on its own: it prevents a user from being *shown* an action they'd be denied, but every actual mutation is still enforced at one of the six call sites above regardless of what the UI displayed.
+Row-action buttons in list views and show/edit page headers are also filtered by object-level authorization — see [Row-Action Button Visibility](#row-action-button-visibility). That's UI-only, not a security boundary on its own: it prevents a user from being *shown* an action they'd be denied, but every actual mutation is still enforced at one of the seven call sites above regardless of what the UI displayed.
 
 A custom controller extending `AbstractAdminController` directly (rather than `GenericAdminController`) gets the *new object-level* checks above for free, since they live on the parent class. It does **not** get the bundle's existing *class-level* check (`AdminEntityVoter` via `checkEntityPermission()`) for free — that call has only ever lived in `GenericAdminController`'s own route methods, not in `AbstractAdminController`, and this feature doesn't change that. If you're routing through your own controller, you're responsible for your own class-level check exactly as before; object-level authorization is additive to whatever you already do, not a replacement for it.
 
@@ -128,6 +130,20 @@ This applies to any row action carrying a `voterAttribute` — the bundle's own 
 
 Custom action buttons rendered via `liveComponent:` still enforce their own access inside the component itself, same as before — this only affects whether the button is offered in the first place.
 
+## Inline Editing
+
+List-view inline editing (see [Inline Editing](INLINE_EDIT.md)) goes through `AdminEditabilityResolver::canEdit()` — this bundle's implementation of `entity-components-bundle`'s `EditabilityResolverInterface`. That single method is called by every inline-edit field component in exactly two places: to decide whether to render the ✎ trigger, and — the security-relevant call — inside `save()`, before any value is written. Object-level authorization is checked there, immediately after the existing class-level `ADMIN_EDIT` voter check.
+
+`EntityList::editRow()` — the row-level "enter edit mode" action fired by the ✏️ button — also checks object-level authorization, but only as a UX convenience: it stops a denied row from visually entering an edit state with nothing actually editable in it. It has no bearing on security by itself — each field component enforces independently via `AdminEditabilityResolver::canEdit()` regardless of whether a row is "in edit mode," so this would still be safe even if `editRow()` checked nothing at all.
+
+### Checked before the write, not after
+
+Unlike the New/Edit form flow, this has a real timing limitation. `entity-components-bundle`'s `AbstractEditableField::save()` runs `canEdit()` guard → write → validate → flush, with no second authorization check between the write and the flush. `canEdit()` therefore validates the entity's state as it was **before** this specific field's new value is applied.
+
+If the property being inline-edited is the same one your voter's decision reads — say, `Contact::$type` itself — the check passes or fails based on the *old* type, and the new type is written without a further check. A `ROLE_SALES` user editing a `CUSTOMER` contact's `type` field to `VENDOR` would be authorized for that specific save (the check ran against `CUSTOMER`), even though a `VENDOR` contact wouldn't otherwise be editable by them at all.
+
+This can't be fixed from `FrdAdminBundle` — the check/write ordering lives inside `entity-components-bundle`'s `AbstractEditableField::save()`, a separate package with its own release cycle. There's also no clean per-field lever to say "editable via the form but not inline": `#[AdminColumn(editable: false)]` excludes a field from *both* surfaces, since `AdminColumnEditabilityResolver` (the sibling resolver that decides form-field inclusion) treats an explicit `false` the same way. So the honest mitigation, until the ordering changes upstream, is to keep any field your voter reads out of inline editing entirely — either via `#[AdminColumn(editable: false)]` (accepting it becomes uneditable through the admin UI, full stop) or by leaving `enableInlineEdit` off for that entity — or to design the voter so its decision doesn't key off a field this feature can mutate.
+
 ## Two Things Worth Understanding Before You Turn This On
 
 Both of the following come from the same underlying Symfony mechanism, applied at two different scopes. Understanding one makes the other obvious, but they bite in different ways, so both are called out explicitly here rather than one being a footnote to the other.
@@ -149,6 +165,7 @@ There's no validation today that catches this at boot time or in the admin UI �
 - **Index/list filtering.** Object-level authorization gates actions against a specific, already-identified entity — it has no bearing on which rows a list query returns. If you need per-row visibility in list views (hide rows entirely rather than just disabling their actions), that's a separate concern, e.g. a custom Doctrine query filter.
 - **Fully custom form components that don't implement `ObjectAuthorizedFormInterface`.** See [Why the New/Edit Form Check Lives in doSubmitForm(), Not save()](#why-the-newedit-form-check-lives-in-dosubmitform-not-save) — a from-scratch component composing `AdminFormComponentTrait` directly has to opt in explicitly.
 - **An explicit per-item report for partial batch results.** See [Batch Actions](#batch-actions) — the signal today is "denied rows stay selected," not a message naming which ones or why.
+- **Inline-edit checks run before the write, not after.** See [Inline Editing → Checked before the write, not after](#checked-before-the-write-not-after) — if the edited field is itself what your voter's decision depends on, the check validates the old value.
 - **Boot-time or console validation that a voter actually exists for an opted-in entity.** The second gotcha above (deny-by-default with no matching voter) currently surfaces only as a 403 at request time. Worth having eventually; not built yet.
 
 ## Testing

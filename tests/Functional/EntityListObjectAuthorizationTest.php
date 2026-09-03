@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Tests\Fixtures\ObjectAuthEntity;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -12,17 +11,9 @@ use PHPUnit\Framework\Attributes\Group;
 #[Group('row-actions')]
 final class EntityListObjectAuthorizationTest extends ComponentTestCase
 {
-    private EntityManagerInterface $entityManager;
-
     protected static function getKernelClass(): string
     {
         return ObjectAuthorizationTestKernel::class;
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->entityManager = $this->getEntityManager();
     }
 
     public function testDeniedObjectDoesNotRenderEditActionInEntityList(): void
@@ -30,8 +21,8 @@ final class EntityListObjectAuthorizationTest extends ComponentTestCase
         $entity = new ObjectAuthEntity();
         $entity->setName('Forbidden Item');
         $entity->setKind(ObjectAuthEntity::KIND_FORBIDDEN);
-        $this->entityManager->persist($entity);
-        $this->entityManager->flush();
+        $this->em->persist($entity);
+        $this->em->flush();
 
         $component = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
@@ -53,8 +44,8 @@ final class EntityListObjectAuthorizationTest extends ComponentTestCase
         $entity = new ObjectAuthEntity();
         $entity->setName('Allowed Item');
         $entity->setKind(ObjectAuthEntity::KIND_ALLOWED);
-        $this->entityManager->persist($entity);
-        $this->entityManager->flush();
+        $this->em->persist($entity);
+        $this->em->flush();
 
         $component = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
