@@ -65,6 +65,20 @@ trait AdminFormComponentTrait
     #[LiveProp]
     public string $formTypeClass = '';
 
+    /**
+     * Populated via the #[Required] setter below, which only fires through
+     * real Symfony DI (container-built components, including LiveComponent's
+     * own instantiation path). A component constructed directly via `new` —
+     * as several existing test doubles in this bundle do (e.g.
+     * TestableAdminEntityForm, TestableInlineEntityForm) — never receives
+     * this property unless the test calls setObjectAuthorizationChecker()
+     * itself first. doSubmitForm() below checks isset() before use and
+     * throws a descriptive \LogicException rather than letting PHP's own
+     * "must not be accessed before initialization" error surface, which
+     * gives no hint about *why* — only classes implementing
+     * ObjectAuthorizedFormInterface are affected; every other component
+     * composing this trait never touches this property at all.
+     */
     private ObjectAuthorizationChecker $objectAuthChecker;
 
     #[Required]
@@ -111,6 +125,12 @@ trait AdminFormComponentTrait
      *
      * @throws \Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException
      *   when the submitted form is invalid
+     * @throws \LogicException
+     *   when the composing class implements ObjectAuthorizedFormInterface
+     *   but $objectAuthChecker was never initialized — see that property's
+     *   docblock. This indicates a test or other caller constructed the
+     *   component directly instead of through the container, and forgot to
+     *   call setObjectAuthorizationChecker() first.
      * @throws \Symfony\Component\Security\Core\Exception\AccessDeniedException
      *   when ObjectAuthorizedFormInterface is implemented and the current
      *   user is not granted access to the bound entity — see
@@ -121,6 +141,19 @@ trait AdminFormComponentTrait
         $this->submitForm();
 
         if ($this instanceof ObjectAuthorizedFormInterface) {
+            if (!isset($this->objectAuthChecker)) {
+                throw new \LogicException(sprintf(
+                    '%s implements ObjectAuthorizedFormInterface but its ObjectAuthorizationChecker '
+                    . 'was never set. This is normally injected automatically via the #[Required] '
+                    . 'setObjectAuthorizationChecker() setter when the component is built through the '
+                    . 'Symfony container. If you constructed this component directly (e.g. `new %s(...)` '
+                    . 'in a unit test), call setObjectAuthorizationChecker() yourself before calling '
+                    . 'doSubmitForm() / save().',
+                    static::class,
+                    static::class,
+                ));
+            }
+
             $entity = $this->doGetForm()->getData();
 
             if (!is_object($entity)) {
