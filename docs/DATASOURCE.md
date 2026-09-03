@@ -231,7 +231,7 @@ class ExternalApiDataSource implements DataSourceInterface
 
 ### Service Registration
 
-Data sources are **auto-discovered** when implementing `DataSourceInterface`. The bundle uses Symfony's `#[AutowireIterator]` attribute (Symfony 6.4+) to automatically collect all implementations:
+Data sources are **auto-discovered** when implementing `DataSourceInterface`. The bundle uses Symfony's `#[AutowireIterator]` attribute to automatically collect all implementations:
 
 ```yaml
 # config/services.yaml

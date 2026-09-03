@@ -9,7 +9,7 @@
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
 ![Vitest](<https://img.shields.io/badge/vitest-30%20passed-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
-![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0|^8.0-000000?logo=symfony&logoColor=white>)
+![Symfony](<https://img.shields.io/badge/Symfony-^7.4|^8.0-000000?logo=symfony&logoColor=white>)
 <!-- BADGES -->
 
 A modern Symfony admin bundle powered by [LiveComponents](https://symfony.com/bundles/ux-live-component/current/index.html). Add the `#[Admin]` attribute to your entity and get a full CRUD interface with search, filters, pagination, and batch actions.
@@ -318,7 +318,7 @@ EasyAdmin and SonataAdmin use PHP configuration, while this bundle leans heavily
 ## Requirements
 
 - PHP 8.4 or higher
-- Symfony 6.4 / 7.0 / 8.0
+- Symfony 7.4 / 8.0
 - Doctrine ORM 3.5+
 - [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts) (pulled automatically by Composer)
 - [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle) (pulled automatically by Composer — licensed MPL-2.0, a file-level copyleft compatible with this bundle's MIT license and with closed-source deployments)

@@ -14,7 +14,7 @@ Until 1.0 is released:
 
 - **Minor version bumps** (`0.x` → `0.y`) may include breaking changes. Read the [CHANGELOG](../CHANGELOG.md) before upgrading.
 - **Patch releases** (`0.x.y` → `0.x.z`) are safe — only bug fixes and documentation.
-- Doctrine ORM 3.5+, PHP 8.4+, Symfony 6.4+/7.x/8.x required.
+- Doctrine ORM 3.5+, PHP 8.4+, Symfony 7.4+/8.x required.
 
 ## Upgrading
 
@@ -85,6 +85,11 @@ show/edit/new/delete/archive for it will start returning 403. See
 [Object-Level Authorization](OBJECT_AUTHORIZATION.md) before enabling this
 flag on any entity.
 
+### Symfony 6.4 support removed
+
+Symfony 6.4 is no longer supported. The dynamic form bundle now requires
+Symfony UX Autocomplete 3, which requires Symfony 7.4 or later.
+
 ---
 
 ## No Action Needed
@@ -94,7 +99,6 @@ The following are **not** breaking changes, just clarifications:
 - `#[Admin]` attributes on entities are optional — omit to exclude from admin
 - `enableInlineEdit` does **not** affect the New/Edit form, only list-view row editing
 - `dataSourceId`-only (no `entityClass`) silently disables archive toggling, inline editing, and `#[ColumnPermission]` — use `entityClass` for full functionality
-- Forms require Symfony Form 7.0+ (included with Symfony 7.x/8.x; users on 6.4 must pin `symfony/form:^7`)
 
 ---
 
