@@ -55,6 +55,36 @@ not supported by Symfony's native evaluator. Update custom row-action,
 editability, and archive expressions to call the entity's getter or boolean
 accessor directly.
 
+### `EntityListBatchService::batchDelete()` now returns an array (0.13 → 0.y)
+
+Added as part of object-level authorization ([Object-Level Authorization
+guide](OBJECT_AUTHORIZATION.md)): `batchDelete()` skips entities the current
+user isn't authorized to delete (via `#[Admin(enableObjectAuth: true)]`
+and a supporting voter) rather than aborting the whole batch, and needs a way
+to tell the caller which IDs actually went through so `DeleteButton` can
+leave denied rows selected instead of silently reporting them as deleted.
+
+```diff
+- public function batchDelete(...): void
++ public function batchDelete(...): array // IDs actually removed
+```
+
+**Action:** If you call `EntityListBatchService::batchDelete()` directly
+(rather than through the bundle's own `DeleteButton` component, which already
+handles this), update any code that relied on the old `void` return type.
+The method's behaviour for IDs it can't resolve to an entity is unchanged —
+those were already silently skipped before this release.
+
+### New: object-level authorization is opt-in and requires a voter (0.13 → 0.y)
+
+Not itself breaking — every entity defaults to
+`#[Admin(enableObjectAuth: false)]`, matching current behaviour exactly.
+But if you do turn it on for an entity, you must also register a Symfony
+voter whose `supports()` accepts that entity instance as subject, or every
+show/edit/new/delete/archive for it will start returning 403. See
+[Object-Level Authorization](OBJECT_AUTHORIZATION.md) before enabling this
+flag on any entity.
+
 ---
 
 ## No Action Needed
