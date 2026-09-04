@@ -109,10 +109,14 @@ The editability of a column is resolved in this order:
 3. `#[AdminColumn(editable: true)]` — **always eligible**; entity default bypassed
 4. `#[AdminColumn(editable: null)]` or **no** `#[AdminColumn]` — read entity-level `enableInlineEdit`
 
-After the above resolves to eligible, two additional gates apply:
+After the above resolves to eligible, three additional gates apply:
 
 5. **Voter** — `ADMIN_EDIT` must be granted for the entity type
-6. **PropertyAccessor** — the property must have a setter
+6. **Object-level authorization** — when `#[Admin(enableObjectAuth: true)]` is set, `ADMIN_EDIT`
+    must also be granted for this specific entity instance. See
+    [Object-Level Authorization → Inline Editing](OBJECT_AUTHORIZATION.md#inline-editing) for the
+    mechanism and a timing caveat worth knowing before you turn it on.
+7. **PropertyAccessor** — the property must have a setter
 
 ---
 
@@ -160,6 +164,11 @@ this order:
 
 This template-method pattern means it is **impossible** for a subclass to skip
 the permission check, regardless of how it overrides value-writing logic.
+
+When [object-level authorization](OBJECT_AUTHORIZATION.md) is enabled, `canEdit()` in step 1
+above is checked against the entity's state **before** step 2 writes the new value — not after.
+See [Object-Level Authorization → Inline Editing](OBJECT_AUTHORIZATION.md#inline-editing) for
+what this means if the field being edited is one your voter's decision depends on.
 
 ---
 

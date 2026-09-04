@@ -1,15 +1,15 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1604%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-93%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-3747-blue>)
+![Tests](<https://img.shields.io/badge/tests-1669%20passed-brightgreen>)
+![Coverage](<https://img.shields.io/badge/coverage-92%25-brightgreen>)
+![Assertions](<https://img.shields.io/badge/assertions-3900-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-clean-brightgreen>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
 ![Vitest](<https://img.shields.io/badge/vitest-30%20passed-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
-![Symfony](<https://img.shields.io/badge/Symfony-^6.4|^7.0|^8.0-000000?logo=symfony&logoColor=white>)
+![Symfony](<https://img.shields.io/badge/Symfony-^7.4|^8.0-000000?logo=symfony&logoColor=white>)
 <!-- BADGES -->
 
 A modern Symfony admin bundle powered by [LiveComponents](https://symfony.com/bundles/ux-live-component/current/index.html). Add the `#[Admin]` attribute to your entity and get a full CRUD interface with search, filters, pagination, and batch actions.
@@ -263,6 +263,7 @@ kachnitel_admin:
 - **Archive / Soft-Delete** — Hide archived rows by default with a live toggle; works with boolean flags and nullable-datetime fields; no Doctrine filter needed
 - **Column Visibility** - Show/hide columns with session or database-backed preferences
 - **Composite Columns** — Group related properties into a single stacked table cell with `#[AdminColumn(group: '...')]`
+- **Object-Level Authorization** — Instance-level checks (not just class-level) for show/edit/new/delete/archive via a plain Symfony voter — e.g. let `ROLE_SALES` edit customer contacts and `ROLE_PURCHASING` edit vendor contacts
 - **DataSource Abstraction** - Display data from external APIs, audit logs, or any source via [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts)
 
 ## Documentation
@@ -291,6 +292,7 @@ kachnitel_admin:
 |-------|-------------|
 | [Inline Editing](docs/INLINE_EDIT.md) | Per-field in-place editing in list views |
 | [Inline Add](docs/INLINE_ADD.md) | Create related entities without leaving the current form |
+| [Object-Level Authorization](docs/OBJECT_AUTHORIZATION.md) | Instance-level (not just class-level) permission checks via a plain Symfony voter |
 | [Composite Columns](docs/COMPOSITE_COLUMNS.md) | Group related properties into one stacked table cell |
 | [Column Visibility](docs/COLUMN_VISIBILITY.md) | Permissions and user preferences |
 | [DataSource](docs/DATASOURCE.md) | Non-Doctrine data sources |
@@ -316,7 +318,7 @@ EasyAdmin and SonataAdmin use PHP configuration, while this bundle leans heavily
 ## Requirements
 
 - PHP 8.4 or higher
-- Symfony 6.4 / 7.0 / 8.0
+- Symfony 7.4 / 8.0
 - Doctrine ORM 3.5+
 - [`kachnitel/datasource-contracts`](https://github.com/kachnitel/datasource-contracts) (pulled automatically by Composer)
 - [`kachnitel/dynamic-form-bundle`](https://github.com/kachnitel/dynamic-form-bundle) (pulled automatically by Composer — licensed MPL-2.0, a file-level copyleft compatible with this bundle's MIT license and with closed-source deployments)

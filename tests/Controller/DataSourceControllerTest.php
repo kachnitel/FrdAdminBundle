@@ -32,7 +32,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  *
  * Override signatures (isGranted, denyAccessUnlessGranted, render) were
  * checked against Symfony\Bundle\FrameworkBundle\Controller\AbstractController
- * on 6.4 through 8.2 — unchanged across that range. denyAccessUnlessGranted()
+ * on 7.4 through 8.2 — unchanged across that range. denyAccessUnlessGranted()
  * as of 7.2+ internally routes through a new getAccessDecision() method
  * rather than calling $this->isGranted() directly, but the double replaces
  * the whole method body instead of delegating to parent::, so that internal

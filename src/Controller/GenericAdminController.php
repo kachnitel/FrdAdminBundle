@@ -178,6 +178,8 @@ class GenericAdminController extends AbstractAdminController
 
         $this->validateArchiveCsrf($request, 'archive', $id);
 
+        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_ARCHIVE, $entity);
+
         $entityClassName = $this->entityNamespace . $entityName;
         if (!class_exists($entityClassName)) {
             throw new NotFoundHttpException('Entity class not found: ' . $entityClassName);
@@ -215,6 +217,8 @@ class GenericAdminController extends AbstractAdminController
         }
 
         $this->validateArchiveCsrf($request, 'unarchive', $id);
+
+        $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_ARCHIVE, $entity);
 
         $entityClassName = $this->entityNamespace . $entityName;
         if (!class_exists($entityClassName)) {

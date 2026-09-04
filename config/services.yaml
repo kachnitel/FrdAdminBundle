@@ -143,6 +143,10 @@ services:
             $entityNamespace: '%kachnitel_admin.entity_namespace%'
             $requiredRole: '%kachnitel_admin.required_role%'
 
+    # Object-level authorization on top of AdminEntityVoter's class-level checks.
+    # Opt-in per entity via #[Admin(enableObjectAuth: true)] — see docs/OBJECT_AUTHORIZATION.md.
+    Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker: ~
+
     # Security Voter for entity admin access control
     Kachnitel\AdminBundle\Security\AdminEntityVoter:
         arguments:
@@ -164,8 +168,8 @@ services:
         arguments:
             $expressionLanguage: '@security.expression_language'
 
-    # RowActionRuntime needs the service container to resolve DI-tuple conditions
-    Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime:
+    # RowActionVisibilityChecker needs the service container to resolve DI-tuple conditions
+    Kachnitel\AdminBundle\Twig\Runtime\RowActionVisibilityChecker:
         arguments:
             $debug: '%kernel.debug%'
 

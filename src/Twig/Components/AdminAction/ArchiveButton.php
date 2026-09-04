@@ -8,7 +8,10 @@ use Kachnitel\AdminBundle\Archive\ArchiveEntityService;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\BatchAction\BatchActionComponentInterface;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
+use Kachnitel\AdminBundle\Security\SkipsUnauthorizedEntitiesTrait;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -24,9 +27,14 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
  * On execute():
  *   1. Checks ADMIN_ARCHIVE permission (AccessDeniedException on denial)
  *   2. Resolves the ArchiveConfig for the entity
- *   3. Loads each entity by ID and calls ArchiveEntityService::archive()
+ *   3. Loads each entity by ID, then runs the resolved set through
+ *      SkipsUnauthorizedEntitiesTrait::filterAuthorizedEntities() — the
+ *      same skip-on-deny helper EntityListBatchService::batchDelete()
+ *      uses — before calling ArchiveEntityService::archive() on what remains
  *   4. Emits 'admin:action:completed' with the affected IDs so EntityList
- *      removes them from the selection and refreshes the query
+ *      removes them from the selection and refreshes the query — a denied
+ *      row is never added to $affected, so it stays selected/visible
+ *      rather than being silently reported as archived
  *
  * ArchiveEntityService handles the actual field mutation (boolean → true,
  * datetime → now) and flushes; see its docblock for supported field types.
@@ -37,12 +45,14 @@ class ArchiveButton implements BatchActionComponentInterface
 {
     use DefaultActionTrait;
     use BatchActionTrait;
+    use SkipsUnauthorizedEntitiesTrait;
 
     public function __construct(
         private readonly ArchiveService $archiveService,
         private readonly ArchiveEntityService $archiveEntityService,
         private readonly EntityManagerInterface $em,
         private readonly AuthorizationCheckerInterface $authChecker,
+        private readonly ObjectAuthorizationChecker $objectAuthChecker,
     ) {}
 
     #[LiveAction]
@@ -68,17 +78,39 @@ class ArchiveButton implements BatchActionComponentInterface
             );
         }
 
+        /** @var EntityRepository<object> $repository */
         $repository = $this->em->getRepository($entityClass);
-        $affected = [];
 
-        foreach ($this->selectedIds as $id) {
+        $resolved = $this->resolveByIds($repository, $this->selectedIds);
+        $granted  = $this->filterAuthorizedEntities($this->objectAuthChecker, AdminEntityVoter::ADMIN_ARCHIVE, $resolved);
+
+        foreach ($granted as $entity) {
+            $this->archiveEntityService->archive($entity, $config);
+        }
+
+        $this->completeAction('archive', array_keys($granted));
+    }
+
+    /**
+     * Resolve a list of selected IDs to entities via repository->find(),
+     * keyed by the ID they were resolved from. IDs that don't resolve to an
+     * entity are dropped from the result — mirrors
+     * EntityListBatchService::resolveByIds()'s same tolerance.
+     *
+     * @param EntityRepository<object> $repository
+     * @param array<int|string> $ids
+     * @return array<int|string, object>
+     */
+    private function resolveByIds(EntityRepository $repository, array $ids): array
+    {
+        $resolved = [];
+        foreach ($ids as $id) {
             $entity = $repository->find($id);
             if ($entity !== null) {
-                $this->archiveEntityService->archive($entity, $config);
-                $affected[] = $id;
+                $resolved[$id] = $entity;
             }
         }
 
-        $this->completeAction('archive', $affected);
+        return $resolved;
     }
 }

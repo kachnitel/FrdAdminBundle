@@ -1,13 +1,13 @@
 {
-    "generated_at": "2026-08-25 16:35:55",
+    "generated_at": "2026-09-04 18:51:28",
     "tests": {
-        "count": 1604,
-        "assertions": 3747,
+        "count": 1669,
+        "assertions": 3900,
         "status": "passing"
     },
     "coverage": {
-        "lines": 92.7,
-        "percentage": 93,
+        "lines": 92.49,
+        "percentage": 92,
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {
@@ -30,6 +30,6 @@
     },
     "requirements": {
         "php": ">=8.4",
-        "symfony": "^6.4|^7.0|^8.0"
+        "symfony": "^7.4|^8.0"
     }
 }

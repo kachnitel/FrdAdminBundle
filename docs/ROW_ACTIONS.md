@@ -329,6 +329,11 @@ Three functions are available in templates:
 `admin_visible_row_actions` is what the default `_RowActions.html.twig` partial and the
 show/edit page header loops use. The show/edit templates additionally filter `by context`.
 
+When the entity has `#[Admin(enableObjectAuth: true)]`, visibility also checks
+object-level authorization for each action's `voterAttribute` against that specific row —
+see [Object-Level Authorization → Row-Action Button Visibility](OBJECT_AUTHORIZATION.md#row-action-button-visibility).
+
+
 ## Examples
 
 ### Status workflow with condition

@@ -14,7 +14,7 @@ Until 1.0 is released:
 
 - **Minor version bumps** (`0.x` → `0.y`) may include breaking changes. Read the [CHANGELOG](../CHANGELOG.md) before upgrading.
 - **Patch releases** (`0.x.y` → `0.x.z`) are safe — only bug fixes and documentation.
-- Doctrine ORM 3.5+, PHP 8.4+, Symfony 6.4+/7.x/8.x required.
+- Doctrine ORM 3.5+, PHP 8.4+, Symfony 7.4+/8.x required.
 
 ## Upgrading
 
@@ -55,6 +55,41 @@ not supported by Symfony's native evaluator. Update custom row-action,
 editability, and archive expressions to call the entity's getter or boolean
 accessor directly.
 
+### `EntityListBatchService::batchDelete()` now returns an array (0.13 → 0.y)
+
+Added as part of object-level authorization ([Object-Level Authorization
+guide](OBJECT_AUTHORIZATION.md)): `batchDelete()` skips entities the current
+user isn't authorized to delete (via `#[Admin(enableObjectAuth: true)]`
+and a supporting voter) rather than aborting the whole batch, and needs a way
+to tell the caller which IDs actually went through so `DeleteButton` can
+leave denied rows selected instead of silently reporting them as deleted.
+
+```diff
+- public function batchDelete(...): void
++ public function batchDelete(...): array // IDs actually removed
+```
+
+**Action:** If you call `EntityListBatchService::batchDelete()` directly
+(rather than through the bundle's own `DeleteButton` component, which already
+handles this), update any code that relied on the old `void` return type.
+The method's behaviour for IDs it can't resolve to an entity is unchanged —
+those were already silently skipped before this release.
+
+### New: object-level authorization is opt-in and requires a voter (0.13 → 0.y)
+
+Not itself breaking — every entity defaults to
+`#[Admin(enableObjectAuth: false)]`, matching current behaviour exactly.
+But if you do turn it on for an entity, you must also register a Symfony
+voter whose `supports()` accepts that entity instance as subject, or every
+show/edit/new/delete/archive for it will start returning 403. See
+[Object-Level Authorization](OBJECT_AUTHORIZATION.md) before enabling this
+flag on any entity.
+
+### Symfony 6.4 support removed
+
+Symfony 6.4 is no longer supported. The dynamic form bundle now requires
+Symfony UX Autocomplete 3, which requires Symfony 7.4 or later.
+
 ---
 
 ## No Action Needed
@@ -64,7 +99,6 @@ The following are **not** breaking changes, just clarifications:
 - `#[Admin]` attributes on entities are optional — omit to exclude from admin
 - `enableInlineEdit` does **not** affect the New/Edit form, only list-view row editing
 - `dataSourceId`-only (no `entityClass`) silently disables archive toggling, inline editing, and `#[ColumnPermission]` — use `entityClass` for full functionality
-- Forms require Symfony Form 7.0+ (included with Symfony 7.x/8.x; users on 6.4 must pin `symfony/form:^7`)
 
 ---
 

@@ -25,6 +25,14 @@ use Symfony\UX\LiveComponent\Attribute\PreReRender;
  * class fully overrides save(): it's a separate `#[PreReRender]` hook, not
  * something save() has to remember to call.
  *
+ * Object-level authorization is NOT checked here. It runs in
+ * AdminFormComponentTrait::doSubmitForm() (called by save() below, but also
+ * by any override of save()) when the composing class implements
+ * ObjectAuthorizedFormInterface — deliberately not inlined in this method's
+ * body, so it can't be silently skipped the way inlining it here would let
+ * an overridden save() skip it. See ObjectAuthorizedFormInterface's
+ * docblock for the full reasoning.
+ *
  * Requires the consuming class to also compose AdminFormComponentTrait,
  * and to declare its own EntityManagerInterface $em and ?int $entityId
  * (see AdminEntityForm, and FORMS.md's "Custom form components" section).
@@ -96,10 +104,16 @@ trait AdminFormSaveTrait
         /** @var object $entity */
         $entity = $this->doGetForm()->getData();
 
+        // Object-level authorization for this save already ran inside the
+        // doSubmitForm() call above (AdminFormComponentTrait), against this
+        // same $entity in its post-submission state — see that method's
+        // docblock. An AccessDeniedException there propagates out of this
+        // try block same as UnprocessableEntityHttpException would, since
+        // it isn't caught by the catch clause above.
+        $wasNew = $this->entityId === null;
+
         $this->em->persist($entity);
         $this->em->flush();
-
-        $wasNew = $this->entityId === null;
 
         if ($wasNew) {
             $idValues = $this->em

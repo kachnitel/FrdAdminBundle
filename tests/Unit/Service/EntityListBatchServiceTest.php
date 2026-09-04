@@ -7,6 +7,8 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
@@ -19,6 +21,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 #[Group('entity-list')]
 #[Group('batch')]
+#[Group('object-authorization')]
 #[AllowMockObjectsWithoutExpectations]
 final class EntityListBatchServiceTest extends TestCase
 {
@@ -28,6 +31,9 @@ final class EntityListBatchServiceTest extends TestCase
     /** @var EntityListPermissionService&MockObject */
     private EntityListPermissionService $permissionService;
 
+    /** @var ObjectAuthorizationChecker&MockObject */
+    private ObjectAuthorizationChecker $objectAuthChecker;
+
     private EntityListBatchService $service;
 
     protected function setUp(): void
@@ -35,9 +41,16 @@ final class EntityListBatchServiceTest extends TestCase
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->permissionService = $this->createMock(EntityListPermissionService::class);
 
+        // Permissive by default so every pre-existing test in this class —
+        // none of which care about object-level authorization — keeps
+        // passing unchanged. Tests that DO care override this per-test.
+        $this->objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $this->objectAuthChecker->method('isGranted')->willReturn(true);
+
         $this->service = new EntityListBatchService(
             $this->em,
-            $this->permissionService
+            $this->permissionService,
+            $this->objectAuthChecker,
         );
     }
 
@@ -170,12 +183,14 @@ final class EntityListBatchServiceTest extends TestCase
 
         $this->em->expects($this->once())->method('flush');
 
-        $this->service->batchDelete(
+        $result = $this->service->batchDelete(
             [1, 2],
             $doctrineDataSource,
             'App\\Entity\\TestEntity',
             'TestEntity'
         );
+
+        $this->assertSame([1, 2], $result);
     }
 
     #[Test]
@@ -211,12 +226,59 @@ final class EntityListBatchServiceTest extends TestCase
 
         $this->em->expects($this->once())->method('flush');
 
-        $this->service->batchDelete(
+        $result = $this->service->batchDelete(
             [1, 999],
             $doctrineDataSource,
             'App\\Entity\\TestEntity',
             'TestEntity'
         );
+
+        $this->assertSame([1], $result);
+    }
+
+    #[Test]
+    public function batchDeleteSkipsEntitiesDeniedByObjectAuthorizationButStillRemovesGrantedOnes(): void
+    {
+        $allowedEntity = new \stdClass();
+        $deniedEntity = new \stdClass();
+
+        $doctrineDataSource = $this->createDoctrineDataSourceMock();
+        $doctrineDataSource->method('supportsAction')->willReturn(true);
+        $doctrineDataSource->method('getEntityClass')->willReturn('App\\Entity\\TestEntity');
+
+        $this->permissionService->method('canBatchDelete')->willReturn(true);
+
+        /** @var EntityRepository<object>&MockObject $repository */
+        $repository = $this->createMock(EntityRepository::class);
+        $repository->method('find')->willReturnMap([
+            [1, null, null, $allowedEntity],
+            [2, null, null, $deniedEntity],
+        ]);
+        $this->em->method('getRepository')->willReturn($repository);
+
+        $this->objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
+        $this->objectAuthChecker->method('isGranted')->willReturnMap([
+            [AdminEntityVoter::ADMIN_DELETE, $allowedEntity, true],
+            [AdminEntityVoter::ADMIN_DELETE, $deniedEntity, false],
+        ]);
+        $this->service = new EntityListBatchService($this->em, $this->permissionService, $this->objectAuthChecker);
+
+        // Only the granted entity is removed — the denied one is skipped,
+        // not thrown for, so the rest of the batch still goes through.
+        $this->em->expects($this->once())->method('remove')->with($allowedEntity);
+        $this->em->expects($this->once())->method('flush');
+
+        $result = $this->service->batchDelete(
+            [1, 2],
+            $doctrineDataSource,
+            'App\\Entity\\TestEntity',
+            'TestEntity',
+        );
+
+        // The denied ID is absent from the result — DeleteButton passes
+        // this on to completeAction(), so a denied row stays selected
+        // rather than being reported as removed.
+        $this->assertSame([1], $result);
     }
 
     #[Test]

@@ -188,7 +188,7 @@ if (!$vitestRan) {
 $composer = json_decode(file_get_contents($projectRoot . '/composer.json'), true);
 
 // Get Symfony version
-$symfonyVersion = $composer['require']['symfony/framework-bundle'] ?? '^6.4|^7.0';
+$symfonyVersion = $composer['require']['symfony/framework-bundle'] ?? '^7.4|^8.0';
 
 $phpVersion = $composer['require']['php'] ?? '^8.2';
 $phpVersionSafe = htmlentities($phpVersion);

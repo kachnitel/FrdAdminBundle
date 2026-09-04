@@ -218,6 +218,26 @@ Individual columns can override this setting via `#[AdminColumn(editable: ...)]`
 See the full [Inline Editing Guide](INLINE_EDIT.md) for details, including
 per-column opt-in/opt-out, expression-based editability, and supported field types.
 
+#### enableObjectAuth
+**Type:** `bool` **Default:** `false`
+
+Runs an additional authorization check against the actual entity **instance**
+(not just its class) on show/edit/new/delete/archive/unarchive and inline
+field edits, on top of the existing class-level `#[Admin(permissions: ...)]` /
+`AdminEntityVoter` check.
+
+```php
+#[Admin(label: 'Contacts', enableObjectAuth: true)]
+class Contact { }
+```
+
+**Requires a supporting Symfony voter.** Turning this on for an entity with no
+registered voter whose `supports()` accepts that entity as subject results in
+every show/edit/new/delete/archive, and every inline field edit, for it being denied — not a silent
+allow. See the full [Object-Level Authorization Guide](OBJECT_AUTHORIZATION.md)
+for the mechanism, a worked voter example, and this gotcha in detail before
+enabling it.
+
 #### archiveExpression
 **Type:** `?string` **Default:** `null`
 
@@ -759,6 +779,7 @@ class User implements UserInterface
 - `enableBatchActions: bool = false`
 - `enableColumnVisibility: bool = false` — user-toggleable column show/hide (see [Column Visibility](COLUMN_VISIBILITY.md))
 - `enableInlineEdit: bool = false`
+- `enableObjectAuth: bool = false` — instance-level authorization on top of class-level permissions; requires a supporting voter (see [Object-Level Authorization](OBJECT_AUTHORIZATION.md))
 - `formComponent: ?string = null` — override the LiveComponent used for new/edit forms (see [Forms](FORMS.md#custom-form-components))
 - `itemsPerPage: ?int = null`
 - `sortBy: ?string = null`

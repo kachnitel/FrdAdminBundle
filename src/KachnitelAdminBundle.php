@@ -37,7 +37,7 @@ class KachnitelAdminBundle extends AbstractBundle
     {
         $rootNode = $definition->rootNode();
 
-        /**@disregard P1013 Undefined method 'children'. */
+        /** @disregard P1013 Undefined method 'children'. */
         $rootNode->children()
                 ->scalarNode('entity_namespace')
                     ->defaultValue('App\\Entity\\')

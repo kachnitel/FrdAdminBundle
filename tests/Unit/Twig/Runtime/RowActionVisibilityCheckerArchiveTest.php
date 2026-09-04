@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
-use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
-use Kachnitel\AdminBundle\Twig\Runtime\RowActionRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionVisibilityChecker;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use PHPUnit\Framework\Attributes as PHPUnit;
@@ -16,30 +14,25 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
-#[PHPUnit\CoversClass(RowActionRuntime::class)]
+#[PHPUnit\CoversClass(RowActionVisibilityChecker::class)]
 #[PHPUnit\UsesClass(RowAction::class)]
 #[PHPUnit\UsesClass(RowActionExpressionLanguage::class)]
-#[PHPUnit\UsesClass(RowActionVisibilityChecker::class)]
-#[PHPUnit\Group('row-actions')]
 #[PHPUnit\Group('archive')]
-final class RowActionRuntimeArchiveTest extends TestCase
+#[PHPUnit\Group('row-actions')]
+final class RowActionVisibilityCheckerArchiveTest extends TestCase
 {
     /** @var AdminRouteRuntime&MockObject */
     private AdminRouteRuntime $routeRuntime;
 
-    private RowActionRuntime $runtime;
+    private RowActionVisibilityChecker $checker;
 
     protected function setUp(): void
     {
-        $registry = $this->createStub(RowActionRegistry::class);
         $this->routeRuntime = $this->createMock(AdminRouteRuntime::class);
 
-        $this->runtime = new RowActionRuntime(
-            registry: $registry,
-            visibilityChecker: new RowActionVisibilityChecker(
-                routeRuntime: $this->routeRuntime,
-                expressionLanguage: new RowActionExpressionLanguage(new ExpressionLanguage()),
-            ),
+        $this->checker = new RowActionVisibilityChecker(
+            routeRuntime: $this->routeRuntime,
+            expressionLanguage: new RowActionExpressionLanguage(new ExpressionLanguage()),
         );
     }
 
@@ -62,7 +55,7 @@ final class RowActionRuntimeArchiveTest extends TestCase
             voterAttribute: AdminEntityVoter::ADMIN_ARCHIVE,
         );
 
-        $this->assertTrue($this->runtime->isActionVisible($action, $this->makeEntity(), 'Product'));
+        $this->assertTrue($this->checker->isVisible($action, $this->makeEntity(), 'Product'));
     }
 
     #[PHPUnit\Test]
@@ -79,7 +72,7 @@ final class RowActionRuntimeArchiveTest extends TestCase
             voterAttribute: AdminEntityVoter::ADMIN_ARCHIVE,
         );
 
-        $this->assertFalse($this->runtime->isActionVisible($action, $this->makeEntity(), 'Product'));
+        $this->assertFalse($this->checker->isVisible($action, $this->makeEntity(), 'Product'));
     }
 
     #[PHPUnit\Test]
@@ -98,7 +91,7 @@ final class RowActionRuntimeArchiveTest extends TestCase
             voterAttribute: AdminEntityVoter::ADMIN_ARCHIVE,
         );
 
-        $this->assertTrue($this->runtime->isActionVisible($action, $this->makeEntity(), 'Product'));
+        $this->assertTrue($this->checker->isVisible($action, $this->makeEntity(), 'Product'));
     }
 
     #[PHPUnit\Test]
@@ -122,6 +115,6 @@ final class RowActionRuntimeArchiveTest extends TestCase
             voterAttribute: AdminEntityVoter::ADMIN_ARCHIVE,
         );
 
-        $this->runtime->isActionVisible($action, $this->makeEntity(), 'Product');
+        $this->checker->isVisible($action, $this->makeEntity(), 'Product');
     }
 }
