@@ -68,7 +68,14 @@ Auto-registered as a service the normal Symfony way (autowire + autoconfigure pi
 
 ## Where Checks Run
 
-Object-level authorization is checked in seven places. Each runs after the entity is loaded (or, for new/edit saves, after the submitted data has been bound onto it) and, where CSRF applies, after CSRF has already been validated — see [CSRF Runs Before Authorization](#csrf-runs-before-authorization).
+Object-level authorization touches two conceptually different kinds of call site, and it's worth keeping them separate rather than reading this as "N equally-weighted security boundaries":
+
+- **Enforcement** — the check is the reason a mutation or a read is actually blocked. Bypassing the UI (a forged LiveComponent request, a hand-crafted POST) still hits one of these.
+- **Display-only** — the check only decides whether a button, action, or trigger is shown. It never *itself* stops a mutation; real enforcement for that same operation lives at one of the enforcement call sites below. These exist purely so a user doesn't see an option they'd be denied on click.
+
+The full, current inventory of both lives as a docblock on `ObjectAuthorizationChecker` itself (`src/Security/ObjectAuthorizationChecker.php`) — treat that as the source of truth and this table as a narrated version of it. Each enforcement row runs after the entity is loaded (or, for new/edit saves, after the submitted data has been bound onto it) and, where CSRF applies, after CSRF has already been validated — see [CSRF Runs Before Authorization](#csrf-runs-before-authorization).
+
+### Enforcement
 
 | Location | Voter attribute | Runs against |
 |---|---|---|
@@ -76,13 +83,18 @@ Object-level authorization is checked in seven places. Each runs after the entit
 | `AbstractAdminController::doEdit()` | `ADMIN_EDIT` | The loaded entity |
 | `AbstractAdminController::doDeleteEntity()` | `ADMIN_DELETE` | The loaded entity, after CSRF validation, before removal |
 | `GenericAdminController::archive()` / `unarchive()` | `ADMIN_ARCHIVE` | The loaded entity, after CSRF validation, before the field mutation |
-| The New/Edit LiveComponent form save, and the "+ Add" inline-creation dialog | `ADMIN_NEW` or `ADMIN_EDIT` | The entity **after** form binding — see below for exactly where and why |
-| Batch archive / batch delete (`ArchiveButton`, `DeleteButton`) | `ADMIN_ARCHIVE` / `ADMIN_DELETE` | Each selected entity individually — see [Batch Actions](#batch-actions) |
-| `AdminEditabilityResolver::canEdit()` | `ADMIN_EDIT` | The entity, **before** the edited property's new value is written — see [Inline Editing](#inline-editing) |
+| The New/Edit LiveComponent form save, and the "+ Add" inline-creation dialog (`AdminFormComponentTrait::doSubmitForm()`) | `ADMIN_NEW` or `ADMIN_EDIT` | The entity **after** form binding — see [below](#why-the-newedit-form-check-lives-in-dosubmitform-not-save) for exactly where and why |
+| `AdminEditabilityResolver::canEdit()` | `ADMIN_EDIT` | The entity, immediately before the inline-edited property's new value is written — see [Inline Editing](#inline-editing) for a real timing caveat this one has |
+| Batch archive / batch delete (`ArchiveButton::execute()`, `EntityListBatchService::batchDelete()`) | `ADMIN_ARCHIVE` / `ADMIN_DELETE` | Each selected entity individually, via `SkipsUnauthorizedEntitiesTrait` — see [Batch Actions](#batch-actions) |
 
-Row-action buttons in list views and show/edit page headers are also filtered by object-level authorization — see [Row-Action Button Visibility](#row-action-button-visibility). That's UI-only, not a security boundary on its own: it prevents a user from being *shown* an action they'd be denied, but every actual mutation is still enforced at one of the seven call sites above regardless of what the UI displayed.
+### Display-only
 
-A custom controller extending `AbstractAdminController` directly (rather than `GenericAdminController`) gets the *new object-level* checks above for free, since they live on the parent class. It does **not** get the bundle's existing *class-level* check (`AdminEntityVoter` via `checkEntityPermission()`) for free — that call has only ever lived in `GenericAdminController`'s own route methods, not in `AbstractAdminController`, and this feature doesn't change that. If you're routing through your own controller, you're responsible for your own class-level check exactly as before; object-level authorization is additive to whatever you already do, not a replacement for it.
+| Location | What it hides | Real enforcement lives at |
+|---|---|---|
+| `EntityList::editRow()` | Prevents a denied row from visually entering edit mode | `AdminEditabilityResolver::canEdit()`, consulted independently by each field component |
+| `RowActionVisibilityChecker` | Hides Edit/Delete/Archive/Unarchive row-action buttons for a denied row | The corresponding controller/batch action above |
+
+A custom controller extending `AbstractAdminController` directly (rather than `GenericAdminController`) gets the *enforcement* checks above for free, since they live on the parent class. It does **not** get the bundle's existing *class-level* check (`AdminEntityVoter` via `checkEntityPermission()`) for free — that call has only ever lived in `GenericAdminController`'s own route methods, not in `AbstractAdminController`, and this feature doesn't change that. If you're routing through your own controller, you're responsible for your own class-level check exactly as before; object-level authorization is additive to whatever you already do, not a replacement for it.
 
 ## Writing a Voter
 
@@ -114,31 +126,43 @@ In `doDeleteEntity()` and `archive()`/`unarchive()`, CSRF is validated **before*
 
 ## Batch Actions
 
-`ArchiveButton` and `DeleteButton` (the batch archive/delete components behind the "Archive Selected" / "Delete Selected" buttons) check object-level authorization **per selected entity**, individually, rather than gating the batch as a whole:
+`ArchiveButton` and `DeleteButton` (the batch archive/delete components behind the "Archive Selected" / "Delete Selected" buttons) check object-level authorization **per selected entity**, individually, rather than gating the batch as a whole. Both go through the same helper — `SkipsUnauthorizedEntitiesTrait::filterAuthorizedEntities()` — rather than each implementing their own find-then-filter loop:
+
+```php
+$resolved = $this->resolveByIds($repository, $selectedIds); // find() each ID, drop the nulls
+$granted  = $this->filterAuthorizedEntities($this->objectAuthChecker, AdminEntityVoter::ADMIN_DELETE, $resolved);
+// act on array_values($granted); array_keys($granted) is what stays "processed"
+```
+
+This lives as a trait consumed by both components, rather than as a method on `ObjectAuthorizationChecker` itself, deliberately: the trait's loop only ever calls `ObjectAuthorizationChecker::isGranted()`, the one method every existing consumer's tests already mock. A batch-specific method placed directly on the checker would need its own mock stub in every test that constructs a full mock of the checker — easy to forget, and it fails silently (an unstubbed method with an `array` return type returns `[]`, not an error) rather than loudly.
+
+Behaviourally:
 
 - An entity the current user is authorized for is processed normally.
 - An entity they're **not** authorized for is silently skipped — the rest of the batch still goes through. This mirrors the existing, pre-authorization behaviour for an ID that doesn't resolve to an entity at all (already deleted, bad ID), which has always been skipped rather than aborting the whole request.
 - The `admin:action:completed` event (which `EntityList` uses to clear processed rows from the selection and refresh the query) reports only the entities that were **actually** processed — not the original full selection. A denied row is never added to that list, so after the list refreshes it's still selected and still visible, rather than silently vanishing from the count with no signal that it didn't go through.
 
-There's currently no toast or explicit "3 of 10 skipped" message — the signal is that denied rows remain selected. If your application needs an explicit per-item report, `EntityListBatchService::batchDelete()`'s return value (the actually-removed IDs) and `ArchiveButton`'s equivalent internal list are the values to build that from.
+There's currently no toast or explicit "3 of 10 skipped" message — the signal is that denied rows remain selected. If your application needs an explicit per-item report, the array `filterAuthorizedEntities()` returns (or its `array_keys()`) is the value to build that from — `EntityListBatchService::batchDelete()` returns exactly that.
+
+If you're adding a new batch action, `use SkipsUnauthorizedEntitiesTrait;` and call `filterAuthorizedEntities()` the same way rather than writing a third find-then-filter loop.
 
 ## Row-Action Button Visibility
 
-Edit / Delete / Archive / Unarchive row-action buttons — in list rows, and on show/edit page headers — are filtered through object-level authorization the same way class-level permissions already filter them. `RowActionRuntime::isActionVisible()` reuses each action's own `voterAttribute` (the same `AdminEntityVoter::ADMIN_*` constant `ObjectAuthorizationChecker` itself expects) against the specific entity instance being rendered, so a user who would be denied on click doesn't see the button at all.
+Edit / Delete / Archive / Unarchive row-action buttons — in list rows, and on show/edit page headers — are filtered through object-level authorization the same way class-level permissions already filter them. `RowActionVisibilityChecker::isVisible()` reuses each action's own `voterAttribute` (the same `AdminEntityVoter::ADMIN_*` constant `ObjectAuthorizationChecker` itself expects) against the specific entity instance being rendered, so a user who would be denied on click doesn't see the button at all.
 
-This applies to any row action carrying a `voterAttribute` — the bundle's own Show/Edit/Archive/Unarchive buttons, and any `#[AdminAction(voterAttribute: '...')]` you declare yourself. An action with no `voterAttribute` set is unaffected (there's nothing to check it against). As with everywhere else in this feature, this is a no-op for entities without `enableObjectAuth: true`.
+This applies to any row action carrying a `voterAttribute` — the bundle's own Show/Edit/Archive/Unarchive buttons, and any `#[AdminAction(voterAttribute: '...')]` you declare yourself. An action with no `voterAttribute` set is unaffected (there's nothing to check it against). As with everywhere else in this feature, this is a no-op for entities without `enableObjectAuth: true`. This is display-only — see [Where Checks Run](#where-checks-run) — the real enforcement is whatever controller or batch action the button links to.
 
 Custom action buttons rendered via `liveComponent:` still enforce their own access inside the component itself, same as before — this only affects whether the button is offered in the first place.
 
 ## Inline Editing
 
-List-view inline editing (see [Inline Editing](INLINE_EDIT.md)) goes through `AdminEditabilityResolver::canEdit()` — this bundle's implementation of `entity-components-bundle`'s `EditabilityResolverInterface`. That single method is called by every inline-edit field component in exactly two places: to decide whether to render the ✎ trigger, and — the security-relevant call — inside `save()`, before any value is written. Object-level authorization is checked there, immediately after the existing class-level `ADMIN_EDIT` voter check.
+List-view inline editing (see [Inline Editing](INLINE_EDIT.md)) goes through `AdminEditabilityResolver::canEdit()` — this bundle's implementation of `entity-components-bundle`'s `EditabilityResolverInterface`. That single method is called by every inline-edit field component in exactly two places: to decide whether to render the ✎ trigger, and — the enforcement call — inside `save()`, before any value is written. Object-level authorization is checked there, immediately after the existing class-level `ADMIN_EDIT` voter check, so `canEdit()` is itself an **enforcement** call site, not a display-only one, even though one of its two callers is a rendering decision.
 
-`EntityList::editRow()` — the row-level "enter edit mode" action fired by the ✏️ button — also checks object-level authorization, but only as a UX convenience: it stops a denied row from visually entering an edit state with nothing actually editable in it. It has no bearing on security by itself — each field component enforces independently via `AdminEditabilityResolver::canEdit()` regardless of whether a row is "in edit mode," so this would still be safe even if `editRow()` checked nothing at all.
+`EntityList::editRow()` — the row-level "enter edit mode" action fired by the ✏️ button — also checks object-level authorization, but purely as a UX convenience and is listed as **display-only** above: it stops a denied row from visually entering an edit state with nothing actually editable in it. It has no bearing on security by itself — each field component enforces independently via `AdminEditabilityResolver::canEdit()` regardless of whether a row is "in edit mode," so this would still be safe even if `editRow()` checked nothing at all.
 
 ### Checked before the write, not after
 
-Unlike the New/Edit form flow, this has a real timing limitation. `entity-components-bundle`'s `AbstractEditableField::save()` runs `canEdit()` guard → write → validate → flush, with no second authorization check between the write and the flush. `canEdit()` therefore validates the entity's state as it was **before** this specific field's new value is applied.
+`canEdit()` being enforcement doesn't mean it's timing-perfect. Unlike the New/Edit form flow, this has a real limitation. `entity-components-bundle`'s `AbstractEditableField::save()` runs `canEdit()` guard → write → validate → flush, with no second authorization check between the write and the flush. `canEdit()` therefore validates the entity's state as it was **before** this specific field's new value is applied.
 
 If the property being inline-edited is the same one your voter's decision reads — say, `Contact::$type` itself — the check passes or fails based on the *old* type, and the new type is written without a further check. A `ROLE_SALES` user editing a `CUSTOMER` contact's `type` field to `VENDOR` would be authorized for that specific save (the check ran against `CUSTOMER`), even though a `VENDOR` contact wouldn't otherwise be editable by them at all.
 

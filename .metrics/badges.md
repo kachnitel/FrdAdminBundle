@@ -1,6 +1,6 @@
-![Tests](<https://img.shields.io/badge/tests-1658%20passed-brightgreen>)
+![Tests](<https://img.shields.io/badge/tests-1669%20passed-brightgreen>)
 ![Coverage](<https://img.shields.io/badge/coverage-92%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-3886-blue>)
+![Assertions](<https://img.shields.io/badge/assertions-3900-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-clean-brightgreen>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)

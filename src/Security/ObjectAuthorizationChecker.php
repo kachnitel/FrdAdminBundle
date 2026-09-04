@@ -52,6 +52,38 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * who enables it — so AdminEntityVoter must never vote on object subjects.
  * It doesn't: its supports() requires is_string($subject).
  *
+ * ## Call-site inventory
+ *
+ * Every place in the bundle that consults this service, grouped by whether
+ * it's a real security boundary or a display-only convenience. Kept here,
+ * rather than only in docs/OBJECT_AUTHORIZATION.md, so a new call site is
+ * added next to the list it needs to update — the docs page links back to
+ * this docblock rather than re-deriving the same inventory by hand.
+ *
+ * Enforcement (actually blocks a mutation or a data read):
+ *   - AbstractAdminController::doShow() / doEdit() / doDeleteEntity()
+ *   - GenericAdminController::archive() / unarchive()
+ *   - AdminFormComponentTrait::doSubmitForm() (via ObjectAuthorizedFormInterface —
+ *     covers the New/Edit form save and the "+ Add" inline-creation dialog)
+ *   - AdminEditabilityResolver::canEdit() (the sole choke point
+ *     entity-components-bundle's AbstractEditableField::save() calls before
+ *     writing an inline-edited value — see that class's docblock for the
+ *     known "checked before the write, not after" timing limitation)
+ *   - EntityListBatchService::batchDelete() / ArchiveButton::execute() (both
+ *     go through SkipsUnauthorizedEntitiesTrait — skip-on-deny, not abort-on-deny.
+ *     That trait calls isGranted() below, not a batch-specific method on this
+ *     class — see the trait's own docblock for why that boundary matters)
+ *
+ * Display-only (hides UI, never itself the reason a mutation is blocked):
+ *   - EntityList::editRow() — stops a denied row entering visual edit mode;
+ *     the field components enforce independently via canEdit() regardless
+ *   - RowActionVisibilityChecker — hides Edit/Delete/Archive row-action
+ *     buttons for denied rows; a forged request still hits real enforcement
+ *
+ * Adding a new batch action or write path? Add it to the enforcement list
+ * above and to docs/OBJECT_AUTHORIZATION.md's "Where Checks Run" table in
+ * the same commit.
+ *
  * @see AdminEntityVoter
  */
 class ObjectAuthorizationChecker
