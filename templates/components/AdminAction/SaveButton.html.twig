@@ -9,12 +9,17 @@
 
 <button {{ attributes }}
         type="button"
-        class="{{ css.btn_primary() }}"
+        class="{{ this.status == 'error' or not this.valid ? css.btn_danger() : css.btn_primary() }} {{ css.save_button() }}"
         data-action="live#action"
         data-live-action-param="triggerSave"
         aria-busy="{{ this.saving ? 'true' : 'false' }}"
-        {% if not this.valid %}aria-invalid="true"{% endif %}
+        aria-label="{{ this.status == 'success' ? 'Saved'|trans : (this.status == 'error' or not this.valid ? 'Save - form has errors'|trans : (this.hasUnsavedChanges ? 'Save - unsaved changes'|trans : 'Save'|trans)) }}"
+        title="{{ this.status == 'success' ? 'Saved successfully'|trans : (this.status == 'error' or not this.valid ? 'Please correct the errors before saving'|trans : (this.hasUnsavedChanges ? 'Unsaved changes'|trans : 'Save'|trans)) }}"
+        {% if this.status == 'error' or not this.valid %}aria-invalid="true"{% endif %}
         {% if this.saving %}disabled{% endif %}
 >
     {{ this.saving ? 'Saving…' : 'Save' }}
+    {% if this.status == 'success' %}<span aria-hidden="true" class="{{ css.save_success_marker() }}">✓</span>{% endif %}
+    {% if this.status == 'error' or not this.valid %}<span aria-hidden="true" class="{{ css.save_error_marker() }}">⚠</span>{% endif %}
+    {% if this.hasUnsavedChanges %}<span aria-hidden="true" class="{{ css.save_unsaved_marker() }}">&#9679;</span>{% endif %}
 </button>

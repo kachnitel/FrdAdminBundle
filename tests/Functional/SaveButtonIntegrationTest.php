@@ -89,6 +89,47 @@ final class SaveButtonIntegrationTest extends ComponentTestCase
         $this->assertFalse($button->component()->valid);
     }
 
+    public function testReceivingSaveResultUpdatesStatus(): void
+    {
+        $button = $this->saveButtonComponent();
+
+        $button->emit('admin:form:result', ['status' => 'success']);
+
+        $this->assertSame('success', $button->component()->status);
+
+        $button->emit('admin:form:result', ['status' => 'error']);
+
+        $this->assertSame('error', $button->component()->status);
+    }
+
+    public function testFormStateKeepsSaveResultVisible(): void
+    {
+        $button = $this->saveButtonComponent();
+
+        $button->emit('admin:form:result', ['status' => 'success']);
+        $button->emit('admin:form:state', ['valid' => 1]);
+        $this->assertSame('success', $button->component()->status);
+        $this->assertFalse($button->component()->hasUnsavedChanges);
+
+        $button->emit('admin:form:state', ['valid' => 1]);
+        $this->assertSame('idle', $button->component()->status);
+        $this->assertTrue($button->component()->hasUnsavedChanges);
+
+        $button->emit('admin:form:result', ['status' => 'error']);
+        $button->emit('admin:form:state', ['valid' => 0]);
+        $this->assertSame('error', $button->component()->status);
+    }
+
+    public function testFormStateMarksChangesBeforeFirstSave(): void
+    {
+        $button = $this->saveButtonComponent();
+
+        $button->emit('admin:form:state', ['valid' => 1]);
+
+        $this->assertTrue($button->component()->hasUnsavedChanges);
+        $this->assertSame(1, $button->component()->rendersSinceSave);
+    }
+
     public function testInvalidStateDoesNotRenderDisabledAttribute(): void
     {
         $button = $this->saveButtonComponent();

@@ -115,11 +115,13 @@ trait AdminFormSaveTrait
         try {
             $this->doSubmitForm();
         } catch (UnprocessableEntityHttpException) {
+            $this->emit('admin:form:result', ['status' => 'error'], 'K:Admin:Action:Save');
             $this->dispatchBrowserEvent('toast.show', ['message' => 'Please correct the errors below and try again.']);
             return null;
         } catch (AccessDeniedException) {
             $message = 'You are not allowed to manage this entity.';
             $this->saveError = $message;
+            $this->emit('admin:form:result', ['status' => 'error'], 'K:Admin:Action:Save');
             $this->dispatchBrowserEvent('toast.show', ['message' => $message]);
             return null;
         }
@@ -155,6 +157,7 @@ trait AdminFormSaveTrait
             }
         }
 
+        $this->emit('admin:form:result', ['status' => 'success'], 'K:Admin:Action:Save');
         $this->dispatchBrowserEvent('toast.show', ['message' => 'Saved successfully!']);
 
         return null;

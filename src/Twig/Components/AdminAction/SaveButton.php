@@ -53,11 +53,42 @@ class SaveButton
     #[LiveProp]
     public bool $valid = true;
 
+    /**
+     * Result of the most recent save attempt. This is visual feedback only;
+     * the form remains responsible for validation and persistence.
+     */
+    #[LiveProp]
+    public string $status = 'idle';
+
+    /**
+        * Number of form-state renders observed since the last save result.
+     */
+    #[LiveProp]
+        public int $rendersSinceSave = 0;
+
+        /**
+        * True once a save has succeeded and a later form render can represent
+        * unsaved changes.
+        */
+        #[LiveProp]
+        public bool $hasUnsavedChanges = false;
+
     #[LiveAction]
     public function triggerSave(): void
     {
         $this->saving = true;
+        $this->status = 'idle';
+        $this->rendersSinceSave = 0;
+        $this->hasUnsavedChanges = false;
         $this->emit('save');
+    }
+
+    #[LiveListener('admin:form:result')]
+    public function onFormResult(#[LiveArg] string $status): void
+    {
+        $this->status = in_array($status, ['success', 'error'], true) ? $status : 'idle';
+        $this->rendersSinceSave = 0;
+        $this->hasUnsavedChanges = false;
     }
 
     /**
@@ -66,7 +97,19 @@ class SaveButton
     #[LiveListener('admin:form:state')]
     public function onFormStateChanged(#[LiveArg] int $valid): void
     {
+        ++$this->rendersSinceSave;
         $this->valid = $valid === 1;
         $this->saving = false;
+
+        if ($this->status === 'success') {
+            if ($this->rendersSinceSave > 1) {
+                $this->status = 'idle';
+                $this->hasUnsavedChanges = true;
+            }
+
+            return;
+        }
+
+        $this->hasUnsavedChanges = true;
     }
 }

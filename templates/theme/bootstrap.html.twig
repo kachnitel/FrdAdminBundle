@@ -23,6 +23,10 @@
 {% macro btn_link() %}btn btn-link p-0 text-decoration-none{% endmacro %}
 {% macro btn_close() %}btn-close{% endmacro %}
 {% macro btn_sm() %}btn-sm{% endmacro %}
+{% macro save_button() %}position-relative{% endmacro %}
+{% macro save_success_marker() %}badge rounded-pill text-bg-success position-absolute top-0 end-0 translate-middle{% endmacro %}
+{% macro save_error_marker() %}badge rounded-pill text-bg-danger position-absolute top-0 end-0 translate-middle{% endmacro %}
+{% macro save_unsaved_marker() %}text-warning fs-5 position-absolute top-0 end-0 translate-middle{% endmacro %}
 
 {# Forms #}
 {% macro form_input() %}form-control{% endmacro %}
