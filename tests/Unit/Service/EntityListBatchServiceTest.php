@@ -166,10 +166,10 @@ final class EntityListBatchServiceTest extends TestCase
         /** @var EntityRepository<object>&MockObject $repository */
         $repository = $this->createMock(EntityRepository::class);
         $repository->expects($this->atLeast(2))->method('find')
-            ->willReturnMap([
-                [1, null, null, $entity1],
-                [2, null, null, $entity2],
-            ]);
+            ->willReturnCallback(static fn (int|string $id): object => match ($id) {
+                1 => $entity1,
+                2 => $entity2,
+            });
 
         $this->em->expects($this->once())->method('getRepository')
             ->with('App\\Entity\\TestEntity')
@@ -211,10 +211,10 @@ final class EntityListBatchServiceTest extends TestCase
         /** @var EntityRepository<object>&MockObject $repository */
         $repository = $this->createMock(EntityRepository::class);
         $repository->expects($this->atLeast(2))->method('find')
-            ->willReturnMap([
-                [1, null, null, $entity1],
-                [999, null, null, null], // Entity not found
-            ]);
+            ->willReturnCallback(static fn (int|string $id): ?object => match ($id) {
+                1 => $entity1,
+                999 => null,
+            });
 
         $this->em->method('getRepository')
             ->willReturn($repository);
@@ -250,17 +250,18 @@ final class EntityListBatchServiceTest extends TestCase
 
         /** @var EntityRepository<object>&MockObject $repository */
         $repository = $this->createMock(EntityRepository::class);
-        $repository->method('find')->willReturnMap([
-            [1, null, null, $allowedEntity],
-            [2, null, null, $deniedEntity],
-        ]);
+        $repository->method('find')
+            ->willReturnCallback(static fn (int|string $id): object => match ($id) {
+                1 => $allowedEntity,
+                2 => $deniedEntity,
+            });
         $this->em->method('getRepository')->willReturn($repository);
 
         $this->objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
-        $this->objectAuthChecker->method('isGranted')->willReturnMap([
-            [AdminEntityVoter::ADMIN_DELETE, $allowedEntity, true],
-            [AdminEntityVoter::ADMIN_DELETE, $deniedEntity, false],
-        ]);
+        $this->objectAuthChecker->method('isGranted')
+            ->willReturnCallback(static fn (string $attribute, object $entity): bool =>
+                $attribute === AdminEntityVoter::ADMIN_DELETE && $entity === $allowedEntity
+            );
         $this->service = new EntityListBatchService($this->em, $this->permissionService, $this->objectAuthChecker);
 
         // Only the granted entity is removed — the denied one is skipped,
