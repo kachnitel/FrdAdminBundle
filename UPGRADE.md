@@ -96,15 +96,33 @@ arguments were moved to `RowActionVisibilityChecker`.
 from `RowActionRuntime`. The `$debug` binding belongs to
 `RowActionVisibilityChecker` instead.
 
+### `AbstractAdminController` constructor requires authorization checker (0.13 → 0.y)
+
+`AbstractAdminController::__construct()` now requires an
+`ObjectAuthorizationChecker` in addition to the entity manager:
+
+```diff
+- public function __construct(EntityManagerInterface $em)
++ public function __construct(EntityManagerInterface $em, ObjectAuthorizationChecker $objectAuthChecker)
+```
+
+`GenericAdminController` also accepts and forwards this dependency to its
+parent constructor.
+
+**Action:** Update custom controllers extending `AbstractAdminController` to
+accept and pass an `ObjectAuthorizationChecker` when calling
+`parent::__construct()`. Update test doubles and other code that instantiates
+these controllers with `new` in the same way.
+
 ### AbstractAdminController test doubles require authorization setup (0.13 → 0.y)
 
-`AbstractAdminController` and `GenericAdminController` test doubles created
-with `new` bypass Symfony's `#[Required]` setter injection. Their protected
-object authorization checker is therefore uninitialized when show, edit,
-delete, or archive methods are exercised.
+`AbstractAdminController` and `GenericAdminController` test doubles or other
+instances created with `new` are not built by Symfony's service container.
+They must therefore receive an `ObjectAuthorizationChecker` explicitly in
+their constructor before show, edit, delete, or archive methods are exercised.
 
-**Action:** Call `setObjectAuthorizationChecker()` in the test double's
-constructor, for example with `new PermissiveObjectAuthorizationChecker()`.
+**Action:** Pass an authorization checker to the constructor, for example
+`new PermissiveObjectAuthorizationChecker()` in a test double.
 
 ### Symfony 6.4 support removed
 

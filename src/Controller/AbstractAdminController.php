@@ -11,7 +11,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * Abstract base controller for entity CRUD operations.
@@ -27,23 +26,20 @@ abstract class AbstractAdminController extends AbstractController
     use DeleteEntityTrait;
 
     /**
-     * Injected via #[Required] setter rather than the constructor so this
-     * class's (and GenericAdminController's) constructor signature doesn't
-     * change — consistent with how AdminFormSaveTrait injects AdminRouteRuntime.
-     * Test doubles that bypass the container (e.g. GenericAdminControllerTestDouble)
-     * must call setObjectAuthorizationChecker() themselves before exercising
-     * doShow()/doEdit()/doDeleteEntity() or any GenericAdminController method
-     * that reads it, since #[Required] setters only fire through real DI.
+     * Constructor-injected rather than via a #[Required] setter: unlike
+     * AdminFormComponentTrait/AdminFormSaveTrait (traits composed into
+     * multiple LiveComponent classes, which have no constructor of their
+     * own to add a parameter to), this is a plain abstract class with a
+     * constructor already, and this bundle's own SemVer policy (see
+     * UPGRADE.md) treats constructor-signature changes as an acceptable
+     * pre-1.0 breaking change rather than something to avoid at the cost of
+     * a "did you remember to wire this up" failure mode for every test
+     * double built via `new`.
      */
-    protected ObjectAuthorizationChecker $objectAuthChecker;
-
-    public function __construct(protected EntityManagerInterface $em) {}
-
-    #[Required]
-    public function setObjectAuthorizationChecker(ObjectAuthorizationChecker $objectAuthChecker): void
-    {
-        $this->objectAuthChecker = $objectAuthChecker;
-    }
+    public function __construct(
+        protected EntityManagerInterface $em,
+        protected ObjectAuthorizationChecker $objectAuthChecker,
+    ) {}
 
     /**
      * List all entities of the given class.

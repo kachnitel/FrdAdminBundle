@@ -10,6 +10,7 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Tests\Fixtures\PermissiveObjectAuthorizationChecker;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -46,6 +47,7 @@ final class GenericAdminControllerFormComponentTest extends TestCase
             formNamespace:    'App\\Form\\',
             formSuffix:       'FormType',
             formRegistry:     $this->formRegistry,
+            objectAuthChecker: new PermissiveObjectAuthorizationChecker()
         );
     }
 

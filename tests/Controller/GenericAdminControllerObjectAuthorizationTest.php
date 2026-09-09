@@ -71,7 +71,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $this->archiveEntityService = $this->createStub(ArchiveEntityService::class);
     }
 
-    private function makeController(): GenericAdminControllerTestDouble
+    private function makeController(?ObjectAuthorizationChecker $objectAuthChecker = null): GenericAdminControllerTestDouble
     {
         return new GenericAdminControllerTestDouble(
             em: $this->em,
@@ -80,6 +80,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
             formNamespace: 'App\\Form\\',
             formSuffix: 'FormType',
             formRegistry: $this->createStub(FormRegistryInterface::class),
+            objectAuthChecker: $objectAuthChecker,
         );
     }
 
@@ -139,8 +140,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $entity = new DeletableEntity(5);
         $this->repository->method('find')->willReturn($entity);
 
-        $controller = $this->makeController();
-        $controller->setObjectAuthorizationChecker($this->grantingChecker(AdminEntityVoter::ADMIN_SHOW, $entity));
+        $controller = $this->makeController($this->grantingChecker(AdminEntityVoter::ADMIN_SHOW, $entity));
 
         $controller->show('deletable-entity', 5);
     }
@@ -151,8 +151,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $entity = new DeletableEntity(5);
         $this->repository->method('find')->willReturn($entity);
 
-        $controller = $this->makeController();
-        $controller->setObjectAuthorizationChecker($this->denyingChecker(AdminEntityVoter::ADMIN_SHOW, $entity));
+        $controller = $this->makeController($this->denyingChecker(AdminEntityVoter::ADMIN_SHOW, $entity));
 
         $this->expectException(AccessDeniedException::class);
 
@@ -167,8 +166,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $entity = new DeletableEntity(5);
         $this->repository->method('find')->willReturn($entity);
 
-        $controller = $this->makeController();
-        $controller->setObjectAuthorizationChecker($this->grantingChecker(AdminEntityVoter::ADMIN_EDIT, $entity));
+        $controller = $this->makeController($this->grantingChecker(AdminEntityVoter::ADMIN_EDIT, $entity));
 
         $controller->edit('deletable-entity', 5);
     }
@@ -179,8 +177,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $entity = new DeletableEntity(5);
         $this->repository->method('find')->willReturn($entity);
 
-        $controller = $this->makeController();
-        $controller->setObjectAuthorizationChecker($this->denyingChecker(AdminEntityVoter::ADMIN_EDIT, $entity));
+        $controller = $this->makeController($this->denyingChecker(AdminEntityVoter::ADMIN_EDIT, $entity));
 
         $this->expectException(AccessDeniedException::class);
 
@@ -195,8 +192,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $entity = new DeletableEntity(5);
         $this->repository->method('find')->willReturn($entity);
 
-        $controller = $this->makeController();
-        $controller->setObjectAuthorizationChecker($this->grantingChecker(AdminEntityVoter::ADMIN_DELETE, $entity));
+        $controller = $this->makeController($this->grantingChecker(AdminEntityVoter::ADMIN_DELETE, $entity));
 
         $request = Request::create('/admin/deletable-entity/5', 'POST');
         $request->request->set('_token', 'valid-token');
@@ -222,8 +218,8 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
             formNamespace: 'App\\Form\\',
             formSuffix: 'FormType',
             formRegistry: $this->createStub(FormRegistryInterface::class),
+            objectAuthChecker: $this->denyingChecker(AdminEntityVoter::ADMIN_DELETE, $entity),
         );
-        $controller->setObjectAuthorizationChecker($this->denyingChecker(AdminEntityVoter::ADMIN_DELETE, $entity));
 
         $request = Request::create('/admin/deletable-entity/5', 'POST');
         $request->request->set('_token', 'valid-token');
@@ -242,8 +238,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $this->repository->method('find')->willReturn($entity);
         $this->archiveService->method('resolveConfig')->willReturn($this->archiveConfig());
 
-        $controller = $this->makeController();
-        $controller->setObjectAuthorizationChecker($this->grantingChecker(AdminEntityVoter::ADMIN_ARCHIVE, $entity));
+        $controller = $this->makeController($this->grantingChecker(AdminEntityVoter::ADMIN_ARCHIVE, $entity));
 
         $controller->archive(
             $this->archiveRequest('archive', 5, 'valid-token'),
@@ -263,9 +258,8 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $checker = $this->createMock(ObjectAuthorizationChecker::class);
         $checker->expects($this->never())->method('denyAccessUnlessGranted');
 
-        $controller = $this->makeController();
+        $controller = $this->makeController($checker);
         $controller->csrfValid = false;
-        $controller->setObjectAuthorizationChecker($checker);
 
         // InvalidArgumentException (CSRF), not AccessDeniedException, proves
         // CSRF is validated before — not after — object-level authorization.
@@ -294,9 +288,8 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $checker = $this->createMock(ObjectAuthorizationChecker::class);
         $checker->expects($this->never())->method('denyAccessUnlessGranted');
 
-        $controller = $this->makeController();
+        $controller = $this->makeController($checker);
         $controller->csrfValid = false;
-        $controller->setObjectAuthorizationChecker($checker);
 
         $this->expectException(\InvalidArgumentException::class);
 
@@ -315,8 +308,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $archiveEntityService = $this->createMock(ArchiveEntityService::class);
         $archiveEntityService->expects($this->never())->method('archive');
 
-        $controller = $this->makeController();
-        $controller->setObjectAuthorizationChecker($this->denyingChecker(AdminEntityVoter::ADMIN_ARCHIVE, $entity));
+        $controller = $this->makeController($this->denyingChecker(AdminEntityVoter::ADMIN_ARCHIVE, $entity));
 
         $this->expectException(AccessDeniedException::class);
 
@@ -338,8 +330,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $this->repository->method('find')->willReturn($entity);
         $this->archiveService->method('resolveConfig')->willReturn($this->archiveConfig());
 
-        $controller = $this->makeController();
-        $controller->setObjectAuthorizationChecker($this->grantingChecker(AdminEntityVoter::ADMIN_ARCHIVE, $entity));
+        $controller = $this->makeController($this->grantingChecker(AdminEntityVoter::ADMIN_ARCHIVE, $entity));
 
         $controller->unarchive(
             $this->archiveRequest('unarchive', 6, 'valid-token'),
@@ -356,8 +347,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $entity = new DeletableEntity(6);
         $this->repository->method('find')->willReturn($entity);
 
-        $controller = $this->makeController();
-        $controller->setObjectAuthorizationChecker($this->denyingChecker(AdminEntityVoter::ADMIN_ARCHIVE, $entity));
+        $controller = $this->makeController($this->denyingChecker(AdminEntityVoter::ADMIN_ARCHIVE, $entity));
 
         $this->expectException(AccessDeniedException::class);
 

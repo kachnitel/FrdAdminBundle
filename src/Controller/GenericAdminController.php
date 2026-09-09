@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\Archive\ArchiveEntityService;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,6 +37,8 @@ use Symfony\Component\Routing\Attribute\Route;
  * Permissions are checked using the AdminEntityVoter which respects:
  * 1. Entity-specific permissions from #[Admin(permissions: [...])]
  * 2. Global required_role configuration (fallback)
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
 class GenericAdminController extends AbstractAdminController
 {
@@ -46,11 +49,12 @@ class GenericAdminController extends AbstractAdminController
         private readonly string $formNamespace,
         private readonly string $formSuffix,
         private readonly FormRegistryInterface $formRegistry,
+        ObjectAuthorizationChecker $objectAuthChecker,
         private readonly string $routePrefix = 'app_admin_entity',
         private readonly string $dashboardRoute = 'app_admin_dashboard',
         private readonly ?string $requiredRole = 'ROLE_ADMIN',
     ) {
-        parent::__construct($em);
+        parent::__construct($em, $objectAuthChecker);
     }
 
     /**

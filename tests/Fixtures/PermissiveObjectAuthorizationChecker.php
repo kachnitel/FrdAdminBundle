@@ -9,8 +9,7 @@ use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 /**
  * Always-permissive stand-in for ObjectAuthorizationChecker, for test doubles
  * (e.g. GenericAdminControllerTestDouble) that are constructed directly via
- * `new` and so never receive the real service through #[Required] setter
- * injection (that only fires through the DI container).
+ * `new` rather than through the DI container.
  *
  * Deliberately does not call parent::__construct() — none of
  * ObjectAuthorizationChecker's real dependencies (EntityDiscoveryService,
@@ -18,8 +17,9 @@ use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
  * overridden and never touches them.
  *
  * Existing tests that don't care about object-level authorization can use
- * this as-is; tests that do (see GenericAdminControllerObjectAuthorizationTest)
- * install their own double afterward via setObjectAuthorizationChecker().
+ * this as-is (it's GenericAdminControllerTestDouble's default); tests that
+ * do (see GenericAdminControllerObjectAuthorizationTest) pass their own
+ * mock/stub in via the $objectAuthChecker constructor argument instead.
  */
 final class PermissiveObjectAuthorizationChecker extends ObjectAuthorizationChecker
 {

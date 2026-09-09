@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Controller\AbstractAdminController;
+use Kachnitel\AdminBundle\Tests\Fixtures\PermissiveObjectAuthorizationChecker;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -25,7 +26,10 @@ final class AbstractAdminControllerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->controller = new ConcreteAdminController($this->createStub(EntityManagerInterface::class));
+        $this->controller = new ConcreteAdminController(
+            $this->createStub(EntityManagerInterface::class),
+            new PermissiveObjectAuthorizationChecker()
+        );
     }
 
     #[Test]

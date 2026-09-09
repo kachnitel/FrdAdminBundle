@@ -44,6 +44,20 @@ use Symfony\UX\LiveComponent\Attribute\PreReRender;
  */
 trait AdminFormSaveTrait
 {
+    /**
+     * Populated via the #[Required] setter below, which only fires through
+     * real Symfony DI (container-built components, including LiveComponent's
+     * own instantiation path). A component constructed directly via `new` —
+     * as several existing test doubles in this bundle do — never receives
+     * this property unless the test calls setAdminRouteRuntime() itself
+     * first. buildCreateRedirect() below checks isset() before use and
+     * throws a descriptive \LogicException rather than letting PHP's own
+     * "must not be accessed before initialization" error surface uncaught
+     * (that error is a plain \Error, not an \Exception, so it would not be
+     * caught by buildCreateRedirect()'s own \Exception catch below —
+     * matches the same isset()-guard pattern used by
+     * AdminFormComponentTrait::$objectAuthChecker for the same reason).
+     */
     private AdminRouteRuntime $adminRouteRuntime;
 
     #[Required]
@@ -149,9 +163,30 @@ trait AdminFormSaveTrait
      * generating the URL can tell a real gap from a healthy default.
      * Protected so a consuming class can override just the redirect
      * target (e.g. to a show page).
+     *
+     * @throws \LogicException
+     *   when $adminRouteRuntime was never initialized — see that property's
+     *   docblock. This indicates a test or other caller constructed the
+     *   component directly instead of through the container, and forgot to
+     *   call setAdminRouteRuntime() first. Checked before the try/catch
+     *   below so it isn't silently swallowed by the \Exception catch —
+     *   \LogicException extends \Exception.
      */
     protected function buildCreateRedirect(object $entity): ?RedirectResponse
     {
+        if (!isset($this->adminRouteRuntime)) {
+            throw new \LogicException(sprintf(
+                '%s uses AdminFormSaveTrait but its AdminRouteRuntime was never set. '
+                . 'This is normally injected automatically via the #[Required] '
+                . 'setAdminRouteRuntime() setter when the component is built through the '
+                . 'Symfony container. If you constructed this component directly (e.g. `new %s(...)` '
+                . 'in a unit test), call setAdminRouteRuntime() yourself before calling '
+                . 'save() (or buildCreateRedirect() directly).',
+                static::class,
+                static::class,
+            ));
+        }
+
         try {
             $url = $this->adminRouteRuntime->getPath($entity, 'edit');
         } catch (\Exception) {

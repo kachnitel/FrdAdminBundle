@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -26,13 +27,15 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * anyway purely to capture the route/params for assertions.
  *
  * Declares its own constructor (mirroring GenericAdminController's exactly,
- * argument-for-argument) purely to install a PermissiveObjectAuthorizationChecker
- * default afterward — #[Required] setter injection (how the real
- * ObjectAuthorizationChecker reaches AbstractAdminController) only fires
- * through the DI container, which direct `new` construction here bypasses.
- * Tests that need to exercise object-level authorization call
- * setObjectAuthorizationChecker() again after construction with their own
- * double — see GenericAdminControllerObjectAuthorizationTest.
+ * argument-for-argument) purely to default the constructor-injected
+ * $objectAuthChecker to a PermissiveObjectAuthorizationChecker when the
+ * caller doesn't care about object-level authorization — the common case
+ * for every test suite other than GenericAdminControllerObjectAuthorizationTest.
+ * Tests that DO need to exercise object-level authorization pass their own
+ * mock/stub via the $objectAuthChecker constructor argument instead — see
+ * GenericAdminControllerObjectAuthorizationTest. Because the checker is now
+ * a plain constructor argument (no #[Required] setter involved), there is
+ * no "forgot to wire it up after construction" failure mode to guard against.
  */
 final class GenericAdminControllerTestDouble extends GenericAdminController
 {
@@ -65,6 +68,7 @@ final class GenericAdminControllerTestDouble extends GenericAdminController
         string $routePrefix = 'app_admin_entity',
         string $dashboardRoute = 'app_admin_dashboard',
         ?string $requiredRole = 'ROLE_ADMIN',
+        ?ObjectAuthorizationChecker $objectAuthChecker = null,
     ) {
         parent::__construct(
             em: $em,
@@ -73,12 +77,11 @@ final class GenericAdminControllerTestDouble extends GenericAdminController
             formNamespace: $formNamespace,
             formSuffix: $formSuffix,
             formRegistry: $formRegistry,
+            objectAuthChecker: $objectAuthChecker ?? new PermissiveObjectAuthorizationChecker(),
             routePrefix: $routePrefix,
             dashboardRoute: $dashboardRoute,
             requiredRole: $requiredRole,
         );
-
-        $this->setObjectAuthorizationChecker(new PermissiveObjectAuthorizationChecker());
     }
 
     protected function isGranted(mixed $attribute, mixed $subject = null): bool
