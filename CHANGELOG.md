@@ -7,6 +7,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.14.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.13.1...v0.14.0) (2026-09-09)
+
+### ⚠ BREAKING CHANGES
+
+
+##### Deps
+
+* Remove unresolvable 6.4 support ([624020](https://github.com/kachnitel/FrdAdminBundle/commit/624020855ba5cce14ac6b55710a595d14e85c5b6))
+
+### Features
+
+
+##### Auth
+
+* Implement object-level authorization for inline editing and enhance related documentation ([749121](https://github.com/kachnitel/FrdAdminBundle/commit/749121bd491788e2374c9bcc6baa2c9a3190fa1d))
+* Implement shared skip-on-deny logic for batch actions and enhance object-level authorization documentation ([150d21](https://github.com/kachnitel/FrdAdminBundle/commit/150d21dc6de296ac8286c7d2221bf9b28f2a2c23))
+
+##### Tests
+
+* Add missing Integration test for DI wiring of RowActionVisibilityChecker ([b2fcbf](https://github.com/kachnitel/FrdAdminBundle/commit/b2fcbff9ecd3ca257faf22530dcda763c3b02cf1))
+
+### Bug Fixes
+
+* Check CSRF before auth & skip restricted rows in batch actions ([af0bae](https://github.com/kachnitel/FrdAdminBundle/commit/af0baedeb1fab29ebd43b8df2e562e0063e98480))
+* Move new $enableObjectAuth param in Admin to the end ([cad62f](https://github.com/kachnitel/FrdAdminBundle/commit/cad62faebb728362c79f011d27a2bc7c64462924))
+* Obsolete docs and camel case in `isEnableObjectAuth()` call ([52ad13](https://github.com/kachnitel/FrdAdminBundle/commit/52ad130612331c1cb3c22cefab1747de66326155))
+
+##### Form
+
+* Guard against uninitialized ObjectAuthorizationChecker in doSubmitForm() ([88bb1f](https://github.com/kachnitel/FrdAdminBundle/commit/88bb1f1323e3b6fcedc001d1f8c22211e79fc2dd))
+
+### Code Refactoring
+
+* Do not use #[Required] in Controller init; more readable exception on uninitialized AdminFormSaveTrait ([d80111](https://github.com/kachnitel/FrdAdminBundle/commit/d80111c0705e3ebb5c4c03f5835f30e5e0ff081e))
+
+##### Tests
+
+* Replace willReturnMap with willReturnCallback for entity repository mocks ([865546](https://github.com/kachnitel/FrdAdminBundle/commit/865546be1a782c7a1bba6e89f7ecaad8e1c85991))
+
+### Documentation
+
+* Mention lack of Intl support in docs ([6c8713](https://github.com/kachnitel/FrdAdminBundle/commit/6c8713373ce4b559f42ea33cf9e914caa80b2131))
+
+##### Upgrade
+
+* Document EntityListBatchService::batchDelete() return type change and enableObjectAuth requirements ([8481c8](https://github.com/kachnitel/FrdAdminBundle/commit/8481c82bfb866be3f313db4587f00e6a2dc28771))
+
+
+---
+
 ## [0.13.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.13.0...v0.13.1) (2026-08-25)
 
 ### Bug Fixes
