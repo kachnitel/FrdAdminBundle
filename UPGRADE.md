@@ -85,6 +85,27 @@ show/edit/new/delete/archive for it will start returning 403. See
 [Object-Level Authorization](OBJECT_AUTHORIZATION.md) before enabling this
 flag on any entity.
 
+### `RowActionRuntime` constructor refactored (0.13 → 0.y)
+
+`RowActionRuntime::__construct()` now accepts only `RowActionRegistry` and
+`RowActionVisibilityChecker`. The previous `AdminRouteRuntime`, expression
+language, authorization checker, service locator, logger, and `$debug`
+arguments were moved to `RowActionVisibilityChecker`.
+
+**Action:** Remove custom `services.yaml` bindings for those old arguments
+from `RowActionRuntime`. The `$debug` binding belongs to
+`RowActionVisibilityChecker` instead.
+
+### AbstractAdminController test doubles require authorization setup (0.13 → 0.y)
+
+`AbstractAdminController` and `GenericAdminController` test doubles created
+with `new` bypass Symfony's `#[Required]` setter injection. Their protected
+object authorization checker is therefore uninitialized when show, edit,
+delete, or archive methods are exercised.
+
+**Action:** Call `setObjectAuthorizationChecker()` in the test double's
+constructor, for example with `new PermissiveObjectAuthorizationChecker()`.
+
 ### Symfony 6.4 support removed
 
 Symfony 6.4 is no longer supported. The dynamic form bundle now requires

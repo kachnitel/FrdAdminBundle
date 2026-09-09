@@ -27,12 +27,6 @@ class Admin
      * @param bool $enableInlineEdit Enable per-field inline editing in the list view.
      *   Defaults to false — opt in per entity. Individual columns can be further
      *   controlled with #[AdminColumn(editable: true|false|'expr')].
-     * @param bool $enableObjectAuth Run object-subject authorization checks
-     *   (via ObjectAuthorizationChecker) on show/edit/new/delete/archive/unarchive, in
-     *   addition to the class-level AdminEntityVoter checks. Defaults to false — opt in
-     *   per entity. Requires an application-registered Symfony voter whose supports()
-     *   accepts the entity instance as subject; without one, every request for this
-     *   entity is denied once this flag is true. See docs/OBJECT_AUTHORIZATION.md.
      * @param array<string>|null $columns Explicit list of columns to display (null = auto-detect)
      * @param array<string>|null $excludeColumns Columns to exclude from display
      * @param array<string>|null $filterableColumns Columns that can be filtered (null = all visible)
@@ -51,6 +45,12 @@ class Admin
      *   Null means any authenticated user can toggle (default).
      * @param bool $archiveDisabled Set true to disable archive filtering for this entity even
      *   when a global `kachnitel_admin.archive.expression` is configured.
+     * @param bool $enableObjectAuth Run object-subject authorization checks
+     *   (via ObjectAuthorizationChecker) on show/edit/new/delete/archive/unarchive, in
+     *   addition to the class-level AdminEntityVoter checks. Defaults to false — opt in
+     *   per entity. Requires an application-registered Symfony voter whose supports()
+     *   accepts the entity instance as subject; without one, every request for this
+     *   entity is denied once this flag is true. See docs/OBJECT_AUTHORIZATION.md.
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -63,7 +63,6 @@ class Admin
         private bool $enableBatchActions = false,
         private bool $enableColumnVisibility = false,
         private bool $enableInlineEdit = false,
-        private bool $enableObjectAuth = false,
         private ?array $columns = null,
         private ?array $excludeColumns = null,
         private ?array $filterableColumns = null,
@@ -74,6 +73,7 @@ class Admin
         private ?string $archiveExpression = null,
         private ?string $archiveRole = null,
         private bool $archiveDisabled = false,
+        private bool $enableObjectAuth = false,
     ) {}
 
     public function getLabel(): ?string
