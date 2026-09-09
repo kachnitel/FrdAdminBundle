@@ -75,14 +75,15 @@ final class AdminEntityFormObjectAuthorizationTest extends ComponentTestCase
 
         $component->set(self::FORM_NAME, ['name' => 'Forbidden One', 'kind' => ObjectAuthEntity::KIND_FORBIDDEN]);
 
-        $this->expectException(AccessDeniedException::class);
+        $component->call('save');
 
-        try {
-            $component->call('save');
-        } finally {
-            $all = $this->em->getRepository(ObjectAuthEntity::class)->findBy(['name' => 'Forbidden One']);
-            $this->assertCount(0, $all, 'A denied save must not persist the entity.');
-        }
+        $this->assertStringContainsString(
+            'You are not allowed to manage this entity.',
+            (string) $component->render(),
+        );
+
+        $all = $this->em->getRepository(ObjectAuthEntity::class)->findBy(['name' => 'Forbidden One']);
+        $this->assertCount(0, $all, 'A denied save must not persist the entity.');
     }
 
     // ── Existing entity (ADMIN_EDIT) ────────────────────────────────────────
@@ -118,20 +119,21 @@ final class AdminEntityFormObjectAuthorizationTest extends ComponentTestCase
         $component = $this->mountEditForm($entity);
         $component->set(self::FORM_NAME, ['name' => 'Retyped', 'kind' => ObjectAuthEntity::KIND_FORBIDDEN]);
 
-        $this->expectException(AccessDeniedException::class);
+        $component->call('save');
 
-        try {
-            $component->call('save');
-        } finally {
-            $reloaded = $this->em->getRepository(ObjectAuthEntity::class)->find($entity->getId());
-            $this->assertNotNull($reloaded);
-            $this->assertSame(
-                ObjectAuthEntity::KIND_ALLOWED,
-                $reloaded->getKind(),
-                'A denied save must not persist the kind change.',
-            );
-            $this->assertSame('Existing', $reloaded->getName(), 'A denied save must not persist any field change.');
-        }
+        $this->assertStringContainsString(
+            'You are not allowed to manage this entity.',
+            (string) $component->render(),
+        );
+
+        $reloaded = $this->em->getRepository(ObjectAuthEntity::class)->find($entity->getId());
+        $this->assertNotNull($reloaded);
+        $this->assertSame(
+            ObjectAuthEntity::KIND_ALLOWED,
+            $reloaded->getKind(),
+            'A denied save must not persist the kind change.',
+        );
+        $this->assertSame('Existing', $reloaded->getName(), 'A denied save must not persist any field change.');
     }
 
     // ── The critical case: object authorization survives an overridden save() ──

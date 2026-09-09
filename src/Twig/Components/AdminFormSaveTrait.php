@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Twig\Components;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Contracts\Service\Attribute\Required;
@@ -39,6 +40,7 @@ use Symfony\UX\LiveComponent\Attribute\PreReRender;
  *
  * @property-read EntityManagerInterface $em
  * @property ?int $entityId
+ * @property ?string $saveError
  *
  * @phpstan-require-implements AdminFormComponentInterface
  */
@@ -108,10 +110,17 @@ trait AdminFormSaveTrait
     #[LiveListener('save')]
     public function save(): ?RedirectResponse
     {
+        $this->saveError = null;
+
         try {
             $this->doSubmitForm();
         } catch (UnprocessableEntityHttpException) {
             $this->dispatchBrowserEvent('toast.show', ['message' => 'Please correct the errors below and try again.']);
+            return null;
+        } catch (AccessDeniedException) {
+            $message = 'You are not allowed to manage this entity.';
+            $this->saveError = $message;
+            $this->dispatchBrowserEvent('toast.show', ['message' => $message]);
             return null;
         }
 
@@ -121,9 +130,8 @@ trait AdminFormSaveTrait
         // Object-level authorization for this save already ran inside the
         // doSubmitForm() call above (AdminFormComponentTrait), against this
         // same $entity in its post-submission state — see that method's
-        // docblock. An AccessDeniedException there propagates out of this
-        // try block same as UnprocessableEntityHttpException would, since
-        // it isn't caught by the catch clause above.
+        // docblock. A denied save returns before reaching this persistence
+        // block and reports the failure through the toast event above.
         $wasNew = $this->entityId === null;
 
         $this->em->persist($entity);

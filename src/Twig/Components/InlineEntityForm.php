@@ -12,6 +12,7 @@ use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 
@@ -98,6 +99,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
  * @see ObjectAuthorizedFormInterface
  *
  * @template TData of object|null
+ * @property ?string $saveError
  */
 #[AsLiveComponent(
     name: 'K:Admin:EntityType:InlineForm',
@@ -168,10 +170,17 @@ class InlineEntityForm extends AbstractController implements ObjectAuthorizedFor
     #[LiveAction]
     public function save(): void
     {
+        $this->saveError = null;
+
         try {
             $this->doSubmitForm();
         } catch (UnprocessableEntityHttpException) {
             // Invalid form — re-render with inline errors, dialog stays open.
+            return;
+        } catch (AccessDeniedException) {
+            $message = 'You are not allowed to manage this entity.';
+            $this->saveError = $message;
+            $this->dispatchBrowserEvent('toast.show', ['message' => $message]);
             return;
         }
 

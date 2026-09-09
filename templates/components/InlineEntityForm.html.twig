@@ -22,6 +22,9 @@
 
 <div {{ attributes }}>
   {% form_theme form '@KachnitelAdmin/form/admin_compact.html.twig' %}
+  {% if saveError %}
+    <div role="alert" class="{{ css.alert_danger() }}">{{ saveError|trans }}</div>
+  {% endif %}
   {{ form(form) }}
 
   <div class="{{ css.mt_3() }} {{ css.flex_between() }}">

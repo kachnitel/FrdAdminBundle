@@ -16,7 +16,12 @@
  # @var \Symfony\Component\Form\FormView form - The current form view
  #}
 
+{% import kachnitel_admin_theme as css %}
+
 <div data-admin-form {{ attributes }}>
   {% form_theme form '@KachnitelAdmin/form/admin_compact.html.twig' %}
+  {% if saveError %}
+    <div role="alert" class="{{ css.alert_danger() }}">{{ saveError|trans }}</div>
+  {% endif %}
   {{ form(form) }}
 </div>

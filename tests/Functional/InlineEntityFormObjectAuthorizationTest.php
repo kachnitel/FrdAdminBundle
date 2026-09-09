@@ -12,7 +12,6 @@ use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 
 /**
@@ -74,14 +73,15 @@ final class InlineEntityFormObjectAuthorizationTest extends ComponentTestCase
 
         $component->set(self::FORM_NAME, ['name' => 'Inline Forbidden', 'kind' => ObjectAuthEntity::KIND_FORBIDDEN]);
 
-        $this->expectException(AccessDeniedException::class);
+        $component->call('save');
 
-        try {
-            $component->call('save');
-        } finally {
-            $entities = $this->em->getRepository(ObjectAuthEntity::class)->findBy(['name' => 'Inline Forbidden']);
-            $this->assertCount(0, $entities, 'A denied inline save must not persist the entity.');
-        }
+        $this->assertStringContainsString(
+            'You are not allowed to manage this entity.',
+            (string) $component->render(),
+        );
+
+        $entities = $this->em->getRepository(ObjectAuthEntity::class)->findBy(['name' => 'Inline Forbidden']);
+        $this->assertCount(0, $entities, 'A denied inline save must not persist the entity.');
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

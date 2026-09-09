@@ -66,6 +66,13 @@ trait AdminFormComponentTrait
     public string $formTypeClass = '';
 
     /**
+     * User-facing save error preserved across the LiveComponent round trip.
+     * This is a fallback for applications that do not handle toast events.
+     */
+    #[LiveProp]
+    public ?string $saveError = null;
+
+    /**
      * Populated via the #[Required] setter below, which only fires through
      * real Symfony DI (container-built components, including LiveComponent's
      * own instantiation path). A component constructed directly via `new` —
