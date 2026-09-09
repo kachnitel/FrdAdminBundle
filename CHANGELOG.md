@@ -7,7 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.14.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.13.1...v0.14.0) (2026-09-09)
+## [0.14.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.14.0...v0.14.1) (2026-09-09)
+
+### Features
+
+* Enhance SaveButton with status feedback and unsaved changes tracking ([c6f144](https://github.com/kachnitel/FrdAdminBundle/commit/c6f14468db00db0c869f5b02ec0c5005a913bbd3))
+* Handle denied form saves with themed alerts ([a66f34](https://github.com/kachnitel/FrdAdminBundle/commit/a66f34888627f53257483d1ac722f959815b7170))
+
+
+---
+
+## [0.14.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.13.1...v0.14.0) (2026-09-08)
 
 ### ⚠ BREAKING CHANGES
 
