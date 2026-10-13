@@ -95,6 +95,16 @@ class KachnitelAdminBundle extends AbstractBundle
                     ->defaultValue('@KachnitelAdmin/theme/bootstrap.html.twig')
                     ->info('CSS theme template. Use @KachnitelAdmin/theme/tailwind.html.twig for Tailwind, or provide your own.')
                 ->end()
+                ->arrayNode('icons')
+                    ->info('Action icon rendering.')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('class')
+                            ->defaultNull()
+                            ->info('CSS class(es) applied to icons of app-defined actions, e.g. "material-symbols-outlined". Bundle-supplied emoji icons are never wrapped. Override per action with #[AdminAction(iconClass: ...)].')
+                        ->end()
+                    ->end()
+                ->end()
                 ->arrayNode('archive')
                     ->info('Global archive/soft-delete filter configuration. Override per-entity with #[Admin(archiveExpression: ...)].')
                     ->addDefaultsIfNotSet()
@@ -129,6 +139,7 @@ class KachnitelAdminBundle extends AbstractBundle
         *     enable_generic_controller: bool,
         *     pagination: array{default_items_per_page: int, allowed_items_per_page: list<int>},
         *     theme: string,
+        *     icons: array{class: string|null},
         *     archive: array{expression: string|null, role: string|null}
         * } $config
      */
@@ -145,6 +156,7 @@ class KachnitelAdminBundle extends AbstractBundle
         $builder->setParameter('kachnitel_admin.pagination.default_items_per_page', $config['pagination']['default_items_per_page']);
         $builder->setParameter('kachnitel_admin.pagination.allowed_items_per_page', $config['pagination']['allowed_items_per_page']);
         $builder->setParameter('kachnitel_admin.theme', $config['theme']);
+        $builder->setParameter('kachnitel_admin.icons.class', $config['icons']['class']);
         $builder->setParameter('kachnitel_admin.archive.expression', $config['archive']['expression']);
         $builder->setParameter('kachnitel_admin.archive.role', $config['archive']['role']);
 

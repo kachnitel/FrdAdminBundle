@@ -34,6 +34,9 @@ final class BatchAction
      */
     public const DEFAULT_PRIORITY = 100;
 
+    /** Explicit "no icon class" marker; see RowAction::ICON_CLASS_NONE. */
+    public const ICON_CLASS_NONE = '';
+
     /**
      * @param string      $name           Unique action identifier
      * @param string      $label          Button label text
@@ -48,6 +51,8 @@ final class BatchAction
      * @param string|null $cssClass       Override button CSS classes
      * @param string|null $confirmMessage Confirm dialog text; supports `%count%` placeholder
      * @param int         $priority       Sort order (lower = earlier)
+     * @param string|null $iconClass      CSS class(es) for the icon element. null = inherit global `icons.class`;
+     *                                    ICON_CLASS_NONE = none.
      */
     public function __construct(
         public readonly string $name,
@@ -61,6 +66,7 @@ final class BatchAction
         public readonly ?string $cssClass = null,
         public readonly ?string $confirmMessage = null,
         public readonly int $priority = self::DEFAULT_PRIORITY,
+        public readonly ?string $iconClass = null,
     ) {}
 
     /**

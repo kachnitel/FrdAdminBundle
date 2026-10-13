@@ -84,6 +84,10 @@ kachnitel_admin:
         default_items_per_page: 20      # Default items per page
         allowed_items_per_page: [10, 20, 50, 100]  # Allowed values
 
+    # Action icons
+    icons:
+        class: ~                        # e.g. 'material-symbols-outlined'; see ROW_ACTIONS.md#icons
+
     # Archive / soft-delete filtering
     archive:
         expression: 'item.getDeletedAt()'    # field expression applied to every entity

@@ -30,6 +30,7 @@ class DefaultRowActionProvider implements RowActionProviderInterface
                 name: 'show',
                 label: 'Show',
                 icon: '👀', // null = admin_object_path auto-resolution in template
+                iconClass: RowAction::ICON_CLASS_NONE,
                 voterAttribute: AdminEntityVoter::ADMIN_SHOW,
                 priority: 10,
             ),
@@ -37,6 +38,7 @@ class DefaultRowActionProvider implements RowActionProviderInterface
                 name: 'edit',
                 label: 'Edit',
                 icon: '🖊',
+                iconClass: RowAction::ICON_CLASS_NONE,
                 voterAttribute: AdminEntityVoter::ADMIN_EDIT,
                 priority: 20,
             ),

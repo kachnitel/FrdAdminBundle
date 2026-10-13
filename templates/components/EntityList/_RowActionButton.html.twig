@@ -37,18 +37,21 @@
           {% if action.confirmMessage %}onsubmit="return confirm('{{ action.confirmMessage|e('js') }}');"{% endif %}>
         <input type="hidden" name="_method" value="{{ action.method }}">
         <input type="hidden" name="_token" value="{{ csrf_token(action.name ~ '_' ~ (entityId ?? '')) }}">
+        {% set iconHtml = admin_icon(action.icon, action.iconClass) %}
         <button type="submit" class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
-                title="{{ action.label }}">
-            {% if action.icon %}{{ action.icon }}{% else %}{{ action.label }}{% endif %}
+                title="{{ action.label }}"{% if iconHtml %} aria-label="{{ action.label }}"{% endif %}>
+            {% if iconHtml %}{{ iconHtml }}{% else %}{{ action.label }}{% endif %}
         </button>
     </form>
 {% else %}
     {# Link-based action #}
+    {% set iconHtml = admin_icon(action.icon, action.iconClass) %}
     <a href="{% if action.route %}{{ path(action.route, action.routeParams|merge(entityId is not null ? {id: entityId} : {})) }}{% elseif action.url %}{{ action.url }}{% else %}{{ admin_object_path(entity, action.name) }}{% endif %}"
        class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
        title="{{ action.label }}"
+       {% if iconHtml %}aria-label="{{ action.label }}"{% endif %}
        {% if action.openInNewTab %}target="_blank" rel="noopener"{% endif %}
        {% if action.confirmMessage %}onclick="return confirm('{{ action.confirmMessage|e('js') }}');"{% endif %}>
-        {% if action.icon %}{{ action.icon }}{% else %}{{ action.label }}{% endif %}
+        {% if iconHtml %}{{ iconHtml }}{% else %}{{ action.label }}{% endif %}
     </a>
 {% endif %}

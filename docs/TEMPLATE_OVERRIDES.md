@@ -311,6 +311,12 @@ Customize rendering for ONE specific property:
 </a>
 ```
 
+### Action icons
+
+Row and batch action icons go through `admin_icon(icon, iconClass)`. Use it in your own action
+templates to stay consistent with the configured icon class and UX Icons support — see
+[ROW_ACTIONS.md](ROW_ACTIONS.md#icons).
+
 ### 3. Override All Properties of an Entity
 
 Apply custom rendering to ALL properties of an entity:

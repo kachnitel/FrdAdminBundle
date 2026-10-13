@@ -72,6 +72,7 @@ class AttributeRowActionProvider implements RowActionProviderInterface
                     template: $adminAction->template,
                     liveComponent: $adminAction->liveComponent,
                     contexts: $adminAction->contexts,
+                    iconClass: $adminAction->iconClass,
                 );
 
                 $actions[] = $rowAction;

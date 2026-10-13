@@ -53,7 +53,8 @@ class AdminAction
     /**
      * @param string                  $name             Unique action identifier
      * @param string                  $label            Button label text
-     * @param string|null             $icon             Emoji or icon identifier
+     * @param string|null             $icon             Emoji, ligature text (e.g. 'edit' for Material Symbols) or
+     *                                                  `ux:<name>` for a Symfony UX Icons icon (requires symfony/ux-icons)
      * @param string|null             $route            Named Symfony route
      * @param array<string, mixed>    $routeParams      Additional route parameters (row actions only)
      * @param string|null             $url              Static URL (alternative to route)
@@ -76,6 +77,9 @@ class AdminAction
      * @param bool                    $override         If true, fully replaces an existing row action with same name (vs merge)
      * @param string                  $actionType       One of ACTION_TYPE_ROW, ACTION_TYPE_BATCH, ACTION_TYPE_BOTH.
      *                                                  Controls whether action appears as a row action, batch action, or both.
+     * @param string|null             $iconClass        CSS class(es) for the icon element, e.g. 'material-symbols-outlined' or 'bi bi-pencil'.
+     *                                                  null = inherit global `kachnitel_admin.icons.class`;
+     *                                                  '' (RowAction::ICON_CLASS_NONE) = no class.
      */
     public function __construct(
         public readonly string $name,
@@ -97,5 +101,6 @@ class AdminAction
         public readonly array $contexts = [],
         public readonly bool $override = false,
         public readonly string $actionType = self::ACTION_TYPE_ROW,
+        public readonly ?string $iconClass = null,
     ) {}
 }

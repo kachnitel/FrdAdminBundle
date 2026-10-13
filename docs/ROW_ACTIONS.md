@@ -68,13 +68,51 @@ class Product
 }
 ```
 
+## Icons
+
+Icons are rendered by the `admin_icon()` Twig function. Buttons with an icon show only the icon
+(with `title` and `aria-label` set to the label); buttons without one show the label.
+
+```php
+// Ligature font (Material Symbols / Icons): class + ligature text
+#[AdminAction(name: 'approve', label: 'Approve', icon: 'check_circle',
+              iconClass: 'material-symbols-outlined', route: 'app_approve')]
+
+// Class-only font (Bootstrap Icons, Font Awesome): class only, no icon text
+#[AdminAction(name: 'edit', label: 'Edit', iconClass: 'bi bi-pencil', route: 'app_edit')]
+
+// Symfony UX Icons (explicit opt-in, requires symfony/ux-icons)
+#[AdminAction(name: 'edit', label: 'Edit', icon: 'ux:material-symbols:edit', route: 'app_edit')]
+```
+
+Set the class once for the whole app instead of per action:
+
+```yaml
+kachnitel_admin:
+    icons:
+        class: 'material-symbols-outlined'
+```
+
+`iconClass` is tri-state:
+
+| Value | Meaning |
+|-------|---------|
+| `null` (default) | Inherit `kachnitel_admin.icons.class` |
+| `''` | No class — icon is output as plain text (used by the bundle's own emoji icons, so they are never wrapped in your icon font) |
+| any string | Used as-is for this action |
+
+When you override a built-in action (e.g. `show`) and set a new `icon` without `iconClass`, the class resets to
+`null` and inherits the global class, so your icon uses your icon font. An inherited global class alone
+never renders an empty icon: class-only icons need an explicit per-action `iconClass`.
+
 ## Action Parameters
 
 | Parameter        | Type                                     | Default      | Description |
 |------------------|--------------------------------------------|--------------|-------------|
 | `name`           | `string`                                 | **required** | Unique action identifier (e.g., `'approve'`, `'duplicate'`) |
 | `label`          | `string`                                 | **required** | Button label text |
-| `icon`           | `?string`                                | `null`       | Emoji or icon identifier displayed in the button |
+| `icon`           | `?string`                                | `null`       | Emoji, ligature text (`'edit'`), or `ux:<name>` ([UX Icons](#icons)) displayed in the button |
+| `iconClass`      | `?string`                                | `null`       | CSS class(es) for the icon element; `null` inherits `kachnitel_admin.icons.class`, `''` = none (see [Icons](#icons)) |
 | `route`          | `?string`                                | `null`       | Named Symfony route; entity `id` is appended automatically |
 | `routeParams`    | `array`                                  | `[]`         | Additional parameters merged into the route (alongside `id`) |
 | `url`            | `?string`                                | `null`       | Static URL — use `route` for dynamic entity-based links |

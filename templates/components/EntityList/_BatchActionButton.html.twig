@@ -46,7 +46,8 @@
             data-batch-action="{{ action.name }}"
             {% if selectedIds|length == 0 %}disabled{% endif %}
         >
-            {% if action.icon %}{{ action.icon }} {% endif %}
+            {% set iconHtml = admin_icon(action.icon, action.iconClass) %}
+            {% if iconHtml %}{{ iconHtml }} {% endif %}
             {{ action.label }} ({{ selectedIds|length }})
         </button>
     </form>

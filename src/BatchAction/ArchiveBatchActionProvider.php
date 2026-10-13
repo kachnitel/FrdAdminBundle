@@ -46,6 +46,7 @@ class ArchiveBatchActionProvider implements BatchActionProviderInterface
                 name: 'archive',
                 label: 'Archive',
                 icon: '🗃',
+                iconClass: BatchAction::ICON_CLASS_NONE,
                 liveComponent: 'K:Admin:Action:Archive',
                 voterAttribute: AdminEntityVoter::ADMIN_ARCHIVE,
                 confirmMessage: 'Archive %count% item(s)? They will be hidden from the default list view.',

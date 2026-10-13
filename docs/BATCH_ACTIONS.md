@@ -33,7 +33,7 @@ use Kachnitel\AdminBundle\Attribute\AdminAction;
 #[AdminAction(
     name: 'bulk-archive',
     label: 'Archive Selected',
-    icon: '📦',
+    icon: '📦',  // see ROW_ACTIONS.md#icons for iconClass / ux: icons
     route: 'app_order_bulk_archive',
     confirmMessage: 'Archive %count% orders?',
     actionType: AdminAction::ACTION_TYPE_BATCH,

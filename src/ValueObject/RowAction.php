@@ -52,6 +52,14 @@ final class RowAction
     public const DEFAULT_PRIORITY = 100;
 
     /**
+     * Explicit "no icon class" marker for $iconClass.
+     *
+     * $iconClass is tri-state: null inherits the global `kachnitel_admin.icons.class`,
+     * ICON_CLASS_NONE opts out (used by bundle-supplied emoji icons), any other string is used as-is.
+     */
+    public const ICON_CLASS_NONE = '';
+
+    /**
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      *
      * @param string                                        $name           Unique action identifier
@@ -77,6 +85,8 @@ final class RowAction
      *                                                                      E.g. [RowAction::CONTEXT_INDEX] for list-only actions
      *                                                                      such as liveComponent buttons that fire events on the
      *                                                                      parent EntityList LiveComponent via Stimulus.
+     * @param string|null                                   $iconClass      CSS class(es) for the icon element (e.g. 'material-symbols-outlined').
+     *                                                                      null = inherit global `icons.class`; ICON_CLASS_NONE = none.
      */
     public function __construct(
         public readonly string $name,
@@ -96,6 +106,7 @@ final class RowAction
         public readonly ?string $template = null,
         public readonly ?string $liveComponent = null,
         public readonly array $contexts = [],
+        public readonly ?string $iconClass = null,
     ) {}
 
     /**
@@ -128,7 +139,8 @@ final class RowAction
      *     method?: string|null,
      *     template?: string|null,
      *     liveComponent?: string|null,
-     *     contexts?: list<string>
+     *     contexts?: list<string>,
+     *     iconClass?: string|null
      * } $overrides
      * @return self New instance with overrides applied
      */
@@ -152,6 +164,7 @@ final class RowAction
             template:      $this->pick($overrides, 'template',      $this->template),
             liveComponent: $this->pick($overrides, 'liveComponent', $this->liveComponent),
             contexts:      $overrides['contexts']      ?? $this->contexts,
+            iconClass:     $this->pick($overrides, 'iconClass',     $this->iconClass),
         );
     }
 
@@ -162,6 +175,11 @@ final class RowAction
      *
      * Priority merge rule: if the incoming action uses DEFAULT_PRIORITY (meaning the
      * developer did not explicitly set a priority), the original priority is kept.
+     *
+     * iconClass merge rule: an incoming action that sets a new `icon` without an `iconClass`
+     * resets the class to null (inherit global), so an app's icon is never rendered with the
+     * bundle's explicit opt-out inherited from the action it overrides. Otherwise the incoming
+     * iconClass wins when set, falling back to the original.
      *
      * contexts merge rule: prefer $other->contexts when non-empty, otherwise keep $this->contexts.
      * Context filtering is already applied by RowActionRegistry before merge, so by the time
@@ -188,7 +206,17 @@ final class RowAction
             template:      $other->template       ?? $this->template,
             liveComponent: $other->liveComponent  ?? $this->liveComponent,
             contexts:      !empty($other->contexts) ? $other->contexts : $this->contexts,
+            iconClass:     $this->mergeIconClass($other),
         );
+    }
+
+    private function mergeIconClass(self $other): ?string
+    {
+        if ($other->icon !== null && $other->iconClass === null) {
+            return null;
+        }
+
+        return $other->iconClass ?? $this->iconClass;
     }
 
     public function hasRoute(): bool

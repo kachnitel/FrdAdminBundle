@@ -84,6 +84,13 @@ services:
         resource: '../src/Twig/Runtime'
         tags: ['twig.runtime']
 
+    # AdminIconRuntime — action icon rendering (global icon class, optional Symfony UX Icons)
+    Kachnitel\AdminBundle\Twig\Runtime\AdminIconRuntime:
+        arguments:
+            $defaultIconClass: '%kachnitel_admin.icons.class%'
+            $uxIconRenderer: '@?Symfony\UX\Icons\IconRendererInterface'
+        tags: ['twig.runtime']
+
     # AdminEntityUrlRuntime with entity discovery, entity manager, and filterability service
     Kachnitel\AdminBundle\Twig\Runtime\AdminEntityUrlRuntime:
         arguments:

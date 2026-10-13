@@ -59,6 +59,7 @@ class AttributeBatchActionProvider implements BatchActionProviderInterface
                     cssClass: $adminAction->cssClass,
                     confirmMessage: $adminAction->confirmMessage,
                     priority: $adminAction->priority,
+                    iconClass: $adminAction->iconClass,
                 );
             }
         } catch (\ReflectionException) {
