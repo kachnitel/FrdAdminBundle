@@ -47,7 +47,7 @@
             {% if selectedIds|length == 0 %}disabled{% endif %}
         >
             {% set iconHtml = admin_icon(action.icon, action.iconClass) %}
-            {% if iconHtml %}{{ iconHtml }} {% endif %}
+            {% if iconHtml %}{{ iconHtml|raw }} {% endif %}
             {{ action.label }} ({{ selectedIds|length }})
         </button>
     </form>

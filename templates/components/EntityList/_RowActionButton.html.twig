@@ -40,7 +40,7 @@
         {% set iconHtml = admin_icon(action.icon, action.iconClass) %}
         <button type="submit" class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
                 title="{{ action.label }}"{% if iconHtml %} aria-label="{{ action.label }}"{% endif %}>
-            {% if iconHtml %}{{ iconHtml }}{% else %}{{ action.label }}{% endif %}
+            {% if iconHtml %}{{ iconHtml|raw }}{% else %}{{ action.label }}{% endif %}
         </button>
     </form>
 {% else %}
@@ -52,6 +52,6 @@
        {% if iconHtml %}aria-label="{{ action.label }}"{% endif %}
        {% if action.openInNewTab %}target="_blank" rel="noopener"{% endif %}
        {% if action.confirmMessage %}onclick="return confirm('{{ action.confirmMessage|e('js') }}');"{% endif %}>
-        {% if iconHtml %}{{ iconHtml }}{% else %}{{ action.label }}{% endif %}
+        {% if iconHtml %}{{ iconHtml|raw }}{% else %}{{ action.label }}{% endif %}
     </a>
 {% endif %}
