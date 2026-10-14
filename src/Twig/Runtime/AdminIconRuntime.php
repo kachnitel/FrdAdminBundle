@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
-use Twig\Extension\RuntimeExtensionInterface;
-
 /**
  * Renders action icons for row and batch action buttons.
  *
@@ -61,9 +59,12 @@ class AdminIconRuntime
 
     private function renderUxIcon(string $name, string $class): string
     {
+        /**
+         * @var null|callable(string, array<string, string>): string|null $callable
+         */
         $callable = $this->uxIconRenderer === null ? null : [$this->uxIconRenderer, 'renderIcon'];
 
-        if ($callable === null || !\is_callable($callable)) {
+        if ($callable === null || !\is_callable($callable)) { // @phpstan-ignore function.alreadyNarrowedType
             throw new \LogicException(sprintf(
                 'Icon "%s%s" requires symfony/ux-icons. Run "composer require symfony/ux-icons".',
                 self::UX_PREFIX,
