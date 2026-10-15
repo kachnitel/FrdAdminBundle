@@ -1,0 +1,15 @@
+{#
+ # Renders an action or entity icon.
+ #
+ # Single rendering point for every icon in the admin: row actions, batch actions,
+ # built-in action buttons and the dashboard. The icon is a plain string (emoji,
+ # entity, or any text) and is output as-is, HTML-escaped, with no wrapper.
+ #
+ # To use an icon font or SVG sprite, override this template in your application:
+ #   templates/bundles/KachnitelAdminBundle/components/_Icon.html.twig
+ # e.g. {{- '<i class="bi bi-' ~ icon ~ '"></i>' -}}  (mark safe only if you trust the source)
+ #
+ # Variables:
+ # @var string icon - The value of the `icon` argument (never empty when included)
+ #}
+{{- icon -}}
