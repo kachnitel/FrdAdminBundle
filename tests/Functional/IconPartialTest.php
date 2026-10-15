@@ -9,6 +9,9 @@ use Kachnitel\AdminBundle\ValueObject\BatchAction;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Twig\Environment;
 
 /**
@@ -69,7 +72,12 @@ final class IconPartialTest extends KernelTestCase
 
     public function testBatchActionButtonRendersIconBeforeLabel(): void
     {
-        $html = $this->twig()->render('@KachnitelAdmin/components/EntityList/_BatchActionButton.html.twig', [
+        $twig = $this->twig();
+        $request = new Request();
+        $request->setSession(new Session(new MockArraySessionStorage()));
+        self::getContainer()->get('request_stack')->push($request);
+
+        $html = $twig->render('@KachnitelAdmin/components/EntityList/_BatchActionButton.html.twig', [
             'action' => new BatchAction(name: 'publish', label: 'Publish', icon: '📦', url: '/publish'),
             'selectedIds' => [1, 2],
             'entityClass' => TestEntity::class,
