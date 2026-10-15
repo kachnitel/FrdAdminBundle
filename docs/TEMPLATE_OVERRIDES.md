@@ -29,6 +29,7 @@ templates/bundles/KachnitelAdminBundle/
 - [Template Hierarchy](#template-hierarchy)
 - [Override Locations](#override-locations)
 - [Common Override Scenarios](#common-override-scenarios)
+- [Icons](#icons)
 - [Important Limitations](#important-limitations)
 - [Testing Your Overrides](#testing-your-overrides)
 
@@ -491,6 +492,35 @@ Custom boolean rendering with icons:
 ```
 
 </details>
+
+## Icons
+
+Every `icon` in the admin — `#[AdminAction(icon:)]` on row and batch actions, the built-in
+inline edit / archive / delete buttons, and `#[Admin(icon:)]` on dashboard cards — is rendered by
+one partial:
+
+```
+@KachnitelAdmin/components/_Icon.html.twig
+```
+
+The value is a plain string. By default it is output as-is (HTML-escaped, no wrapper), so emoji
+work out of the box and no configuration is needed. To use an icon font or SVG sprite, override the
+partial once and every icon follows:
+
+```twig
+{# templates/bundles/KachnitelAdminBundle/components/_Icon.html.twig #}
+<i class="bi bi-{{ icon }}" aria-hidden="true"></i>
+```
+
+```php
+#[AdminAction(name: 'approve', label: 'Approve', icon: 'check-circle', route: 'app_approve')]
+#[Admin(icon: 'box-seam')]
+```
+
+**Available variables:** `icon` — the string passed to the attribute (never empty).
+
+Built-in buttons pass fixed emoji (`✏️` inline edit, `🗃` archive, `🗑` delete), which will reach
+your override as the `icon` value; map them in your template if you use named icons.
 
 ## Important Limitations
 

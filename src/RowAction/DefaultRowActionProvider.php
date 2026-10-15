@@ -29,7 +29,7 @@ class DefaultRowActionProvider implements RowActionProviderInterface
             new RowAction(
                 name: 'show',
                 label: 'Show',
-                icon: '👀', // null = admin_object_path auto-resolution in template
+                icon: '👀',
                 voterAttribute: AdminEntityVoter::ADMIN_SHOW,
                 priority: 10,
             ),

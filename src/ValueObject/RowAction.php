@@ -56,7 +56,7 @@ final class RowAction
      *
      * @param string                                        $name           Unique action identifier
      * @param string                                        $label          Display label
-     * @param string|null                                   $icon           Emoji or icon identifier
+     * @param string|null                                   $icon           Plain string (emoji by default), rendered via _Icon.html.twig
      * @param string|null                                   $route          Named route (null = admin_object_path auto-resolution)
      * @param array<string, mixed>                          $routeParams    Additional route parameters
      * @param string|null                                   $url            Static URL (alternative to route)
