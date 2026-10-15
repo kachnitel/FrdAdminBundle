@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\RowAction;
 
 use Kachnitel\AdminBundle\Attribute\AdminAction;
 use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
+use Kachnitel\AdminBundle\Service\AdminActionMapper;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 
 /**
@@ -24,6 +25,13 @@ class AttributeRowActionProvider implements RowActionProviderInterface
 
     /** @var array<string, AdminAction> */
     private array $adminActionsCache = [];
+
+    private readonly AdminActionMapper $mapper;
+
+    public function __construct(?AdminActionMapper $mapper = null)
+    {
+        $this->mapper = $mapper ?? new AdminActionMapper();
+    }
 
     public function supports(string $entityClass): bool
     {
@@ -54,25 +62,7 @@ class AttributeRowActionProvider implements RowActionProviderInterface
                     continue;
                 }
 
-                $rowAction = new RowAction(
-                    name: $adminAction->name,
-                    label: $adminAction->label,
-                    icon: $adminAction->icon,
-                    route: $adminAction->route,
-                    routeParams: $adminAction->routeParams,
-                    url: $adminAction->url,
-                    permission: $adminAction->permission,
-                    voterAttribute: $adminAction->voterAttribute,
-                    condition: $adminAction->condition,
-                    cssClass: $adminAction->cssClass,
-                    confirmMessage: $adminAction->confirmMessage,
-                    openInNewTab: $adminAction->openInNewTab,
-                    priority: $adminAction->priority,
-                    method: $adminAction->method,
-                    template: $adminAction->template,
-                    liveComponent: $adminAction->liveComponent,
-                    contexts: $adminAction->contexts,
-                );
+                $rowAction = $this->mapper->toRowAction($adminAction);
 
                 $actions[] = $rowAction;
                 $this->adminActionsCache[$entityClass . '::' . $adminAction->name] = $adminAction;
