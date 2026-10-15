@@ -19,7 +19,7 @@ use Kachnitel\AdminBundle\Attribute\AdminActionsConfig;
  *  - Static URL (no routing dependency in tests)
  */
 #[ORM\Entity]
-#[Admin(label: 'Approvable Items')]
+#[Admin(label: 'Approvable Items', icon: '📋')]
 #[AdminActionsConfig(exclude: ['edit'])]
 #[AdminAction(
     name: 'approve',
