@@ -39,7 +39,7 @@
         <input type="hidden" name="_token" value="{{ csrf_token(action.name ~ '_' ~ (entityId ?? '')) }}">
         <button type="submit" class="{{ action.cssClass|default(css.btn_outline_primary() ~ ' ' ~ css.btn_sm()) }}"
                 title="{{ action.label }}">
-            {% if action.icon %}{{ action.icon }}{% else %}{{ action.label }}{% endif %}
+            {% if action.icon %}{{ include('@KachnitelAdmin/components/_Icon.html.twig', {icon: action.icon}) }}{% else %}{{ action.label }}{% endif %}
         </button>
     </form>
 {% else %}
@@ -49,6 +49,6 @@
        title="{{ action.label }}"
        {% if action.openInNewTab %}target="_blank" rel="noopener"{% endif %}
        {% if action.confirmMessage %}onclick="return confirm('{{ action.confirmMessage|e('js') }}');"{% endif %}>
-        {% if action.icon %}{{ action.icon }}{% else %}{{ action.label }}{% endif %}
+        {% if action.icon %}{{ include('@KachnitelAdmin/components/_Icon.html.twig', {icon: action.icon}) }}{% else %}{{ action.label }}{% endif %}
     </a>
 {% endif %}

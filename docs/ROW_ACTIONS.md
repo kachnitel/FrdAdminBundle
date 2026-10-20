@@ -74,7 +74,7 @@ class Product
 |------------------|--------------------------------------------|--------------|-------------|
 | `name`           | `string`                                 | **required** | Unique action identifier (e.g., `'approve'`, `'duplicate'`) |
 | `label`          | `string`                                 | **required** | Button label text |
-| `icon`           | `?string`                                | `null`       | Emoji or icon identifier displayed in the button |
+| `icon`           | `?string`                                | `null`       | Icon string (emoji by default) shown instead of the label; rendered via the overridable [icon partial](TEMPLATE_OVERRIDES.md#icons) |
 | `route`          | `?string`                                | `null`       | Named Symfony route; entity `id` is appended automatically |
 | `routeParams`    | `array`                                  | `[]`         | Additional parameters merged into the route (alongside `id`) |
 | `url`            | `?string`                                | `null`       | Static URL — use `route` for dynamic entity-based links |

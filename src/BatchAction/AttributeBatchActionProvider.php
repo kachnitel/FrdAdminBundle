@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\BatchAction;
 
 use Kachnitel\AdminBundle\Attribute\AdminAction;
+use Kachnitel\AdminBundle\Service\AdminActionMapper;
 use Kachnitel\AdminBundle\ValueObject\BatchAction;
 
 /**
@@ -17,6 +18,13 @@ class AttributeBatchActionProvider implements BatchActionProviderInterface
 {
     /** @var array<string, array<BatchAction>> */
     private array $cache = [];
+
+    private readonly AdminActionMapper $mapper;
+
+    public function __construct(?AdminActionMapper $mapper = null)
+    {
+        $this->mapper = $mapper ?? new AdminActionMapper();
+    }
 
     public function supports(string $entityClass): bool
     {
@@ -47,19 +55,7 @@ class AttributeBatchActionProvider implements BatchActionProviderInterface
                     continue;
                 }
 
-                $actions[] = new BatchAction(
-                    name: $adminAction->name,
-                    label: $adminAction->label,
-                    icon: $adminAction->icon,
-                    route: $adminAction->route,
-                    url: $adminAction->url,
-                    liveComponent: $adminAction->liveComponent,
-                    permission: $adminAction->permission,
-                    voterAttribute: $adminAction->voterAttribute,
-                    cssClass: $adminAction->cssClass,
-                    confirmMessage: $adminAction->confirmMessage,
-                    priority: $adminAction->priority,
-                );
+                $actions[] = $this->mapper->toBatchAction($adminAction);
             }
         } catch (\ReflectionException) {
             // Class not found — return empty

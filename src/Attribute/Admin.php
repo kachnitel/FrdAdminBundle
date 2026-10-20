@@ -19,7 +19,7 @@ class Admin
 {
     /**
      * @param string|null $label Display label for this entity (defaults to class name)
-     * @param string|null $icon Material icon name for this entity
+     * @param string|null $icon Icon shown on the dashboard card — a plain string (emoji by default) rendered via components/_Icon.html.twig
      * @param string|null $formType Custom form type class for create/edit forms
      * @param bool $enableFilters Enable column filtering in list view
      * @param bool $enableBatchActions Enable batch actions (e.g., bulk delete)

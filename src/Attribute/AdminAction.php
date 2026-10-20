@@ -53,7 +53,7 @@ class AdminAction
     /**
      * @param string                  $name             Unique action identifier
      * @param string                  $label            Button label text
-     * @param string|null             $icon             Emoji or icon identifier
+     * @param string|null             $icon             Plain string (emoji by default), rendered via _Icon.html.twig
      * @param string|null             $route            Named Symfony route
      * @param array<string, mixed>    $routeParams      Additional route parameters (row actions only)
      * @param string|null             $url              Static URL (alternative to route)

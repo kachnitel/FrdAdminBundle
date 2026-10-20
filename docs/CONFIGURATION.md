@@ -33,7 +33,7 @@ The entity will now appear in the admin dashboard with auto-detected columns.
 **With common options:**
 
 ```php
-#[Admin(label: 'Products', icon: 'inventory')]
+#[Admin(label: 'Products', icon: '📦')]
 class Product
 {
     // ...
@@ -151,10 +151,13 @@ Display name for the entity in the admin interface.
 #### icon
 **Type:** `?string` **Default:** `null`
 
-[Material Icons](https://fonts.google.com/icons) icon name.
+Icon shown before the entity label on the dashboard card. It is a plain string — an emoji by
+default — rendered through the shared `components/_Icon.html.twig` partial, the same partial used
+for row and batch action icons. To use an icon font or SVG instead, override that partial (see
+[Icons](TEMPLATE_OVERRIDES.md#icons)).
 
 ```php
-#[Admin(icon: 'inventory')]
+#[Admin(icon: '📦')]
 ```
 
 #### formType
@@ -565,7 +568,7 @@ class Category
 
 ```php
 // With label and icon
-#[Admin(label: 'Products', icon: 'inventory')]
+#[Admin(label: 'Products', icon: '📦')]
 class Product { }
 
 // With batch actions
@@ -616,7 +619,7 @@ use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 #[ORM\Entity]
 #[Admin(
     label: 'Products',
-    icon: 'inventory',
+    icon: '📦',
     columns: ['id', 'sku', 'name', 'price', 'stock', 'category', 'active', 'createdAt'],
     excludeColumns: ['internalNotes', 'costPrice'],
     filterableColumns: ['name', 'sku', 'category', 'active'],
@@ -691,7 +694,7 @@ class Product
 #[ORM\Entity]
 #[Admin(
     label: 'Users',
-    icon: 'people',
+    icon: '👥',
     columns: ['id', 'email', 'name', 'roles', 'active', 'lastLogin'],
     permissions: [
         'index' => 'ROLE_USER_ADMIN',
@@ -771,7 +774,7 @@ class User implements UserInterface
 
 **#[Admin]** — Common parameters:
 - `label: ?string` — Display name
-- `icon: ?string` — Material icon name
+- `icon: ?string` — Icon string (emoji by default; see [Icons](TEMPLATE_OVERRIDES.md#icons))
 - `columns: ?array<string>` — Visible columns (auto-detect if null)
 - `excludeColumns: ?array<string>` — Exclude from auto-detect
 - `permissions: ?array<string, string>` — Role map (index, show, new, edit, delete)

@@ -18,7 +18,7 @@
         <div class="{{ css.card_hover() }}">
           <div class="{{ css.card_body() }}">
             <h3 class="{{ css.card_title() }}">
-              {{ entity.label }}
+              {% if entity.icon %}{{ include('@KachnitelAdmin/components/_Icon.html.twig', {icon: entity.icon}) }} {% endif %}{{ entity.label }}
             </h3>
 
             {#
@@ -45,7 +45,7 @@
         <div class="{{ css.card_info() }}">
           <div class="{{ css.card_body() }}">
             <h3 class="{{ css.card_title() }}">
-              {{ ds.label }}
+              {% if ds.icon %}{{ include('@KachnitelAdmin/components/_Icon.html.twig', {icon: ds.icon}) }} {% endif %}{{ ds.label }}
             </h3>
             <a href="{{ path('app_admin_datasource_index', { dataSourceId: ds.identifier }) }}"
                class="{{ css.btn_outline_info() }}">
