@@ -10,9 +10,11 @@ use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeletableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\GenericAdminControllerTestDouble;
+use Kachnitel\AdminBundle\Utils\CollectionScopeParameter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormRegistryInterface;
@@ -25,6 +27,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * GenericAdminControllerFormComponentTest for getFormType()/getFormComponentName().
  */
 #[CoversClass(GenericAdminController::class)]
+#[UsesClass(CollectionScopeParameter::class)]
 #[Group('controller')]
 final class GenericAdminControllerRoutesTest extends TestCase
 {

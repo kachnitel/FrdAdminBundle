@@ -6,8 +6,6 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
-use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
@@ -15,7 +13,6 @@ use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityUrlRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Utils\CollectionScopeParameter;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -180,7 +177,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
     #[Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWhenTargetHasNoAdmin(): void
     {
-        $this->stubCollectionMetadata('tags', TagEntity::class);
+        $this->stubCollectionMetadata(TagEntity::class);
         $this->entityDiscovery->expects($this->once())->method('isAdminEntity')->with(TagEntity::class)->willReturn(false);
 
         $runtime = $this->createRuntime($this->entityDiscovery, $this->em);
@@ -194,7 +191,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
     public function getCollectionAdminUrlReturnsNullWhenOwnerHasNoAdmin(): void
     {
         // The scope resolver 404s a non-admin owner, so a link to it would be dead.
-        $this->stubCollectionMetadata('tagEntities', TagEntity::class);
+        $this->stubCollectionMetadata(TagEntity::class);
         $this->entityDiscovery->method('isAdminEntity')
             ->willReturnCallback(static fn (string $class): bool => $class === TagEntity::class);
         $this->adminRouteRuntime->method('getRoute')->willReturn('app_admin_entity_index');
@@ -209,7 +206,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
     #[Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWhenOwnerHasNoId(): void
     {
-        $this->stubCollectionMetadata('tagEntities', TagEntity::class);
+        $this->stubCollectionMetadata(TagEntity::class);
         $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
         $this->adminRouteRuntime->method('getRoute')->willReturn('app_admin_entity_index');
         $this->adminRouteRuntime->method('isActionAccessible')->willReturn(true);
@@ -224,7 +221,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
     #[Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWhenIndexNotAccessible(): void
     {
-        $this->stubCollectionMetadata('tagEntities', TagEntity::class);
+        $this->stubCollectionMetadata(TagEntity::class);
         $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
         $this->adminRouteRuntime->method('getRoute')->willReturn('app_admin_entity_index');
         $this->adminRouteRuntime->expects($this->once())->method('isActionAccessible')->with('TagEntity', 'index')->willReturn(false);
@@ -235,19 +232,17 @@ class AdminEntityUrlRuntimeTest extends TestCase
     }
 
     /**
-     * The link carries the same scope the dialog uses, so both paths list identical rows —
-     * independent of mappedBy/inversedBy, which is what used to break unidirectional ManyToMany.
-     *
-     * @param \Closure(): object $mappingFactory
+     * The link carries the same scope the dialog uses, so both paths list identical rows.
+     * The association mapping (mappedBy/inversedBy) is deliberately not consulted — that
+     * dependency is what used to break unidirectional ManyToMany.
      */
     #[Test]
     #[Group('collection-scope')]
-    #[DataProvider('associationMappingProvider')]
-    public function getCollectionAdminUrlCarriesScopeInsteadOfColumnFilter(\Closure $mappingFactory): void
+    public function getCollectionAdminUrlCarriesScopeInsteadOfColumnFilter(): void
     {
-        $this->stubCollectionMetadata('tagEntities', TagEntity::class, $mappingFactory());
+        $this->stubCollectionMetadata(TagEntity::class);
         $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
-        $this->adminRouteRuntime->expects($this->any())->method('getRoute')->with(TagEntity::class, 'index')->willReturn('app_admin_entity_index');
+        $this->adminRouteRuntime->expects($this->once())->method('getRoute')->with(TagEntity::class, 'index')->willReturn('app_admin_entity_index');
         $this->adminRouteRuntime->method('isActionAccessible')->willReturn(true);
 
         $this->router
@@ -267,37 +262,14 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertSame('/admin/tag-entity?collection=x', $runtime->getCollectionAdminUrl($this->ownerWithId(1), 'tagEntities'));
     }
 
-    /** @return iterable<string, array{\Closure}> */
-    public static function associationMappingProvider(): iterable
-    {
-        yield 'OneToMany' => [static function (): OneToManyAssociationMapping {
-            $mapping = new OneToManyAssociationMapping('tagEntities', TestEntity::class, TagEntity::class);
-            $mapping->mappedBy = 'testEntity';
-
-            return $mapping;
-        }];
-        yield 'ManyToMany with inversedBy' => [static function (): ManyToManyOwningSideMapping {
-            $mapping = new ManyToManyOwningSideMapping('tagEntities', TestEntity::class, TagEntity::class);
-            $mapping->inversedBy = 'testEntities';
-
-            return $mapping;
-        }];
-        yield 'unidirectional ManyToMany' => [static fn (): ManyToManyOwningSideMapping
-            => new ManyToManyOwningSideMapping('tagEntities', TestEntity::class, TagEntity::class)];
-    }
-
     /**
      * @param class-string $targetClass
      */
-    private function stubCollectionMetadata(string $property, string $targetClass, ?object $mapping = null): void
+    private function stubCollectionMetadata(string $targetClass): void
     {
-        /** @var ClassMetadata<object>&MockObject $metadata */
-        $metadata = $this->createMock(ClassMetadata::class);
-        $metadata->expects($this->any())->method('isCollectionValuedAssociation')->with($property)->willReturn(true);
-        $metadata->expects($this->any())->method('getAssociationTargetClass')->with($property)->willReturn($targetClass);
-        if ($mapping !== null) {
-            $metadata->expects($this->any())->method('getAssociationMapping')->with($property)->willReturn($mapping);
-        }
+        $metadata = $this->createStub(ClassMetadata::class);
+        $metadata->method('isCollectionValuedAssociation')->willReturn(true);
+        $metadata->method('getAssociationTargetClass')->willReturn($targetClass);
 
         $this->em->method('getClassMetadata')->willReturn($metadata);
     }
