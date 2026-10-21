@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
+## [0.14.3](https://github.com/kachnitel/FrdAdminBundle/compare/v0.14.2...v0.14.3) (2026-10-21)
+
+### Features
+
+* Descriptive Page title in admin pages ([296350](https://github.com/kachnitel/FrdAdminBundle/commit/296350742790de4f0494c1dac474a8a3e36cb53c))
+
+### Bug Fixes
+
+
+##### Docs
+
+* Add missing Admin::$formComponent in docblock ([8d918c](https://github.com/kachnitel/FrdAdminBundle/commit/8d918c22131f62738240ef9d1c8f811b93c6e312))
+
+
+---
+
 ## [0.14.2](https://github.com/kachnitel/FrdAdminBundle/compare/v0.14.1...v0.14.2) (2026-10-20)
 
 
