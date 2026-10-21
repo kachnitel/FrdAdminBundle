@@ -102,6 +102,11 @@
                       styling applies cleanly instead of stacking with it.
                       overflow-auto lets a tall inline form scroll within the
                       dialog rather than overflowing the viewport.
+   dialog_wide()    — dialog() for content that needs room, e.g. the embedded
+                      entity list of the collection dialog. Swaps the
+                      500px modal-dialog cap for modal-xl (800px from the lg
+                      breakpoint, 1140px from xl) and, below lg where those
+                      sizes no longer fit, modal-fullscreen-lg-down.
    dialog_header()  — header row: title + close button, bottom border.
    dialog_title()   — header text styling.
    dialog_body()    — content padding.
@@ -113,6 +118,7 @@
    See MDN for details: https://developer.mozilla.org/docs/Web/API/HTMLDialogElement/backdrop
 #}
 {% macro dialog() %}position-fixed top-50 start-50 translate-middle modal-dialog modal-content border-0 p-0 overflow-auto{% endmacro %}
+{% macro dialog_wide() %}position-fixed top-50 start-50 translate-middle modal-dialog modal-xl modal-fullscreen-lg-down modal-content border-0 p-0 overflow-auto{% endmacro %}
 {% macro dialog_header() %}modal-header{% endmacro %}
 {% macro dialog_title() %}modal-title fs-6{% endmacro %}
 {% macro dialog_body() %}modal-body{% endmacro %}

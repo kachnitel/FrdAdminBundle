@@ -232,6 +232,33 @@ final class CollectionDisplayTest extends ComponentTestCase
     }
 
     #[Test]
+    public function collectionDialogUsesThemeDialogMacrosLikeInlineAdd(): void
+    {
+        $entity = new EntityWithCollectionDisplay();
+        $entity->setName('Dialog owner');
+        $this->em->persist($entity);
+
+        $tag = new TagEntity();
+        $tag->setName('Dialog item');
+        $tag->setDialogOwner($entity);
+        $this->em->persist($tag);
+        $this->em->flush();
+        $this->em->clear();
+
+        $rendered = $this->renderEntityList();
+
+        // Default (Bootstrap) theme: dialog_wide() centers via position-fixed + translate-middle
+        $this->assertStringContainsString('position-fixed top-50 start-50 translate-middle', $rendered);
+        $this->assertStringContainsString('modal-header', $rendered);
+        $this->assertStringContainsString('modal-body', $rendered);
+        $this->assertStringContainsString('btn-close', $rendered);
+        // Shared hook for the app's ::backdrop rule (same class the inline-add dialog carries)
+        $this->assertStringContainsString('admin-inline-dialog', $rendered);
+        // No hand-rolled layout: it must come from the theme, not inline styles
+        $this->assertStringNotContainsString('min(70rem,95vw)', $rendered);
+    }
+
+    #[Test]
     public function defaultModeDoesNotRenderCollectionListWhenEmpty(): void
     {
         // With zero tags the default column should show '-', not an inline item list.

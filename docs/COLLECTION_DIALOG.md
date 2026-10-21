@@ -10,6 +10,7 @@ Show a collection column as a **count button that opens a dialog containing a fu
 - [Security](#security)
 - [Embedding a Scoped List Yourself](#embedding-a-scoped-list-yourself)
 - [EntityList vs EntityListEmbedded](#entitylist-vs-entitylistembedded)
+- [Styling](#styling)
 - [Asset Setup](#asset-setup)
 - [Limitations](#limitations)
 - [Running Tests](#running-tests)
@@ -105,6 +106,14 @@ The mechanism is not specific to `AdminColumn`. Any template can embed a scoped 
 Use `K:Admin:EntityList` for index pages; use `K:Admin:EntityListEmbedded` for anything nested or shown in a dialog.
 
 For a custom embedded list, extend `EntityListEmbedded` and preserve its non-URL-bound LiveProps and scope handling.
+
+## Styling
+
+The dialog is styled exactly like the [inline-add dialog](INLINE_ADD.md#styling): its surface, centering, header, title, body and close button all come from the active theme's macros (`dialog_wide()`, `dialog_header()`, `dialog_title()`, `dialog_body()`, `btn_close()`) — no inline styles. The only difference is `dialog_wide()` in place of `dialog()`, because an embedded list needs more room than a form.
+
+It also carries the `admin-inline-dialog` class, so a single `dialog.admin-inline-dialog::backdrop` rule in your app stylesheet restyles the backdrop of both dialogs. `admin-collection-dialog` is available if you need to target this dialog alone.
+
+**Custom themes** must define `dialog_wide()` (see `templates/theme/bootstrap.html.twig`); [UPGRADE.md](../UPGRADE.md) has the details. To restyle the dialog, override the macros in your theme file, or override `types/_collection_dialog.html.twig` (see [Template Overrides](TEMPLATE_OVERRIDES.md)).
 
 ## Asset Setup
 

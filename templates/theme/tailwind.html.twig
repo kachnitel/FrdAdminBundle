@@ -92,6 +92,10 @@
                       within the dialog instead of overflowing the viewport.
                       border-0/p-0 strip the dialog element's own UA-stylesheet
                       border and padding.
+   dialog_wide()    — dialog() for content that needs room, e.g. the embedded
+                      entity list of the collection dialog. Same surface, but
+                      max-w-5xl instead of max-w-xl, and w-11/12 so it keeps a
+                      margin on narrow viewports.
    dialog_header()  — header row: title + close button, bottom border.
    dialog_title()   — header text styling.
    dialog_body()    — content padding.
@@ -103,6 +107,7 @@
    See MDN for details: https://developer.mozilla.org/docs/Web/API/HTMLDialogElement/backdrop
 #}
 {% macro dialog() %}fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl max-h-screen overflow-auto rounded-lg shadow-2xl border-0 p-0 bg-white{% endmacro %}
+{% macro dialog_wide() %}fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-5xl max-h-screen overflow-auto rounded-lg shadow-2xl border-0 p-0 bg-white{% endmacro %}
 {% macro dialog_header() %}flex items-center justify-between px-5 py-3.5 border-b border-gray-200{% endmacro %}
 {% macro dialog_title() %}font-semibold text-base{% endmacro %}
 {% macro dialog_body() %}p-5{% endmacro %}

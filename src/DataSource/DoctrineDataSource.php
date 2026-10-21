@@ -318,14 +318,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         return $labels;
     }
 
-    /**
-     * @return class-string
-     */
-    public function getEntityClass(): string
-    {
-        return $this->entityClass;
-    }
-
     public function getAdminAttribute(): Admin
     {
         return $this->adminAttribute;

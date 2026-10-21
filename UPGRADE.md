@@ -55,6 +55,12 @@ not supported by Symfony's native evaluator. Update custom row-action,
 editability, and archive expressions to call the entity's getter or boolean
 accessor directly.
 
+### Custom themes must define `dialog_wide()` (0.14 → 0.y)
+
+The collection dialog (`#[AdminColumn(collectionDialog: true)]`) now renders with the theme's dialog macros instead of inline styles, using a new `dialog_wide()` macro for the larger embedded list. The bundled Bootstrap and Tailwind themes define it.
+
+**Action:** If you maintain a custom theme (`kachnitel_admin.theme`), add a `dialog_wide()` macro — typically `dialog()` with a larger max-width. Without it, any page rendering a collection dialog column fails with an undefined-macro error.
+
 ### `EntityListBatchService::batchDelete()` now returns an array (0.13 → 0.y)
 
 Added as part of object-level authorization ([Object-Level Authorization

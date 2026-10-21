@@ -28,7 +28,7 @@ Order edit form
 
 The dialog uses the active CSS theme's macros (`dialog()`, `dialog_header()`, `dialog_title()`, `dialog_body()`). To restyle the dialog entirely, override these macros in your theme file.
 
-To darken the browser's default `<dialog>` backdrop, add this to your CSS and apply the `admin-inline-dialog` class via a template override of `EntityTypeAddButton.html.twig`:
+To darken the browser's default `<dialog>` backdrop, add this to your CSS. The `admin-inline-dialog` class is already applied to this dialog and to the [collection dialog](COLLECTION_DIALOG.md#styling), so one rule covers both:
 
 ```css
 .admin-inline-dialog::backdrop {
