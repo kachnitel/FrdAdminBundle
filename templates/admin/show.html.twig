@@ -10,8 +10,10 @@
 
 {% import kachnitel_admin_theme as css %}
 
+{% block title %}{{ entityLabel|default(entityClass|split('\\')|last) }} · {{ admin_entity_label(entity) }}{% endblock %}
+
 {% block headerTitle %}
-  {{ entity.name|default(entity.label|default('#' ~ entity.id)) }}
+  View {{ entityLabel|default(entityClass|split('\\')|last) }} · {{ admin_entity_label(entity) }}
 {% endblock %}
 
 {% block headerButtons %}

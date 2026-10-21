@@ -9,7 +9,9 @@
  #}
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
-{% block headerTitle %}New{% endblock %}
+{% block title %}New {{ entityLabel|default(entityClass|split('\\')|last) }}{% endblock %}
+
+{% block headerTitle %}New {{ entityLabel|default(entityClass|split('\\')|last) }}{% endblock %}
 
 {% block headerButtons %}
   {{ include('@KachnitelAdmin/admin/_save_button.html.twig', {}, ignore_missing = true) }}

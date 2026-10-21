@@ -10,7 +10,9 @@
  #}
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
-{% block headerTitle %}Edit{% endblock %}
+{% block title %}Edit {{ entityLabel|default(entityClass|split('\\')|last) }} · {{ admin_entity_label(entity) }}{% endblock %}
+
+{% block headerTitle %}Edit {{ entityLabel|default(entityClass|split('\\')|last) }} · {{ admin_entity_label(entity) }}{% endblock %}
 
 {% block headerButtons %}
   {% set entityShortClass = entityClass|split('\\')|last %}

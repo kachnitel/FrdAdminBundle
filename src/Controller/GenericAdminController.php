@@ -132,6 +132,7 @@ class GenericAdminController extends AbstractAdminController
         return $this->render('@KachnitelAdmin/admin/index_live.html.twig', [
             'entityClass'      => $this->entityNamespace . $entityName,
             'entityShortClass' => $entityName,
+            'entityLabel'      => $this->getAdminEntityLabel($entityName),
         ]);
     }
 

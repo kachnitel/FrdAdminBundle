@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Controller;
 
 use Kachnitel\AdminBundle\Controller\Trait\DeleteEntityTrait;
+use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Doctrine\ORM\EntityManagerInterface;
@@ -68,6 +69,7 @@ abstract class AbstractAdminController extends AbstractController
 
         return $this->render($this->getNewTemplate($class), [
             'entityClass'       => $this->getEntityNamespace() . $class,
+            'entityLabel'       => $this->getAdminEntityLabel($class),
             'formTypeClass'     => $this->getFormType($class),
             'formComponentName' => $this->getFormComponentName($class),
             'breadcrumbs'       => $this->getBreadcrumbs($class),
@@ -92,6 +94,7 @@ abstract class AbstractAdminController extends AbstractController
         return $this->render($this->getShowTemplate($class), [
             'entity' => $entity,
             'entityClass' => $this->getEntityNamespace() . $class,
+            'entityLabel' => $this->getAdminEntityLabel($class),
             'breadcrumbs' => $this->getBreadcrumbs($class, $entity)
         ]);
     }
@@ -116,6 +119,7 @@ abstract class AbstractAdminController extends AbstractController
         return $this->render($this->getEditTemplate($class), [
             'entity'            => $entity,
             'entityClass'       => $this->getEntityNamespace() . $class,
+            'entityLabel'       => $this->getAdminEntityLabel($class),
             'formTypeClass'     => $this->getFormType($class),
             'formComponentName' => $this->getFormComponentName($class),
             'breadcrumbs'       => $this->getBreadcrumbs($class, $entity),
@@ -252,6 +256,20 @@ abstract class AbstractAdminController extends AbstractController
             return '#' . $this->stringifyEntityValue($entity->getId());
         }
         return '#unknown';
+    }
+
+    protected function getAdminEntityLabel(string $class): string
+    {
+        /** @var class-string $entityClass */
+        $entityClass = $this->getEntityNamespace() . $class;
+        $attributes = (new \ReflectionClass($entityClass))->getAttributes(Admin::class);
+        if ($attributes === []) {
+            return $class;
+        }
+
+        $label = $attributes[0]->newInstance()->getLabel();
+
+        return $label !== null && $label !== '' ? $label : $class;
     }
 
     private function stringifyEntityValue(mixed $value): string

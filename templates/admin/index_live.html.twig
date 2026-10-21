@@ -11,8 +11,12 @@
 
 {% import kachnitel_admin_theme as css %}
 
+{% block title %}
+    {{ title|default(entityLabel|default(entityShortClass)) }}
+{% endblock %}
+
 {% block headerTitle %}
-    {{ title|default(entityShortClass ~ ' List') }}
+    {{ title|default(entityLabel|default(entityShortClass)) }}
 {% endblock %}
 
 {% block headerButtons %}
