@@ -16,6 +16,7 @@ Typical use case: `ROLE_SALES` may edit customer contacts, `ROLE_PURCHASING` may
 - [Inline Editing](#inline-editing)
 - [Two Things Worth Understanding Before You Turn This On](#two-things-worth-understanding-before-you-turn-this-on)
 - [What This Does Not Cover](#what-this-does-not-cover)
+- [Building Controllers and Form Components Outside the Container](#building-controllers-and-form-components-outside-the-container)
 - [Testing](#testing)
 
 ## Quick Start
@@ -85,7 +86,6 @@ The full, current inventory of both lives as a docblock on `ObjectAuthorizationC
 | `GenericAdminController::archive()` / `unarchive()` | `ADMIN_ARCHIVE` | The loaded entity, after CSRF validation, before the field mutation |
 | The New/Edit LiveComponent form save, and the "+ Add" inline-creation dialog (`AdminFormComponentTrait::doSubmitForm()`) | `ADMIN_NEW` or `ADMIN_EDIT` | The entity **after** form binding — see [below](#why-the-newedit-form-check-lives-in-dosubmitform-not-save) for exactly where and why |
 | `AdminEditabilityResolver::canEdit()` | `ADMIN_EDIT` | The entity, immediately before the inline-edited property's new value is written — see [Inline Editing](#inline-editing) for a real timing caveat this one has |
-| `CollectionScopeResolver::resolve()` | `ADMIN_SHOW` | The scope's owner entity, on every embedded-list query |
 | Batch archive / batch delete (`ArchiveButton::execute()`, `EntityListBatchService::batchDelete()`) | `ADMIN_ARCHIVE` / `ADMIN_DELETE` | Each selected entity individually, via `SkipsUnauthorizedEntitiesTrait` — see [Batch Actions](#batch-actions) |
 
 ### Display-only
@@ -192,6 +192,27 @@ There's no validation today that catches this at boot time or in the admin UI �
 - **An explicit per-item report for partial batch results.** See [Batch Actions](#batch-actions) — the signal today is "denied rows stay selected," not a message naming which ones or why.
 - **Inline-edit checks run before the write, not after.** See [Inline Editing → Checked before the write, not after](#checked-before-the-write-not-after) — if the edited field is itself what your voter's decision depends on, the check validates the old value.
 - **Boot-time or console validation that a voter actually exists for an opted-in entity.** The second gotcha above (deny-by-default with no matching voter) currently surfaces only as a 403 at request time. Worth having eventually; not built yet.
+
+## Building Controllers and Form Components Outside the Container
+
+Both entry points get their `ObjectAuthorizationChecker` from Symfony's container, so anything you build with `new` (test doubles, factories, manual wiring) has to supply it yourself.
+
+**Controllers** (`AbstractAdminController`, `GenericAdminController` and your subclasses) take it as the second constructor argument:
+
+```php
+$controller = new MyAdminController($entityManager, $objectAuthorizationChecker);
+```
+
+**Form components** (`AdminEntityForm`, `InlineEntityForm`, and any component composing `AdminFormComponentTrait` that implements `ObjectAuthorizedFormInterface`) receive it through a `#[Required]` setter, which only fires for container-built instances. For an instance created with `new`, call the setter before `doSubmitForm()` / `save()`:
+
+```php
+$component = new MyFormComponent(/* ... */);
+$component->setObjectAuthorizationChecker($objectAuthorizationChecker);
+```
+
+Skipping the call does not fail silently: `doSubmitForm()` throws a `\LogicException` naming the component class and pointing at the setter.
+
+In your own tests, a stub of `ObjectAuthorizationChecker` that returns `true` from `isGranted()` is enough when authorization isn't what's under test; configure it to deny (or throw from `denyAccessUnlessGranted()`) when you need to assert a blocked action. This bundle's own suite does the former with a `PermissiveObjectAuthorizationChecker` fixture under `tests/Fixtures`, which is not part of the autoloaded package.
 
 ## Testing
 
