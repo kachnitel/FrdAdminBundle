@@ -1,5 +1,5 @@
 ![Tests](<https://img.shields.io/badge/tests-1751%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-94%25-brightgreen>)
+![Coverage](<https://img.shields.io/badge/coverage-91%25-brightgreen>)
 ![Assertions](<https://img.shields.io/badge/assertions-4134-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-clean-brightgreen>)

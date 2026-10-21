@@ -32,7 +32,6 @@
         "symfony/security-bundle": "^7.4|^8.0",
         "symfony/serializer": "^7.4|^8.0",
         "symfony/twig-bundle": "^7.4|^8.0",
-        "symfony/ux-autocomplete": "^3.0",
         "symfony/ux-live-component": "^2.13",
         "symfony/ux-twig-component": "^2.13",
         "twig/twig": "^3.15"
