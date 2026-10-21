@@ -84,6 +84,19 @@ final class EntityListArchiveToggleTest extends TestCase
     }
 
     #[Test]
+    public function canToggleArchiveReturnsFalseForExternalDataSource(): void
+    {
+        $this->archiveService->expects($this->never())->method('resolveConfig');
+        $this->permissionService->expects($this->never())->method('canToggleArchive');
+
+        $component = $this->makeComponent();
+        $component->dataSourceId = 'external';
+        $component->entityClass = ArchiveToggleEntity::class;
+
+        $this->assertFalse($component->canToggleArchive());
+    }
+
+    #[Test]
     public function canToggleArchiveReturnsFalseWhenNoArchiveConfig(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn(null);
