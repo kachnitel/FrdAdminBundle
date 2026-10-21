@@ -28,6 +28,8 @@ class AdminEntityExtension extends AbstractExtension
             new TwigFunction('admin_entity_column_templates', [AdminEntityInfoRuntime::class, 'getEntityColumnTemplates']),
             new TwigFunction('admin_field_component_name', [AdminEntityInfoRuntime::class, 'getFieldComponentName']),
             new TwigFunction('admin_column_attribute', [AdminEntityInfoRuntime::class, 'getColumnAttribute']),
+            // Real FQCN of an entity (unwraps Doctrine proxies) — for passing as a LiveProp
+            new TwigFunction('admin_real_class', [AdminEntityInfoRuntime::class, 'getRealClass']),
             new TwigFunction('admin_entity_label', [AdminEntityDataRuntime::class, 'getEntityLabel']),
         ];
     }

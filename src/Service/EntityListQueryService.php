@@ -33,6 +33,9 @@ class EntityListQueryService
      * @param array<string, array<string, mixed>> $filterMetadata
      * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
      *                                         (e.g. 'e.deletedAt IS NULL' or 'e.archived = false')
+     * @param string|null $scopeDqlCondition   Pre-built DQL WHERE fragment from CollectionScopeResolver
+     *                                         restricting the list to one owner's collection
+     * @param array<string, mixed> $scopeParameters Bound parameters for $scopeDqlCondition
      * @return array{entities: array<object>, total: int, page: int}
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -48,6 +51,8 @@ class EntityListQueryService
         int $page,
         int $itemsPerPage,
         ?string $archiveDqlCondition = null,
+        ?string $scopeDqlCondition = null,
+        array $scopeParameters = [],
     ): array {
         $qb = $this->buildQuery(
             $entityClass,
@@ -58,6 +63,8 @@ class EntityListQueryService
             $sortBy,
             $sortDirection,
             $archiveDqlCondition,
+            $scopeDqlCondition,
+            $scopeParameters,
         );
 
         $page = max(1, $page);
@@ -92,6 +99,10 @@ class EntityListQueryService
      * @param array<string, mixed> $columnFilters
      * @param array<string, array<string, mixed>> $filterMetadata
      * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
+     * @param string|null $scopeDqlCondition   Pre-built DQL WHERE fragment from CollectionScopeResolver
+     * @param array<string, mixed> $scopeParameters Bound parameters for $scopeDqlCondition
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function buildQuery(
         string $entityClass,
@@ -102,6 +113,8 @@ class EntityListQueryService
         string $sortBy,
         string $sortDirection,
         ?string $archiveDqlCondition = null,
+        ?string $scopeDqlCondition = null,
+        array $scopeParameters = [],
     ): QueryBuilder {
         /** @var \Doctrine\ORM\EntityRepository<object> $repository */
         $repository = $this->em->getRepository($entityClass);
@@ -123,14 +136,36 @@ class EntityListQueryService
             }
         }
 
-        // Archive condition — a pre-built DQL fragment originating from ArchiveService
-        if ($archiveDqlCondition !== null) {
-            $qb->andWhere($archiveDqlCondition);
-        }
+        $this->applyRestrictions($qb, $archiveDqlCondition, $scopeDqlCondition, $scopeParameters);
 
         $qb->orderBy('e.' . $sortBy, $sortDirection);
 
         return $qb;
+    }
+
+    /**
+     * Apply pre-built archive and collection-scope restrictions to the list query.
+     *
+     * @param array<string, mixed> $scopeParameters
+     */
+    private function applyRestrictions(
+        QueryBuilder $qb,
+        ?string $archiveDqlCondition,
+        ?string $scopeDqlCondition,
+        array $scopeParameters,
+    ): void {
+        if ($archiveDqlCondition !== null) {
+            $qb->andWhere($archiveDqlCondition);
+        }
+
+        if ($scopeDqlCondition === null) {
+            return;
+        }
+
+        $qb->andWhere($scopeDqlCondition);
+        foreach ($scopeParameters as $name => $value) {
+            $qb->setParameter($name, $value);
+        }
     }
 
     /**

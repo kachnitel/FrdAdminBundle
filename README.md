@@ -1,13 +1,13 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1700%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-90%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-4019-blue>)
+![Tests](<https://img.shields.io/badge/tests-1751%20passed-red>)
+![Coverage](<https://img.shields.io/badge/coverage-94%25-brightgreen>)
+![Assertions](<https://img.shields.io/badge/assertions-4134-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-clean-brightgreen>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
-![Vitest](<https://img.shields.io/badge/vitest-30%20passed-brightgreen>)
+![Vitest](<https://img.shields.io/badge/vitest-34%20passed-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
 ![Symfony](<https://img.shields.io/badge/Symfony-^7.4|^8.0-000000?logo=symfony&logoColor=white>)
 <!-- BADGES -->
@@ -292,6 +292,7 @@ kachnitel_admin:
 |-------|-------------|
 | [Inline Editing](docs/INLINE_EDIT.md) | Per-field in-place editing in list views |
 | [Inline Add](docs/INLINE_ADD.md) | Create related entities without leaving the current form |
+| [Collection Dialog](docs/COLLECTION_DIALOG.md) | Browse collection items in a scoped, searchable dialog |
 | [Object-Level Authorization](docs/OBJECT_AUTHORIZATION.md) | Instance-level (not just class-level) permission checks via a plain Symfony voter |
 | [Composite Columns](docs/COMPOSITE_COLUMNS.md) | Group related properties into one stacked table cell |
 | [Column Visibility](docs/COLUMN_VISIBILITY.md) | Permissions and user preferences |

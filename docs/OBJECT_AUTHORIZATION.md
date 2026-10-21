@@ -85,6 +85,7 @@ The full, current inventory of both lives as a docblock on `ObjectAuthorizationC
 | `GenericAdminController::archive()` / `unarchive()` | `ADMIN_ARCHIVE` | The loaded entity, after CSRF validation, before the field mutation |
 | The New/Edit LiveComponent form save, and the "+ Add" inline-creation dialog (`AdminFormComponentTrait::doSubmitForm()`) | `ADMIN_NEW` or `ADMIN_EDIT` | The entity **after** form binding — see [below](#why-the-newedit-form-check-lives-in-dosubmitform-not-save) for exactly where and why |
 | `AdminEditabilityResolver::canEdit()` | `ADMIN_EDIT` | The entity, immediately before the inline-edited property's new value is written — see [Inline Editing](#inline-editing) for a real timing caveat this one has |
+| `CollectionScopeResolver::resolve()` | `ADMIN_SHOW` | The scope's owner entity, on every embedded-list query |
 | Batch archive / batch delete (`ArchiveButton::execute()`, `EntityListBatchService::batchDelete()`) | `ADMIN_ARCHIVE` / `ADMIN_DELETE` | Each selected entity individually, via `SkipsUnauthorizedEntitiesTrait` — see [Batch Actions](#batch-actions) |
 
 ### Display-only

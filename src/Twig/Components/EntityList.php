@@ -4,34 +4,45 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components;
 
+use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
-use Kachnitel\DataSourceContracts\ColumnGroup;
-use Kachnitel\DataSourceContracts\ColumnMetadata;
-use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
-use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
+use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\Preferences\ColumnVisibilityPreferenceTrait;
-use Kachnitel\AdminBundle\Security\AdminEntityVoter;
-use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
+use Kachnitel\DataSourceContracts\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
+use Kachnitel\DataSourceContracts\PaginatedResult;
 use Kachnitel\DataSourceContracts\PaginationInfo;
+use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
 use Symfony\UX\LiveComponent\Attribute\LiveListener;
+use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 
 /**
- * LiveComponent for reactive entity lists.
+ * LiveComponent for reactive entity lists — list state is bound to the URL.
+ * EntityListEmbedded inherits this behavior and overrides URL-bound props.
+ *
+ * ## Scoped lists
+ *
+ * A non-empty `scope` ({ownerClass, ownerId, property}) restricts the list to one
+ * owner entity's collection. It is a non-writable LiveProp (signed — not
+ * client-modifiable) and is authorized and translated by CollectionScopeResolver on
+ * every query. See docs/COLLECTION_DIALOG.md.
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessivePublicCount)
@@ -42,30 +53,11 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 #[AsLiveComponent('K:Admin:EntityList', template: '@KachnitelAdmin/components/EntityList.html.twig')]
 class EntityList
 {
-    public const SORT_ASC = 'ASC';
-    public const SORT_DESC = 'DESC';
-
     use DefaultActionTrait;
     use ColumnVisibilityPreferenceTrait;
 
-    #[LiveProp(writable: true, url: true)]
-    public string $search = '';
-
-    #[LiveProp(writable: true, url: true)]
-    public string $sortBy = 'id';
-
-    #[LiveProp(writable: true, url: true)]
-    public string $sortDirection = self::SORT_DESC;
-
-    /** @var array<string, mixed> */
-    #[LiveProp(writable: true, url: true, onUpdated: 'onColumnFiltersUpdated')]
-    public array $columnFilters = [];
-
-    #[LiveProp(writable: true, url: true)]
-    public int $page = 1;
-
-    #[LiveProp(writable: true, url: true)]
-    public int $itemsPerPage;
+    public const SORT_ASC = 'ASC';
+    public const SORT_DESC = 'DESC';
 
     /** @var array<string> Stored as strings to match browser form values from data-model */
     #[LiveProp(writable: true)]
@@ -99,22 +91,29 @@ class EntityList
     public ?int $editingRowId = null;
 
     /**
-     * When true, archived/soft-deleted records are shown alongside active ones.
+     * Restricts the list to one owner entity's collection:
+     * {ownerClass: class-string, ownerId: int|string, property: string}.
+     *
+     * Non-writable, so the signed LiveProp cannot be altered client-side.
+     * Empty = unscoped.
+     *
+     * @var array<string, mixed>
      */
-    #[LiveProp(writable: true, url: true)]
-    public bool $showArchived = false;
+    #[LiveProp]
+    public array $scope = [];
 
     /** @var array<int> */
     public array $allowedItemsPerPage;
 
     /**
      * @var array{
-    *     queryResult?: \Kachnitel\DataSourceContracts\PaginatedResult,
+     *     queryResult?: PaginatedResult,
      *     filterMetadata?: array<string, array<string, mixed>>,
      *     columns?: array<int|string, string>,
      *     columnSlots?: list<string|ColumnGroup>,
      *     dataSource?: DataSourceInterface,
-     *     visibilityLoaded?: bool
+     *     visibilityLoaded?: bool,
+     *     scope?: array{0: string, 1: array<string, mixed>}
      * }
      */
     private array $cache = [];
@@ -128,6 +127,7 @@ class EntityList
         private EntityListColumnService $columnService,
         private ArchiveService $archiveService,
         private ObjectAuthorizationChecker $objectAuthChecker,
+        private ?CollectionScopeResolver $scopeResolver = null,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -143,6 +143,9 @@ class EntityList
         if (!$this->permissionService->canViewList($identifier)) {
             throw new AccessDeniedException(sprintf('Access denied to view %s.', $identifier));
         }
+
+        // Authorize the scope on every hydration too, not only when a query runs.
+        $this->resolveScope();
     }
 
     /**
@@ -182,6 +185,26 @@ class EntityList
         if ($this->entityClass === '' && $this->entityShortClass !== '') {
             $this->entityClass = $this->config->entityNamespace . $this->entityShortClass;
         }
+    }
+
+    // ── Scope ──────────────────────────────────────────────────────────────────
+
+    /**
+     * Authorize and translate the `scope` LiveProp. Null when unscoped.
+     *
+     * @return array{0: string, 1: array<string, mixed>}|null [DQL fragment, parameters]
+     */
+    private function resolveScope(): ?array
+    {
+        if ($this->scope === []) {
+            return null;
+        }
+
+        if ($this->scopeResolver === null) {
+            throw new AccessDeniedException('Scoped lists are not available.');
+        }
+
+        return $this->cache['scope'] ??= $this->scopeResolver->resolve($this->scope);
     }
 
     // ── Data Source Resolution ─────────────────────────────────────────────────
@@ -243,7 +266,7 @@ class EntityList
      * resolveConfig() twice.
      */
     #[ExposeInTemplate('archiveConfig')]
-    public function getArchiveConfig(): ?\Kachnitel\AdminBundle\Archive\ArchiveConfig
+    public function getArchiveConfig(): ?ArchiveConfig
     {
         if (!$this->isDoctrineEntity()) {
             return null;
@@ -335,6 +358,18 @@ class EntityList
                 );
                 $dataSource->setArchiveDqlCondition($condition);
             }
+        }
+
+        // Scope: always set (null when unscoped) so a stale value on a shared
+        // DataSource instance can never leak into this query. A scope on a
+        // non-Doctrine source cannot be honoured, so fail closed instead of
+        // silently listing everything.
+        $scope = $this->resolveScope();
+        if ($scope !== null && !$dataSource instanceof DoctrineDataSource) {
+            throw new \LogicException('Scoped lists require a Doctrine data source.');
+        }
+        if ($dataSource instanceof DoctrineDataSource) {
+            $dataSource->setScopeCondition($scope[0] ?? null, $scope[1] ?? []);
         }
 
         $this->cache['queryResult'] = $dataSource->query(
@@ -656,4 +691,29 @@ class EntityList
 
         return $columns[$column]->sortable;
     }
+
+    #[LiveProp(writable: true, url: true)]
+    public string $search = '';
+
+    #[LiveProp(writable: true, url: true)]
+    public string $sortBy = 'id';
+
+    #[LiveProp(writable: true, url: true)]
+    public string $sortDirection = self::SORT_DESC;
+
+    /** @var array<string, mixed> */
+    #[LiveProp(writable: true, url: true, onUpdated: 'onColumnFiltersUpdated')]
+    public array $columnFilters = [];
+
+    #[LiveProp(writable: true, url: true)]
+    public int $page = 1;
+
+    #[LiveProp(writable: true, url: true)]
+    public int $itemsPerPage;
+
+    /**
+     * When true, archived/soft-deleted records are shown alongside active ones.
+     */
+    #[LiveProp(writable: true, url: true)]
+    public bool $showArchived = false;
 }

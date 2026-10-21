@@ -79,6 +79,12 @@ class TestEntity
     #[ORM\ManyToMany(targetEntity: TagEntity::class)]
     private Collection $items;
 
+    /**
+     * @var Collection<int, TagEntity>
+     */
+    #[ORM\ManyToMany(targetEntity: TagEntity::class, mappedBy: 'sharedOwners')]
+    private Collection $sharedItems;
+
     #[ORM\Column(type: 'string')]
     #[ColumnFilter(enabled: false)]
     private string $disabledFilter = '';
@@ -88,6 +94,7 @@ class TestEntity
         $this->createdAt = new \DateTime();
         $this->tags = new ArrayCollection();
         $this->items = new ArrayCollection();
+        $this->sharedItems = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -222,5 +229,13 @@ class TestEntity
     public function getItems(): Collection
     {
         return $this->items;
+    }
+
+    /**
+     * @return Collection<int, TagEntity>
+     */
+    public function getSharedItems(): Collection
+    {
+        return $this->sharedItems;
     }
 }
