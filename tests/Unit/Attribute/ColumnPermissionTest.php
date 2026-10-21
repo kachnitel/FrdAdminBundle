@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -18,6 +19,21 @@ final class ColumnPermissionTest extends TestCase
         $permission = new ColumnPermission();
 
         $this->assertSame([], $permission->getPermissions());
+    }
+
+    #[IgnoreDeprecations('ColumnPermission.*deprecated since 0\.6\.0')]
+    public function testLegacyStringPermissionIsNormalizedAndDeprecated(): void
+    {
+        $this->expectUserDeprecationMessage(
+            "#[ColumnPermission('ROLE_HR')] is deprecated since 0.6.0. Replace with #[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR'])].",
+        );
+
+        $permission = new ColumnPermission('ROLE_HR');
+
+        $this->assertSame(
+            [AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR'],
+            $permission->getPermissions(),
+        );
     }
 
     public function testSingleActionPermission(): void

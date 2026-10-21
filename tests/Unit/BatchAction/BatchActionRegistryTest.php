@@ -103,6 +103,26 @@ final class BatchActionRegistryTest extends TestCase
     }
 
     #[Test]
+    public function sortsProvidersOnlyOnceAcrossEntityClasses(): void
+    {
+        /** @var BatchActionProviderInterface&MockObject $firstProvider */
+        $firstProvider = $this->createMock(BatchActionProviderInterface::class);
+        $firstProvider->method('supports')->willReturn(true);
+        $firstProvider->method('getActions')->willReturn([]);
+        $firstProvider->expects($this->once())->method('getPriority')->willReturn(10);
+
+        /** @var BatchActionProviderInterface&MockObject $secondProvider */
+        $secondProvider = $this->createMock(BatchActionProviderInterface::class);
+        $secondProvider->method('supports')->willReturn(true);
+        $secondProvider->method('getActions')->willReturn([]);
+        $secondProvider->expects($this->once())->method('getPriority')->willReturn(0);
+
+        $registry = $this->makeRegistry([$firstProvider, $secondProvider]);
+        $registry->getActions(self::PRODUCT_CLASS); // @phpstan-ignore argument.type
+        $registry->getActions('App\\Entity\\Category'); // @phpstan-ignore argument.type
+    }
+
+    #[Test]
     public function clearCacheRemovesCachedResults(): void
     {
         $callCount = 0;

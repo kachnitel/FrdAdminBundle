@@ -46,6 +46,15 @@ final class AttributeBatchActionProviderTest extends TestCase
     }
 
     #[Test]
+    public function returnsEmptyArrayForNonExistentEntityClass(): void
+    {
+        /** @var class-string $missing */
+        $missing = 'App\\Entity\\DoesNotExist'; // @phpstan-ignore varTag.nativeType
+
+        $this->assertSame([], $this->provider->getActions($missing));
+    }
+
+    #[Test]
     public function returnsEmptyArrayForEntityWithOnlyRowActions(): void
     {
         // EntityWithRowActions has row-type actions only
