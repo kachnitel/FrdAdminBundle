@@ -56,7 +56,7 @@ Generates a URL to the admin detail page for a single related entity.
 
 ### `admin_collection_url(entity, property, checkAccess = true)`
 
-Generates a URL to the target entity's admin list, pre-filtered to show items related to the source entity.
+Generates a URL to the target entity's admin list, scoped to the source entity's collection.
 
 **Parameters:**
 - `entity` - The source entity that owns the collection
@@ -64,25 +64,28 @@ Generates a URL to the target entity's admin list, pre-filtered to show items re
 - `checkAccess` (optional, default: `true`) - Whether to check if current user can access the route
 
 **Returns:** `string|null` - The URL, or `null` if:
-- The target entity class has no `#[Admin]` attribute
-- The user lacks permission to access the route (when `checkAccess` is `true`)
+- The target or the source entity class has no `#[Admin]` attribute
+- The user lacks permission to access the target's index route (when `checkAccess` is `true`)
 - The property is not a collection-valued association
+- The source entity has no id yet
 
 **Behavior:**
-- For **OneToMany** associations: The URL includes a `columnFilter` on the inverse ManyToOne field
-- For **ManyToMany** associations with `mappedBy` (inverse side): filter on the `mappedBy` field
-- For **ManyToMany** associations with `inversedBy` (owning side): filter on the `inversedBy` field, resolved via the numeric-ID exact-match in `applyRelationFilter`
-- For unidirectional **ManyToMany** (no `inversedBy`): links to the target list without a pre-applied filter
+
+The URL carries a compact scope in the `collection` query parameter, `Owner:id:property`. The index page turns it into the same exact `IN (subquery)` restriction that the [collection dialog](COLLECTION_DIALOG.md) uses, so the new-tab link and the dialog always list identical rows. This holds for **OneToMany**, bidirectional and unidirectional **ManyToMany** alike; it does not depend on `mappedBy`/`inversedBy` or on any column filter.
+
+The target page shows a "Orders of Customer #42" banner with a ✕ to clear the scope. Authorization is re-checked by `CollectionScopeResolver` on every query (owner is `#[Admin]`, class and column `ADMIN_SHOW`, object-level `ADMIN_SHOW` on the owner), so editing the URL by hand cannot widen access; a malformed or unknown value is a 404.
 
 ```twig
-{# Link to orders filtered by this customer #}
+{# Link to orders of this customer #}
 {% set url = admin_collection_url(customer, 'orders') %}
-{# Result: /admin/order?columnFilters[customer]=42 #}
+{# Result: /admin/order?collection=Customer%3A42%3Aorders #}
 
-{# Link to tags for this product (ManyToMany) #}
+{# Same for ManyToMany, including unidirectional #}
 {% set url = admin_collection_url(product, 'tags') %}
-{# Result: /admin/tag #}
+{# Result: /admin/tag?collection=Product%3A7%3Atags #}
 ```
+
+> **Changed:** earlier versions emitted `columnFilters[<inverse field>]=<id>` (and no filter at all for unidirectional ManyToMany). Existing bookmarked `columnFilters` URLs keep working; they are just no longer generated.
 
 ## Access Control
 
@@ -120,7 +123,7 @@ Make related entities clickable in entity list previews:
 
 ### Collection Counts with Links
 
-Show collection counts that link to filtered admin lists:
+Show collection counts that link to scoped admin lists:
 
 ```twig
 {% set orderCount = customer.orders|length %}

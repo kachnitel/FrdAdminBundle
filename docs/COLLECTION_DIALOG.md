@@ -52,11 +52,13 @@ e.id IN (
 )
 ```
 
-This is exact (it is not a column filter, so it cannot be confused with the LIKE-based relation filter that `admin_collection_url()` links rely on) and independent of whether the association has an inverse side.
+This is exact (it is not a column filter, so it cannot be confused with the LIKE-based relation filter) and independent of whether the association has an inverse side.
+
+The new-tab link produced by `admin_collection_url()` uses the same scope: it points at the target's index with `?collection=Owner:id:property`, which the index page passes to `EntityList` as its `scope`. The dialog and the link therefore always show the same rows. See [ENTITY_URLS.md](ENTITY_URLS.md).
 
 ## Requirements and Fallback
 
-- The **target** entity must have `#[Admin]`, and its index must be accessible to the current user (`admin_collection_url(entity, property)` non-null).
+- The **target** entity must have `#[Admin]`, and its index must be accessible to the current user (`admin_collection_url(entity, property)` non-null; this also requires the owner to be `#[Admin]`).
 - Otherwise the column falls back to the default count-only display.
 
 ## Security

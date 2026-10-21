@@ -6,6 +6,7 @@
  # @var string entityClass - Full class name of the entity
  # @var string entityShortClass - Short class name of the entity
  # @var string|null repositoryMethod - Custom repository method for query
+ # @var array scope - Optional collection scope ({ownerClass, ownerId, property}) from ?collection=Owner:id:property
  #}
 {% extends kachnitel_admin_base_layout ?: '@KachnitelAdmin/admin/base.html.twig' %}
 
@@ -30,8 +31,17 @@
 {% endblock %}
 
 {% block content %}
+    {% set scope = scope|default([]) %}
+    {% if scope is not empty %}
+        <p class="admin-collection-scope-banner" data-testid="collection-scope-banner">
+            <strong>{{ scope.property|humanize }}</strong>
+            of {{ scope.ownerClass|split('\\')|last }} #{{ scope.ownerId }}
+            <a href="{{ app.request.pathInfo }}" aria-label="Clear collection scope" title="Show all">✕</a>
+        </p>
+    {% endif %}
     <twig:K:Admin:EntityList
         :entityShortClass="entityShortClass"
         :repositoryMethod="repositoryMethod|default(null)"
+        :scope="scope"
     />
 {% endblock %}

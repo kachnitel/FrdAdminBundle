@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
-use Kachnitel\AdminBundle\Service\PropertyFilterabilityService;
+use Kachnitel\AdminBundle\Utils\CollectionScopeParameter;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Extension\RuntimeExtensionInterface;
@@ -15,9 +14,9 @@ use Twig\Extension\RuntimeExtensionInterface;
 /**
  * Runtime for generating admin URLs for related entities and collections.
  *
- * "Can this property be filtered?" logic is delegated entirely to
- * PropertyFilterabilityService, keeping this class as a thin coordinator
- * between routing, entity discovery, and filter-parameter building.
+ * Collection links carry a CollectionScopeParameter (`?collection=Owner:id:property`)
+ * rather than a column filter, so the index page lists exactly the rows the collection
+ * dialog shows — CollectionScopeResolver authorizes and applies the same scope for both.
  */
 class AdminEntityUrlRuntime implements RuntimeExtensionInterface
 {
@@ -26,7 +25,6 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
         private readonly AdminRouteRuntime $adminRouteRuntime,
         private readonly ?EntityDiscoveryService $entityDiscovery = null,
         private readonly ?EntityManagerInterface $em = null,
-        private readonly ?PropertyFilterabilityService $filterabilityService = null,
     ) {}
 
     /**
@@ -56,13 +54,12 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * Get a URL to the target entity's admin list, pre-filtered to show items
-     * related to the given entity's collection property.
+     * Get a URL to the target entity's admin list, scoped to the given entity's
+     * collection property.
      *
-     * For OneToMany associations the URL includes a columnFilter on the inverse
-     * ManyToOne field. For ManyToMany the URL links without a pre-applied filter.
-     *
-     * Returns null when the target entity has no #[Admin] attribute.
+     * Works for OneToMany and both ManyToMany variants. Returns null when the property
+     * is not a collection, the owner or target has no #[Admin] attribute, the owner has
+     * no id yet, or (with $checkAccess) the target's index is not accessible.
      */
     public function getCollectionAdminUrl(object $entity, string $property, bool $checkAccess = true): ?string
     {
@@ -80,7 +77,7 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
         /** @var class-string $targetClass */
         $targetClass = $metadata->getAssociationTargetClass($property);
 
-        if (!$this->entityDiscovery->isAdminEntity($targetClass)) {
+        if (!$this->entityDiscovery->isAdminEntity($targetClass) || !$this->entityDiscovery->isAdminEntity($entityClass)) {
             return null;
         }
 
@@ -95,47 +92,18 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
             return null;
         }
 
-        $targetSlug = $this->toEntitySlug($targetShortName);
-        $parameters = $this->buildCollectionParameters($entity, $metadata, $property, $targetClass, $targetSlug);
+        $ownerId = method_exists($entity, 'getId') ? $entity->getId() : null;
+        if (!is_int($ownerId) && !is_string($ownerId)) {
+            return null;
+        }
 
-        return $this->router->generate($route, $parameters);
+        return $this->router->generate($route, [
+            'entitySlug'                        => $this->toEntitySlug($targetShortName),
+            CollectionScopeParameter::QUERY_KEY => CollectionScopeParameter::encode($entityClass, $ownerId, $property),
+        ]);
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────
-
-    /**
-     * @param ClassMetadata<object> $metadata
-     * @param class-string $targetClass
-     * @return array<string, mixed>
-     */
-    private function buildCollectionParameters(
-        object $entity,
-        ClassMetadata $metadata,
-        string $property,
-        string $targetClass,
-        string $targetSlug,
-    ): array {
-        $parameters = ['entitySlug' => $targetSlug];
-
-        if ($this->filterabilityService === null) {
-            return $parameters;
-        }
-
-        $mapping     = $metadata->getAssociationMapping($property);
-        $filterField = $mapping->mappedBy ?? $mapping->inversedBy ?? null;
-
-        if (!is_string($filterField)) {
-            return $parameters;
-        }
-
-        $filterEntry = $this->filterabilityService->buildCollectionFilterEntry($entity, $filterField, $targetClass);
-
-        if ($filterEntry !== null) {
-            $parameters['columnFilters'] = $filterEntry;
-        }
-
-        return $parameters;
-    }
 
     private function tryShowUrl(
         string $entityClass,

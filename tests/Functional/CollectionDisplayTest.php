@@ -125,9 +125,8 @@ final class CollectionDisplayTest extends ComponentTestCase
     #[Test]
     public function accordionSummaryContainsViewAllLinkWhenCollectionUrlAvailable(): void
     {
-        // The ↗ link only renders when admin_collection_url() returns a URL.
-        // EntityWithCollectionDisplay::tagsAccordion is a unidirectional ManyToMany
-        // with no inversedBy, so admin_collection_url() returns null → no link rendered.
+        // The ↗ link only renders when admin_collection_url() returns a URL. Links now
+        // carry a collection scope, so they no longer depend on an inverse field.
         // This test verifies the count label and <summary> are present regardless.
         $this->persistEntityWithTags(2);
 

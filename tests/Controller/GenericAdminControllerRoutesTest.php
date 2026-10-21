@@ -68,7 +68,7 @@ final class GenericAdminControllerRoutesTest extends TestCase
     public function indexRendersEntityListView(): void
     {
         $controller = $this->makeController();
-        $controller->index('deletable-entity');
+        $controller->index(new Request(), 'deletable-entity');
 
         $this->assertNotNull($controller->lastRender);
         $this->assertSame('@KachnitelAdmin/admin/index_live.html.twig', $controller->lastRender['view']);
@@ -82,7 +82,55 @@ final class GenericAdminControllerRoutesTest extends TestCase
         $this->expectException(NotFoundHttpException::class);
         $this->expectExceptionMessage('Entity "NonexistentEntity" is not supported.');
 
-        $this->makeController()->index('nonexistent-entity');
+        $this->makeController()->index(new Request(), 'nonexistent-entity');
+    }
+
+    #[Test]
+    #[Group('collection-scope')]
+    public function indexPassesNoScopeByDefault(): void
+    {
+        $controller = $this->makeController();
+        $controller->index(new Request(), 'deletable-entity');
+
+        $this->assertNotNull($controller->lastRender);
+        $this->assertSame([], $controller->lastRender['parameters']['scope']);
+    }
+
+    #[Test]
+    #[Group('collection-scope')]
+    public function indexTranslatesCollectionQueryParameterToScope(): void
+    {
+        $this->entityDiscovery = $this->createStub(EntityDiscoveryService::class);
+        $this->entityDiscovery->method('getAdminEntityShortNames')->willReturn(['DeletableEntity']);
+        $this->entityDiscovery->method('resolveEntityClass')
+            ->willReturnCallback(static fn (string $short): ?string => $short === 'DeletableEntity' ? DeletableEntity::class : null);
+
+        $controller = $this->makeController();
+        $controller->index(new Request(['collection' => 'DeletableEntity:7:children']), 'deletable-entity');
+
+        $this->assertNotNull($controller->lastRender);
+        $this->assertSame(
+            ['ownerClass' => DeletableEntity::class, 'ownerId' => '7', 'property' => 'children'],
+            $controller->lastRender['parameters']['scope'],
+        );
+    }
+
+    /** @return iterable<string, array{mixed}> */
+    public static function invalidCollectionParameterProvider(): iterable
+    {
+        yield 'malformed' => ['not-a-scope'];
+        yield 'unknown owner' => ['Nope:1:items'];
+        yield 'array value' => [['x']];
+    }
+
+    #[Test]
+    #[Group('collection-scope')]
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidCollectionParameterProvider')]
+    public function indexThrowsNotFoundForInvalidCollectionParameter(mixed $value): void
+    {
+        $this->expectException(NotFoundHttpException::class);
+
+        $this->makeController()->index(new Request(['collection' => $value]), 'deletable-entity');
     }
 
     // ── new() ────────────────────────────────────────────────────────────
