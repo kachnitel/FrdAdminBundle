@@ -267,7 +267,11 @@ class AdminEntityUrlRuntimeTest extends TestCase
      */
     private function stubCollectionMetadata(string $targetClass): void
     {
-        $metadata = $this->createStub(ClassMetadata::class);
+        $metadata = $this->createMock(ClassMetadata::class);
+        // The link must not depend on the association type (mappedBy/inversedBy): it always
+        // carries the same scope the dialog uses. Reading the mapping again would reintroduce
+        // the unidirectional-ManyToMany bug.
+        $metadata->expects($this->never())->method('getAssociationMapping');
         $metadata->method('isCollectionValuedAssociation')->willReturn(true);
         $metadata->method('getAssociationTargetClass')->willReturn($targetClass);
 
