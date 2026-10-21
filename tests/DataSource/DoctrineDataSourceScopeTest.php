@@ -17,6 +17,7 @@ use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,6 +25,7 @@ use PHPUnit\Framework\TestCase;
  * query must be consumed by it and never leak into the next.
  */
 #[CoversClass(DoctrineDataSource::class)]
+#[UsesClass(Admin::class)]
 #[Group('collection-dialog')]
 final class DoctrineDataSourceScopeTest extends TestCase
 {

@@ -8,12 +8,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityInfoRuntime;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(AdminEntityInfoRuntime::class)]
+#[UsesClass(ObjectHelper::class)]
 #[Group('collection-dialog')]
 final class AdminEntityInfoRuntimeRealClassTest extends TestCase
 {
