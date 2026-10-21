@@ -63,6 +63,39 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
      */
     public function getCollectionAdminUrl(object $entity, string $property, bool $checkAccess = true): ?string
     {
+        $targetClass = $this->resolveCollectionTarget($entity, $property);
+        $ownerId     = method_exists($entity, 'getId') ? $entity->getId() : null;
+
+        if ($targetClass === null || (!is_int($ownerId) && !is_string($ownerId))) {
+            return null;
+        }
+
+        $targetShortName = (new \ReflectionClass($targetClass))->getShortName();
+        $route           = $this->getIndexRoute($targetClass, $targetShortName, $checkAccess);
+        if ($route === null) {
+            return null;
+        }
+
+        return $this->router->generate($route, [
+            'entitySlug'                        => $this->toEntitySlug($targetShortName),
+            CollectionScopeParameter::QUERY_KEY => CollectionScopeParameter::encode(
+                ObjectHelper::getRealClass($entity),
+                $ownerId,
+                $property,
+            ),
+        ]);
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    /**
+     * The collection's target class when both it and the owner are #[Admin] entities
+     * (CollectionScopeResolver 404s otherwise), null when no link can be built.
+     *
+     * @return class-string|null
+     */
+    private function resolveCollectionTarget(object $entity, string $property): ?string
+    {
         if ($this->em === null || $this->entityDiscovery === null) {
             return null;
         }
@@ -77,33 +110,21 @@ class AdminEntityUrlRuntime implements RuntimeExtensionInterface
         /** @var class-string $targetClass */
         $targetClass = $metadata->getAssociationTargetClass($property);
 
-        if (!$this->entityDiscovery->isAdminEntity($targetClass) || !$this->entityDiscovery->isAdminEntity($entityClass)) {
-            return null;
-        }
-
-        $route = $this->adminRouteRuntime->getRoute($targetClass, 'index');
-        if ($route === null) {
-            return null;
-        }
-
-        $targetShortName = (new \ReflectionClass($targetClass))->getShortName();
-
-        if ($checkAccess && !$this->adminRouteRuntime->isActionAccessible($targetShortName, 'index')) {
-            return null;
-        }
-
-        $ownerId = method_exists($entity, 'getId') ? $entity->getId() : null;
-        if (!is_int($ownerId) && !is_string($ownerId)) {
-            return null;
-        }
-
-        return $this->router->generate($route, [
-            'entitySlug'                        => $this->toEntitySlug($targetShortName),
-            CollectionScopeParameter::QUERY_KEY => CollectionScopeParameter::encode($entityClass, $ownerId, $property),
-        ]);
+        return $this->entityDiscovery->isAdminEntity($targetClass) && $this->entityDiscovery->isAdminEntity($entityClass)
+            ? $targetClass
+            : null;
     }
 
-    // ── Private helpers ────────────────────────────────────────────────────────
+    private function getIndexRoute(string $targetClass, string $targetShortName, bool $checkAccess): ?string
+    {
+        $route = $this->adminRouteRuntime->getRoute($targetClass, 'index');
+
+        if ($route === null || ($checkAccess && !$this->adminRouteRuntime->isActionAccessible($targetShortName, 'index'))) {
+            return null;
+        }
+
+        return $route;
+    }
 
     private function tryShowUrl(
         string $entityClass,

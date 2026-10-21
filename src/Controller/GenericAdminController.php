@@ -40,6 +40,7 @@ use Symfony\Component\Routing\Attribute\Route;
  * 2. Global required_role configuration (fallback)
  *
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class GenericAdminController extends AbstractAdminController
 {
