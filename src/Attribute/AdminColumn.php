@@ -61,6 +61,17 @@ use Attribute;
  *   #[AdminColumn(collectionDisplay: true, collectionLabelMethod: 'getDisplayName')]
  *   private Collection $participants;
  *
+ * `collectionDialog: true` renders a count button instead. Clicking it opens a native
+ * `<dialog>` embedding a full, scoped `K:Admin:EntityListEmbedded` of the collection's
+ * target entity (search, sort, filters, paging). The list is lazy-loaded on open and
+ * restricted to this row's collection. It takes precedence over `collectionDisplay`
+ * (`collectionLimit` / `collectionCollapsible` / `collectionLabelMethod` do not apply),
+ * and falls back to the count-only display when the target entity has no accessible
+ * admin index. See docs/COLLECTION_DIALOG.md.
+ *
+ *   #[AdminColumn(collectionDialog: true)]
+ *   private Collection $lineItems;
+ *
  * ## Precedence (checked in order)
  *
  *   1. `editable: false`        → never editable (short-circuits everything)
@@ -94,6 +105,10 @@ use Attribute;
  * @example Custom label method for collection items:
  *   #[AdminColumn(collectionDisplay: true, collectionLabelMethod: 'getDisplayName')]
  *   private Collection $participants;
+ *
+ * @example Collection in a dialog:
+ *   #[AdminColumn(collectionDialog: true)]
+ *   private Collection $lineItems;
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class AdminColumn
@@ -120,6 +135,11 @@ class AdminColumn
      *   When null (default), auto-detection is used: getLabel() → getName() → getTitle()
      *   → __toString() → #id. Use this to specify a custom method such as 'getDisplayName'
      *   or 'getFullTitle'. Only applies when collectionDisplay is true.
+     * @param bool $collectionDialog
+     *   Render a count button that opens a dialog embedding a lazy-loaded, scoped
+     *   entity list of the collection. Takes precedence over collectionDisplay.
+     *   Requires the target to be an #[Admin] entity with an accessible index.
+     *   Default false.
      */
     public function __construct(
         public readonly string|bool|null $editable = null,
@@ -128,5 +148,6 @@ class AdminColumn
         public readonly bool $collectionCollapsible = true,
         public readonly ?int $collectionLimit = 5,
         public readonly ?string $collectionLabelMethod = null,
+        public readonly bool $collectionDialog = false,
     ) {}
 }

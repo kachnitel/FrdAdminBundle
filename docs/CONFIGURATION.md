@@ -791,6 +791,7 @@ class User implements UserInterface
 - `archiveRole: ?string = null`
 
 **#[AdminColumn]** — Collection display parameters:
+- `collectionDialog: bool = false` — Open a scoped entity list in a dialog; takes precedence over inline display (see [Collection Dialog](COLLECTION_DIALOG.md))
 - `collectionDisplay: bool = false` — Show items inline instead of count+link
 - `collectionCollapsible: bool = true` — Wrap in `<details>` accordion
 - `collectionLimit: ?int = 5` — Items before "+ N more…" link; null/0 = show all
@@ -824,6 +825,8 @@ private Collection $tags;
 #[AdminColumn(collectionDisplay: true, collectionLabelMethod: 'getDisplayName')]
 private Collection $lineItems;
 ```
+
+For a searchable, paginated list in a dialog, use `#[AdminColumn(collectionDialog: true)]`. See the [Collection Dialog guide](COLLECTION_DIALOG.md) for setup and security details.
 
 **Label Auto-Detection** (when `collectionLabelMethod: null`):
 1. `getLabel()`

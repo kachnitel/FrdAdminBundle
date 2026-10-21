@@ -176,6 +176,28 @@ final class CollectionDisplayTest extends ComponentTestCase
     }
 
     #[Test]
+    public function collectionDialogRendersButtonAndLazyEmbeddedList(): void
+    {
+        $entity = new EntityWithCollectionDisplay();
+        $entity->setName('Dialog owner');
+        $this->em->persist($entity);
+
+        $tag = new TagEntity();
+        $tag->setName('Dialog item');
+        $tag->setDialogOwner($entity);
+        $this->em->persist($tag);
+        $this->em->flush();
+        $this->em->clear();
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertStringContainsString('data-controller="admin-collection-dialog"', $rendered);
+        $this->assertStringContainsString('<dialog', $rendered);
+        $this->assertStringContainsString('loading="lazy"', $rendered);
+        $this->assertStringContainsString('Dialog item', $rendered);
+    }
+
+    #[Test]
     public function defaultModeDoesNotRenderCollectionListWhenEmpty(): void
     {
         // With zero tags the default column should show '-', not an inline item list.

@@ -1,0 +1,52 @@
+{#
+ # Collection column rendered as a count button that opens a dialog embedding a
+ # scoped, lazy-loaded entity list of the collection (#[AdminColumn(collectionDialog: true)]).
+ #
+ # Variables (same as every types/ template): entity, value, property, cell
+ #
+ # See docs/COLLECTION_DIALOG.md. Behaviour lives in the admin-collection-dialog
+ # Stimulus controller; the list itself is K:Admin:EntityListEmbedded with a signed
+ # `scope` prop that CollectionScopeResolver authorizes on every query.
+ #}
+{% import kachnitel_admin_theme as css %}
+{% set targetClass = admin_get_association_type(entity, property) %}
+{% set count = value|length %}
+{% set dialogId = 'collection-dialog-' ~ entity.id ~ '-' ~ property %}
+
+<span data-controller="admin-collection-dialog"
+      data-admin-collection-dialog-dialog-id-value="{{ dialogId }}">
+    <button type="button"
+            class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}"
+            data-action="admin-collection-dialog#open"
+            {% if count == 0 %}disabled{% endif %}>{{ count }} {{ property|humanize|lower }}</button>
+
+    {# <dialog> padding stays 0 so a click on the dialog element itself is a backdrop click #}
+    <dialog id="{{ dialogId }}"
+            data-admin-collection-dialog-target="dialog"
+            data-action="click->admin-collection-dialog#backdrop"
+            style="padding:0;width:min(70rem,95vw);max-height:90vh;">
+        <div style="padding:1rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                <strong>{{ property|humanize }}</strong>
+                <button type="button"
+                        class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}"
+                        data-action="admin-collection-dialog#close"
+                        aria-label="Close">✕</button>
+            </div>
+
+            {# loading: "lazy" is REQUIRED inside a closed <dialog> — eager mounting breaks silently.
+               See InlineEntityForm's docblock. `key` keeps one stable instance per cell. #}
+            {{ component('K:Admin:EntityListEmbedded', {
+                key: dialogId,
+                loading: 'lazy',
+                entityClass: targetClass,
+                entityShortClass: targetClass|split('\\')|last,
+                scope: {
+                    ownerClass: admin_real_class(entity),
+                    ownerId: '' ~ entity.id,
+                    property: property,
+                },
+            }) }}
+        </div>
+    </dialog>
+</span>

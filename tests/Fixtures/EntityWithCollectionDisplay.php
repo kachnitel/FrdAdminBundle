@@ -62,11 +62,19 @@ class EntityWithCollectionDisplay
     #[ORM\JoinTable(name: 'collection_display_tags_default')]
     private Collection $tagsDefault;
 
+    /**
+     * @var Collection<int, TagEntity>
+     */
+    #[ORM\OneToMany(targetEntity: TagEntity::class, mappedBy: 'dialogOwner')]
+    #[AdminColumn(collectionDialog: true)]
+    private Collection $dialogItems;
+
     public function __construct()
     {
         $this->tagsAccordion = new ArrayCollection();
         $this->tagsList      = new ArrayCollection();
         $this->tagsDefault   = new ArrayCollection();
+        $this->dialogItems   = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -102,5 +110,13 @@ class EntityWithCollectionDisplay
     public function getTagsDefault(): Collection
     {
         return $this->tagsDefault;
+    }
+
+    /**
+     * @return Collection<int, TagEntity>
+     */
+    public function getDialogItems(): Collection
+    {
+        return $this->dialogItems;
     }
 }
