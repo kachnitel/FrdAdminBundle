@@ -144,7 +144,7 @@ class GenericAdminController extends AbstractAdminController
      * Only shape and owner class are resolved here; authorization (admin owner, ADMIN_SHOW,
      * column permission, object-level) happens in CollectionScopeResolver on every query.
      *
-     * @return array{ownerClass?: class-string, ownerId?: string, property?: string}
+     * @return array<string, string>
      */
     private function resolveCollectionScope(Request $request): array
     {

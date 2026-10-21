@@ -237,6 +237,8 @@ class AdminEntityUrlRuntimeTest extends TestCase
     /**
      * The link carries the same scope the dialog uses, so both paths list identical rows —
      * independent of mappedBy/inversedBy, which is what used to break unidirectional ManyToMany.
+     *
+     * @param \Closure(): object $mappingFactory
      */
     #[Test]
     #[Group('collection-scope')]
@@ -245,7 +247,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
     {
         $this->stubCollectionMetadata('tagEntities', TagEntity::class, $mappingFactory());
         $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
-        $this->adminRouteRuntime->method('getRoute')->with(TagEntity::class, 'index')->willReturn('app_admin_entity_index');
+        $this->adminRouteRuntime->expects($this->any())->method('getRoute')->with(TagEntity::class, 'index')->willReturn('app_admin_entity_index');
         $this->adminRouteRuntime->method('isActionAccessible')->willReturn(true);
 
         $this->router
@@ -291,13 +293,21 @@ class AdminEntityUrlRuntimeTest extends TestCase
     {
         /** @var ClassMetadata<object>&MockObject $metadata */
         $metadata = $this->createMock(ClassMetadata::class);
-        $metadata->method('isCollectionValuedAssociation')->with($property)->willReturn(true);
-        $metadata->method('getAssociationTargetClass')->with($property)->willReturn($targetClass);
+        $metadata->expects($this->any())->method('isCollectionValuedAssociation')->with($property)->willReturn(true);
+        $metadata->expects($this->any())->method('getAssociationTargetClass')->with($property)->willReturn($targetClass);
         if ($mapping !== null) {
-            $metadata->method('getAssociationMapping')->with($property)->willReturn($mapping);
+            $metadata->expects($this->any())->method('getAssociationMapping')->with($property)->willReturn($mapping);
         }
 
         $this->em->method('getClassMetadata')->willReturn($metadata);
+    }
+
+    /** @param array<int|string, mixed> $params */
+    private function hasColumnFilter(array $params, string $field, string $expected): bool
+    {
+        $filters = $params['columnFilters'] ?? null;
+
+        return is_array($filters) && ($filters[$field] ?? null) === $expected;
     }
 
     private function ownerWithId(int $id): object
