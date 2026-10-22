@@ -129,6 +129,66 @@ their constructor before show, edit, delete, or archive methods are exercised.
 Symfony 6.4 is no longer supported. The dynamic form bundle now requires
 Symfony UX Autocomplete 3, which requires Symfony 7.4 or later.
 
+### Collection links and the index page are scoped (0.x → 0.y)
+
+Introduced with the [collection dialog](docs/COLLECTION_DIALOG.md).
+`admin_collection_url()` now links to the target's index with a collection scope
+(`?collection=Owner:id:property`) instead of a `columnFilters` entry. The index page
+passes that scope to `EntityList`, so the link lists exactly the rows the dialog shows —
+including for unidirectional ManyToMany, which previously linked to the unfiltered list.
+
+**1. `GenericAdminController::index()` takes the request**
+
+```diff
+- public function index(string $entitySlug): Response
++ public function index(Request $request, string $entitySlug): Response
+```
+
+**Action:** If you override `index()` or call it directly, add the `Request $request`
+argument first. Test doubles that call `$controller->index('slug')` need
+`$controller->index(new Request(), 'slug')`.
+
+**2. Overridden `admin/index_live.html.twig` must forward `scope`**
+
+The controller passes a `scope` variable (empty array when unscoped) to the template.
+
+**Action:** If you override `@KachnitelAdmin/admin/index_live.html.twig`, pass it on —
+otherwise `admin_collection_url()` links silently open the full, unscoped list:
+
+```diff
+  <twig:K:Admin:EntityList
+      :entityShortClass="entityShortClass"
++     :scope="scope|default([])"
+  />
+```
+
+The bundled template also renders a "Lines of Order #12 ✕" banner for a scoped list;
+copy it if you want the same cue.
+
+**3. `AdminEntityUrlRuntime` no longer takes `$filterabilityService`**
+
+**Action:** Remove the `$filterabilityService` binding from any custom
+`services.yaml` definition of `AdminEntityUrlRuntime`, and drop it from code that
+constructs the runtime with named arguments.
+
+**4. `admin_collection_url()` output changed**
+
+- URLs now contain `collection=Owner:id:property` instead of `columnFilters[...]`.
+  Update code or tests that assert the old URL shape. Previously generated
+  `columnFilters` URLs (bookmarks) keep working.
+- It returns `null` when the owner entity has no `#[Admin]` attribute or has no id yet
+  (the scope cannot be authorized for it). Guard with `{% if url %}` as before.
+- The debug-mode `LogicException` for `#[ColumnFilter(enabled: false)]` on the inverse
+  field is gone; `PropertyFilterabilityService` is no longer used by the bundle.
+
+**5. `EntityListQueryService::executeQuery()` / `buildQuery()` gained parameters**
+
+Both take two optional trailing parameters, `?string $scopeDqlCondition = null` and
+`array $scopeParameters = []`.
+
+**Action:** Callers need no change. Subclasses overriding either method must add the
+two parameters to stay signature-compatible.
+
 ---
 
 ## No Action Needed
