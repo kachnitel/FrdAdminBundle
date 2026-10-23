@@ -7,27 +7,27 @@ namespace Kachnitel\AdminBundle\Twig\Components;
 use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
+use Kachnitel\DataSourceContracts\ColumnGroup;
+use Kachnitel\DataSourceContracts\ColumnMetadata;
+use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
-use Kachnitel\AdminBundle\Security\AdminEntityVoter;
-use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
-use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
+use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\Preferences\ColumnVisibilityPreferenceTrait;
-use Kachnitel\DataSourceContracts\ColumnGroup;
-use Kachnitel\DataSourceContracts\ColumnMetadata;
-use Kachnitel\DataSourceContracts\DataSourceInterface;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
+use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\DataSourceContracts\PaginatedResult;
 use Kachnitel\DataSourceContracts\PaginationInfo;
-use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
 use Symfony\UX\LiveComponent\Attribute\LiveListener;
-use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
@@ -53,11 +53,30 @@ use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 #[AsLiveComponent('K:Admin:EntityList', template: '@KachnitelAdmin/components/EntityList.html.twig')]
 class EntityList
 {
+    public const SORT_ASC = 'ASC';
+    public const SORT_DESC = 'DESC';
+
     use DefaultActionTrait;
     use ColumnVisibilityPreferenceTrait;
 
-    public const SORT_ASC = 'ASC';
-    public const SORT_DESC = 'DESC';
+    #[LiveProp(writable: true, url: true)]
+    public string $search = '';
+
+    #[LiveProp(writable: true, url: true)]
+    public string $sortBy = 'id';
+
+    #[LiveProp(writable: true, url: true)]
+    public string $sortDirection = self::SORT_DESC;
+
+    /** @var array<string, mixed> */
+    #[LiveProp(writable: true, url: true, onUpdated: 'onColumnFiltersUpdated')]
+    public array $columnFilters = [];
+
+    #[LiveProp(writable: true, url: true)]
+    public int $page = 1;
+
+    #[LiveProp(writable: true, url: true)]
+    public int $itemsPerPage;
 
     /** @var array<string> Stored as strings to match browser form values from data-model */
     #[LiveProp(writable: true)]
@@ -89,6 +108,12 @@ class EntityList
 
     #[LiveProp(writable: true)]
     public ?int $editingRowId = null;
+
+    /**
+     * When true, archived/soft-deleted records are shown alongside active ones.
+     */
+    #[LiveProp(writable: true, url: true)]
+    public bool $showArchived = false;
 
     /**
      * Restricts the list to one owner entity's collection:
@@ -127,7 +152,7 @@ class EntityList
         private EntityListColumnService $columnService,
         private ArchiveService $archiveService,
         private ObjectAuthorizationChecker $objectAuthChecker,
-        private ?CollectionScopeResolver $scopeResolver = null,
+        private CollectionScopeResolver $scopeResolver,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -226,10 +251,6 @@ class EntityList
     {
         if ($this->scope === []) {
             return null;
-        }
-
-        if ($this->scopeResolver === null) {
-            throw new AccessDeniedException('Scoped lists are not available.');
         }
 
         // The list's own entity: the scope's collection target must be it. Resolved from
@@ -727,29 +748,4 @@ class EntityList
 
         return $columns[$column]->sortable;
     }
-
-    #[LiveProp(writable: true, url: true)]
-    public string $search = '';
-
-    #[LiveProp(writable: true, url: true)]
-    public string $sortBy = 'id';
-
-    #[LiveProp(writable: true, url: true)]
-    public string $sortDirection = self::SORT_DESC;
-
-    /** @var array<string, mixed> */
-    #[LiveProp(writable: true, url: true, onUpdated: 'onColumnFiltersUpdated')]
-    public array $columnFilters = [];
-
-    #[LiveProp(writable: true, url: true)]
-    public int $page = 1;
-
-    #[LiveProp(writable: true, url: true)]
-    public int $itemsPerPage;
-
-    /**
-     * When true, archived/soft-deleted records are shown alongside active ones.
-     */
-    #[LiveProp(writable: true, url: true)]
-    public bool $showArchived = false;
 }

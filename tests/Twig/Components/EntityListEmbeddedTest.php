@@ -215,17 +215,6 @@ final class EntityListEmbeddedTest extends TestCase
     }
 
     #[Test]
-    public function scopeWithoutResolverIsDenied(): void
-    {
-        $component = $this->makeComponent(EntityListEmbedded::class);
-        $component->scope = self::SCOPE;
-
-        $this->expectException(AccessDeniedException::class);
-
-        $component->checkPermissions();
-    }
-
-    #[Test]
     public function emptyScopeNeverTouchesTheResolver(): void
     {
         $resolver = $this->createMock(CollectionScopeResolver::class);
@@ -256,6 +245,7 @@ final class EntityListEmbeddedTest extends TestCase
         ?DataSourceInterface $dataSource = null,
         ?CollectionScopeResolver $resolver = null,
     ): EntityList|EntityListEmbedded {
+        $resolver ??= $this->createStub(CollectionScopeResolver::class);
         $permissions = $this->createStub(EntityListPermissionService::class);
         $permissions->method('canViewList')->willReturn(true);
 

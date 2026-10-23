@@ -11,7 +11,10 @@
 {% import kachnitel_admin_theme as css %}
 {% set targetClass = admin_get_association_type(entity, property) %}
 {% set count = value|length %}
-{% set dialogId = 'collection-dialog-' ~ entity.id ~ '-' ~ property %}
+{# Owner class is part of the id: two owner classes sharing an id and a property name (e.g. in
+   one page or nested dialogs) must not collide, or the getElementById fallback finds the wrong dialog. #}
+{% set ownerClass = admin_real_class(entity) %}
+{% set dialogId = 'collection-dialog-' ~ ownerClass|split('\\')|last ~ '-' ~ entity.id ~ '-' ~ property %}
 
 <span data-controller="admin-collection-dialog"
       data-admin-collection-dialog-dialog-id-value="{{ dialogId }}">
@@ -20,20 +23,24 @@
             data-action="admin-collection-dialog#open"
             {% if count == 0 %}disabled{% endif %}>{{ count }} {{ property|humanize|lower }}</button>
 
-    {# <dialog> padding stays 0 so a click on the dialog element itself is a backdrop click #}
+    {# Theme macros give centering/positioning and header/body styling (same as inline-add);
+       the inline style only widens the theme's narrow dialog() for a full list. The theme's
+       border-0 p-0 keep a click on the <dialog> element itself a backdrop click. #}
     <dialog id="{{ dialogId }}"
+            class="{{ css.dialog() }} admin-collection-dialog"
+            style="width:min(70rem,95vw);max-width:none;"
+            aria-labelledby="{{ dialogId }}-title"
+            aria-modal="true"
             data-admin-collection-dialog-target="dialog"
-            data-action="click->admin-collection-dialog#backdrop"
-            style="padding:0;width:min(70rem,95vw);max-height:90vh;">
-        <div style="padding:1rem;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
-                <strong>{{ property|humanize }}</strong>
-                <button type="button"
-                        class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}"
-                        data-action="admin-collection-dialog#close"
-                        aria-label="Close">✕</button>
-            </div>
+            data-action="click->admin-collection-dialog#backdrop">
+        <div class="{{ css.dialog_header() }}">
+            <span id="{{ dialogId }}-title" class="{{ css.dialog_title() }}">{{ property|humanize }}</span>
+            <button type="button"
+                    class="{{ css.btn_close() }}"
+                    data-action="admin-collection-dialog#close">{{ 'Close'|trans }}</button>
+        </div>
 
+        <div class="{{ css.dialog_body() }}">
             {# loading: "lazy" is REQUIRED inside a closed <dialog> — eager mounting breaks silently.
                See InlineEntityForm's docblock. `key` keeps one stable instance per cell. #}
             {{ component('K:Admin:EntityListEmbedded', {
@@ -42,7 +49,7 @@
                 entityClass: targetClass,
                 entityShortClass: targetClass|split('\\')|last,
                 scope: {
-                    ownerClass: admin_real_class(entity),
+                    ownerClass: ownerClass,
                     ownerId: '' ~ entity.id,
                     property: property,
                 },

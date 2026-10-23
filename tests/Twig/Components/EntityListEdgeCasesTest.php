@@ -13,6 +13,7 @@ use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
+use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
@@ -173,6 +174,7 @@ final class EntityListEdgeCasesTest extends TestCase
             $this->columnService,
             $this->archiveService,
             $this->createStub(ObjectAuthorizationChecker::class),
+            $this->createStub(CollectionScopeResolver::class),
         ) extends EntityList {
             public function getEntities(): array
             {
@@ -223,6 +225,7 @@ final class EntityListEdgeCasesTest extends TestCase
             $this->columnService,
             $this->archiveService,
             $this->createStub(ObjectAuthorizationChecker::class),
+            $this->createStub(CollectionScopeResolver::class),
         );
     }
 }

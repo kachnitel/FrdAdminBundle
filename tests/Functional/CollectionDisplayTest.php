@@ -194,6 +194,8 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('<dialog', $rendered);
         $this->assertStringContainsString('loading="lazy"', $rendered);
         $this->assertStringContainsString('Dialog item', $rendered);
+        // Owner class is part of the id so same-id/same-property owners can't collide.
+        $this->assertMatchesRegularExpression('/id="collection-dialog-EntityWithCollectionDisplay-\d+-dialogItems"/', $rendered);
     }
 
     /**

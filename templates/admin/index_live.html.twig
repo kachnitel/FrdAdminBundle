@@ -36,7 +36,7 @@
         <p class="admin-collection-scope-banner" data-testid="collection-scope-banner">
             <strong>{{ scope.property|humanize }}</strong>
             of {{ scope.ownerClass|split('\\')|last }} #{{ scope.ownerId }}
-            <a href="{{ app.request.pathInfo }}" aria-label="Clear collection scope" title="Show all">✕</a>
+            <a href="{{ path(app.current_route, app.current_route_parameters) }}" aria-label="Clear collection scope" title="Show all">✕</a>
         </p>
     {% endif %}
     <twig:K:Admin:EntityList
