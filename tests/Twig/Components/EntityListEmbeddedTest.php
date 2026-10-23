@@ -14,6 +14,7 @@ use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
+use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\AdminBundle\Twig\Components\EntityListEmbedded;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
@@ -186,10 +187,29 @@ final class EntityListEmbeddedTest extends TestCase
         $resolver = $this->createStub(CollectionScopeResolver::class);
         $resolver->method('resolve')->willThrowException(new AccessDeniedException());
 
-        $component = $this->makeComponent(EntityListEmbedded::class, null, $resolver);
+        $component = $this->makeComponent(EntityListEmbedded::class, $this->createStub(DoctrineDataSource::class), $resolver);
         $component->scope = self::SCOPE;
 
         $this->expectException(AccessDeniedException::class);
+
+        $component->checkPermissions();
+    }
+
+    #[Test]
+    #[Group('collection-scope')]
+    public function scopeIsBoundToTheListsOwnEntityClass(): void
+    {
+        $dataSource = $this->createStub(DoctrineDataSource::class);
+        $dataSource->method('getEntityClass')->willReturn(TagEntity::class);
+
+        $resolver = $this->createMock(CollectionScopeResolver::class);
+        $resolver->expects($this->once())
+            ->method('resolve')
+            ->with(self::SCOPE, TagEntity::class)
+            ->willReturn(['x', []]);
+
+        $component = $this->makeComponent(EntityListEmbedded::class, $dataSource, $resolver);
+        $component->scope = self::SCOPE;
 
         $component->checkPermissions();
     }

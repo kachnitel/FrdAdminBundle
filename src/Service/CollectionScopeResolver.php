@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\MappingException;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -18,8 +19,9 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  *
  * Checks, in order: owner is an #[Admin] entity, class-level ADMIN_SHOW on the
  * owner, #[ColumnPermission] ADMIN_SHOW on the property, the property is a
- * collection association, the target is an #[Admin] entity, the owner exists,
- * and object-level ADMIN_SHOW on the owner instance.
+ * collection association, the target is an #[Admin] entity and is the entity the
+ * list shows, the owner id is valid for the owner's identifier type, the owner
+ * exists, and object-level ADMIN_SHOW on the owner instance.
  *
  * The restriction is an exact `IN (subquery)` on the target's identifier, not a
  * column filter: it is correct for OneToMany, bidirectional and unidirectional
@@ -41,13 +43,16 @@ class CollectionScopeResolver
 
     /**
      * @param array<string, mixed> $scope
+     * @param class-string $listEntityClass Entity class of the list being scoped; the
+     *                                      collection's target must be this entity (or a subclass)
      * @return array{0: string, 1: array<string, mixed>} [DQL fragment using alias "e", parameters]
      *
      * @throws \InvalidArgumentException  malformed scope
-     * @throws NotFoundHttpException      unmanaged entity, non-collection property, missing owner
+     * @throws NotFoundHttpException      unmanaged entity, non-collection property, target/list mismatch,
+     *                                    invalid or missing owner
      * @throws AccessDeniedException      class, column or object-level denial
      */
-    public function resolve(array $scope): array
+    public function resolve(array $scope, string $listEntityClass): array
     {
         $ownerClass = $scope['ownerClass'] ?? null;
         $ownerId    = $scope['ownerId'] ?? null;
@@ -58,26 +63,29 @@ class CollectionScopeResolver
         }
 
         /** @var class-string $ownerClass */
-        $ownerMeta = $this->getAuthorizedOwnerMetadata($ownerClass, $property);
+        $ownerMeta = $this->getAuthorizedOwnerMetadata($ownerClass, $property, $listEntityClass);
 
-        $owner = $this->em->find($ownerClass, $ownerId);
+        // Normalize before querying: a string bound to an integer key is a driver error
+        // on some platforms (500) rather than a clean "not found".
+        $ownerIdField = $this->getSingleIdentifierField($ownerMeta);
+        $idParameter  = $this->normalizeOwnerId($ownerMeta, $ownerIdField, $ownerId);
+
+        $owner = $this->em->find($ownerClass, $idParameter);
         if ($owner === null) {
             $shortName = (new \ReflectionClass($ownerClass))->getShortName();
             throw new NotFoundHttpException(sprintf('%s #%s not found.', $shortName, (string) $ownerId));
         }
         $this->objectAuthChecker->denyAccessUnlessGranted(AdminEntityVoter::ADMIN_SHOW, $owner);
 
-        return $this->buildRestriction($ownerClass, $ownerMeta, $ownerId, $property);
+        return $this->buildRestriction($ownerClass, $ownerMeta, $ownerIdField, $idParameter, $property);
     }
 
     /**
      * @param class-string $ownerClass
-     */
-    /**
-     * @param class-string $ownerClass
+     * @param class-string $listEntityClass
      * @return ClassMetadata<object>
      */
-    private function getAuthorizedOwnerMetadata(string $ownerClass, string $property): ClassMetadata
+    private function getAuthorizedOwnerMetadata(string $ownerClass, string $property, string $listEntityClass): ClassMetadata
     {
         if (!$this->entityDiscovery->isAdminEntity($ownerClass)) {
             throw new NotFoundHttpException('Scope owner is not managed by the admin.');
@@ -95,27 +103,66 @@ class CollectionScopeResolver
             throw new NotFoundHttpException(sprintf('"%s" is not a collection association.', $property));
         }
 
-        if (!$this->entityDiscovery->isAdminEntity($ownerMeta->getAssociationTargetClass($property))) {
+        $targetClass = $ownerMeta->getAssociationTargetClass($property);
+        if (!$this->entityDiscovery->isAdminEntity($targetClass)) {
             throw new NotFoundHttpException('Collection target is not managed by the admin.');
+        }
+
+        // Without this, /admin/product?collection=Order:12:lines would apply Order line ids
+        // to Product rows (wrong rows, or a DQL error when the id fields differ).
+        if (!is_a($targetClass, $listEntityClass, true)) {
+            throw new NotFoundHttpException('Collection target does not match the listed entity.');
         }
 
         return $ownerMeta;
     }
 
     /**
+     * @param ClassMetadata<object> $ownerMeta
+     */
+    private function getSingleIdentifierField(ClassMetadata $ownerMeta): string
+    {
+        try {
+            return $ownerMeta->getSingleIdentifierFieldName();
+        } catch (MappingException) {
+            throw new NotFoundHttpException('Collection scopes require a single-column owner identifier.');
+        }
+    }
+
+    /**
+     * @param ClassMetadata<object> $ownerMeta
+     */
+    private function normalizeOwnerId(ClassMetadata $ownerMeta, string $ownerIdField, string|int $ownerId): string|int
+    {
+        if (!in_array($ownerMeta->getTypeOfField($ownerIdField), self::INTEGER_TYPES, true)) {
+            return $ownerId;
+        }
+
+        if (is_int($ownerId)) {
+            return $ownerId;
+        }
+
+        if (preg_match('/^-?\d+$/D', $ownerId) !== 1) {
+            throw new NotFoundHttpException('Invalid owner identifier.');
+        }
+
+        return (int) $ownerId;
+    }
+
+    /**
      * @param class-string $ownerClass
-    * @param ClassMetadata<object> $ownerMeta
+     * @param ClassMetadata<object> $ownerMeta
      * @return array{0: string, 1: array<string, mixed>}
      */
-    private function buildRestriction(string $ownerClass, ClassMetadata $ownerMeta, string|int $ownerId, string $property): array
-    {
-        $ownerIdField  = $ownerMeta->getSingleIdentifierFieldName();
+    private function buildRestriction(
+        string $ownerClass,
+        ClassMetadata $ownerMeta,
+        string $ownerIdField,
+        string|int $idParameter,
+        string $property,
+    ): array {
         $targetClass   = $ownerMeta->getAssociationTargetClass($property);
         $targetIdField = $this->em->getClassMetadata($targetClass)->getSingleIdentifierFieldName();
-
-        $idParameter = in_array($ownerMeta->getTypeOfField($ownerIdField), self::INTEGER_TYPES, true) && is_numeric($ownerId)
-            ? (int) $ownerId
-            : $ownerId;
 
         // Class and property names were validated above (admin-entity map / Doctrine
         // metadata), so interpolating them is safe; the owner id is bound.

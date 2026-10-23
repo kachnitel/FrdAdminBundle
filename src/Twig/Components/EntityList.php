@@ -204,7 +204,15 @@ class EntityList
             throw new AccessDeniedException('Scoped lists are not available.');
         }
 
-        return $this->cache['scope'] ??= $this->scopeResolver->resolve($this->scope);
+        // The list's own entity: the scope's collection target must be it. Resolved from
+        // the data source (not entityShortClass + namespace), which is what actually queries.
+        $this->resolveEntityClass();
+        $dataSource = $this->resolveDataSource();
+        if (!$dataSource instanceof DoctrineDataSource) {
+            throw new \LogicException('Scoped lists require a Doctrine data source.');
+        }
+
+        return $this->cache['scope'] ??= $this->scopeResolver->resolve($this->scope, $dataSource->getEntityClass());
     }
 
     // ── Data Source Resolution ─────────────────────────────────────────────────

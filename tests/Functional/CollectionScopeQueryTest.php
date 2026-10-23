@@ -53,7 +53,7 @@ final class CollectionScopeQueryTest extends ComponentTestCase
             'ownerClass' => TestEntity::class,
             'ownerId' => (string) $owner->getId(),
             'property' => $property,
-        ]);
+        ], TagEntity::class);
 
         /** @var EntityListQueryService $queryService */
         $queryService = static::getContainer()->get(EntityListQueryService::class);

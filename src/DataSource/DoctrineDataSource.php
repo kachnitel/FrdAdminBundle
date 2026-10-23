@@ -89,6 +89,17 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         $this->archiveDqlCondition = $condition;
     }
 
+    /**
+     * Entity class this data source lists. EntityList compares it with a collection
+     * scope's target so a scope can never be applied to a different entity's list.
+     *
+     * @return class-string
+     */
+    public function getEntityClass(): string
+    {
+        return $this->entityClass;
+    }
+
     // ── Scope condition ────────────────────────────────────────────────────────
 
     /**

@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\MappingException;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
@@ -29,10 +30,13 @@ final class CollectionScopeResolverTest extends TestCase
 {
     private const SCOPE = ['ownerClass' => \stdClass::class, 'ownerId' => '7', 'property' => 'items'];
 
+    /** The entity class of the list being scoped: must be the collection's target. */
+    private const LIST = \ArrayObject::class;
+
     #[Test]
     public function buildsExactSubqueryWithBoundOwnerId(): void
     {
-        [$dql, $params] = $this->makeResolver()->resolve(self::SCOPE);
+        [$dql, $params] = $this->makeResolver()->resolve(self::SCOPE, self::LIST);
 
         $this->assertSame(
             'e.id IN (SELECT scope_t.id FROM stdClass scope_o JOIN scope_o.items scope_t WHERE scope_o.id = :scope_owner_id)',
@@ -44,7 +48,7 @@ final class CollectionScopeResolverTest extends TestCase
     #[Test]
     public function castsNumericOwnerIdForIntegerKeys(): void
     {
-        [, $params] = $this->makeResolver(idType: 'integer')->resolve(self::SCOPE);
+        [, $params] = $this->makeResolver(idType: 'integer')->resolve(self::SCOPE, self::LIST);
 
         $this->assertSame(['scope_owner_id' => 7], $params);
     }
@@ -54,6 +58,7 @@ final class CollectionScopeResolverTest extends TestCase
     {
         [, $params] = $this->makeResolver(idType: 'guid')->resolve(
             ['ownerClass' => \stdClass::class, 'ownerId' => 'abc-123', 'property' => 'items'],
+            self::LIST,
         );
 
         $this->assertSame(['scope_owner_id' => 'abc-123'], $params);
@@ -68,7 +73,7 @@ final class CollectionScopeResolverTest extends TestCase
             ->method('denyAccessUnlessGranted')
             ->with(AdminEntityVoter::ADMIN_SHOW, $this->identicalTo($owner));
 
-        $this->makeResolver(owner: $owner, objectAuth: $objectAuth)->resolve(self::SCOPE);
+        $this->makeResolver(owner: $owner, objectAuth: $objectAuth)->resolve(self::SCOPE, self::LIST);
     }
 
     #[Test]
@@ -76,7 +81,7 @@ final class CollectionScopeResolverTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $this->makeResolver()->resolve(['ownerClass' => 1, 'ownerId' => '7', 'property' => 'items']);
+        $this->makeResolver()->resolve(['ownerClass' => 1, 'ownerId' => '7', 'property' => 'items'], self::LIST);
     }
 
     #[Test]
@@ -84,7 +89,7 @@ final class CollectionScopeResolverTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $this->makeResolver()->resolve([]);
+        $this->makeResolver()->resolve([], self::LIST);
     }
 
     #[Test]
@@ -92,7 +97,7 @@ final class CollectionScopeResolverTest extends TestCase
     {
         $this->expectException(NotFoundHttpException::class);
 
-        $this->makeResolver(ownerAdmin: false)->resolve(self::SCOPE);
+        $this->makeResolver(ownerAdmin: false)->resolve(self::SCOPE, self::LIST);
     }
 
     #[Test]
@@ -100,7 +105,7 @@ final class CollectionScopeResolverTest extends TestCase
     {
         $this->expectException(NotFoundHttpException::class);
 
-        $this->makeResolver(targetAdmin: false)->resolve(self::SCOPE);
+        $this->makeResolver(targetAdmin: false)->resolve(self::SCOPE, self::LIST);
     }
 
     #[Test]
@@ -108,7 +113,7 @@ final class CollectionScopeResolverTest extends TestCase
     {
         $this->expectException(AccessDeniedException::class);
 
-        $this->makeResolver(show: false)->resolve(self::SCOPE);
+        $this->makeResolver(show: false)->resolve(self::SCOPE, self::LIST);
     }
 
     #[Test]
@@ -116,7 +121,7 @@ final class CollectionScopeResolverTest extends TestCase
     {
         $this->expectException(AccessDeniedException::class);
 
-        $this->makeResolver(column: false)->resolve(self::SCOPE);
+        $this->makeResolver(column: false)->resolve(self::SCOPE, self::LIST);
     }
 
     #[Test]
@@ -127,7 +132,7 @@ final class CollectionScopeResolverTest extends TestCase
 
         $this->expectException(AccessDeniedException::class);
 
-        $this->makeResolver(objectAuth: $objectAuth)->resolve(self::SCOPE);
+        $this->makeResolver(objectAuth: $objectAuth)->resolve(self::SCOPE, self::LIST);
     }
 
     #[Test]
@@ -135,7 +140,44 @@ final class CollectionScopeResolverTest extends TestCase
     {
         $this->expectException(NotFoundHttpException::class);
 
-        $this->makeResolver(isCollection: false)->resolve(self::SCOPE);
+        $this->makeResolver(isCollection: false)->resolve(self::SCOPE, self::LIST);
+    }
+
+    #[Test]
+    public function rejectsScopeWhoseTargetIsNotTheListedEntity(): void
+    {
+        // e.g. /admin/product?collection=Order:12:items — the subquery would select Order
+        // line ids and apply them to Product rows.
+        $this->expectException(NotFoundHttpException::class);
+        $this->expectExceptionMessage('does not match');
+
+        $this->makeResolver()->resolve(self::SCOPE, \stdClass::class);
+    }
+
+    #[Test]
+    public function acceptsListedEntityThatIsASuperclassOfTheTarget(): void
+    {
+        [$dql] = $this->makeResolver()->resolve(self::SCOPE, \Countable::class);
+
+        $this->assertStringContainsString('IN (SELECT', $dql);
+    }
+
+    #[Test]
+    public function rejectsNonNumericOwnerIdForIntegerKeyBeforeQueryingTheDatabase(): void
+    {
+        // A string bound to an integer PK is a driver error on PostgreSQL (500, not 404).
+        $this->expectException(NotFoundHttpException::class);
+
+        $this->makeResolver(idType: 'integer', findExpected: false)
+            ->resolve(['ownerClass' => \stdClass::class, 'ownerId' => 'abc', 'property' => 'items'], self::LIST);
+    }
+
+    #[Test]
+    public function rejectsOwnerWithCompositeIdentifier(): void
+    {
+        $this->expectException(NotFoundHttpException::class);
+
+        $this->makeResolver(compositeId: true, findExpected: false)->resolve(self::SCOPE, self::LIST);
     }
 
     #[Test]
@@ -143,7 +185,7 @@ final class CollectionScopeResolverTest extends TestCase
     {
         $this->expectException(NotFoundHttpException::class);
 
-        $this->makeResolver(owner: null)->resolve(self::SCOPE);
+        $this->makeResolver(owner: null)->resolve(self::SCOPE, self::LIST);
     }
 
     private function makeResolver(
@@ -155,6 +197,8 @@ final class CollectionScopeResolverTest extends TestCase
         ?object $owner = new \stdClass(),
         ?ObjectAuthorizationChecker $objectAuth = null,
         ?string $idType = null,
+        bool $compositeId = false,
+        bool $findExpected = true,
     ): CollectionScopeResolver {
         $discovery = $this->createStub(EntityDiscoveryService::class);
         $discovery->method('isAdminEntity')->willReturnCallback(
@@ -171,12 +215,22 @@ final class CollectionScopeResolverTest extends TestCase
         $metadata = $this->createStub(ClassMetadata::class);
         $metadata->method('isCollectionValuedAssociation')->willReturn($isCollection);
         $metadata->method('getAssociationTargetClass')->willReturn(\ArrayObject::class);
-        $metadata->method('getSingleIdentifierFieldName')->willReturn('id');
+        if ($compositeId) {
+            $metadata->method('getSingleIdentifierFieldName')->willThrowException(new MappingException('composite identifier'));
+        } else {
+            $metadata->method('getSingleIdentifierFieldName')->willReturn('id');
+        }
         $metadata->method('getTypeOfField')->willReturn($idType);
 
-        $em = $this->createStub(EntityManagerInterface::class);
+        if ($findExpected) {
+            $em = $this->createStub(EntityManagerInterface::class);
+            $em->method('find')->willReturn($owner);
+        } else {
+            // Invalid owner ids must be rejected before any query is issued.
+            $em = $this->createMock(EntityManagerInterface::class);
+            $em->expects($this->never())->method('find');
+        }
         $em->method('getClassMetadata')->willReturn($metadata);
-        $em->method('find')->willReturn($owner);
 
         return new CollectionScopeResolver(
             $em,
