@@ -179,7 +179,8 @@ constructs the runtime with named arguments.
 - It returns `null` when the owner entity has no `#[Admin]` attribute or has no id yet
   (the scope cannot be authorized for it). Guard with `{% if url %}` as before.
 - The debug-mode `LogicException` for `#[ColumnFilter(enabled: false)]` on the inverse
-  field is gone; `PropertyFilterabilityService` is no longer used by the bundle.
+  field is gone, and `PropertyFilterabilityService` has been removed (its only caller was
+  this function). Drop any references to it.
 
 **5. `EntityListQueryService::executeQuery()` / `buildQuery()` gained parameters**
 

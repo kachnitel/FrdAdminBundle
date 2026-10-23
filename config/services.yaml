@@ -42,11 +42,6 @@ services:
         arguments:
             $propertyAccessor: '@property_accessor'
 
-    # PropertyFilterabilityService — answers "can this property be filtered?" for URL generation
-    Kachnitel\AdminBundle\Service\PropertyFilterabilityService:
-        arguments:
-            $debug: '%kernel.debug%'
-
     # Field editability resolver — admin implementation overrides the permissive default
     # from kachnitel/entity-components-bundle
     Kachnitel\AdminBundle\Field\:
