@@ -10,6 +10,7 @@
  # @var array<int|string> selectedIds     - Currently selected entity IDs
  # @var string            entityClass     - Fully-qualified entity class name
  # @var string            entityShortClass - Short entity class name
+ # @var string|null       listComponent   - Component name of the owning list (scopes emitted events)
  #}
 
 {% import kachnitel_admin_theme as css %}
@@ -21,7 +22,8 @@
     {{ component(action.liveComponent, {
         selectedIds: selectedIds,
         entityClass: entityClass,
-        entityShortClass: entityShortClass
+        entityShortClass: entityShortClass,
+        listComponent: listComponent|default(null)
     }) }}
 
 {% elseif action.route or action.url %}

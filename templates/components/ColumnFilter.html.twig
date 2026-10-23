@@ -11,6 +11,7 @@
     {% include '@KachnitelAdmin/components/ColumnFilter/_' ~ filterType ~ '.html.twig' with {
         column: column,
         value: this.value,
-        filterMetadata: filterMetadata
+        filterMetadata: filterMetadata,
+        listComponent: this.listComponent
     } only %}
 </div>

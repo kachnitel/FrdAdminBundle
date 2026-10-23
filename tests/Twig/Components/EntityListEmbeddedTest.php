@@ -236,6 +236,16 @@ final class EntityListEmbeddedTest extends TestCase
         $component->checkPermissions();
     }
 
+    // ── Event scoping ──────────────────────────────────────────────────────────
+
+    #[Test]
+    #[Group('collection-scope')]
+    public function listComponentNameIsTheRegisteredNameOfTheConcreteClass(): void
+    {
+        $this->assertSame('K:Admin:EntityList', $this->makeComponent(EntityList::class)->getListComponentName());
+        $this->assertSame('K:Admin:EntityListEmbedded', $this->makeComponent(EntityListEmbedded::class)->getListComponentName());
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     /**

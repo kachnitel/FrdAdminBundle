@@ -196,6 +196,39 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('Dialog item', $rendered);
     }
 
+    /**
+     * UX cannot target one of two same-named nested lists, so a dialog inside an embedded
+     * list would leak its filter/batch events into the embedded list around it. Dialog
+     * cells therefore fall back to the plain count + link there.
+     */
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogFallsBackToPlainCellInsideAnEmbeddedList(): void
+    {
+        $entity = new EntityWithCollectionDisplay();
+        $entity->setName('Dialog owner');
+        $this->em->persist($entity);
+
+        $tag = new TagEntity();
+        $tag->setName('Dialog item');
+        $tag->setDialogOwner($entity);
+        $this->em->persist($tag);
+        $this->em->flush();
+        $this->em->clear();
+
+        $rendered = (string) $this->createLiveComponent(
+            name: 'K:Admin:EntityListEmbedded',
+            data: [
+                'entityClass'      => EntityWithCollectionDisplay::class,
+                'entityShortClass' => 'EntityWithCollectionDisplay',
+            ],
+        )->render();
+
+        $this->assertStringNotContainsString('data-controller="admin-collection-dialog"', $rendered);
+        $this->assertStringNotContainsString('<dialog', $rendered);
+        $this->assertStringContainsString('1 item', $rendered);
+    }
+
     #[Test]
     public function defaultModeDoesNotRenderCollectionListWhenEmpty(): void
     {

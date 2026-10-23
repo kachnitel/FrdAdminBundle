@@ -47,4 +47,9 @@ class EntityListEmbedded extends EntityList
      */
     #[LiveProp(writable: true)]
     public bool $showArchived = false;
+
+    public function isEmbedded(): bool
+    {
+        return true;
+    }
 }

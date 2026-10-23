@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Components\AdminAction;
 
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
-use Symfony\UX\LiveComponent\ComponentToolsTrait;
+use Kachnitel\AdminBundle\Twig\Components\EmitsToListTrait;
 
 /**
  * Provides the three standard LiveProps expected by every batch action component
@@ -32,6 +32,8 @@ use Symfony\UX\LiveComponent\ComponentToolsTrait;
  *   selectedIds      — IDs of currently selected entities
  *   entityClass      — Fully-qualified entity class name
  *   entityShortClass — Short class name used for voter checks and route slugs
+ *   listComponent    — Component name of the owning list; scopes the emitted event so a
+ *                      list embedded in a dialog doesn't update the outer list (optional)
  *
  * EntityList listens for 'admin:action:completed' and refreshes the list,
  * clearing affected IDs from its own selectedIds LiveProp.
@@ -40,7 +42,7 @@ use Symfony\UX\LiveComponent\ComponentToolsTrait;
  */
 trait BatchActionTrait
 {
-    use ComponentToolsTrait;
+    use EmitsToListTrait;
 
     /**
      * IDs of currently selected entities, synced from EntityList's selectedIds LiveProp.
@@ -75,7 +77,7 @@ trait BatchActionTrait
      */
     protected function completeAction(string $action, array $affectedIds): void
     {
-        $this->emitUp('admin:action:completed', [
+        $this->emitToList('admin:action:completed', [
             'action'      => $action,
             'affectedIds' => $affectedIds,
         ]);

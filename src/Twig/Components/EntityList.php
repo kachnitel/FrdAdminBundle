@@ -187,6 +187,34 @@ class EntityList
         }
     }
 
+    /**
+     * Whether this list is embedded in another page or dialog (EntityListEmbedded).
+     * Cell templates use it to avoid nesting collection dialogs: see EmitsToListTrait.
+     */
+    public function isEmbedded(): bool
+    {
+        return false;
+    }
+
+    // ── Event scoping ──────────────────────────────────────────────────────────
+
+    /**
+     * Registered component name of the concrete list class (e.g. K:Admin:EntityList or
+     * K:Admin:EntityListEmbedded). Templates pass it to the filters and batch actions
+     * so their emitUp() events reach only lists of this kind — see EmitsToListTrait.
+     */
+    public function getListComponentName(): string
+    {
+        $class = new \ReflectionClass(static::class);
+        do {
+            foreach ($class->getAttributes(AsLiveComponent::class) as $attribute) {
+                return $attribute->newInstance()->name ?? $class->getShortName();
+            }
+        } while (($class = $class->getParentClass()) !== false);
+
+        return 'K:Admin:EntityList';
+    }
+
     // ── Scope ──────────────────────────────────────────────────────────────────
 
     /**

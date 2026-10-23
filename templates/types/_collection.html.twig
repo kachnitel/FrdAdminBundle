@@ -13,8 +13,11 @@
  # @var object     entity   - The root entity being displayed
  # @var Collection value    - The collection value
  # @var string     property - The property name being displayed
+ # @var bool|null  embedded - True inside an EntityListEmbedded; collectionDialog then falls back
+ #                            to the plain count/link cell (dialogs don't nest)
  #}
-{% if (admin_column_attribute(entity, property).collectionDialog ?? false) and admin_collection_url(entity, property) %}
+{# A dialog never renders inside an embedded list (UX cannot scope events between same-named nested lists) #}
+{% if (admin_column_attribute(entity, property).collectionDialog ?? false) and not (embedded ?? false) and admin_collection_url(entity, property) %}
     {% include '@KachnitelAdmin/types/_collection_dialog.html.twig' %}
 {% else %}
 {% import kachnitel_admin_theme as css %}
