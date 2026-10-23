@@ -72,6 +72,8 @@ Every check runs server-side in `CollectionScopeResolver::resolve()`, on **every
 | `#[ColumnPermission]` `ADMIN_SHOW` on the property | 403 |
 | Property is a collection association | 404 |
 | Target entity has `#[Admin]` | 404 |
+| Target entity is the entity the list shows (a mismatched `?collection=` on another entity's index) | 404 |
+| Owner id is valid for the owner's identifier type; single-column identifier | 404 |
 | Owner row exists | 404 |
 | Object-level `ADMIN_SHOW` on the owner instance (`enableObjectAuth`) | 403 |
 
@@ -128,7 +130,15 @@ import AdminCollectionDialogController from '../vendor/kachnitel/admin-bundle/as
 application.register('admin-collection-dialog', AdminCollectionDialogController);
 ```
 
+## Events inside the dialog
+
+The embedded list sits inside the outer list's element, and UX's `emitUp()` reaches *every* ancestor component. Filters and batch actions therefore emit to the component name of the list that rendered them (`EntityList::getListComponentName()`, passed down as `listComponent`; see [scoping events](https://symfony.com/bundles/ux-live-component/current/index.html#scoping-events)). A filter typed in a dialog updates only the embedded list, never the outer list's filters, page or URL.
+
+Custom filter or batch-action components get this by using `EmitsToListTrait` (or `BatchActionTrait`) and receiving `listComponent`; without it they broadcast as before.
+
 ## Limitations
+
+- **Dialogs don't nest.** UX can target components by name but not by instance, so a dialog inside an embedded list would leak its events into the embedded list around it. Inside an `EntityListEmbedded`, a `collectionDialog` column falls back to the plain count and link.
 
 - One `<dialog>` per row per collection column is rendered, but it is empty until opened (the list is lazy).
 - Column visibility preferences are stored per entity short name, so the embedded list shares them with the entity's main list.

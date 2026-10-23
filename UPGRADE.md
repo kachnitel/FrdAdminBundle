@@ -182,7 +182,19 @@ constructs the runtime with named arguments.
   field is gone, and `PropertyFilterabilityService` has been removed (its only caller was
   this function). Drop any references to it.
 
-**5. `EntityListQueryService::executeQuery()` / `buildQuery()` gained parameters**
+**5. `EntityList` requires a `CollectionScopeResolver`**
+
+`EntityList::__construct()` takes a new last argument, `CollectionScopeResolver $scopeResolver`.
+
+**Action:** If you extend `EntityList` and override its constructor, or instantiate it with `new` (for example in tests), pass a `CollectionScopeResolver`. Autowired services need no change.
+
+**6. Filter and batch-action events are scoped to their list**
+
+Filters and batch actions now `emitUp()` to the component name of the list that rendered them, so lists embedded in a collection dialog no longer update the outer list. The bundled templates pass a new `listComponent` prop.
+
+**Action:** If you override `ColumnFilter.html.twig`, a `ColumnFilter/_*.html.twig` partial, or the `EntityList/_BatchActionsBar` / `_BatchActionButton` templates, pass `listComponent` on to the filter and batch components. Custom filter or batch components should `use EmitsToListTrait` (`BatchActionTrait` already does). Without `listComponent` the old broadcast behavior is kept.
+
+**7. `EntityListQueryService::executeQuery()` / `buildQuery()` gained parameters**
 
 Both take two optional trailing parameters, `?string $scopeDqlCondition = null` and
 `array $scopeParameters = []`.
