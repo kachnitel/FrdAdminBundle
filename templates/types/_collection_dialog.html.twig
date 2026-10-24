@@ -23,12 +23,9 @@
             data-action="admin-collection-dialog#open"
             {% if count == 0 %}disabled{% endif %}>{{ count }} {{ property|humanize|lower }}</button>
 
-    {# Theme macros give centering/positioning and header/body styling (same as inline-add);
-       the inline style only widens the theme's narrow dialog() for a full list. The theme's
-       border-0 p-0 keep a click on the <dialog> element itself a backdrop click. #}
+    {# Theme macros provide the wide layout and shared backdrop hook. #}
     <dialog id="{{ dialogId }}"
-            class="{{ css.dialog() }} admin-collection-dialog"
-            style="width:min(70rem,95vw);max-width:none;"
+            class="{{ css.dialog_wide() }} admin-inline-dialog"
             aria-labelledby="{{ dialogId }}-title"
             aria-modal="true"
             data-admin-collection-dialog-target="dialog"

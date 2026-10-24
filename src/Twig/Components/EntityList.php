@@ -233,7 +233,10 @@ class EntityList
         $class = new \ReflectionClass(static::class);
         do {
             foreach ($class->getAttributes(AsLiveComponent::class) as $attribute) {
-                return $attribute->newInstance()->name ?? $class->getShortName();
+                $arguments = $attribute->getArguments();
+                $name = $arguments['name'] ?? $arguments[0] ?? null;
+
+                return is_string($name) ? $name : $class->getShortName();
             }
         } while (($class = $class->getParentClass()) !== false);
 

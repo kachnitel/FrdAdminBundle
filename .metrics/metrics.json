@@ -1,9 +1,9 @@
 {
-    "generated_at": "2026-10-23 22:43:24",
+    "generated_at": "2026-10-24 05:57:31",
     "tests": {
         "count": 1761,
-        "assertions": 4104,
-        "status": "failing(errors)"
+        "assertions": 4111,
+        "status": "passing"
     },
     "coverage": {
         "lines": 93.57,
@@ -12,7 +12,7 @@
     },
     "phpstan": {
         "level": 10,
-        "status": "errors"
+        "status": "pass"
     },
     "phpmd": {
         "ran": true,
