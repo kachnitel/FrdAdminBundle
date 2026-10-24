@@ -38,6 +38,18 @@ use Attribute;
  * The group label is derived by humanising the identifier string.
  * Group members appear in the composite cell in their original column order.
  *
+ * ## Read-only in the New/Edit form
+ *
+ * `editable: false` removes a column from the auto-generated New/Edit form
+ * entirely. Add `readOnlyInForm: true` to keep it in the form as a disabled
+ * field instead (value displayed, submitted data ignored):
+ *
+ *   #[AdminColumn(editable: false, readOnlyInForm: true)]
+ *   private string $reference;
+ *
+ * Only takes effect together with `editable: false`; it does not change inline
+ * editing in the list view, where the column stays non-editable.
+ *
  * ## Collection display
  *
  * By default, collection-valued associations render as a count label with a
@@ -67,6 +79,8 @@ use Attribute;
  *   2. `editable: 'expression'` → evaluate; if false, not editable (entity default bypassed)
  *   3. `editable: true`         → editable (entity default bypassed; still needs voter + writable)
  *   4. `editable: null`         → use entity's `#[Admin(enableInlineEdit: ...)]`
+ *
+ * Form rendering: `editable: false` + `readOnlyInForm: true` → shown as a disabled field.
  *
  * @example Group two properties into one composite cell:
  *   #[AdminColumn(group: 'name_block')]
@@ -104,6 +118,9 @@ class AdminColumn
      *   - true   = always editable (overrides entity default; still needs voter + writable)
      *   - false  = never editable (overrides entity default)
      *   - string = ExpressionLanguage expression (overrides entity default)
+     * @param bool $readOnlyInForm
+     *   With `editable: false`, render the field disabled in the New/Edit form instead of
+     *   omitting it. Ignored for any other `editable` value. Default false.
      * @param string|null $group
      *   Composite column group identifier. Properties sharing the same group
      *   are rendered in a single stacked table cell. Null means no grouping.
@@ -128,5 +145,6 @@ class AdminColumn
         public readonly bool $collectionCollapsible = true,
         public readonly ?int $collectionLimit = 5,
         public readonly ?string $collectionLabelMethod = null,
+        public readonly bool $readOnlyInForm = false,
     ) {}
 }
