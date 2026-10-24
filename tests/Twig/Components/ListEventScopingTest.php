@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Twig\Components;
 
+use Kachnitel\AdminBundle\BatchAction\BatchActionComponentInterface;
 use Kachnitel\AdminBundle\Twig\Components\AdminAction\BatchActionTrait;
 use Kachnitel\AdminBundle\Twig\Components\ColumnFilter;
 use Kachnitel\AdminBundle\Twig\Components\DateRangeFilter;
@@ -13,7 +14,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\UX\LiveComponent\LiveResponder;
 
@@ -43,9 +43,12 @@ final class ListEventScopingTest extends TestCase
         $filter->column = 'name';
         $filter->value = 'abc';
         $filter->listComponent = self::EMBEDDED;
-        $filter->setLiveResponder($this->expectEmitUp('filter:updated', ['column' => 'name', 'value' => 'abc'], self::EMBEDDED));
+        $responder = new LiveResponder();
+        $filter->setLiveResponder($responder);
 
         $filter->onUpdated();
+
+        $this->assertEmitUp($responder, 'filter:updated', ['column' => 'name', 'value' => 'abc'], self::EMBEDDED);
     }
 
     #[Test]
@@ -54,9 +57,12 @@ final class ListEventScopingTest extends TestCase
         // Custom templates that don't pass listComponent behave exactly as before.
         $filter = new ColumnFilter();
         $filter->column = 'name';
-        $filter->setLiveResponder($this->expectEmitUp('filter:updated', ['column' => 'name', 'value' => ''], null));
+        $responder = new LiveResponder();
+        $filter->setLiveResponder($responder);
 
         $filter->onUpdated();
+
+        $this->assertEmitUp($responder, 'filter:updated', ['column' => 'name', 'value' => ''], null);
     }
 
     #[Test]
@@ -65,9 +71,12 @@ final class ListEventScopingTest extends TestCase
         $filter = new DateRangeFilter();
         $filter->column = 'createdAt';
         $filter->listComponent = self::EMBEDDED;
-        $filter->setLiveResponder($this->expectEmitUp('filter:updated', ['column' => 'createdAt', 'value' => ''], self::EMBEDDED));
+        $responder = new LiveResponder();
+        $filter->setLiveResponder($responder);
 
         $filter->clear();
+
+        $this->assertEmitUp($responder, 'filter:updated', ['column' => 'createdAt', 'value' => ''], self::EMBEDDED);
     }
 
     #[Test]
@@ -76,15 +85,18 @@ final class ListEventScopingTest extends TestCase
         $filter = new EnumMultiFilter();
         $filter->column = 'status';
         $filter->listComponent = self::EMBEDDED;
-        $filter->setLiveResponder($this->expectEmitUp('filter:updated', ['column' => 'status', 'value' => ''], self::EMBEDDED));
+        $responder = new LiveResponder();
+        $filter->setLiveResponder($responder);
 
         $filter->clear();
+
+        $this->assertEmitUp($responder, 'filter:updated', ['column' => 'status', 'value' => ''], self::EMBEDDED);
     }
 
     #[Test]
     public function batchActionsTargetTheirListComponent(): void
     {
-        $action = new class {
+        $action = new class implements BatchActionComponentInterface {
             use BatchActionTrait;
 
             public function run(): void
@@ -93,21 +105,24 @@ final class ListEventScopingTest extends TestCase
             }
         };
         $action->listComponent = self::EMBEDDED;
-        $action->setLiveResponder(
-            $this->expectEmitUp('admin:action:completed', ['action' => 'delete', 'affectedIds' => [1, 2]], self::EMBEDDED),
-        );
+        $responder = new LiveResponder();
+        $action->setLiveResponder($responder);
 
         $action->run();
+
+        $this->assertEmitUp($responder, 'admin:action:completed', ['action' => 'delete', 'affectedIds' => [1, 2]], self::EMBEDDED);
     }
 
     /**
      * @param array<string, mixed> $data
      */
-    private function expectEmitUp(string $event, array $data, ?string $componentName): LiveResponder&MockObject
+    private function assertEmitUp(LiveResponder $responder, string $event, array $data, ?string $componentName): void
     {
-        $responder = $this->createMock(LiveResponder::class);
-        $responder->expects($this->once())->method('emitUp')->with($event, $data, $componentName);
-
-        return $responder;
+        $this->assertSame([[
+            'event' => $event,
+            'data' => $data,
+            'target' => 'up',
+            'componentName' => $componentName,
+        ]], $responder->getEventsToEmit());
     }
 }
