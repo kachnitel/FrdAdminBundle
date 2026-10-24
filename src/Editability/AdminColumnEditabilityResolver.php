@@ -6,6 +6,8 @@ namespace Kachnitel\AdminBundle\Editability;
 
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\DynamicFormBundle\Editability\FieldEditabilityResolverInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -31,11 +33,23 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * enableInlineEdit: true would lose every field from its auto-generated form —
  * this class must never read #[Admin] at all.
  *
+ * ## #[ColumnPermission]: no entry / read-only / read-write
+ *
+ * The form honours the same per-column roles as the list view:
+ *
+ *   - ADMIN_SHOW restricted and not granted → no entry (field omitted)
+ *   - ADMIN_SHOW granted, ADMIN_EDIT restricted and not granted → read-only
+ *                                              (rendered disabled, see isReadOnly())
+ *   - otherwise                                → read-write
+ *
+ * A column with no #[ColumnPermission] is unaffected. #[AdminColumn(editable: false)]
+ * still removes the field regardless of roles.
+ *
  * ## canEdit() precedence (checked in order)
  *
+ *   0. ADMIN_SHOW denied by #[ColumnPermission] → excluded
  *   1. No #[AdminColumn] attribute  → included (permissive default)
- *   2. editable: false              → excluded (short-circuits everything), unless
- *                                      readOnlyInForm: true → included, rendered disabled
+ *   2. editable: false              → excluded (short-circuits everything)
  *   3. editable: 'expression'       → evaluate; the result IS the answer. If no
  *                                      $entity is available yet, included
  *                                      provisionally — DynamicFormEditabilityListener
@@ -57,8 +71,9 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *
  * ## isReadOnly()
  *
- * True only for `editable: false` + `readOnlyInForm: true`. Such a field is
- * included by canEdit() and rendered disabled; it is never an explicit override.
+ * True when #[ColumnPermission] restricts ADMIN_EDIT for the column and the
+ * current user does not hold the required role. Only consulted for fields
+ * canEdit() already accepted, i.e. the user may see the column.
  *
  * @see \Kachnitel\AdminBundle\Field\AdminEditabilityResolver the sibling resolver
  *      for list-view inline editing — same underlying attribute, different defaults
@@ -69,6 +84,7 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
         private readonly AttributeHelper $attributeHelper,
         private readonly RowActionExpressionLanguage $expressionLanguage,
         private readonly AuthorizationCheckerInterface $authorizationChecker,
+        private readonly ColumnPermissionService $columnPermissions,
     ) {}
 
     /**
@@ -76,6 +92,10 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
      */
     public function canEdit(string $entityClass, string $property, ?object $entity = null): bool
     {
+        if (!$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_SHOW)) {
+            return false;
+        }
+
         $column = $this->getAdminColumn($entityClass, $property);
 
         if ($column === null) {
@@ -83,8 +103,7 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
         }
 
         if ($column->editable === false) {
-            // Opt-in: still rendered, but as a disabled field (see isReadOnly())
-            return $column->readOnlyInForm;
+            return false;
         }
 
         if (is_string($column->editable)) {
@@ -126,9 +145,7 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
      */
     public function isReadOnly(string $entityClass, string $property, ?object $entity = null): bool
     {
-        $column = $this->getAdminColumn($entityClass, $property);
-
-        return $column !== null && $column->editable === false && $column->readOnlyInForm;
+        return !$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_EDIT);
     }
 
     /**

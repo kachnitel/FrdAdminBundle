@@ -27,6 +27,8 @@ class Employee
 }
 ```
 
+The New/Edit form follows the same rules: no `ADMIN_SHOW` role means the field is omitted, `ADMIN_SHOW` without `ADMIN_EDIT` renders it read-only (disabled). See [Forms](FORMS.md#column-permissions-no-entry--read-only--read-write).
+
 **Available actions:** `ADMIN_SHOW`, `ADMIN_EDIT`, `ADMIN_DELETE` (use `AdminEntityVoter` constants).
 
 **Role arrays:** Pass an array of roles for OR logic — user needs at least one.

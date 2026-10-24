@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Editability;
 
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
+use Kachnitel\AdminBundle\Attribute\ColumnPermission;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Kachnitel\AdminBundle\Editability\AdminColumnEditabilityResolver;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
@@ -29,11 +33,13 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(AdminColumnEditabilityResolver::class)]
 #[UsesClass(AdminColumn::class)]
+#[UsesClass(ColumnPermission::class)]
+#[UsesClass(ColumnPermissionService::class)]
 #[UsesClass(AttributeHelper::class)]
 #[UsesClass(ObjectHelper::class)]
 #[Group('dynamic-form')]
 #[Group('expressions')]
-#[Group('readonly-form')]
+#[Group('column-permission-form')]
 #[AllowMockObjectsWithoutExpectations]
 final class AdminColumnEditabilityResolverTest extends TestCase
 {
@@ -42,18 +48,28 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
     private AdminColumnEditabilityResolver $resolver;
 
+    /** @var list<string> roles the simulated user holds */
+    private array $grantedRoles = [];
+
     protected function setUp(): void
     {
+        $this->grantedRoles = [];
+
         $this->expressionLanguage   = $this->createMock(RowActionExpressionLanguage::class);
 
         // AttributeHelper is a plain reflection service with no dependencies of its
         // own — using the real implementation keeps this test honest about how
         // #[AdminColumn] is actually read, rather than mocking away the one
         // collaborator whose interaction with the resolver matters most.
+        $authChecker = $this->createStub(AuthorizationCheckerInterface::class);
+        $authChecker->method('isGranted')
+            ->willReturnCallback(fn (mixed $attribute): bool => in_array($attribute, $this->grantedRoles, true));
+
         $this->resolver = new AdminColumnEditabilityResolver(
             new AttributeHelper(),
             $this->expressionLanguage,
-            $this->createStub(\Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface::class),
+            $authChecker,
+            new ColumnPermissionService($authChecker),
         );
     }
 
@@ -207,49 +223,60 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         $this->assertFalse($this->resolver->isExplicitOverride(ResolverTestEntity::class, 'status'));
     }
 
-    // ── isReadOnly() / readOnlyInForm ──────────────────────────────────────────
+    // ── #[ColumnPermission]: no entry / read-only / read-write ─────────────────
 
     #[Test]
-    public function readOnlyInFormKeepsAnEditableFalseFieldIncluded(): void
+    public function columnWithoutShowRoleHasNoEntry(): void
     {
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'shown'));
+        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'salary'));
     }
 
     #[Test]
-    public function readOnlyInFormMarksAnEditableFalseFieldReadOnly(): void
+    public function columnWithShowButNotEditRoleIsReadOnly(): void
     {
-        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'shown'));
+        $this->grantedRoles = ['ROLE_HR'];
+
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'salary'));
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'salary'));
     }
 
     #[Test]
-    public function editableFalseWithoutOptInIsStillExcludedAndNotReadOnly(): void
+    public function columnWithShowAndEditRolesIsReadWrite(): void
     {
+        $this->grantedRoles = ['ROLE_HR', 'ROLE_HR_EDIT'];
+
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'salary'));
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'salary'));
+    }
+
+    #[Test]
+    public function columnRestrictedOnlyByEditRoleIsReadOnlyWithoutIt(): void
+    {
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'editRestricted'));
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'editRestricted'));
+    }
+
+    #[Test]
+    public function editableFalseStillExcludesEvenWhenPermissionsAllow(): void
+    {
+        $this->grantedRoles = ['ROLE_HR', 'ROLE_HR_EDIT'];
+
         $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'blocked'));
-        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'blocked'));
     }
 
     #[Test]
-    public function readOnlyInFormIsIgnoredUnlessEditableIsFalse(): void
-    {
-        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'forcedWithOptIn'));
-    }
-
-    #[Test]
-    public function unannotatedFieldIsNotReadOnly(): void
+    public function unrestrictedColumnIsNeverReadOnly(): void
     {
         $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'plain'));
-    }
-
-    #[Test]
-    public function readOnlyFieldIsNotAnExplicitOverride(): void
-    {
-        $this->assertFalse($this->resolver->isExplicitOverride(ResolverTestEntity::class, 'shown'));
-    }
-
-    #[Test]
-    public function isReadOnlyIsFalseForAnUnknownProperty(): void
-    {
         $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'doesNotExist'));
+    }
+
+    #[Test]
+    public function readOnlyColumnIsNotAnExplicitOverride(): void
+    {
+        $this->grantedRoles = ['ROLE_HR'];
+
+        $this->assertFalse($this->resolver->isExplicitOverride(ResolverTestEntity::class, 'salary'));
     }
 }
 
@@ -265,14 +292,17 @@ class ResolverTestEntity
     #[AdminColumn(editable: true)]
     public string $forced = '';
 
-    #[AdminColumn(editable: false, readOnlyInForm: true)]
-    public string $shown = '';
-
-    #[AdminColumn(editable: true, readOnlyInForm: true)]
-    public string $forcedWithOptIn = '';
-
     #[AdminColumn(editable: 'entity.enabled')]
     public string $status = '';
 
     public bool $enabled = false;
+
+    #[ColumnPermission([
+        AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR',
+        AdminEntityVoter::ADMIN_EDIT => 'ROLE_HR_EDIT',
+    ])]
+    public string $salary = '';
+
+    #[ColumnPermission([AdminEntityVoter::ADMIN_EDIT => 'ROLE_HR_EDIT'])]
+    public string $editRestricted = '';
 }
