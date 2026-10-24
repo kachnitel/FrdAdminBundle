@@ -135,9 +135,6 @@ class AdminColumn
      *   - true   = always editable (overrides entity default; still needs voter + writable)
      *   - false  = never editable (overrides entity default)
      *   - string = ExpressionLanguage expression (overrides entity default)
-     * @param bool $readOnlyInForm
-     *   With `editable: false`, render the field disabled in the New/Edit form instead of
-     *   omitting it. Ignored for any other `editable` value. Default false.
      * @param string|null $group
      *   Composite column group identifier. Properties sharing the same group
      *   are rendered in a single stacked table cell. Null means no grouping.
@@ -159,6 +156,9 @@ class AdminColumn
      *   of the collection. Alone it replaces the count/link; with collectionDisplay it
      *   the "+ N more…" entry opens it. Requires the target to be an #[Admin] entity
      *   with an accessible index. Default false.
+     * @param bool $readOnlyInForm
+     *   With `editable: false`, render the field disabled in the New/Edit form instead of
+     *   omitting it. Ignored for any other `editable` value. Default false.
      */
     public function __construct(
         public readonly string|bool|null $editable = null,
