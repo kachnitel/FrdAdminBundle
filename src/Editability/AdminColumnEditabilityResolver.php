@@ -34,7 +34,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * ## canEdit() precedence (checked in order)
  *
  *   1. No #[AdminColumn] attribute  → included (permissive default)
- *   2. editable: false              → excluded (short-circuits everything)
+ *   2. editable: false              → excluded (short-circuits everything), unless
+ *                                      readOnlyInForm: true → included, rendered disabled
  *   3. editable: 'expression'       → evaluate; the result IS the answer. If no
  *                                      $entity is available yet, included
  *                                      provisionally — DynamicFormEditabilityListener
@@ -53,6 +54,11 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *   3. editable: true               → overridden (bypasses the auto-skip)
  *   4. editable: 'expression'       → evaluate if $entity is available; if not,
  *                                      not overridden (yet)
+ *
+ * ## isReadOnly()
+ *
+ * True only for `editable: false` + `readOnlyInForm: true`. Such a field is
+ * included by canEdit() and rendered disabled; it is never an explicit override.
  *
  * @see \Kachnitel\AdminBundle\Field\AdminEditabilityResolver the sibling resolver
  *      for list-view inline editing — same underlying attribute, different defaults
@@ -77,7 +83,8 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
         }
 
         if ($column->editable === false) {
-            return false;
+            // Opt-in: still rendered, but as a disabled field (see isReadOnly())
+            return $column->readOnlyInForm;
         }
 
         if (is_string($column->editable)) {
@@ -112,6 +119,16 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
         }
 
         return false;
+    }
+
+    /**
+     * @param class-string $entityClass
+     */
+    public function isReadOnly(string $entityClass, string $property, ?object $entity = null): bool
+    {
+        $column = $this->getAdminColumn($entityClass, $property);
+
+        return $column !== null && $column->editable === false && $column->readOnlyInForm;
     }
 
     /**

@@ -33,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ObjectHelper::class)]
 #[Group('dynamic-form')]
 #[Group('expressions')]
+#[Group('readonly-form')]
 #[AllowMockObjectsWithoutExpectations]
 final class AdminColumnEditabilityResolverTest extends TestCase
 {
@@ -205,6 +206,51 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
         $this->assertFalse($this->resolver->isExplicitOverride(ResolverTestEntity::class, 'status'));
     }
+
+    // ── isReadOnly() / readOnlyInForm ──────────────────────────────────────────
+
+    #[Test]
+    public function readOnlyInFormKeepsAnEditableFalseFieldIncluded(): void
+    {
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'shown'));
+    }
+
+    #[Test]
+    public function readOnlyInFormMarksAnEditableFalseFieldReadOnly(): void
+    {
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'shown'));
+    }
+
+    #[Test]
+    public function editableFalseWithoutOptInIsStillExcludedAndNotReadOnly(): void
+    {
+        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'blocked'));
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'blocked'));
+    }
+
+    #[Test]
+    public function readOnlyInFormIsIgnoredUnlessEditableIsFalse(): void
+    {
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'forcedWithOptIn'));
+    }
+
+    #[Test]
+    public function unannotatedFieldIsNotReadOnly(): void
+    {
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'plain'));
+    }
+
+    #[Test]
+    public function readOnlyFieldIsNotAnExplicitOverride(): void
+    {
+        $this->assertFalse($this->resolver->isExplicitOverride(ResolverTestEntity::class, 'shown'));
+    }
+
+    #[Test]
+    public function isReadOnlyIsFalseForAnUnknownProperty(): void
+    {
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'doesNotExist'));
+    }
 }
 
 // ── Fixture ────────────────────────────────────────────────────────────────────
@@ -218,6 +264,12 @@ class ResolverTestEntity
 
     #[AdminColumn(editable: true)]
     public string $forced = '';
+
+    #[AdminColumn(editable: false, readOnlyInForm: true)]
+    public string $shown = '';
+
+    #[AdminColumn(editable: true, readOnlyInForm: true)]
+    public string $forcedWithOptIn = '';
 
     #[AdminColumn(editable: 'entity.enabled')]
     public string $status = '';

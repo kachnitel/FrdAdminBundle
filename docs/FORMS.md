@@ -89,6 +89,7 @@ the New and Edit buttons appear for every `#[Admin]` entity without any extra co
 |---|---|
 | Regular Doctrine fields (string, int, float, bool, date, datetime, time, enum) | ✅ Yes |
 | `#[AdminColumn(editable: false)]` on the property | ❌ Excluded |
+| `#[AdminColumn(editable: false, readOnlyInForm: true)]` | 👁 Shown, disabled |
 | The primary identifier field (`id`) | ❌ Always excluded |
 | JSON, array, blob, binary fields | ❌ Skipped (no sensible widget) |
 | Single-valued associations (ManyToOne, OneToOne) | ✅ As `EntityType` select |
@@ -114,6 +115,25 @@ class User
     private string $passwordHash = '';   // excluded from the auto-form
 }
 ```
+
+#### Showing a field read-only
+
+To display a non-editable field on the form instead of hiding it, add `readOnlyInForm: true`:
+
+```php
+#[ORM\Column]
+#[AdminColumn(editable: false, readOnlyInForm: true)]
+private string $reference = '';      // rendered as a disabled input
+```
+
+The field is added with `disabled => true`, so Symfony ignores any submitted value —
+the entity value can't be changed through the form, even with a tampered request.
+`readOnlyInForm` only applies together with `editable: false`, and doesn't affect inline
+editing in the list view (the column stays non-editable there). Inverse-side
+associations that are auto-skipped stay skipped; `readOnlyInForm` is not an opt-back-in.
+
+> Requires `kachnitel/dynamic-form-bundle` with `isReadOnly()` support on
+> `FieldEditabilityResolverInterface`.
 
 `#[AdminColumn(editable: ...)]` is read by `AdminColumnEditabilityResolver` — this
 bundle's implementation of dynamic-form-bundle's

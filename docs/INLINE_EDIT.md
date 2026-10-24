@@ -104,7 +104,7 @@ the entity level.
 
 The editability of a column is resolved in this order:
 
-1. `#[AdminColumn(editable: false)]` — **never editable**, short-circuits all other checks
+1. `#[AdminColumn(editable: false)]` — **never editable**, short-circuits all other checks (add `readOnlyInForm: true` to still show it, disabled, on the New/Edit [form](FORMS.md#showing-a-field-read-only))
 2. `#[AdminColumn(editable: 'expression')]` — expression evaluated; entity default bypassed
 3. `#[AdminColumn(editable: true)]` — **always eligible**; entity default bypassed
 4. `#[AdminColumn(editable: null)]` or **no** `#[AdminColumn]` — read entity-level `enableInlineEdit`
