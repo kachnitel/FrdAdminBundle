@@ -92,7 +92,7 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
      */
     public function canEdit(string $entityClass, string $property, ?object $entity = null): bool
     {
-        if (!$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_SHOW)) {
+        if (!$this->isPermitted($entityClass, $property, AdminEntityVoter::ADMIN_SHOW)) {
             return false;
         }
 
@@ -145,7 +145,22 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
      */
     public function isReadOnly(string $entityClass, string $property, ?object $entity = null): bool
     {
-        return !$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_EDIT);
+        return !$this->isPermitted($entityClass, $property, AdminEntityVoter::ADMIN_EDIT);
+    }
+
+    /**
+     * #[ColumnPermission] check. A class that can't be reflected has no
+     * restrictions to apply — same fallback as getAdminColumn().
+     *
+     * @param class-string $entityClass
+     */
+    private function isPermitted(string $entityClass, string $property, string $action): bool
+    {
+        try {
+            return $this->columnPermissions->canPerformAction($entityClass, $property, $action);
+        } catch (\ReflectionException) {
+            return true;
+        }
     }
 
     /**

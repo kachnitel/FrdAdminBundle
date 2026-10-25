@@ -63,7 +63,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         // collaborator whose interaction with the resolver matters most.
         $authChecker = $this->createStub(AuthorizationCheckerInterface::class);
         $authChecker->method('isGranted')
-            ->willReturnCallback(fn (mixed $attribute): bool => in_array($attribute, $this->grantedRoles, true));
+            ->willReturnCallback(fn (mixed $attribute): bool => $this->holdsRole($attribute));
 
         $this->resolver = new AdminColumnEditabilityResolver(
             new AttributeHelper(),
@@ -71,6 +71,15 @@ final class AdminColumnEditabilityResolverTest extends TestCase
             $authChecker,
             new ColumnPermissionService($authChecker),
         );
+    }
+
+    /**
+     * Separate method so PHPStan doesn't narrow $grantedRoles to the empty array
+     * assigned in setUp() when analysing the closure.
+     */
+    private function holdsRole(mixed $attribute): bool
+    {
+        return in_array($attribute, $this->grantedRoles, true);
     }
 
     // ── canEdit(): the key behavioural difference from AdminEditabilityResolver ──
