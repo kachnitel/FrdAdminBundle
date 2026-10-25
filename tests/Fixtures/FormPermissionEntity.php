@@ -14,7 +14,7 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
  * Covers #[ColumnPermission] in the New/Edit form:
  *   - title   → no restriction (always read-write)
  *   - salary  → no entry without ROLE_HR, read-only with ROLE_HR, read-write with ROLE_HR + ROLE_HR_EDIT
- *   - hidden  → #[AdminColumn(editable: false)], absent regardless of roles
+ *   - lockedNote → #[AdminColumn(editable: false)], read-only for everyone who can see it
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'test_form_permission')]
@@ -38,7 +38,7 @@ class FormPermissionEntity
 
     #[ORM\Column(length: 100)]
     #[AdminColumn(editable: false)]
-    private string $hidden = '';
+    private string $lockedNote = '';
 
     public function getId(): ?int
     {
@@ -69,14 +69,14 @@ class FormPermissionEntity
         return $this;
     }
 
-    public function getHidden(): string
+    public function getLockedNote(): string
     {
-        return $this->hidden;
+        return $this->lockedNote;
     }
 
-    public function setHidden(string $hidden): self
+    public function setLockedNote(string $lockedNote): self
     {
-        $this->hidden = $hidden;
+        $this->lockedNote = $lockedNote;
 
         return $this;
     }

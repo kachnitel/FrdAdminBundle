@@ -121,12 +121,12 @@ The dialog creates its form using an FQCN-derived name (e.g., `inline_app_entity
 
 ## OneToMany Fields
 
-OneToMany associations appear in the inline dialog via `LiveCollectionType` when using the auto-generated form. If you encounter issues with add/remove row controls (as this edge-case is untested), use a custom form type or exclude the association from the inline form:
+OneToMany associations appear in the inline dialog via `LiveCollectionType` when using the auto-generated form. If you encounter issues with add/remove row controls (as this edge-case is untested), use a custom form type, or make the association read-only in the inline form:
 
 ```php
 class OrderLine {
     #[ORM\OneToMany(...)]
-    #[AdminColumn(editable: false)]
+    #[AdminColumn(editable: false)]   // shown disabled; restrict ADMIN_SHOW via #[ColumnPermission] to hide it
     private Collection $attachments;
 }
 ```
@@ -135,7 +135,7 @@ class OrderLine {
 
 ## Disabling the Inline-Add Button
 
-* **Per field:** Set `#[AdminColumn(editable: false)]` on the specific property.
+* **Per field:** Set `#[AdminColumn(editable: false)]` on the specific property (the field stays visible but read-only).
 * **Per entity:** Restrict the `new` permission to a role no user holds, or override `EntityTypeAddButton.html.twig` to return empty for that entity.
 
 ---

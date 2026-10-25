@@ -25,6 +25,15 @@ use Attribute;
  *   - An expression string evaluated against the entity row using Symfony's
  *     ExpressionLanguage. The result overrides the entity default entirely.
  *
+ * ## Effect on the New/Edit form
+ *
+ * `editable` can only restrict the auto-generated form, never permit: `false`, or an
+ * expression evaluating false, renders the field read-only (disabled) instead of
+ * hiding it. Whether a field appears at all, and whether it is read-only for the
+ * current user, is decided first by `#[ColumnPermission]` (ADMIN_SHOW / ADMIN_EDIT).
+ * `true` does not lift a ColumnPermission restriction. Inline editing in the list
+ * view is unaffected: there `false` hides the ✎ trigger.
+ *
  * The `group` parameter allows multiple properties to share a single
  * composite `<th>`/`<td>` in the admin list view. Properties with the same
  * group identifier are stacked vertically inside one table cell.
@@ -37,18 +46,6 @@ use Attribute;
  *
  * The group label is derived by humanising the identifier string.
  * Group members appear in the composite cell in their original column order.
- *
- * ## Read-only in the New/Edit form
- *
- * `editable: false` removes a column from the auto-generated New/Edit form
- * entirely. Add `readOnlyInForm: true` to keep it in the form as a disabled
- * field instead (value displayed, submitted data ignored):
- *
- *   #[AdminColumn(editable: false, readOnlyInForm: true)]
- *   private string $reference;
- *
- * Only takes effect together with `editable: false`; it does not change inline
- * editing in the list view, where the column stays non-editable.
  *
  * ## Collection display
  *
@@ -92,8 +89,6 @@ use Attribute;
  *   2. `editable: 'expression'` → evaluate; if false, not editable (entity default bypassed)
  *   3. `editable: true`         → editable (entity default bypassed; still needs voter + writable)
  *   4. `editable: null`         → use entity's `#[Admin(enableInlineEdit: ...)]`
- *
- * Form rendering: `editable: false` + `readOnlyInForm: true` → shown as a disabled field.
  *
  * @example Group two properties into one composite cell:
  *   #[AdminColumn(group: 'name_block')]
@@ -156,9 +151,6 @@ class AdminColumn
      *   of the collection. Alone it replaces the count/link; with collectionDisplay it
      *   the "+ N more…" entry opens it. Requires the target to be an #[Admin] entity
      *   with an accessible index. Default false.
-     * @param bool $readOnlyInForm
-     *   With `editable: false`, render the field disabled in the New/Edit form instead of
-     *   omitting it. Ignored for any other `editable` value. Default false.
      */
     public function __construct(
         public readonly string|bool|null $editable = null,
@@ -168,6 +160,5 @@ class AdminColumn
         public readonly ?int $collectionLimit = 5,
         public readonly ?string $collectionLabelMethod = null,
         public readonly bool $collectionDialog = false,
-        public readonly bool $readOnlyInForm = false,
     ) {}
 }

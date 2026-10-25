@@ -22,7 +22,8 @@ use Symfony\Component\Security\Core\User\InMemoryUser;
 /**
  * #[ColumnPermission] drives the New/Edit form through the real container:
  *   no ADMIN_SHOW role → no entry; ADMIN_SHOW only → read-only (disabled);
- *   ADMIN_SHOW + ADMIN_EDIT → read-write.
+ *   ADMIN_SHOW + ADMIN_EDIT → read-write. #[AdminColumn(editable: false)] can only
+ *   restrict further: such a column is read-only for everyone who may see it.
  */
 #[Group('column-permission-form')]
 #[Group('dynamic-form')]
@@ -86,11 +87,17 @@ final class ColumnPermissionFormIntegrationTest extends KernelTestCase
         $this->assertSame('100', $entity->getSalary());
     }
 
-    public function testEditableFalseColumnStaysAbsentRegardlessOfRoles(): void
+    public function testEditableFalseColumnIsReadOnlyEvenWithEveryRole(): void
     {
-        $form = $this->createForm(new FormPermissionEntity(), ['ROLE_HR', 'ROLE_HR_EDIT']);
+        $entity = new FormPermissionEntity();
+        $form   = $this->createForm($entity, ['ROLE_HR', 'ROLE_HR_EDIT']);
 
-        $this->assertFalse($form->has('hidden'));
+        $this->assertTrue($form->has('lockedNote'));
+        $this->assertTrue($form->get('lockedNote')->isDisabled());
+
+        $form->submit(['title' => 'T', 'salary' => '5', 'lockedNote' => 'TAMPERED']);
+
+        $this->assertSame('', $entity->getLockedNote());
     }
 
     /**

@@ -88,7 +88,7 @@ the New and Edit buttons appear for every `#[Admin]` entity without any extra co
 | Condition | Included |
 |---|---|
 | Regular Doctrine fields (string, int, float, bool, date, datetime, time, enum) | ✅ Yes |
-| `#[AdminColumn(editable: false)]` on the property | ❌ Excluded |
+| `#[AdminColumn(editable: false)]` on the property | 👁 Shown, disabled (read-only) |
 | `#[ColumnPermission]` restricts `ADMIN_SHOW` and the user lacks the role | ❌ Excluded |
 | `#[ColumnPermission]` restricts `ADMIN_EDIT` and the user lacks the role | 👁 Shown, disabled (read-only) |
 | The primary identifier field (`id`) | ❌ Always excluded |
@@ -102,20 +102,23 @@ recursion prevention — is covered in dynamic-form-bundle's own
 [Associations](https://github.com/kachnitel/dynamic-form-bundle/blob/master/docs/ASSOCIATIONS.md)
 guide, and in this bundle's [inline-add integration notes](DYNAMIC_FORM_COLLECTIONS.md).
 
-#### Excluding a field
+#### Read-only and hidden fields
 
 ```php
 #[Admin(label: 'Users', enableInlineEdit: true)]
 class User
 {
     #[ORM\Column]
-    private string $email = '';          // included
+    private string $email = '';          // editable
 
     #[ORM\Column]
     #[AdminColumn(editable: false)]
-    private string $passwordHash = '';   // excluded from the auto-form
+    private string $passwordHash = '';   // shown, disabled
 }
 ```
+
+To keep a field off the form entirely, restrict `ADMIN_SHOW` with
+[`#[ColumnPermission]`](COLUMN_VISIBILITY.md#per-column-permissions) (this also hides it in the list).
 
 `#[AdminColumn(editable: ...)]` is read by `AdminColumnEditabilityResolver` — this
 bundle's implementation of dynamic-form-bundle's
@@ -154,12 +157,26 @@ private float $salary;   // ROLE_HR: read-only · ROLE_HR + ROLE_HR_EDIT: editab
 
 Read-only fields are added with `disabled => true`, so Symfony ignores submitted values —
 the entity value can't be changed through the form, even with a tampered request.
-`#[AdminColumn(editable: false)]` still removes the field regardless of roles.
+`#[AdminColumn(editable: ...)]` can only restrict further, never permit:
+
+| `editable` | Effect on the form |
+|---|---|
+| `false` | read-only (disabled), whatever the roles |
+| expression evaluating `false` | read-only once the entity is known |
+| `true` / `null` / no attribute | no effect — permissions decide |
+
+`editable: true` does **not** lift a `ColumnPermission` restriction. Inline editing in the
+list view is a separate surface: there `editable: false` hides the ✎ trigger and the form is
+not involved.
+
+**Collection rows:** a child row's entity isn't known when its form is built, so an expression
+that can only be evaluated per row can't disable the field then. After the row's entity is bound
+the field is removed instead of being left editable.
 
 > Requires a `kachnitel/dynamic-form-bundle` release with `isReadOnly()` support on
 > `FieldEditabilityResolverInterface`.
 >
-> **Behaviour change:** previously the form ignored `#[ColumnPermission]` entirely.
+> **Behaviour changes:** the form used to ignore `#[ColumnPermission]` entirely, and `#[AdminColumn(editable: false)]` used to remove the field from the form; it's now shown read-only. See [UPGRADE](../UPGRADE.md).
 
 #### Doctrine → Symfony form type mapping
 

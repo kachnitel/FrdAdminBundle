@@ -97,20 +97,29 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'plain'));
     }
 
-    // ── canEdit(): explicit false ──────────────────────────────────────────────
+    // ── explicit false: shown, but read-only ───────────────────────────────────
 
     #[Test]
-    public function canEditExcludesAFieldMarkedEditableFalse(): void
+    public function aFieldMarkedEditableFalseIsIncludedButReadOnly(): void
     {
-        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'blocked'));
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'blocked'));
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'blocked'));
     }
 
     #[Test]
-    public function canEditExcludesEditableFalseEvenWithAnEntityProvided(): void
+    public function editableFalseIsReadOnlyWithAnEntityProvidedToo(): void
     {
         $entity = new ResolverTestEntity();
 
-        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'blocked', $entity));
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'blocked', $entity));
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'blocked', $entity));
+    }
+
+    #[Test]
+    public function editableFalseNeverHidesAFieldThePermissionsDeny(): void
+    {
+        // no ADMIN_SHOW role: permissions win, editable can only restrict further
+        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'salaryLocked'));
     }
 
     // ── canEdit(): explicit true ───────────────────────────────────────────────
@@ -119,12 +128,26 @@ final class AdminColumnEditabilityResolverTest extends TestCase
     public function canEditIncludesAFieldMarkedEditableTrue(): void
     {
         $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'forced'));
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'forced'));
+    }
+
+    /** editable can only restrict, never permit: true must not lift a ColumnPermission restriction. */
+    #[Test]
+    public function editableTrueDoesNotOverrideAnEditPermissionRestriction(): void
+    {
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'forcedRestricted'));
+    }
+
+    #[Test]
+    public function editableTrueDoesNotOverrideAShowPermissionRestriction(): void
+    {
+        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'forcedRestricted'));
     }
 
     // ── canEdit(): expression, entity available ────────────────────────────────
 
     #[Test]
-    public function canEditEvaluatesTheExpressionWhenAnEntityIsAvailable(): void
+    public function isReadOnlyEvaluatesTheExpressionWhenAnEntityIsAvailable(): void
     {
         $entity          = new ResolverTestEntity();
         $entity->enabled = true;
@@ -133,27 +156,29 @@ final class AdminColumnEditabilityResolverTest extends TestCase
             ->with('entity.enabled', $entity, $this->createStub(\Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface::class))
             ->willReturn(true);
 
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status', $entity));
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'status', $entity));
     }
 
     #[Test]
-    public function canEditExcludesWhenTheExpressionEvaluatesFalse(): void
+    public function aFalseExpressionMakesTheFieldReadOnlyNotAbsent(): void
     {
         $entity = new ResolverTestEntity();
 
         $this->expressionLanguage->method('evaluate')->willReturn(false);
 
-        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'status', $entity));
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status', $entity));
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'status', $entity));
     }
 
     // ── canEdit(): expression, no entity yet ───────────────────────────────────
 
     #[Test]
-    public function canEditIncludesAnExpressionFieldWhenNoEntityIsAvailableYet(): void
+    public function anExpressionFieldIsEditableWhenNoEntityIsAvailableYet(): void
     {
         $this->expressionLanguage->expects($this->never())->method('evaluate');
 
         $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status'));
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'status'));
     }
 
     // ── canEdit(): reflection failures fall back to permissive ────────────────
@@ -266,11 +291,12 @@ final class AdminColumnEditabilityResolverTest extends TestCase
     }
 
     #[Test]
-    public function editableFalseStillExcludesEvenWhenPermissionsAllow(): void
+    public function editableFalseRestrictsEvenWhenPermissionsAllowEverything(): void
     {
         $this->grantedRoles = ['ROLE_HR', 'ROLE_HR_EDIT'];
 
-        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'blocked'));
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'salaryLocked'));
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'salaryLocked'));
     }
 
     #[Test]
@@ -314,4 +340,15 @@ class ResolverTestEntity
 
     #[ColumnPermission([AdminEntityVoter::ADMIN_EDIT => 'ROLE_HR_EDIT'])]
     public string $editRestricted = '';
+
+    #[AdminColumn(editable: false)]
+    #[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR'])]
+    public string $salaryLocked = '';
+
+    #[AdminColumn(editable: true)]
+    #[ColumnPermission([
+        AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR',
+        AdminEntityVoter::ADMIN_EDIT => 'ROLE_HR_EDIT',
+    ])]
+    public string $forcedRestricted = '';
 }

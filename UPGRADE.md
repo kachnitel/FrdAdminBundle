@@ -27,6 +27,16 @@ Check the CHANGELOG for your version. If breaking changes are listed, see "Break
 
 ## Breaking Changes
 
+### Form fields follow `#[ColumnPermission]`; `editable: false` is read-only (0.x → 0.y)
+
+The auto-generated New/Edit form (`DynamicEntityFormType`) now resolves each field as *no entry / read-only / read-write*:
+
+- `#[ColumnPermission]`: no `ADMIN_SHOW` role → field omitted; `ADMIN_SHOW` without `ADMIN_EDIT` → rendered disabled. Previously the form ignored `#[ColumnPermission]`.
+- `#[AdminColumn(editable: false)]` (or an expression evaluating false) → **rendered disabled instead of omitted**. `editable` can only restrict, never lift a `ColumnPermission` restriction.
+- Requires a `kachnitel/dynamic-form-bundle` release with `FieldEditabilityResolverInterface::isReadOnly()`. Custom implementations of that interface must add the method (return `false` to keep current behaviour).
+
+**Action:** fields you hid from the form with `editable: false` now show up disabled. To hide them, restrict `ADMIN_SHOW` via `#[ColumnPermission]`.
+
 ### Extracting Packages (0.x → 0.y)
 
 Several internal packages were extracted into standalone repositories with their own release cycles:
