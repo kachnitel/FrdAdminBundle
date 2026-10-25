@@ -7,7 +7,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!--- END HEADER -->
 
-## [0.14.3](https://github.com/kachnitel/FrdAdminBundle/compare/v0.14.2...v0.14.3) (2026-10-21)
+## [0.15.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.14.3...v0.15.0) (2026-10-25)
+
+### Features
+
+
+##### Collection
+
+* Show inline dialog with embedded EntityList for collections ([361a5b](https://github.com/kachnitel/FrdAdminBundle/commit/361a5bddb2eca45bc6e7a4d73d5e66e25d52874b))
+
+##### Tests
+
+* Improve BatchAction & ColumnPermission coverage ([60a8f9](https://github.com/kachnitel/FrdAdminBundle/commit/60a8f9ed15b320761a8c01c9859991818d8007a7))
+* Improve EntityList coverage ([60c06e](https://github.com/kachnitel/FrdAdminBundle/commit/60c06ea0dbf381a0d9b8cb96c5b66fe1353f7868))
+
+### Documentation
+
+
+##### Auth
+
+* Document wiring ObjectAuthorizationChecker outside the container ([4f1d8d](https://github.com/kachnitel/FrdAdminBundle/commit/4f1d8da801b8d3ae4bf2b91c0de73ebf615195af))
+
+
+---
+
+## [0.14.3](https://github.com/kachnitel/FrdAdminBundle/compare/v0.14.2...v0.14.3) (2026-10-20)
 
 ### Features
 
