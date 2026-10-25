@@ -34,7 +34,24 @@ class Order
 
 The `Lines` cell now renders a "N lines" button. Clicking it opens a dialog listing that order's lines, using the `OrderLine` entity's own admin list (columns, filters, row actions, permissions).
 
-`collectionDialog` takes precedence over `collectionDisplay`; `collectionLimit`, `collectionCollapsible` and `collectionLabelMethod` do not apply.
+### Combining with `collectionDisplay`
+
+```php
+#[AdminColumn(collectionDisplay: true, collectionLimit: 3, collectionDialog: true)]
+private Collection $lines;
+```
+
+The inline items render as usual (`collectionDisplay`, `collectionLimit`, `collectionCollapsible` and `collectionLabelMethod` all apply) and the dialog button is added for the full, filterable list:
+
+| `collectionDisplay` | Result |
+|---|---|
+| `false` (default) | A "N lines" button replaces the count/link. |
+| `true`, `collectionCollapsible: true` | Accordion as usual; the button is rendered **below** the accordion. |
+| `true`, `collectionCollapsible: false` | Always-visible list; the button sits in the header next to the count. |
+
+In both display modes the button replaces the ↗ new-tab link in the header; the "+ N more…" overflow link still opens the scoped list in a new tab.
+
+The button is rendered after `</details>`, never inside `<summary>`: a click anywhere inside a `<summary>` toggles its `<details>`, and the dialog's content is a DOM descendant of whatever contains it.
 
 Works for `OneToMany`, bidirectional `ManyToMany` and unidirectional `ManyToMany` alike.
 
@@ -60,7 +77,8 @@ The new-tab link produced by `admin_collection_url()` uses the same scope: it po
 ## Requirements and Fallback
 
 - The **target** entity must have `#[Admin]`, and its index must be accessible to the current user (`admin_collection_url(entity, property)` non-null; this also requires the owner to be `#[Admin]`).
-- Otherwise the column falls back to the default count-only display.
+- Otherwise the column falls back to the plain display for its `collectionDisplay` mode.
+- Inside an `EntityListEmbedded` (including a collection dialog's own list) the column also falls back: dialogs don't nest.
 
 ## Security
 

@@ -791,7 +791,7 @@ class User implements UserInterface
 - `archiveRole: ?string = null`
 
 **#[AdminColumn]** — Collection display parameters:
-- `collectionDialog: bool = false` — Open a scoped entity list in a dialog; takes precedence over inline display (see [Collection Dialog](COLLECTION_DIALOG.md))
+- `collectionDialog: bool = false` — Add a button that opens a scoped entity list in a dialog; alone it replaces the count/link, with `collectionDisplay` it is shown next to the inline items (see [Collection Dialog](COLLECTION_DIALOG.md))
 - `collectionDisplay: bool = false` — Show items inline instead of count+link
 - `collectionCollapsible: bool = true` — Wrap in `<details>` accordion
 - `collectionLimit: ?int = 5` — Items before "+ N more…" link; null/0 = show all

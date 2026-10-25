@@ -22,7 +22,8 @@
 {% set columnAttr       = admin_column_attribute(entity, property) %}
 {% set count            = value|length %}
 {% set countLabel       = count ~ ' item' ~ (count != 1 ? 's' : '') %}
-{% set collectionDialog = (admin_column_attribute(entity, property).collectionDialog ?? false) and not (embedded ?? false) and admin_collection_url(entity, property) %}
+{# A dialog never renders inside an embedded list (UX cannot scope events between same-named nested lists) #}
+{% set collectionDialog = (columnAttr.collectionDialog ?? false) and not (embedded ?? false) and collectionUrl %}
 
 {% if count == 0 %}
 
@@ -40,10 +41,8 @@
         <details class="{{ css.collection_details() }}">
             <summary class="{{ css.collection_summary() }}">
                 <span>{{ countLabel }}</span>
-                {# A dialog never renders inside an embedded list (UX cannot scope events between same-named nested lists) #}
-                {% if collectionDialog %}
-                    {% include '@KachnitelAdmin/types/_collection_dialog.html.twig' %}
-                {% elseif collectionUrl %}
+                {# With a dialog, its button lives after </details> (see below), not here #}
+                {% if collectionUrl and not collectionDialog %}
                     {# stopPropagation prevents the click from toggling the <details> #}
                     <a href="{{ collectionUrl }}"
                        class="{{ css.btn_link() }} {{ css.collection_view_all() }}"
@@ -58,6 +57,12 @@
                 columnAttr: columnAttr
             } only %}
         </details>
+
+        {# Must stay OUTSIDE <details>/<summary>: a click anywhere inside <summary> toggles the
+           accordion, and the dialog's content is a DOM descendant of whatever contains it. #}
+        {% if collectionDialog %}
+            {% include '@KachnitelAdmin/types/_collection_dialog.html.twig' %}
+        {% endif %}
 
     {% else %}
 

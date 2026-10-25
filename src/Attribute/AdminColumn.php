@@ -61,13 +61,15 @@ use Attribute;
  *   #[AdminColumn(collectionDisplay: true, collectionLabelMethod: 'getDisplayName')]
  *   private Collection $participants;
  *
- * `collectionDialog: true` renders a count button instead. Clicking it opens a native
- * `<dialog>` embedding a full, scoped `K:Admin:EntityListEmbedded` of the collection's
- * target entity (search, sort, filters, paging). The list is lazy-loaded on open and
- * restricted to this row's collection. It takes precedence over `collectionDisplay`
- * (`collectionLimit` / `collectionCollapsible` / `collectionLabelMethod` do not apply),
- * and falls back to the count-only display when the target entity has no accessible
- * admin index. See docs/COLLECTION_DIALOG.md.
+ * `collectionDialog: true` adds a button that opens a native `<dialog>` embedding a full,
+ * scoped `K:Admin:EntityListEmbedded` of the collection's target entity (search, sort,
+ * filters, paging). The list is lazy-loaded on open and restricted to this row's collection.
+ * Alone, it replaces the count/link with a "N items" button. Combined with
+ * `collectionDisplay`, the inline items (and `collectionLimit` / `collectionCollapsible` /
+ * `collectionLabelMethod`) render as usual and the button is added next to them (below the
+ * accordion when collapsible), replacing the ↗ new-tab link. It falls back to the plain
+ * display when the target entity has no accessible admin index, and inside an embedded
+ * list (dialogs don't nest). See docs/COLLECTION_DIALOG.md.
  *
  *   #[AdminColumn(collectionDialog: true)]
  *   private Collection $lineItems;
@@ -136,10 +138,10 @@ class AdminColumn
      *   → __toString() → #id. Use this to specify a custom method such as 'getDisplayName'
      *   or 'getFullTitle'. Only applies when collectionDisplay is true.
      * @param bool $collectionDialog
-     *   Render a count button that opens a dialog embedding a lazy-loaded, scoped
-     *   entity list of the collection. Takes precedence over collectionDisplay.
-     *   Requires the target to be an #[Admin] entity with an accessible index.
-     *   Default false.
+     *   Add a button that opens a dialog embedding a lazy-loaded, scoped entity list
+     *   of the collection. Alone it replaces the count/link; with collectionDisplay it
+     *   is shown next to the inline items. Requires the target to be an #[Admin] entity
+     *   with an accessible index. Default false.
      */
     public function __construct(
         public readonly string|bool|null $editable = null,

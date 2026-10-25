@@ -258,6 +258,89 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringNotContainsString('min(70rem,95vw)', $rendered);
     }
 
+    // ── dialog combined with collectionDisplay ────────────────────────────────
+
+    private function persistEntityWithDialogDisplayTags(int $tagCount): void
+    {
+        $entity = new EntityWithCollectionDisplay();
+        $entity->setName('Dialog display owner');
+        $this->em->persist($entity);
+
+        for ($i = 1; $i <= $tagCount; $i++) {
+            $tag = new TagEntity();
+            $tag->setName('Dialog tag ' . $i);
+            $this->em->persist($tag);
+            $entity->getTagsDialogAccordion()->add($tag);
+            $entity->getTagsDialogList()->add($tag);
+        }
+
+        $this->em->flush();
+        $this->em->clear();
+    }
+
+    /**
+     * @return list<string> ids of every <dialog> that has an ancestor with one of $ancestorTags
+     */
+    private function dialogIdsInside(string $rendered, string ...$ancestorTags): array
+    {
+        $previous = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML('<?xml encoding="utf-8"?><body>' . $rendered . '</body>');
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $conditions = array_map(static fn (string $tag): string => 'ancestor::' . $tag, $ancestorTags);
+        $ids = [];
+        foreach ((new \DOMXPath($dom))->query('//dialog[' . implode(' or ', $conditions) . ']') ?: [] as $dialog) {
+            \assert($dialog instanceof \DOMElement);
+            $ids[] = $dialog->getAttribute('id');
+        }
+
+        return $ids;
+    }
+
+    /**
+     * A click anywhere inside a <summary> toggles its <details>, and the dialog's content is
+     * a DOM descendant of its parent even when it paints in the top layer — so the dialog
+     * (and its button's controller wrapper) must sit outside <summary> and <details>.
+     */
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogInCollapsibleModeRendersOutsideSummaryAndDetails(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(2);
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertMatchesRegularExpression('/id="collection-dialog-EntityWithCollectionDisplay-\d+-tagsDialogAccordion"/', $rendered);
+        $this->assertSame([], $this->dialogIdsInside($rendered, 'summary', 'details'));
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogWithCollectionDisplayKeepsTheInlineItemsAndLimit(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(5); // limit 3 → "+ 2 more"
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertStringContainsString('Dialog tag 1', $rendered);
+        $this->assertStringContainsString('+ 2 more', $rendered);
+        $this->assertMatchesRegularExpression('/id="collection-dialog-EntityWithCollectionDisplay-\d+-tagsDialogList"/', $rendered);
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogInAlwaysVisibleModeRendersOutsideDetails(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(2);
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertSame([], $this->dialogIdsInside($rendered, 'details'));
+        $this->assertStringContainsString('admin-collection-inline', $rendered);
+    }
+
     #[Test]
     public function defaultModeDoesNotRenderCollectionListWhenEmpty(): void
     {
