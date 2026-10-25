@@ -349,10 +349,10 @@ final class CollectionDisplayTest extends ComponentTestCase
         @$dom->loadHTML('<?xml encoding="utf-8"?>' . $rendered);
         $xpath = new \DOMXPath($dom);
 
-        $this->assertSame(0, $xpath->query('//details//dialog | //summary//dialog')->length);
+        $this->assertSame(0, $xpath->query('//details//dialog | //summary//dialog')->length); // @phpstan-ignore property.nonObject
         $this->assertGreaterThan(
             0,
-            $xpath->query('//*[@data-controller="admin-collection-dialog"][.//details//button[@data-action="admin-collection-dialog#open"]][.//dialog]')->length,
+            $xpath->query('//*[@data-controller="admin-collection-dialog"][.//details//button[@data-action="admin-collection-dialog#open"]][.//dialog]')->length, // @phpstan-ignore property.nonObject
         );
     }
 
