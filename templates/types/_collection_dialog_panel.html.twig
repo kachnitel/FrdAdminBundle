@@ -8,6 +8,12 @@
  #}
 {% import kachnitel_admin_theme as css %}
 
+{% set targetClass = admin_get_association_type(entity, property) %}
+{# Owner class is part of the id: two owner classes sharing an id and a property name (e.g. in
+   one page or nested dialogs) must not collide, or the getElementById fallback finds the wrong dialog. #}
+{% set ownerClass = admin_real_class(entity) %}
+{% set dialogId = 'collection-dialog-' ~ ownerClass|split('\\')|last ~ '-' ~ entity.id ~ '-' ~ property %}
+
 {# Theme macros provide the wide layout and shared backdrop hook. #}
 <dialog id="{{ dialogId }}"
         class="{{ css.dialog_wide() }} admin-inline-dialog"
@@ -16,4 +22,25 @@
         data-admin-collection-dialog-target="dialog"
         data-action="click->admin-collection-dialog#backdrop">
     <div class="{{ css.dialog_header() }}">
-        <span id="{{ dialogId }}-title" class="{{ css.dialog_title() }}">{{ property|humanize }}
+        <span id="{{ dialogId }}-title" class="{{ css.dialog_title() }}">{{ property|humanize }}</span>
+        <button type="button"
+                class="{{ css.btn_close() }}"
+                data-action="admin-collection-dialog#close">{{ 'Close'|trans }}</button>
+    </div>
+
+    <div class="{{ css.dialog_body() }}">
+        {# loading: "lazy" is REQUIRED inside a closed <dialog> — eager mounting breaks silently.
+            See InlineEntityForm's docblock. `key` keeps one stable instance per cell. #}
+        {{ component('K:Admin:EntityListEmbedded', {
+            key: dialogId,
+            loading: 'lazy',
+            entityClass: targetClass,
+            entityShortClass: targetClass|split('\\')|last,
+            scope: {
+                ownerClass: ownerClass,
+                ownerId: '' ~ entity.id,
+                property: property,
+            },
+        }) }}
+    </div>
+</dialog>
