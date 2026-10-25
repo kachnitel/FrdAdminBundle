@@ -308,7 +308,7 @@ final class CollectionDisplayTest extends ComponentTestCase
     #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
     public function collectionDialogInCollapsibleModeRendersOutsideSummaryAndDetails(): void
     {
-        $this->persistEntityWithDialogDisplayTags(2);
+        $this->persistEntityWithDialogDisplayTags(5);
 
         $rendered = $this->renderEntityList();
 
@@ -318,22 +318,73 @@ final class CollectionDisplayTest extends ComponentTestCase
 
     #[Test]
     #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
-    public function collectionDialogWithCollectionDisplayKeepsTheInlineItemsAndLimit(): void
+    public function collectionDialogWithCollectionDisplayTurnsTheOverflowIntoTheTrigger(): void
     {
         $this->persistEntityWithDialogDisplayTags(5); // limit 3 → "+ 2 more"
 
         $rendered = $this->renderEntityList();
 
         $this->assertStringContainsString('Dialog tag 1', $rendered);
-        $this->assertStringContainsString('+ 2 more', $rendered);
         $this->assertMatchesRegularExpression('/id="collection-dialog-EntityWithCollectionDisplay-\d+-tagsDialogList"/', $rendered);
+        // The wording is kept, but it is now a button opening the dialog — not a new-tab link
+        $this->assertMatchesRegularExpression('/<button[^>]*data-action="admin-collection-dialog#open"[^>]*>\s*\+ 2 more/', $rendered);
+        $this->assertDoesNotMatchRegularExpression('/<a [^>]*>\s*\+ 2 more/', $rendered);
+        // No separate "N tags" count button next to the items
+        $this->assertDoesNotMatchRegularExpression('/<button[^>]*admin-collection-dialog#open[^>]*>\s*5 /', $rendered);
+    }
+
+    /**
+     * The trigger sits inside <details> but the <dialog> does not; both must share one
+     * admin-collection-dialog controller element or the trigger cannot find its dialog target.
+     */
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogOverflowTriggerAndDialogShareOneControllerOutsideDetails(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(5);
+
+        $rendered = $this->renderEntityList();
+
+        $dom = new \DOMDocument();
+        @$dom->loadHTML('<?xml encoding="utf-8"?>' . $rendered);
+        $xpath = new \DOMXPath($dom);
+
+        $this->assertSame(0, $xpath->query('//details//dialog | //summary//dialog')->length);
+        $this->assertGreaterThan(
+            0,
+            $xpath->query('//*[@data-controller="admin-collection-dialog"][.//details//button[@data-action="admin-collection-dialog#open"]][.//dialog]')->length,
+        );
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogWithCollectionDisplayKeepsTheNewTabLinkInTheSummary(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(5);
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertStringContainsString('title="View all in list"', $rendered);
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogWithCollectionDisplayRendersNoDialogWhenNothingOverflows(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(2); // limit 3 → everything shown
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertStringContainsString('Dialog tag 1', $rendered);
+        $this->assertStringNotContainsString('collection-dialog-EntityWithCollectionDisplay', $rendered);
+        $this->assertStringContainsString('title="View all in list"', $rendered);
     }
 
     #[Test]
     #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
     public function collectionDialogInAlwaysVisibleModeRendersOutsideDetails(): void
     {
-        $this->persistEntityWithDialogDisplayTags(2);
+        $this->persistEntityWithDialogDisplayTags(5);
 
         $rendered = $this->renderEntityList();
 

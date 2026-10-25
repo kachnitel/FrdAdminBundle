@@ -66,8 +66,8 @@ use Attribute;
  * filters, paging). The list is lazy-loaded on open and restricted to this row's collection.
  * Alone, it replaces the count/link with a "N items" button. Combined with
  * `collectionDisplay`, the inline items (and `collectionLimit` / `collectionCollapsible` /
- * `collectionLabelMethod`) render as usual and the button is added next to them (below the
- * accordion when collapsible), replacing the ↗ new-tab link. It falls back to the plain
+ * `collectionLabelMethod`) render as usual and the "+ N more…" entry becomes the button
+ * (no dialog when nothing overflows; the ↗ link stays). It falls back to the plain
  * display when the target entity has no accessible admin index, and inside an embedded
  * list (dialogs don't nest). See docs/COLLECTION_DIALOG.md.
  *
@@ -140,7 +140,7 @@ class AdminColumn
      * @param bool $collectionDialog
      *   Add a button that opens a dialog embedding a lazy-loaded, scoped entity list
      *   of the collection. Alone it replaces the count/link; with collectionDisplay it
-     *   is shown next to the inline items. Requires the target to be an #[Admin] entity
+     *   the "+ N more…" entry opens it. Requires the target to be an #[Admin] entity
      *   with an accessible index. Default false.
      */
     public function __construct(

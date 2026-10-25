@@ -41,23 +41,23 @@ The `Lines` cell now renders a "N lines" button. Clicking it opens a dialog list
 private Collection $lines;
 ```
 
-The inline items render as usual (`collectionDisplay`, `collectionLimit`, `collectionCollapsible` and `collectionLabelMethod` all apply) and the dialog button is added for the full, filterable list:
+The inline items render as usual (`collectionDisplay`, `collectionLimit`, `collectionCollapsible` and `collectionLabelMethod` all apply) and the dialog opens the full, filterable list:
 
 | `collectionDisplay` | Result |
 |---|---|
 | `false` (default) | A "N lines" button replaces the count/link. |
-| `true`, `collectionCollapsible: true` | Accordion as usual; the button is rendered **below** the accordion. |
-| `true`, `collectionCollapsible: false` | Always-visible list; the button sits in the header next to the count. |
+| `true`, `collectionCollapsible: true` | Accordion as usual; the "+ N more…" entry is the dialog button. |
+| `true`, `collectionCollapsible: false` | Always-visible list; the "+ N more…" entry is the dialog button. |
 
-In both display modes the button replaces the ↗ new-tab link in the header; the "+ N more…" overflow link still opens the scoped list in a new tab.
+In both display modes the **"+ N more…" entry becomes a button** that opens the dialog (same wording, no new tab), and the ↗ new-tab link stays in the header. When nothing overflows (all items fit within `collectionLimit`, or the limit is `null`/`0`) there is nothing to expand, so no dialog is rendered and only the ↗ link leads to the full list.
 
-The button is rendered after `</details>`, never inside `<summary>`: a click anywhere inside a `<summary>` toggles its `<details>`, and the dialog's content is a DOM descendant of whatever contains it.
+The `<dialog>` is rendered after `</details>`, never inside `<details>` or `<summary>`: a click anywhere inside a `<summary>` toggles its `<details>`, a dialog inside a closed `<details>` does not render, and the dialog's content is a DOM descendant of whatever contains it. The "+ N more…" button inside the accordion still reaches it because one `admin-collection-dialog` controller element wraps both.
 
 Works for `OneToMany`, bidirectional `ManyToMany` and unidirectional `ManyToMany` alike.
 
 ## How It Works
 
-1. The cell renders `types/_collection_dialog.html.twig`: a button plus a native `<dialog>`, wired to the `admin-collection-dialog` Stimulus controller (shared dialog helpers live in `assets/lib/native-dialog.js`, which `admin-inline-add` uses too).
+1. The cell renders a trigger (the count button from `types/_collection_dialog.html.twig`, or the "+ N more…" button with `collectionDisplay`) plus the native `<dialog>` from `types/_collection_dialog_panel.html.twig`, wired to the `admin-collection-dialog` Stimulus controller (shared dialog helpers live in `assets/lib/native-dialog.js`, which `admin-inline-add` uses too).
 2. Inside the dialog, `K:Admin:EntityListEmbedded` is mounted with `loading: "lazy"`. Nothing is fetched until the dialog is opened, so a list page with many rows and several collection columns does not hydrate every collection up front.
 3. The embedded list receives a signed `scope` prop — `{ownerClass, ownerId, property}`. On each query `CollectionScopeResolver` authorizes it and turns it into one DQL restriction that is AND-ed with the list's own search and filters:
 

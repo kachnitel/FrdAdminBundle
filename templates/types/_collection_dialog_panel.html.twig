@@ -1,0 +1,19 @@
+{#
+ # The <dialog> of a collection dialog (#[AdminColumn(collectionDialog: true)]).
+ # Must be rendered inside an element carrying data-controller="admin-collection-dialog"
+ # (see _collection_dialog.html.twig and _collection.html.twig) and OUTSIDE any
+ # <details>/<summary>.
+ #
+ # Variables (from the including template): entity, property, dialogId, ownerClass, targetClass
+ #}
+{% import kachnitel_admin_theme as css %}
+
+{# Theme macros provide the wide layout and shared backdrop hook. #}
+<dialog id="{{ dialogId }}"
+        class="{{ css.dialog_wide() }} admin-inline-dialog"
+        aria-labelledby="{{ dialogId }}-title"
+        aria-modal="true"
+        data-admin-collection-dialog-target="dialog"
+        data-action="click->admin-collection-dialog#backdrop">
+    <div class="{{ css.dialog_header() }}">
+        <span id="{{ dialogId }}-title" class="{{ css.dialog_title() }}">{{ property|humanize }}

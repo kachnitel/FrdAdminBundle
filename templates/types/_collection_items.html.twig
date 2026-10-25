@@ -9,6 +9,8 @@
  # @var iterable         items         - Slice of the collection to render
  # @var int              overflow      - Number of items not shown (0 = all shown)
  # @var string|null      collectionUrl - URL to the filtered collection list (for "+ N more…" link)
+ # @var bool|null        dialogTrigger - Render "+ N more…" as a button opening the surrounding
+ #                                       admin-collection-dialog instead of a new-tab link
  # @var AdminColumn|null columnAttr    - The collection's AdminColumn attribute instance (optional, may be used for custom item rendering)
  #}
 {% import kachnitel_admin_theme as css %}
@@ -27,7 +29,11 @@
     {% endfor %}
     {% if overflow > 0 %}
         <li class="{{ css.collection_list_item() }} {{ css.text_muted() }}">
-            {%- if collectionUrl -%}
+            {%- if dialogTrigger ?? false -%}
+                <button type="button"
+                        class="{{ css.btn_link() }}"
+                        data-action="admin-collection-dialog#open">+ {{ overflow }} more…</button>
+            {%- elseif collectionUrl -%}
                 <a href="{{ collectionUrl }}">+ {{ overflow }} more…</a>
             {%- else -%}
                 + {{ overflow }} more…
