@@ -13,6 +13,7 @@
    one page or nested dialogs) must not collide, or the getElementById fallback finds the wrong dialog. #}
 {% set ownerClass = admin_real_class(entity) %}
 {% set dialogId = 'collection-dialog-' ~ ownerClass|split('\\')|last ~ '-' ~ entity.id ~ '-' ~ property %}
+{% set collectionUrl    = admin_collection_url(entity, property, true) %}
 
 {# Theme macros provide the wide layout and shared backdrop hook. #}
 <dialog id="{{ dialogId }}"
@@ -22,7 +23,12 @@
         data-admin-collection-dialog-target="dialog"
         data-action="click->admin-collection-dialog#backdrop">
     <div class="{{ css.dialog_header() }}">
-        <span id="{{ dialogId }}-title" class="{{ css.dialog_title() }}">{{ property|humanize }}</span>
+        <span id="{{ dialogId }}-title" class="{{ css.dialog_title() }}">
+            {{ property|humanize }}
+            <a href="{{ collectionUrl }}"
+               class="{{ css.btn_link() }}"
+               title="View all in list">↗</a>
+        </span>
         <button type="button"
                 class="{{ css.btn_close() }}"
                 data-action="admin-collection-dialog#close">{{ 'Close'|trans }}</button>
