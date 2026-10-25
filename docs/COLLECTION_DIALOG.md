@@ -46,10 +46,10 @@ The inline items render as usual (`collectionDisplay`, `collectionLimit`, `colle
 | `collectionDisplay` | Result |
 |---|---|
 | `false` (default) | A "N lines" button replaces the count/link. |
-| `true`, `collectionCollapsible: true` | Accordion as usual; the "+ N more…" entry is the dialog button. |
-| `true`, `collectionCollapsible: false` | Always-visible list; the "+ N more…" entry is the dialog button. |
+| `true`, `collectionCollapsible: true` | Accordion as usual; the trailing "+ N more…" (or "Details…") entry is the dialog button. |
+| `true`, `collectionCollapsible: false` | Always-visible list; the trailing "+ N more…" (or "Details…") entry is the dialog button. |
 
-In both display modes the **"+ N more…" entry becomes a button** that opens the dialog (same wording, no new tab), and the ↗ new-tab link stays in the header. When nothing overflows (all items fit within `collectionLimit`, or the limit is `null`/`0`) there is nothing to expand, so no dialog is rendered and only the ↗ link leads to the full list.
+In both display modes the **"+ N more…" entry becomes a button** that opens the dialog (same wording, no new tab), and the ↗ new-tab link stays in the header. The dialog is always available, since it shows more than the inline items (search, sort, filters, paging): when nothing overflows (all items fit within `collectionLimit`, or the limit is `null`/`0`) the trailing entry reads "Details…" instead.
 
 The `<dialog>` is rendered after `</details>`, never inside `<details>` or `<summary>`: a click anywhere inside a `<summary>` toggles its `<details>`, a dialog inside a closed `<details>` does not render, and the dialog's content is a DOM descendant of whatever contains it. The "+ N more…" button inside the accordion still reaches it because one `admin-collection-dialog` controller element wraps both.
 

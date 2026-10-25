@@ -43,9 +43,9 @@
     {% set hasLimit     = limit is not null and limit > 0 %}
     {% set displayItems = hasLimit ? value|slice(0, limit) : value %}
     {% set overflow     = hasLimit and count > limit ? count - limit : 0 %}
-    {# In display modes the "+ N more…" entry is the dialog trigger; with nothing to expand
-       there is no dialog and the ↗ link remains the only way to the full list. #}
-    {% set overflowDialog = collectionDialog and overflow > 0 %}
+    {# In display modes the trailing "+ N more…" entry (or "Details…" when nothing overflows)
+       is the dialog trigger: the dialog always shows more than the inline items do. #}
+    {% set overflowDialog = collectionDialog %}
 
     {% if columnAttr.collectionCollapsible %}
 

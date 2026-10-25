@@ -67,7 +67,7 @@ use Attribute;
  * Alone, it replaces the count/link with a "N items" button. Combined with
  * `collectionDisplay`, the inline items (and `collectionLimit` / `collectionCollapsible` /
  * `collectionLabelMethod`) render as usual and the "+ N more…" entry becomes the button
- * (no dialog when nothing overflows; the ↗ link stays). It falls back to the plain
+ * ("Details…" when nothing overflows; the ↗ link stays). It falls back to the plain
  * display when the target entity has no accessible admin index, and inside an embedded
  * list (dialogs don't nest). See docs/COLLECTION_DIALOG.md.
  *

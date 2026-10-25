@@ -369,15 +369,16 @@ final class CollectionDisplayTest extends ComponentTestCase
 
     #[Test]
     #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
-    public function collectionDialogWithCollectionDisplayRendersNoDialogWhenNothingOverflows(): void
+    public function collectionDialogWithCollectionDisplayStillRendersDialogWhenNothingOverflows(): void
     {
         $this->persistEntityWithDialogDisplayTags(2); // limit 3 → everything shown
 
         $rendered = $this->renderEntityList();
 
         $this->assertStringContainsString('Dialog tag 1', $rendered);
-        $this->assertStringNotContainsString('collection-dialog-EntityWithCollectionDisplay', $rendered);
-        $this->assertStringContainsString('title="View all in list"', $rendered);
+        $this->assertMatchesRegularExpression('/id="collection-dialog-EntityWithCollectionDisplay-\d+-tagsDialogList"/', $rendered);
+        $this->assertMatchesRegularExpression('/<button[^>]*data-action="admin-collection-dialog#open"[^>]*>\s*Details…/', $rendered);
+        $this->assertDoesNotMatchRegularExpression('/\+ \d+ more/', $rendered);
     }
 
     #[Test]
