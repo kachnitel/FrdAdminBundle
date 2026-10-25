@@ -16,16 +16,13 @@
  # @var bool|null  embedded - True inside an EntityListEmbedded; collectionDialog then falls back
  #                            to the plain count/link cell (dialogs don't nest)
  #}
-{# A dialog never renders inside an embedded list (UX cannot scope events between same-named nested lists) #}
-{% if (admin_column_attribute(entity, property).collectionDialog ?? false) and not (embedded ?? false) and admin_collection_url(entity, property) %}
-    {% include '@KachnitelAdmin/types/_collection_dialog.html.twig' %}
-{% else %}
 {% import kachnitel_admin_theme as css %}
 
-{% set collectionUrl = admin_collection_url(entity, property, true) %}
-{% set columnAttr    = admin_column_attribute(entity, property) %}
-{% set count         = value|length %}
-{% set countLabel    = count ~ ' item' ~ (count != 1 ? 's' : '') %}
+{% set collectionUrl    = admin_collection_url(entity, property, true) %}
+{% set columnAttr       = admin_column_attribute(entity, property) %}
+{% set count            = value|length %}
+{% set countLabel       = count ~ ' item' ~ (count != 1 ? 's' : '') %}
+{% set collectionDialog = (admin_column_attribute(entity, property).collectionDialog ?? false) and not (embedded ?? false) and admin_collection_url(entity, property) %}
 
 {% if count == 0 %}
 
@@ -43,7 +40,10 @@
         <details class="{{ css.collection_details() }}">
             <summary class="{{ css.collection_summary() }}">
                 <span>{{ countLabel }}</span>
-                {% if collectionUrl %}
+                {# A dialog never renders inside an embedded list (UX cannot scope events between same-named nested lists) #}
+                {% if collectionDialog %}
+                    {% include '@KachnitelAdmin/types/_collection_dialog.html.twig' %}
+                {% elseif collectionUrl %}
                     {# stopPropagation prevents the click from toggling the <details> #}
                     <a href="{{ collectionUrl }}"
                        class="{{ css.btn_link() }} {{ css.collection_view_all() }}"
@@ -64,7 +64,9 @@
         <div class="{{ css.collection_inline() }}">
             <div class="{{ css.collection_inline_header() }}">
                 <span>{{ countLabel }}</span>
-                {% if collectionUrl %}
+                {% if collectionDialog %}
+                    {% include '@KachnitelAdmin/types/_collection_dialog.html.twig' %}
+                {% elseif collectionUrl %}
                     <a href="{{ collectionUrl }}"
                        class="{{ css.btn_link() }} {{ css.collection_view_all() }}"
                        title="View all in list">↗</a>
@@ -83,11 +85,12 @@
 {% else %}
 
     {# Default: count label + optional filtered-list link #}
-    {% if collectionUrl %}
+    {% if collectionDialog %}
+        {% include '@KachnitelAdmin/types/_collection_dialog.html.twig' %}
+    {% elseif collectionUrl %}
         <a href="{{ collectionUrl }}">{{ countLabel }}</a>
     {% else %}
         {{ countLabel }}
     {% endif %}
 
-{% endif %}
 {% endif %}
