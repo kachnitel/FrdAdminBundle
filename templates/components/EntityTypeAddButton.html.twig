@@ -79,6 +79,7 @@
   #}
   <dialog id="{{ dialogId }}"
           data-admin-inline-add-target="dialog"
+          data-action="click->admin-inline-add#backdrop turbo:before-cache@window->admin-inline-add#close"
           class="{{ css.dialog() }} admin-inline-dialog"
           aria-labelledby="{{ dialogId }}-title"
           aria-modal="true">

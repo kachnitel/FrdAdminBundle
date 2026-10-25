@@ -71,7 +71,10 @@ describe('admin-inline-add controller', () => {
                  data-${IDENTIFIER}-dialog-id-value="${dialogId}">
                 <button type="button" data-action="${IDENTIFIER}#open">Add</button>
                 <button type="button" data-action="${IDENTIFIER}#close">Cancel</button>
-                <dialog id="${dialogId}"${withDialogTarget ? ` data-${IDENTIFIER}-target="dialog"` : ''}></dialog>
+                <dialog id="${dialogId}"${withDialogTarget ? ` data-${IDENTIFIER}-target="dialog"` : ''}
+                        data-action="click->${IDENTIFIER}#backdrop turbo:before-cache@window->${IDENTIFIER}#close">
+                    <span id="dialog-content">Content</span>
+                </dialog>
             </div>
         `);
         const root = container.firstElementChild;
@@ -139,6 +142,24 @@ describe('admin-inline-add controller', () => {
         openButton.dispatchEvent(event);
 
         expect(event.defaultPrevented).toBe(true);
+    });
+
+    it('closes on backdrop click but not on dialog content', async () => {
+        const { dialog } = await mountWidget();
+
+        document.getElementById('dialog-content').click();
+        expect(dialog.close).not.toHaveBeenCalled();
+
+        dialog.click();
+        expect(dialog.close).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes before Turbo caches the page', async () => {
+        const { dialog } = await mountWidget();
+
+        window.dispatchEvent(new Event('turbo:before-cache'));
+
+        expect(dialog.close).toHaveBeenCalledTimes(1);
     });
 
     // ── close() ─────────────────────────────────────────────────────────────

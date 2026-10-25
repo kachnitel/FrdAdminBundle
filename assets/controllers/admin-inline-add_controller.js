@@ -22,7 +22,7 @@
  *   dialog  — the <dialog> element inside this component's root
  */
 import { Controller } from '@hotwired/stimulus';
-import { resolveDialog } from '../lib/native-dialog.js';
+import { isBackdropClick, resolveDialog } from '../lib/native-dialog.js';
 
 export default class extends Controller {
     static targets = ['dialog'];
@@ -60,6 +60,18 @@ export default class extends Controller {
      */
     close() {
         this.#dialog().close();
+    }
+
+    /**
+     * Close when the backdrop (the <dialog> element itself) is clicked.
+     * Bound via `data-action="click->admin-inline-add#backdrop"`.
+     *
+     * @param {Event} event
+     */
+    backdrop(event) {
+        if (isBackdropClick(event)) {
+            this.close();
+        }
     }
 
     // ── Private ──────────────────────────────────────────────────────────────

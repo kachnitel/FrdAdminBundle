@@ -14,7 +14,7 @@ describe('admin-collection-dialog controller', () => {
                 <button id="open" data-action="admin-collection-dialog#open">Open</button>
                 <dialog id="d1"
                         data-admin-collection-dialog-target="dialog"
-                        data-action="click->admin-collection-dialog#backdrop">
+                        data-action="click->admin-collection-dialog#backdrop turbo:before-cache@window->admin-collection-dialog#close">
                     <div id="inner">
                         <button id="x" data-action="admin-collection-dialog#close">x</button>
                     </div>
@@ -46,6 +46,12 @@ describe('admin-collection-dialog controller', () => {
 
     it('closes via the close button', () => {
         document.getElementById('x').click();
+
+        expect(dialog.close).toHaveBeenCalledOnce();
+    });
+
+    it('closes before Turbo caches the page', () => {
+        window.dispatchEvent(new Event('turbo:before-cache'));
 
         expect(dialog.close).toHaveBeenCalledOnce();
     });

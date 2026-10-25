@@ -1,9 +1,9 @@
 {
-    "generated_at": "2026-10-25 06:26:23",
+    "generated_at": "2026-10-25 17:55:03",
     "tests": {
         "count": 1767,
         "assertions": 4127,
-        "status": "passing"
+        "status": "failing()"
     },
     "coverage": {
         "lines": 93.57,
@@ -25,7 +25,7 @@
     },
     "vitest": {
         "ran": true,
-        "count": 34,
+        "count": 37,
         "status": "passing"
     },
     "requirements": {

@@ -21,7 +21,7 @@
         aria-labelledby="{{ dialogId }}-title"
         aria-modal="true"
         data-admin-collection-dialog-target="dialog"
-        data-action="click->admin-collection-dialog#backdrop">
+        data-action="click->admin-collection-dialog#backdrop turbo:before-cache@window->admin-collection-dialog#close">
     <div class="{{ css.dialog_header() }}">
         <span id="{{ dialogId }}-title" class="{{ css.dialog_title() }}">
             {{ property|humanize }}
