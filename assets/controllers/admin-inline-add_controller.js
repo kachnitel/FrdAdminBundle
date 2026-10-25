@@ -22,6 +22,7 @@
  *   dialog  — the <dialog> element inside this component's root
  */
 import { Controller } from '@hotwired/stimulus';
+import { resolveDialog } from '../lib/native-dialog.js';
 
 export default class extends Controller {
     static targets = ['dialog'];
@@ -122,24 +123,12 @@ export default class extends Controller {
     }
 
     /**
-     * Resolve the dialog element — prefer the Stimulus target, fall back to
-     * getElementById when the LiveComponent re-render inside the dialog replaces
-     * the element that the target was originally pointing to.
+     * Resolve the dialog element — see lib/native-dialog.js (shared with
+     * admin-collection-dialog).
      *
      * @returns {HTMLDialogElement}
      */
     #dialog() {
-        if (this.hasDialogTarget) {
-            return /** @type {HTMLDialogElement} */ (this.dialogTarget);
-        }
-
-        const el = document.getElementById(this.dialogIdValue);
-        if (!el) {
-            throw new Error(
-                `admin-inline-add: dialog element not found (id="${this.dialogIdValue}")`
-            );
-        }
-
-        return /** @type {HTMLDialogElement} */ (el);
+        return resolveDialog(this, 'admin-inline-add');
     }
 }

@@ -11,6 +11,7 @@ use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use Kachnitel\AdminBundle\Utils\CollectionScopeParameter;
 use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,6 +40,7 @@ use Symfony\Component\Routing\Attribute\Route;
  * 2. Global required_role configuration (fallback)
  *
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class GenericAdminController extends AbstractAdminController
 {
@@ -124,7 +126,7 @@ class GenericAdminController extends AbstractAdminController
     }
 
     #[Route('/admin/{entitySlug}', name: 'app_admin_entity_index', methods: ['GET'])]
-    public function index(string $entitySlug): Response
+    public function index(Request $request, string $entitySlug): Response
     {
         $entityName = $this->resolveEntityName($entitySlug);
         $this->checkEntityPermission(AdminEntityVoter::ADMIN_INDEX, $entityName);
@@ -133,7 +135,40 @@ class GenericAdminController extends AbstractAdminController
             'entityClass'      => $this->entityNamespace . $entityName,
             'entityShortClass' => $entityName,
             'entityLabel'      => $this->getAdminEntityLabel($entityName),
+            'scope'            => $this->resolveCollectionScope($request),
         ]);
+    }
+
+    /**
+     * Translate `?collection=Owner:id:property` into the EntityList `scope` prop.
+     *
+     * Only shape and owner class are resolved here; authorization (admin owner, ADMIN_SHOW,
+     * column permission, object-level) happens in CollectionScopeResolver on every query.
+     *
+     * @return array<string, string>
+     */
+    private function resolveCollectionScope(Request $request): array
+    {
+        $raw = $request->query->all()[CollectionScopeParameter::QUERY_KEY] ?? null;
+        if ($raw === null || $raw === '') {
+            return [];
+        }
+
+        try {
+            if (!is_string($raw)) {
+                throw new \InvalidArgumentException('Collection scope must be a string.');
+            }
+            $decoded = CollectionScopeParameter::decode($raw);
+        } catch (\InvalidArgumentException) {
+            throw $this->createNotFoundException('Invalid collection scope.');
+        }
+
+        $ownerClass = $this->entityDiscovery->resolveEntityClass($decoded['ownerShortName'], $this->entityNamespace);
+        if ($ownerClass === null) {
+            throw $this->createNotFoundException('Unknown collection scope owner.');
+        }
+
+        return ['ownerClass' => $ownerClass, 'ownerId' => $decoded['ownerId'], 'property' => $decoded['property']];
     }
 
     #[Route('/admin/{entitySlug}/new', name: 'app_admin_entity_new', methods: ['GET', 'POST'])]

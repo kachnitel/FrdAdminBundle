@@ -1,13 +1,13 @@
 {
-    "generated_at": "2026-10-21 16:38:42",
+    "generated_at": "2026-10-25 06:19:30",
     "tests": {
-        "count": 1700,
-        "assertions": 4019,
+        "count": 1767,
+        "assertions": 4127,
         "status": "passing"
     },
     "coverage": {
-        "lines": 93.38,
-        "percentage": 93,
+        "lines": 93.54,
+        "percentage": 94,
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {
@@ -25,7 +25,7 @@
     },
     "vitest": {
         "ran": true,
-        "count": 30,
+        "count": 34,
         "status": "passing"
     },
     "requirements": {

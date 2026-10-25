@@ -5,6 +5,7 @@
         :value="value"
         :enumClass="filterMetadata.enumClass|default('')"
         :options="filterMetadata.options|default([])"
+        :listComponent="listComponent|default(null)"
         label="{{ filterMetadata.label|default(column|title) }}"
     />
 {% else %}

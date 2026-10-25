@@ -4,6 +4,7 @@
  # Rendering modes (checked in order):
  #   1. #[AdminColumn(collectionDisplay: true, collectionCollapsible: true)]
  #      → <details>/<summary> accordion; items shown inline, overflow links to filtered list
+ #        (or, with collectionDialog: true, "+ N more…" opens the dialog)
  #   2. #[AdminColumn(collectionDisplay: true, collectionCollapsible: false)]
  #      → always-visible inline list; same items + overflow behaviour
  #   3. No #[AdminColumn] or collectionDisplay: false (default)
@@ -13,13 +14,24 @@
  # @var object     entity   - The root entity being displayed
  # @var Collection value    - The collection value
  # @var string     property - The property name being displayed
+ # @var bool|null  embedded - True inside an EntityListEmbedded; collectionDialog then falls back
+ #                            to the plain count/link cell (dialogs don't nest)
  #}
 {% import kachnitel_admin_theme as css %}
 
-{% set collectionUrl = admin_collection_url(entity, property, true) %}
-{% set columnAttr    = admin_column_attribute(entity, property) %}
-{% set count         = value|length %}
-{% set countLabel    = count ~ ' item' ~ (count != 1 ? 's' : '') %}
+{% set collectionUrl    = admin_collection_url(entity, property, true) %}
+{% set columnAttr       = admin_column_attribute(entity, property) %}
+{% set count            = value|length %}
+{% set countLabel       = count ~ ' item' ~ (count != 1 ? 's' : '') %}
+{# A dialog never renders inside an embedded list (UX cannot scope events between same-named nested lists) #}
+{% set collectionDialog = (columnAttr.collectionDialog ?? false) and not (embedded ?? false) and collectionUrl %}
+{% if collectionDialog %}
+    {# Owner class is part of the id: two owner classes sharing an id and a property name (e.g. in
+       one page or nested dialogs) must not collide, or the getElementById fallback finds the wrong dialog. #}
+    {% set targetClass = admin_get_association_type(entity, property) %}
+    {% set ownerClass  = admin_real_class(entity) %}
+    {% set dialogId    = 'collection-dialog-' ~ ownerClass|split('\\')|last ~ '-' ~ entity.id ~ '-' ~ property %}
+{% endif %}
 
 {% if count == 0 %}
 
@@ -31,9 +43,13 @@
     {% set hasLimit     = limit is not null and limit > 0 %}
     {% set displayItems = hasLimit ? value|slice(0, limit) : value %}
     {% set overflow     = hasLimit and count > limit ? count - limit : 0 %}
+    {# In display modes the trailing "+ N more…" entry (or "Details…" when nothing overflows)
+       is the dialog trigger: the dialog always shows more than the inline items do. #}
+    {% set overflowDialog = collectionDialog %}
 
     {% if columnAttr.collectionCollapsible %}
 
+        {% if overflowDialog %}<div data-controller="admin-collection-dialog" data-admin-collection-dialog-dialog-id-value="{{ dialogId }}">{% endif %}
         <details class="{{ css.collection_details() }}">
             <summary class="{{ css.collection_summary() }}">
                 <span>{{ countLabel }}</span>
@@ -49,13 +65,22 @@
                 items: displayItems,
                 overflow: overflow,
                 collectionUrl: collectionUrl,
-                columnAttr: columnAttr
+                columnAttr: columnAttr,
+                dialogTrigger: overflowDialog
             } only %}
         </details>
 
+        {# Must stay OUTSIDE <details>/<summary>: a click anywhere inside <summary> toggles the
+           accordion, and the dialog's content is a DOM descendant of whatever contains it.
+           The trigger inside <details> still reaches it: both sit in the same controller element. #}
+        {% if overflowDialog %}
+            {% include '@KachnitelAdmin/types/_collection_dialog_panel.html.twig' %}
+            </div>
+        {% endif %}
+
     {% else %}
 
-        <div class="{{ css.collection_inline() }}">
+        <div class="{{ css.collection_inline() }}"{% if overflowDialog %} data-controller="admin-collection-dialog" data-admin-collection-dialog-dialog-id-value="{{ dialogId }}"{% endif %}>
             <div class="{{ css.collection_inline_header() }}">
                 <span>{{ countLabel }}</span>
                 {% if collectionUrl %}
@@ -68,8 +93,12 @@
                 items: displayItems,
                 overflow: overflow,
                 collectionUrl: collectionUrl,
-                columnAttr: columnAttr
+                columnAttr: columnAttr,
+                dialogTrigger: overflowDialog
             } only %}
+            {% if overflowDialog %}
+                {% include '@KachnitelAdmin/types/_collection_dialog_panel.html.twig' %}
+            {% endif %}
         </div>
 
     {% endif %}
@@ -77,7 +106,9 @@
 {% else %}
 
     {# Default: count label + optional filtered-list link #}
-    {% if collectionUrl %}
+    {% if collectionDialog %}
+        {% include '@KachnitelAdmin/types/_collection_dialog.html.twig' %}
+    {% elseif collectionUrl %}
         <a href="{{ collectionUrl }}">{{ countLabel }}</a>
     {% else %}
         {{ countLabel }}

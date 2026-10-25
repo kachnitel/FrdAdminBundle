@@ -90,6 +90,19 @@ class AdminEntityInfoRuntime
     }
 
     /**
+     * Real class name of an entity, unwrapping Doctrine proxies.
+     *
+     * Templates need the FQCN to pass as a LiveProp (e.g. the collection-dialog
+     * scope) and cannot call ObjectHelper themselves.
+     *
+     * @return class-string
+     */
+    public function getRealClass(object $entity): string
+    {
+        return ObjectHelper::getRealClass($entity);
+    }
+
+    /**
      * Resolve the LiveComponent name for a column's inline-edit field.
      *
      * Components are registered by kachnitel/entity-components-bundle under the

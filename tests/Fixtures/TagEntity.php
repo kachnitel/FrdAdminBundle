@@ -2,10 +2,14 @@
 
 namespace Kachnitel\AdminBundle\Tests\Fixtures;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 
 #[ORM\Entity]
+#[Admin]
 class TagEntity
 {
     #[ORM\Id]
@@ -19,6 +23,20 @@ class TagEntity
     #[ORM\ManyToOne(targetEntity: TestEntity::class, inversedBy: 'tags')]
     #[ColumnFilter]
     private ?TestEntity $testEntity = null;
+
+    #[ORM\ManyToOne(targetEntity: EntityWithCollectionDisplay::class, inversedBy: 'dialogItems')]
+    private ?EntityWithCollectionDisplay $dialogOwner = null;
+
+    /**
+     * @var Collection<int, TestEntity>
+     */
+    #[ORM\ManyToMany(targetEntity: TestEntity::class, inversedBy: 'sharedItems')]
+    private Collection $sharedOwners;
+
+    public function __construct()
+    {
+        $this->sharedOwners = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -45,6 +63,20 @@ class TagEntity
     {
         $this->testEntity = $testEntity;
         return $this;
+    }
+
+    public function setDialogOwner(?EntityWithCollectionDisplay $dialogOwner): self
+    {
+        $this->dialogOwner = $dialogOwner;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, TestEntity>
+     */
+    public function getSharedOwners(): Collection
+    {
+        return $this->sharedOwners;
     }
 
     public function __toString(): string

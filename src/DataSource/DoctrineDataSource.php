@@ -44,6 +44,20 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     private ?string $archiveDqlCondition = null;
 
     /**
+     * Optional pre-built DQL WHERE fragment restricting the list to one owner
+     * entity's collection (see CollectionScopeResolver), plus its bound parameters.
+     *
+     * Set via setScopeCondition() before calling query(); consumed and cleared by
+     * query() exactly like the archive condition. DataSource instances are shared
+     * through DataSourceRegistry, so a scope must never outlive the query it was
+     * set for.
+     */
+    private ?string $scopeDqlCondition = null;
+
+    /** @var array<string, mixed> */
+    private array $scopeParameters = [];
+
+    /**
      * @param class-string $entityClass Fully-qualified entity class name
      */
     public function __construct(
@@ -73,6 +87,31 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     public function setArchiveDqlCondition(?string $condition): void
     {
         $this->archiveDqlCondition = $condition;
+    }
+
+    /**
+     * Entity class this data source lists. EntityList compares it with a collection
+     * scope's target so a scope can never be applied to a different entity's list.
+     *
+     * @return class-string
+     */
+    public function getEntityClass(): string
+    {
+        return $this->entityClass;
+    }
+
+    // ── Scope condition ────────────────────────────────────────────────────────
+
+    /**
+     * Set a pre-built DQL WHERE fragment (and its parameters) restricting the next
+     * query() to one owner entity's collection. Pass null to clear.
+     *
+     * @param array<string, mixed> $parameters
+     */
+    public function setScopeCondition(?string $dql, array $parameters = []): void
+    {
+        $this->scopeDqlCondition = $dql;
+        $this->scopeParameters   = $parameters;
     }
 
     // ── DataSourceInterface ────────────────────────────────────────────────────
@@ -175,10 +214,15 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         int $page,
         int $itemsPerPage,
     ): PaginatedResult {
-        // Consume and clear the archive condition so it doesn't leak into
-        // subsequent renders if the DataSource instance is reused.
+        // Consume and clear the archive and scope conditions so they don't leak
+        // into subsequent renders if the DataSource instance is reused.
         $archiveDqlCondition       = $this->archiveDqlCondition;
         $this->archiveDqlCondition = null;
+
+        $scopeDqlCondition       = $this->scopeDqlCondition;
+        $scopeParameters         = $this->scopeParameters;
+        $this->scopeDqlCondition = null;
+        $this->scopeParameters   = [];
 
         $filterMetadata = [];
         foreach ($this->getFilters() as $name => $filter) {
@@ -196,6 +240,8 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
             page: $page,
             itemsPerPage: $itemsPerPage,
             archiveDqlCondition: $archiveDqlCondition,
+            scopeDqlCondition: $scopeDqlCondition,
+            scopeParameters: $scopeParameters,
         );
 
         return PaginatedResult::fromQueryResult($result, $itemsPerPage);
@@ -270,14 +316,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         }
 
         return $labels;
-    }
-
-    /**
-     * @return class-string
-     */
-    public function getEntityClass(): string
-    {
-        return $this->entityClass;
     }
 
     public function getAdminAttribute(): Admin

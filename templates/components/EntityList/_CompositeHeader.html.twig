@@ -55,6 +55,7 @@
                                 column="{{ columnName }}"
                                 value="{{ columnFilters[columnName]|default('') }}"
                                 :filterMetadata="filterMetadata[columnName]"
+                                :listComponent="component.listComponentName"
                             />
                         {% endif %}
                     </div>
@@ -88,6 +89,7 @@
                                     column="{{ columnName }}"
                                     value="{{ columnFilters[columnName]|default('') }}"
                                     :filterMetadata="filterMetadata[columnName]"
+                                :listComponent="component.listComponentName"
                                 />
                             {% endif %}
                         </div>

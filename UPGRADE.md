@@ -55,6 +55,12 @@ not supported by Symfony's native evaluator. Update custom row-action,
 editability, and archive expressions to call the entity's getter or boolean
 accessor directly.
 
+### Custom themes must define `dialog_wide()` (0.14 → 0.y)
+
+The collection dialog (`#[AdminColumn(collectionDialog: true)]`) now renders with the theme's dialog macros instead of inline styles, using a new `dialog_wide()` macro for the larger embedded list. The bundled Bootstrap and Tailwind themes define it.
+
+**Action:** If you maintain a custom theme (`kachnitel_admin.theme`), add a `dialog_wide()` macro — typically `dialog()` with a larger max-width. Without it, any page rendering a collection dialog column fails with an undefined-macro error.
+
 ### `EntityListBatchService::batchDelete()` now returns an array (0.13 → 0.y)
 
 Added as part of object-level authorization ([Object-Level Authorization
@@ -128,6 +134,79 @@ their constructor before show, edit, delete, or archive methods are exercised.
 
 Symfony 6.4 is no longer supported. The dynamic form bundle now requires
 Symfony UX Autocomplete 3, which requires Symfony 7.4 or later.
+
+### Collection links and the index page are scoped (0.x → 0.y)
+
+Introduced with the [collection dialog](docs/COLLECTION_DIALOG.md).
+`admin_collection_url()` now links to the target's index with a collection scope
+(`?collection=Owner:id:property`) instead of a `columnFilters` entry. The index page
+passes that scope to `EntityList`, so the link lists exactly the rows the dialog shows —
+including for unidirectional ManyToMany, which previously linked to the unfiltered list.
+
+**1. `GenericAdminController::index()` takes the request**
+
+```diff
+- public function index(string $entitySlug): Response
++ public function index(Request $request, string $entitySlug): Response
+```
+
+**Action:** If you override `index()` or call it directly, add the `Request $request`
+argument first. Test doubles that call `$controller->index('slug')` need
+`$controller->index(new Request(), 'slug')`.
+
+**2. Overridden `admin/index_live.html.twig` must forward `scope`**
+
+The controller passes a `scope` variable (empty array when unscoped) to the template.
+
+**Action:** If you override `@KachnitelAdmin/admin/index_live.html.twig`, pass it on —
+otherwise `admin_collection_url()` links silently open the full, unscoped list:
+
+```diff
+  <twig:K:Admin:EntityList
+      :entityShortClass="entityShortClass"
++     :scope="scope|default([])"
+  />
+```
+
+The bundled template also renders a "Lines of Order #12 ✕" banner for a scoped list;
+copy it if you want the same cue.
+
+**3. `AdminEntityUrlRuntime` no longer takes `$filterabilityService`**
+
+**Action:** Remove the `$filterabilityService` binding from any custom
+`services.yaml` definition of `AdminEntityUrlRuntime`, and drop it from code that
+constructs the runtime with named arguments.
+
+**4. `admin_collection_url()` output changed**
+
+- URLs now contain `collection=Owner:id:property` instead of `columnFilters[...]`.
+  Update code or tests that assert the old URL shape. Previously generated
+  `columnFilters` URLs (bookmarks) keep working.
+- It returns `null` when the owner entity has no `#[Admin]` attribute or has no id yet
+  (the scope cannot be authorized for it). Guard with `{% if url %}` as before.
+- The debug-mode `LogicException` for `#[ColumnFilter(enabled: false)]` on the inverse
+  field is gone, and `PropertyFilterabilityService` has been removed (its only caller was
+  this function). Drop any references to it.
+
+**5. `EntityList` requires a `CollectionScopeResolver`**
+
+`EntityList::__construct()` takes a new last argument, `CollectionScopeResolver $scopeResolver`.
+
+**Action:** If you extend `EntityList` and override its constructor, or instantiate it with `new` (for example in tests), pass a `CollectionScopeResolver`. Autowired services need no change.
+
+**6. Filter and batch-action events are scoped to their list**
+
+Filters and batch actions now `emitUp()` to the component name of the list that rendered them, so lists embedded in a collection dialog no longer update the outer list. The bundled templates pass a new `listComponent` prop.
+
+**Action:** If you override `ColumnFilter.html.twig`, a `ColumnFilter/_*.html.twig` partial, or the `EntityList/_BatchActionsBar` / `_BatchActionButton` templates, pass `listComponent` on to the filter and batch components. Custom filter or batch components should `use EmitsToListTrait` (`BatchActionTrait` already does). Without `listComponent` the old broadcast behavior is kept.
+
+**7. `EntityListQueryService::executeQuery()` / `buildQuery()` gained parameters**
+
+Both take two optional trailing parameters, `?string $scopeDqlCondition = null` and
+`array $scopeParameters = []`.
+
+**Action:** Callers need no change. Subclasses overriding either method must add the
+two parameters to stay signature-compatible.
 
 ---
 

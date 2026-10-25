@@ -39,6 +39,7 @@ You should see:
 ```
 @kachnitel/admin-bundle/batch-select_controller.js
 @kachnitel/admin-bundle/admin-inline-add_controller.js
+@kachnitel/admin-bundle/admin-collection-dialog_controller.js
 ```
 
 ### Manual Configuration (Optional)
@@ -185,6 +186,12 @@ import AdminInlineAddController from '../vendor/kachnitel/admin-bundle/assets/co
 application.register('admin-inline-add', AdminInlineAddController);
 ```
 
+### admin-collection-dialog
+
+**Purpose:** Opens the scoped collection-list dialog rendered by `#[AdminColumn(collectionDialog: true)]`.
+
+The controller uses the shared `assets/lib/native-dialog.js` helper. See [Collection Dialog](COLLECTION_DIALOG.md#asset-setup) for the full registration snippets for AssetMapper and Webpack Encore.
+
 ## Troubleshooting
 
 ### Controller Not Loading (AssetMapper)
@@ -246,7 +253,7 @@ If you're developing with a symlinked bundle:
 When developing the bundle itself:
 
 1. Edit controllers in `assets/controllers/`
-2. Copy to `dist/` for AssetMapper compatibility
+2. Copy controllers and the shared `lib/` directory to `dist/` for AssetMapper compatibility; `admin-inline-add` and `admin-collection-dialog` import `../lib/native-dialog.js`
 3. Test in both AssetMapper and Encore environments
 4. Clear cache in test applications
 

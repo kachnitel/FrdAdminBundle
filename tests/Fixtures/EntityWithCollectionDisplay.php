@@ -18,6 +18,8 @@ use Kachnitel\AdminBundle\Attribute\ColumnFilter;
  *   - tagsAccordion : collectionDisplay + collapsible (default)  → <details>/<summary>
  *   - tagsList      : collectionDisplay + non-collapsible         → always-visible list
  *   - tagsDefault   : no collectionDisplay                        → count+link (legacy)
+ *   - tagsDialogAccordion : accordion + collectionDialog          → dialog outside <details>
+ *   - tagsDialogList      : always-visible list + collectionDialog
  */
 #[ORM\Entity]
 #[Admin(label: 'Collection Display Entities')]
@@ -62,11 +64,41 @@ class EntityWithCollectionDisplay
     #[ORM\JoinTable(name: 'collection_display_tags_default')]
     private Collection $tagsDefault;
 
+    /**
+     * @var Collection<int, TagEntity>
+     */
+    #[ORM\OneToMany(targetEntity: TagEntity::class, mappedBy: 'dialogOwner')]
+    #[AdminColumn(collectionDialog: true)]
+    private Collection $dialogItems;
+
+    /**
+     * Accordion with a dialog: the <dialog> must not end up inside <summary>/<details>.
+     *
+     * @var Collection<int, TagEntity>
+     */
+    #[ORM\ManyToMany(targetEntity: TagEntity::class)]
+    #[ORM\JoinTable(name: 'collection_display_tags_dialog_accordion')]
+    #[AdminColumn(collectionDisplay: true, collectionCollapsible: true, collectionLimit: 3, collectionDialog: true)]
+    private Collection $tagsDialogAccordion;
+
+    /**
+     * Always-visible list with a dialog.
+     *
+     * @var Collection<int, TagEntity>
+     */
+    #[ORM\ManyToMany(targetEntity: TagEntity::class)]
+    #[ORM\JoinTable(name: 'collection_display_tags_dialog_list')]
+    #[AdminColumn(collectionDisplay: true, collectionCollapsible: false, collectionLimit: 3, collectionDialog: true)]
+    private Collection $tagsDialogList;
+
     public function __construct()
     {
         $this->tagsAccordion = new ArrayCollection();
         $this->tagsList      = new ArrayCollection();
         $this->tagsDefault   = new ArrayCollection();
+        $this->dialogItems   = new ArrayCollection();
+        $this->tagsDialogAccordion = new ArrayCollection();
+        $this->tagsDialogList      = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -102,5 +134,25 @@ class EntityWithCollectionDisplay
     public function getTagsDefault(): Collection
     {
         return $this->tagsDefault;
+    }
+
+    /**
+     * @return Collection<int, TagEntity>
+     */
+    public function getDialogItems(): Collection
+    {
+        return $this->dialogItems;
+    }
+
+    /** @return Collection<int, TagEntity> */
+    public function getTagsDialogAccordion(): Collection
+    {
+        return $this->tagsDialogAccordion;
+    }
+
+    /** @return Collection<int, TagEntity> */
+    public function getTagsDialogList(): Collection
+    {
+        return $this->tagsDialogList;
     }
 }

@@ -125,9 +125,8 @@ final class CollectionDisplayTest extends ComponentTestCase
     #[Test]
     public function accordionSummaryContainsViewAllLinkWhenCollectionUrlAvailable(): void
     {
-        // The ↗ link only renders when admin_collection_url() returns a URL.
-        // EntityWithCollectionDisplay::tagsAccordion is a unidirectional ManyToMany
-        // with no inversedBy, so admin_collection_url() returns null → no link rendered.
+        // The ↗ link only renders when admin_collection_url() returns a URL. Links now
+        // carry a collection scope, so they no longer depend on an inverse field.
         // This test verifies the count label and <summary> are present regardless.
         $this->persistEntityWithTags(2);
 
@@ -173,6 +172,225 @@ final class CollectionDisplayTest extends ComponentTestCase
         $rendered = $this->renderEntityList();
 
         $this->assertStringContainsString('4 items', $rendered);
+    }
+
+    #[Test]
+    public function collectionDialogRendersButtonAndLazyEmbeddedList(): void
+    {
+        $entity = new EntityWithCollectionDisplay();
+        $entity->setName('Dialog owner');
+        $this->em->persist($entity);
+
+        $tag = new TagEntity();
+        $tag->setName('Dialog item');
+        $tag->setDialogOwner($entity);
+        $this->em->persist($tag);
+        $this->em->flush();
+        $this->em->clear();
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertStringContainsString('data-controller="admin-collection-dialog"', $rendered);
+        $this->assertStringContainsString('<dialog', $rendered);
+        $this->assertStringContainsString('loading="lazy"', $rendered);
+        $this->assertStringContainsString('Dialog item', $rendered);
+        // Owner class is part of the id so same-id/same-property owners can't collide.
+        $this->assertMatchesRegularExpression('/id="collection-dialog-EntityWithCollectionDisplay-\d+-dialogItems"/', $rendered);
+    }
+
+    /**
+     * UX cannot target one of two same-named nested lists, so a dialog inside an embedded
+     * list would leak its filter/batch events into the embedded list around it. Dialog
+     * cells therefore fall back to the plain count + link there.
+     */
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogFallsBackToPlainCellInsideAnEmbeddedList(): void
+    {
+        $entity = new EntityWithCollectionDisplay();
+        $entity->setName('Dialog owner');
+        $this->em->persist($entity);
+
+        $tag = new TagEntity();
+        $tag->setName('Dialog item');
+        $tag->setDialogOwner($entity);
+        $this->em->persist($tag);
+        $this->em->flush();
+        $this->em->clear();
+
+        $rendered = (string) $this->createLiveComponent(
+            name: 'K:Admin:EntityListEmbedded',
+            data: [
+                'entityClass'      => EntityWithCollectionDisplay::class,
+                'entityShortClass' => 'EntityWithCollectionDisplay',
+            ],
+        )->render();
+
+        $this->assertStringNotContainsString('data-controller="admin-collection-dialog"', $rendered);
+        $this->assertStringNotContainsString('<dialog', $rendered);
+        $this->assertStringContainsString('1 item', $rendered);
+    }
+
+    #[Test]
+    public function collectionDialogUsesThemeDialogMacrosLikeInlineAdd(): void
+    {
+        $entity = new EntityWithCollectionDisplay();
+        $entity->setName('Dialog owner');
+        $this->em->persist($entity);
+
+        $tag = new TagEntity();
+        $tag->setName('Dialog item');
+        $tag->setDialogOwner($entity);
+        $this->em->persist($tag);
+        $this->em->flush();
+        $this->em->clear();
+
+        $rendered = $this->renderEntityList();
+
+        // Default (Bootstrap) theme: dialog_wide() centers via position-fixed + translate-middle
+        $this->assertStringContainsString('position-fixed top-50 start-50 translate-middle', $rendered);
+        $this->assertStringContainsString('modal-header', $rendered);
+        $this->assertStringContainsString('modal-body', $rendered);
+        $this->assertStringContainsString('btn-close', $rendered);
+        // Shared hook for the app's ::backdrop rule (same class the inline-add dialog carries)
+        $this->assertStringContainsString('admin-inline-dialog', $rendered);
+        // No hand-rolled layout: it must come from the theme, not inline styles
+        $this->assertStringNotContainsString('min(70rem,95vw)', $rendered);
+    }
+
+    // ── dialog combined with collectionDisplay ────────────────────────────────
+
+    private function persistEntityWithDialogDisplayTags(int $tagCount): void
+    {
+        $entity = new EntityWithCollectionDisplay();
+        $entity->setName('Dialog display owner');
+        $this->em->persist($entity);
+
+        for ($i = 1; $i <= $tagCount; $i++) {
+            $tag = new TagEntity();
+            $tag->setName('Dialog tag ' . $i);
+            $this->em->persist($tag);
+            $entity->getTagsDialogAccordion()->add($tag);
+            $entity->getTagsDialogList()->add($tag);
+        }
+
+        $this->em->flush();
+        $this->em->clear();
+    }
+
+    /**
+     * @return list<string> ids of every <dialog> that has an ancestor with one of $ancestorTags
+     */
+    private function dialogIdsInside(string $rendered, string ...$ancestorTags): array
+    {
+        $previous = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML('<?xml encoding="utf-8"?><body>' . $rendered . '</body>');
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $conditions = array_map(static fn (string $tag): string => 'ancestor::' . $tag, $ancestorTags);
+        $ids = [];
+        foreach ((new \DOMXPath($dom))->query('//dialog[' . implode(' or ', $conditions) . ']') ?: [] as $dialog) {
+            \assert($dialog instanceof \DOMElement);
+            $ids[] = $dialog->getAttribute('id');
+        }
+
+        return $ids;
+    }
+
+    /**
+     * A click anywhere inside a <summary> toggles its <details>, and the dialog's content is
+     * a DOM descendant of its parent even when it paints in the top layer — so the dialog
+     * (and its button's controller wrapper) must sit outside <summary> and <details>.
+     */
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogInCollapsibleModeRendersOutsideSummaryAndDetails(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(5);
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertMatchesRegularExpression('/id="collection-dialog-EntityWithCollectionDisplay-\d+-tagsDialogAccordion"/', $rendered);
+        $this->assertSame([], $this->dialogIdsInside($rendered, 'summary', 'details'));
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogWithCollectionDisplayTurnsTheOverflowIntoTheTrigger(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(5); // limit 3 → "+ 2 more"
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertStringContainsString('Dialog tag 1', $rendered);
+        $this->assertMatchesRegularExpression('/id="collection-dialog-EntityWithCollectionDisplay-\d+-tagsDialogList"/', $rendered);
+        // The wording is kept, but it is now a button opening the dialog — not a new-tab link
+        $this->assertMatchesRegularExpression('/<button[^>]*data-action="admin-collection-dialog#open"[^>]*>\s*\+ 2 more/', $rendered);
+        $this->assertDoesNotMatchRegularExpression('/<a [^>]*>\s*\+ 2 more/', $rendered);
+        // No separate "N tags" count button next to the items
+        $this->assertDoesNotMatchRegularExpression('/<button[^>]*admin-collection-dialog#open[^>]*>\s*5 /', $rendered);
+    }
+
+    /**
+     * The trigger sits inside <details> but the <dialog> does not; both must share one
+     * admin-collection-dialog controller element or the trigger cannot find its dialog target.
+     */
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogOverflowTriggerAndDialogShareOneControllerOutsideDetails(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(5);
+
+        $rendered = $this->renderEntityList();
+
+        $dom = new \DOMDocument();
+        @$dom->loadHTML('<?xml encoding="utf-8"?>' . $rendered);
+        $xpath = new \DOMXPath($dom);
+
+        $this->assertSame(0, $xpath->query('//details//dialog | //summary//dialog')->length); // @phpstan-ignore property.nonObject
+        $this->assertGreaterThan(
+            0,
+            $xpath->query('//*[@data-controller="admin-collection-dialog"][.//details//button[@data-action="admin-collection-dialog#open"]][.//dialog]')->length, // @phpstan-ignore property.nonObject
+        );
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogWithCollectionDisplayKeepsTheNewTabLinkInTheSummary(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(5);
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertStringContainsString('title="View all in list"', $rendered);
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogWithCollectionDisplayStillRendersDialogWhenNothingOverflows(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(2); // limit 3 → everything shown
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertStringContainsString('Dialog tag 1', $rendered);
+        $this->assertMatchesRegularExpression('/id="collection-dialog-EntityWithCollectionDisplay-\d+-tagsDialogList"/', $rendered);
+        $this->assertMatchesRegularExpression('/<button[^>]*data-action="admin-collection-dialog#open"[^>]*>\s*Details…/', $rendered);
+        $this->assertDoesNotMatchRegularExpression('/\+ \d+ more/', $rendered);
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    public function collectionDialogInAlwaysVisibleModeRendersOutsideDetails(): void
+    {
+        $this->persistEntityWithDialogDisplayTags(5);
+
+        $rendered = $this->renderEntityList();
+
+        $this->assertSame([], $this->dialogIdsInside($rendered, 'details'));
+        $this->assertStringContainsString('admin-collection-inline', $rendered);
     }
 
     #[Test]

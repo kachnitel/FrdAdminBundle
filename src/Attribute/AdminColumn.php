@@ -61,6 +61,19 @@ use Attribute;
  *   #[AdminColumn(collectionDisplay: true, collectionLabelMethod: 'getDisplayName')]
  *   private Collection $participants;
  *
+ * `collectionDialog: true` adds a button that opens a native `<dialog>` embedding a full,
+ * scoped `K:Admin:EntityListEmbedded` of the collection's target entity (search, sort,
+ * filters, paging). The list is lazy-loaded on open and restricted to this row's collection.
+ * Alone, it replaces the count/link with a "N items" button. Combined with
+ * `collectionDisplay`, the inline items (and `collectionLimit` / `collectionCollapsible` /
+ * `collectionLabelMethod`) render as usual and the "+ N more…" entry becomes the button
+ * ("Details…" when nothing overflows; the ↗ link stays). It falls back to the plain
+ * display when the target entity has no accessible admin index, and inside an embedded
+ * list (dialogs don't nest). See docs/COLLECTION_DIALOG.md.
+ *
+ *   #[AdminColumn(collectionDialog: true)]
+ *   private Collection $lineItems;
+ *
  * ## Precedence (checked in order)
  *
  *   1. `editable: false`        → never editable (short-circuits everything)
@@ -94,6 +107,10 @@ use Attribute;
  * @example Custom label method for collection items:
  *   #[AdminColumn(collectionDisplay: true, collectionLabelMethod: 'getDisplayName')]
  *   private Collection $participants;
+ *
+ * @example Collection in a dialog:
+ *   #[AdminColumn(collectionDialog: true)]
+ *   private Collection $lineItems;
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class AdminColumn
@@ -120,6 +137,11 @@ class AdminColumn
      *   When null (default), auto-detection is used: getLabel() → getName() → getTitle()
      *   → __toString() → #id. Use this to specify a custom method such as 'getDisplayName'
      *   or 'getFullTitle'. Only applies when collectionDisplay is true.
+     * @param bool $collectionDialog
+     *   Add a button that opens a dialog embedding a lazy-loaded, scoped entity list
+     *   of the collection. Alone it replaces the count/link; with collectionDisplay it
+     *   the "+ N more…" entry opens it. Requires the target to be an #[Admin] entity
+     *   with an accessible index. Default false.
      */
     public function __construct(
         public readonly string|bool|null $editable = null,
@@ -128,5 +150,6 @@ class AdminColumn
         public readonly bool $collectionCollapsible = true,
         public readonly ?int $collectionLimit = 5,
         public readonly ?string $collectionLabelMethod = null,
+        public readonly bool $collectionDialog = false,
     ) {}
 }

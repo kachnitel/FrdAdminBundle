@@ -12,6 +12,7 @@ use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
+use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
@@ -38,6 +39,7 @@ final class EntityListEntityClassResolutionTest extends TestCase
             $this->createStub(EntityListColumnService::class),
             $this->createStub(ArchiveService::class),
             $this->createStub(ObjectAuthorizationChecker::class),
+            $this->createStub(CollectionScopeResolver::class),
         );
     }
 

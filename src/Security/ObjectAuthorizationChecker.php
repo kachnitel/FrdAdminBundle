@@ -69,6 +69,8 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  *     entity-components-bundle's AbstractEditableField::save() calls before
  *     writing an inline-edited value — see that class's docblock for the
  *     known "checked before the write, not after" timing limitation)
+ *   - CollectionScopeResolver::resolve() — ADMIN_SHOW on the scope's owner
+ *     entity, on every embedded-list query
  *   - EntityListBatchService::batchDelete() / ArchiveButton::execute() (both
  *     go through SkipsUnauthorizedEntitiesTrait — skip-on-deny, not abort-on-deny.
  *     That trait calls isGranted() below, not a batch-specific method on this

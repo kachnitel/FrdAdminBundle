@@ -1,0 +1,24 @@
+{#
+ # Collection column rendered as a count button that opens a dialog embedding a
+ # scoped, lazy-loaded entity list of the collection (#[AdminColumn(collectionDialog: true)]).
+ # Used for the default (no collectionDisplay) mode; with collectionDisplay the
+ # "+ N more…" entry is the trigger instead (see _collection.html.twig).
+ #
+ # Variables (from _collection.html.twig): entity, value, property, dialogId, ownerClass, targetClass
+ #
+ # See docs/COLLECTION_DIALOG.md. Behaviour lives in the admin-collection-dialog
+ # Stimulus controller; the list itself is K:Admin:EntityListEmbedded with a signed
+ # `scope` prop that CollectionScopeResolver authorizes on every query.
+ #}
+{% import kachnitel_admin_theme as css %}
+{% set count = value|length %}
+
+<span data-controller="admin-collection-dialog"
+      data-admin-collection-dialog-dialog-id-value="{{ dialogId }}">
+    <button type="button"
+            class="{{ css.btn_outline_primary() }} {{ css.btn_sm() }}"
+            data-action="admin-collection-dialog#open"
+            {% if count == 0 %}disabled{% endif %}>{{ count }} {{ property|humanize|lower }}</button>
+
+    {% include '@KachnitelAdmin/types/_collection_dialog_panel.html.twig' %}
+</span>

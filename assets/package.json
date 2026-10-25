@@ -11,7 +11,8 @@
     "homepage": "https://github.com/kachnitel/FrdAdminBundle",
     "type": "module",
     "files": [
-        "controllers"
+        "controllers",
+        "lib"
     ],
     "symfony": {
         "controllers": {
@@ -28,12 +29,20 @@
                 "webpackMode": "eager",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "admin-collection-dialog": {
+                "main": "controllers/admin-collection-dialog_controller.js",
+                "name": "admin-collection-dialog",
+                "webpackMode": "eager",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {
             "@hotwired/stimulus": "^3.0.0",
             "@kachnitel/admin-bundle/batch-select_controller.js": "path:%PACKAGE%/controllers/batch-select_controller.js",
-            "@kachnitel/admin-bundle/admin-inline-add_controller.js": "path:%PACKAGE%/controllers/admin-inline-add_controller.js"
+            "@kachnitel/admin-bundle/admin-inline-add_controller.js": "path:%PACKAGE%/controllers/admin-inline-add_controller.js",
+            "@kachnitel/admin-bundle/admin-collection-dialog_controller.js": "path:%PACKAGE%/controllers/admin-collection-dialog_controller.js"
         }
     },
     "peerDependencies": {

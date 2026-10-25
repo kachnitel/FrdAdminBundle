@@ -59,7 +59,8 @@
                 {% include '@KachnitelAdmin/components/EntityList/_BatchActionsBar.html.twig' with {
                     selectedIds: this.selectedIds,
                     entityClass: this.entityClass,
-                    entityShortClass: this.entityShortClass
+                    entityShortClass: this.entityShortClass,
+                    listComponent: this.listComponentName
                 } only %}
             {% endif %}
 
@@ -133,6 +134,7 @@
                                     column="{{ slot }}"
                                     value="{{ this.columnFilters[slot]|default('') }}"
                                     :filterMetadata="this.filterMetadata[slot]"
+                                    :listComponent="this.listComponentName"
                                 />
                             {% endif %}
                         </th>

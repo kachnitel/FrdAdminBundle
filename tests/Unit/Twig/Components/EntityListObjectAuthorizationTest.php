@@ -13,6 +13,7 @@ use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
+use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
 use PHPUnit\Framework\Attributes as PHPUnit;
@@ -68,6 +69,7 @@ final class EntityListObjectAuthorizationTest extends TestCase
             columnService: $this->createStub(EntityListColumnService::class),
             archiveService: $this->createStub(ArchiveService::class),
             objectAuthChecker: $this->objectAuthChecker,
+            scopeResolver: $this->createStub(CollectionScopeResolver::class),
         );
 
         $entityList->entityShortClass = 'Product';
@@ -164,6 +166,7 @@ final class EntityListObjectAuthorizationTest extends TestCase
             columnService: $this->createStub(EntityListColumnService::class),
             archiveService: $this->createStub(ArchiveService::class),
             objectAuthChecker: $this->objectAuthChecker,
+            scopeResolver: $this->createStub(CollectionScopeResolver::class),
         );
 
         $entityList->entityShortClass = 'Product';

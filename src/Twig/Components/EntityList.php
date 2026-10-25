@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Twig\Components;
 
+use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Config\EntityListConfig;
 use Kachnitel\DataSourceContracts\ColumnGroup;
@@ -19,6 +20,8 @@ use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\Preferences\ColumnVisibilityPreferenceTrait;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
+use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
+use Kachnitel\DataSourceContracts\PaginatedResult;
 use Kachnitel\DataSourceContracts\PaginationInfo;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -31,7 +34,15 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 
 /**
- * LiveComponent for reactive entity lists.
+ * LiveComponent for reactive entity lists — list state is bound to the URL.
+ * EntityListEmbedded inherits this behavior and overrides URL-bound props.
+ *
+ * ## Scoped lists
+ *
+ * A non-empty `scope` ({ownerClass, ownerId, property}) restricts the list to one
+ * owner entity's collection. It is a non-writable LiveProp (signed — not
+ * client-modifiable) and is authorized and translated by CollectionScopeResolver on
+ * every query. See docs/COLLECTION_DIALOG.md.
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessivePublicCount)
@@ -104,17 +115,30 @@ class EntityList
     #[LiveProp(writable: true, url: true)]
     public bool $showArchived = false;
 
+    /**
+     * Restricts the list to one owner entity's collection:
+     * {ownerClass: class-string, ownerId: int|string, property: string}.
+     *
+     * Non-writable, so the signed LiveProp cannot be altered client-side.
+     * Empty = unscoped.
+     *
+     * @var array<string, mixed>
+     */
+    #[LiveProp]
+    public array $scope = [];
+
     /** @var array<int> */
     public array $allowedItemsPerPage;
 
     /**
      * @var array{
-    *     queryResult?: \Kachnitel\DataSourceContracts\PaginatedResult,
+     *     queryResult?: PaginatedResult,
      *     filterMetadata?: array<string, array<string, mixed>>,
      *     columns?: array<int|string, string>,
      *     columnSlots?: list<string|ColumnGroup>,
      *     dataSource?: DataSourceInterface,
-     *     visibilityLoaded?: bool
+     *     visibilityLoaded?: bool,
+     *     scope?: array{0: string, 1: array<string, mixed>}
      * }
      */
     private array $cache = [];
@@ -128,6 +152,7 @@ class EntityList
         private EntityListColumnService $columnService,
         private ArchiveService $archiveService,
         private ObjectAuthorizationChecker $objectAuthChecker,
+        private CollectionScopeResolver $scopeResolver,
     ) {
         $this->itemsPerPage = $this->config->defaultItemsPerPage;
         $this->allowedItemsPerPage = $this->config->allowedItemsPerPage;
@@ -143,6 +168,9 @@ class EntityList
         if (!$this->permissionService->canViewList($identifier)) {
             throw new AccessDeniedException(sprintf('Access denied to view %s.', $identifier));
         }
+
+        // Authorize the scope on every hydration too, not only when a query runs.
+        $this->resolveScope();
     }
 
     /**
@@ -182,6 +210,61 @@ class EntityList
         if ($this->entityClass === '' && $this->entityShortClass !== '') {
             $this->entityClass = $this->config->entityNamespace . $this->entityShortClass;
         }
+    }
+
+    /**
+     * Whether this list is embedded in another page or dialog (EntityListEmbedded).
+     * Cell templates use it to avoid nesting collection dialogs: see EmitsToListTrait.
+     */
+    public function isEmbedded(): bool
+    {
+        return false;
+    }
+
+    // ── Event scoping ──────────────────────────────────────────────────────────
+
+    /**
+     * Registered component name of the concrete list class (e.g. K:Admin:EntityList or
+     * K:Admin:EntityListEmbedded). Templates pass it to the filters and batch actions
+     * so their emitUp() events reach only lists of this kind — see EmitsToListTrait.
+     */
+    public function getListComponentName(): string
+    {
+        $class = new \ReflectionClass(static::class);
+        do {
+            foreach ($class->getAttributes(AsLiveComponent::class) as $attribute) {
+                $arguments = $attribute->getArguments();
+                $name = $arguments['name'] ?? $arguments[0] ?? null;
+
+                return is_string($name) ? $name : $class->getShortName();
+            }
+        } while (($class = $class->getParentClass()) !== false);
+
+        return 'K:Admin:EntityList';
+    }
+
+    // ── Scope ──────────────────────────────────────────────────────────────────
+
+    /**
+     * Authorize and translate the `scope` LiveProp. Null when unscoped.
+     *
+     * @return array{0: string, 1: array<string, mixed>}|null [DQL fragment, parameters]
+     */
+    private function resolveScope(): ?array
+    {
+        if ($this->scope === []) {
+            return null;
+        }
+
+        // The list's own entity: the scope's collection target must be it. Resolved from
+        // the data source (not entityShortClass + namespace), which is what actually queries.
+        $this->resolveEntityClass();
+        $dataSource = $this->resolveDataSource();
+        if (!$dataSource instanceof DoctrineDataSource) {
+            throw new \LogicException('Scoped lists require a Doctrine data source.');
+        }
+
+        return $this->cache['scope'] ??= $this->scopeResolver->resolve($this->scope, $dataSource->getEntityClass());
     }
 
     // ── Data Source Resolution ─────────────────────────────────────────────────
@@ -243,7 +326,7 @@ class EntityList
      * resolveConfig() twice.
      */
     #[ExposeInTemplate('archiveConfig')]
-    public function getArchiveConfig(): ?\Kachnitel\AdminBundle\Archive\ArchiveConfig
+    public function getArchiveConfig(): ?ArchiveConfig
     {
         if (!$this->isDoctrineEntity()) {
             return null;
@@ -335,6 +418,18 @@ class EntityList
                 );
                 $dataSource->setArchiveDqlCondition($condition);
             }
+        }
+
+        // Scope: always set (null when unscoped) so a stale value on a shared
+        // DataSource instance can never leak into this query. A scope on a
+        // non-Doctrine source cannot be honoured, so fail closed instead of
+        // silently listing everything.
+        $scope = $this->resolveScope();
+        if ($scope !== null && !$dataSource instanceof DoctrineDataSource) {
+            throw new \LogicException('Scoped lists require a Doctrine data source.');
+        }
+        if ($dataSource instanceof DoctrineDataSource) {
+            $dataSource->setScopeCondition($scope[0] ?? null, $scope[1] ?? []);
         }
 
         $this->cache['queryResult'] = $dataSource->query(

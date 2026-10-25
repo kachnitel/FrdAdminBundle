@@ -9,13 +9,12 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
-use Symfony\UX\LiveComponent\ComponentToolsTrait;
 
 #[AsLiveComponent('K:Admin:EnumMultiFilter', template: '@KachnitelAdmin/components/EnumMultiFilter.html.twig')]
 class EnumMultiFilter
 {
     use DefaultActionTrait;
-    use ComponentToolsTrait;
+    use EmitsToListTrait;
 
     #[LiveProp]
     public string $column;
@@ -119,7 +118,7 @@ class EnumMultiFilter
             ? ''
             : json_encode(array_values($this->selectedValues), JSON_THROW_ON_ERROR);
 
-        $this->emitUp('filter:updated', [
+        $this->emitToList('filter:updated', [
             'column' => $this->column,
             'value'  => $this->value,
         ]);
@@ -131,7 +130,7 @@ class EnumMultiFilter
         $this->selectedValues = [];
         $this->value = '';
 
-        $this->emitUp('filter:updated', [
+        $this->emitToList('filter:updated', [
             'column' => $this->column,
             'value'  => $this->value,
         ]);

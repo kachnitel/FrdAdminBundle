@@ -9,13 +9,12 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
-use Symfony\UX\LiveComponent\ComponentToolsTrait;
 
 #[AsLiveComponent('K:Admin:DateRangeFilter', template: '@KachnitelAdmin/components/DateRangeFilter.html.twig')]
 class DateRangeFilter
 {
     use DefaultActionTrait;
-    use ComponentToolsTrait;
+    use EmitsToListTrait;
 
     #[LiveProp]
     public string $column;
@@ -69,7 +68,7 @@ class DateRangeFilter
 
         $this->deserializeValue();
 
-        $this->emitUp('filter:updated', [
+        $this->emitToList('filter:updated', [
             'column' => $this->column,
             'value'  => $this->value,
         ]);
@@ -96,7 +95,7 @@ class DateRangeFilter
         ]);
         $this->value = $encoded !== false ? $encoded : '';
 
-        $this->emitUp('filter:updated', [
+        $this->emitToList('filter:updated', [
             'column' => $this->column,
             'value'  => $this->value,
         ]);

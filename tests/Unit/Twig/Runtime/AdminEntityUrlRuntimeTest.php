@@ -6,16 +6,14 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
-use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
-use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
-use Kachnitel\AdminBundle\Service\PropertyFilterabilityService;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityUrlRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
+use Kachnitel\AdminBundle\Utils\CollectionScopeParameter;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -38,7 +36,6 @@ class AdminEntityUrlRuntimeTest extends TestCase
     }
 
     private function createRuntime(
-        PropertyFilterabilityService $filterabilityService,
         ?EntityDiscoveryService $entityDiscovery = null,
         ?EntityManagerInterface $em = null,
     ): AdminEntityUrlRuntime {
@@ -46,56 +43,15 @@ class AdminEntityUrlRuntimeTest extends TestCase
             router: $this->router,
             adminRouteRuntime: $this->adminRouteRuntime,
             entityDiscovery: $entityDiscovery,
-            filterabilityService: $filterabilityService,
             em: $em,
         );
     }
 
-    /**
-     * Returns a PropertyFilterabilityService mock that approves any field as filterable.
-     * Use for tests where the field filterability is not what's under test.
-     *
-     * @return PropertyFilterabilityService&MockObject
-     */
-    private function filterableProvider(): PropertyFilterabilityService
-    {
-        $provider = $this->createMock(PropertyFilterabilityService::class);
-        $provider->method('buildCollectionFilterEntry')
-            ->willReturnCallback(function (object $entity, string $field, string $class): ?array {
-                if (method_exists($entity, 'getId')) {
-                    $id = $entity->getId();
-                    if (is_scalar($id) || $id instanceof \Stringable) {
-                        return [$field => (string) $id];
-                    }
-                }
-                return null;
-            });
-        return $provider;
-    }
-
-    /**
-     * Returns a PropertyFilterabilityService mock that rejects all fields as not filterable.
-     *
-     * @return PropertyFilterabilityService&MockObject
-     */
-    private function unfilteredProvider(): PropertyFilterabilityService
-    {
-        $provider = $this->createMock(PropertyFilterabilityService::class);
-        $provider->method('buildCollectionFilterEntry')
-            ->willReturnCallback(function (object $entity, string $field, string $class): never {
-                throw new \LogicException(sprintf(
-                    'A collection link targets "%s::$%s", but that property has #[ColumnFilter(enabled: false)].',
-                    $class,
-                    $field,
-                ));
-            });
-        return $provider;
-    }
 
     #[Test]
     public function getEntityAdminUrlReturnsNullWithoutDependencies(): void
     {
-        $runtime = $this->createRuntime($this->filterableProvider());
+        $runtime = $this->createRuntime();
 
         $result = $runtime->getEntityAdminUrl(new TestEntity());
         $this->assertNull($result);
@@ -106,7 +62,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
     {
         $this->entityDiscovery->method('isAdminEntity')->willReturn(false);
 
-        $runtime = $this->createRuntime($this->filterableProvider(), $this->entityDiscovery);
+        $runtime = $this->createRuntime($this->entityDiscovery);
 
         $result = $runtime->getEntityAdminUrl(new TagEntity());
         $this->assertNull($result);
@@ -130,7 +86,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
             )
             ->willReturn('/admin/test-entity/42');
 
-        $runtime = $this->createRuntime($this->filterableProvider(), $this->entityDiscovery);
+        $runtime = $this->createRuntime($this->entityDiscovery);
 
         $entity = new class { public function getId(): int { return 42; } };
 
@@ -157,7 +113,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
             )
             ->willReturn('/admin/test-entity');
 
-        $runtime = $this->createRuntime($this->filterableProvider(), $this->entityDiscovery);
+        $runtime = $this->createRuntime($this->entityDiscovery);
 
         $entity = new class { public function getName(): string { return 'Test'; } };
 
@@ -182,7 +138,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
             )
             ->willReturn('/admin/test-entity?columnFilters%5Bid%5D=7');
 
-        $runtime = $this->createRuntime($this->filterableProvider(), $this->entityDiscovery);
+        $runtime = $this->createRuntime($this->entityDiscovery);
 
         $entity = new class { public function getId(): int { return 7; } };
 
@@ -192,15 +148,17 @@ class AdminEntityUrlRuntimeTest extends TestCase
     }
 
     #[Test]
+    #[Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWithoutDependencies(): void
     {
-        $runtime = $this->createRuntime($this->filterableProvider(), $this->entityDiscovery);
+        $runtime = $this->createRuntime($this->entityDiscovery);
 
         $result = $runtime->getCollectionAdminUrl(new TestEntity(), 'tags');
         $this->assertNull($result);
     }
 
     #[Test]
+    #[Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullForNonCollectionProperty(): void
     {
         /** @var ClassMetadata<TestEntity>&MockObject $metadata */
@@ -209,118 +167,82 @@ class AdminEntityUrlRuntimeTest extends TestCase
 
         $this->em->method('getClassMetadata')->willReturn($metadata);
 
-        $runtime = $this->createRuntime($this->filterableProvider(), $this->entityDiscovery, $this->em);
+        $runtime = $this->createRuntime($this->entityDiscovery, $this->em);
 
         $result = $runtime->getCollectionAdminUrl(new TestEntity(), 'name');
         $this->assertNull($result);
     }
 
     #[Test]
+    #[Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWhenTargetHasNoAdmin(): void
     {
-        /** @var ClassMetadata<TestEntity>&MockObject $metadata */
-        $metadata = $this->createMock(ClassMetadata::class);
-        $metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('tags')->willReturn(true);
-        $metadata->expects($this->once())->method('getAssociationTargetClass')->with('tags')->willReturn(TagEntity::class);
-
-        $this->em->method('getClassMetadata')->willReturn($metadata);
+        $this->stubCollectionMetadata(TagEntity::class);
         $this->entityDiscovery->expects($this->once())->method('isAdminEntity')->with(TagEntity::class)->willReturn(false);
 
-        $runtime = $this->createRuntime($this->filterableProvider(), $this->entityDiscovery, $this->em);
+        $runtime = $this->createRuntime($this->entityDiscovery, $this->em);
 
         $result = $runtime->getCollectionAdminUrl(new TestEntity(), 'tags');
         $this->assertNull($result);
     }
 
     #[Test]
-    public function getCollectionAdminUrlReturnsUrlWithFilterForOneToMany(): void
+    #[Group('collection-scope')]
+    public function getCollectionAdminUrlReturnsNullWhenOwnerHasNoAdmin(): void
     {
-        $metadata = $this->createMock(ClassMetadata::class);
-        $metadata->method('getName')->willReturn(TestEntity::class);
-        $metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('tagEntities')->willReturn(true);
-        $metadata->expects($this->once())->method('getAssociationTargetClass')->with('tagEntities')->willReturn(TagEntity::class);
+        // The scope resolver 404s a non-admin owner, so a link to it would be dead.
+        $this->stubCollectionMetadata(TagEntity::class);
+        $this->entityDiscovery->method('isAdminEntity')
+            ->willReturnCallback(static fn (string $class): bool => $class === TagEntity::class);
+        $this->adminRouteRuntime->method('getRoute')->willReturn('app_admin_entity_index');
+        $this->adminRouteRuntime->method('isActionAccessible')->willReturn(true);
 
-        $oneToManyMapping = new OneToManyAssociationMapping('tagEntities', TestEntity::class, TagEntity::class);
-        $oneToManyMapping->mappedBy = 'testEntity';
-        $metadata->expects($this->once())->method('getAssociationMapping')->with('tagEntities')->willReturn($oneToManyMapping);
+        $runtime = $this->createRuntime($this->entityDiscovery, $this->em);
 
-        $this->em->method('getClassMetadata')->willReturn($metadata);
-        $this->entityDiscovery->expects($this->once())->method('isAdminEntity')->with(TagEntity::class)->willReturn(true);
+        $this->assertNull($runtime->getCollectionAdminUrl($this->ownerWithId(1), 'tagEntities'));
+    }
+
+    #[Test]
+    #[Group('collection-scope')]
+    public function getCollectionAdminUrlReturnsNullWhenOwnerHasNoId(): void
+    {
+        $this->stubCollectionMetadata(TagEntity::class);
+        $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
+        $this->adminRouteRuntime->method('getRoute')->willReturn('app_admin_entity_index');
+        $this->adminRouteRuntime->method('isActionAccessible')->willReturn(true);
+        $this->router->expects($this->never())->method('generate');
+
+        $runtime = $this->createRuntime($this->entityDiscovery, $this->em);
+
+        $this->assertNull($runtime->getCollectionAdminUrl(new TestEntity(), 'tagEntities'));
+    }
+
+    #[Test]
+    #[Group('collection-scope')]
+    public function getCollectionAdminUrlReturnsNullWhenIndexNotAccessible(): void
+    {
+        $this->stubCollectionMetadata(TagEntity::class);
+        $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
+        $this->adminRouteRuntime->method('getRoute')->willReturn('app_admin_entity_index');
+        $this->adminRouteRuntime->expects($this->once())->method('isActionAccessible')->with('TagEntity', 'index')->willReturn(false);
+
+        $runtime = $this->createRuntime($this->entityDiscovery, $this->em);
+
+        $this->assertNull($runtime->getCollectionAdminUrl($this->ownerWithId(1), 'tagEntities'));
+    }
+
+    /**
+     * The link carries the same scope the dialog uses, so both paths list identical rows.
+     * The association mapping (mappedBy/inversedBy) is deliberately not consulted — that
+     * dependency is what used to break unidirectional ManyToMany.
+     */
+    #[Test]
+    #[Group('collection-scope')]
+    public function getCollectionAdminUrlCarriesScopeInsteadOfColumnFilter(): void
+    {
+        $this->stubCollectionMetadata(TagEntity::class);
+        $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
         $this->adminRouteRuntime->expects($this->once())->method('getRoute')->with(TagEntity::class, 'index')->willReturn('app_admin_entity_index');
-        $this->adminRouteRuntime->expects($this->once())->method('isActionAccessible')->with('TagEntity', 'index')->willReturn(true);
-
-        $this->router
-            ->expects($this->once())
-            ->method('generate')
-            ->with(
-                'app_admin_entity_index',
-                $this->callback(fn (array $params): bool => $this->hasColumnFilter($params, 'testEntity', '1'))
-            )
-            ->willReturn('/admin/tag-entity?columnFilters[testEntity]=1');
-
-        $runtime = $this->createRuntime(
-            $this->filterableProvider(),
-            $this->entityDiscovery,
-            $this->em,
-        );
-
-        $entity = new class { public function getId(): int { return 1; } };
-        $result = $runtime->getCollectionAdminUrl($entity, 'tagEntities');
-        $this->assertIsString($result);
-    }
-
-    #[Test]
-    public function getCollectionAdminUrlReturnsUrlWithFilterForManyToManyOwningSideWithInversedBy(): void
-    {
-        $metadata = $this->createMock(ClassMetadata::class);
-        $metadata->method('getName')->willReturn(TestEntity::class);
-        $metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('tagEntities')->willReturn(true);
-        $metadata->expects($this->once())->method('getAssociationTargetClass')->with('tagEntities')->willReturn(TagEntity::class);
-
-        $manyToManyMapping = new ManyToManyOwningSideMapping('tagEntities', TestEntity::class, TagEntity::class);
-        $manyToManyMapping->inversedBy = 'testEntities';
-        $metadata->expects($this->once())->method('getAssociationMapping')->with('tagEntities')->willReturn($manyToManyMapping);
-
-        $this->em->method('getClassMetadata')->willReturn($metadata);
-        $this->entityDiscovery->expects($this->once())->method('isAdminEntity')->with(TagEntity::class)->willReturn(true);
-        $this->adminRouteRuntime->expects($this->once())->method('getRoute')->with(TagEntity::class, 'index')->willReturn('app_admin_entity_index');
-        $this->adminRouteRuntime->expects($this->once())->method('isActionAccessible')->with('TagEntity', 'index')->willReturn(true);
-
-        $this->router
-            ->expects($this->once())
-            ->method('generate')
-            ->with(
-                'app_admin_entity_index',
-                $this->callback(fn (array $params): bool => $this->hasColumnFilter($params, 'testEntities', '1'))
-            )
-            ->willReturn('/admin/tag-entity?columnFilters[testEntities]=1');
-
-        $runtime = $this->createRuntime(
-            $this->filterableProvider(),
-            $this->entityDiscovery,
-            $this->em,
-        );
-
-        $entity = new class { public function getId(): int { return 1; } };
-        $result = $runtime->getCollectionAdminUrl($entity, 'tagEntities');
-        $this->assertIsString($result);
-    }
-
-    #[Test]
-    public function getCollectionAdminUrlReturnsUrlWithoutFilterForManyToManyWithNoInversedBy(): void
-    {
-        // Unidirectional ManyToMany — no mappedBy, no inversedBy → no filter possible
-        /** @var ClassMetadata<TestEntity>&MockObject $metadata */
-        $metadata = $this->createMock(ClassMetadata::class);
-        $metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
-        $metadata->expects($this->once())->method('getAssociationTargetClass')->with('items')->willReturn(TagEntity::class);
-        $manyToManyMapping = new ManyToManyOwningSideMapping('items', TestEntity::class, TagEntity::class);
-        // inversedBy intentionally not set
-        $metadata->expects($this->once())->method('getAssociationMapping')->with('items')->willReturn($manyToManyMapping);
-
-        $this->em->method('getClassMetadata')->willReturn($metadata);
-        $this->entityDiscovery->expects($this->once())->method('isAdminEntity')->with(TagEntity::class)->willReturn(true);
-        $this->adminRouteRuntime->method('getRoute')->willReturn('app_admin_entity_index');
         $this->adminRouteRuntime->method('isActionAccessible')->willReturn(true);
 
         $this->router
@@ -328,84 +250,32 @@ class AdminEntityUrlRuntimeTest extends TestCase
             ->method('generate')
             ->with(
                 'app_admin_entity_index',
-                $this->callback(fn (array $params): bool => $this->hasNoColumnFilters($params, 'tag-entity'))
+                [
+                    'entitySlug' => 'tag-entity',
+                    CollectionScopeParameter::QUERY_KEY => 'TestEntity:1:tagEntities',
+                ],
             )
-            ->willReturn('/admin/tag-entity');
+            ->willReturn('/admin/tag-entity?collection=x');
 
-        $runtime = $this->createRuntime($this->filterableProvider(), $this->entityDiscovery, $this->em);
+        $runtime = $this->createRuntime($this->entityDiscovery, $this->em);
 
-        $result = $runtime->getCollectionAdminUrl(new TestEntity(), 'items');
-        $this->assertNotNull($result);
+        $this->assertSame('/admin/tag-entity?collection=x', $runtime->getCollectionAdminUrl($this->ownerWithId(1), 'tagEntities'));
     }
 
-    #[Test]
-    public function getCollectionAdminUrlThrowsInDebugModeWhenTargetFilterFieldExplicitlyDisabled(): void
+    /**
+     * @param class-string $targetClass
+     */
+    private function stubCollectionMetadata(string $targetClass): void
     {
-        /** @var ClassMetadata<object>&MockObject $metadata */
         $metadata = $this->createMock(ClassMetadata::class);
-        $metadata->method('getName')->willReturn(SourceEntityStub::class);
-        $metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
-        $metadata->expects($this->once())->method('getAssociationTargetClass')->with('items')->willReturn(TargetWithDisabledFilterStub::class);
-        $oneToManyMapping = new OneToManyAssociationMapping('items', SourceEntityStub::class, TargetWithDisabledFilterStub::class);
-        $oneToManyMapping->mappedBy = 'owner'; // has #[ColumnFilter(enabled: false)]
-        $metadata->expects($this->once())->method('getAssociationMapping')->with('items')->willReturn($oneToManyMapping);
+        // The link must not depend on the association type (mappedBy/inversedBy): it always
+        // carries the same scope the dialog uses. Reading the mapping again would reintroduce
+        // the unidirectional-ManyToMany bug.
+        $metadata->expects($this->never())->method('getAssociationMapping');
+        $metadata->method('isCollectionValuedAssociation')->willReturn(true);
+        $metadata->method('getAssociationTargetClass')->willReturn($targetClass);
 
         $this->em->method('getClassMetadata')->willReturn($metadata);
-        $this->entityDiscovery->expects($this->once())->method('isAdminEntity')->with(TargetWithDisabledFilterStub::class)->willReturn(true);
-        $this->adminRouteRuntime->method('getRoute')->willReturn('app_admin_entity_index');
-        $this->adminRouteRuntime->method('isActionAccessible')->willReturn(true);
-
-        $runtime = $this->createRuntime(
-            $this->unfilteredProvider(),
-            $this->entityDiscovery,
-            $this->em,
-        );
-
-        $entity = new class { public function getId(): int { return 1; } };
-
-        $this->expectException(\LogicException::class);
-        $this->expectExceptionMessageMatches('/enabled: false/');
-        $this->expectExceptionMessageMatches('/owner/');
-
-        $runtime->getCollectionAdminUrl($entity, 'items');
-    }
-
-    #[Test]
-    public function getCollectionAdminUrlIncludesFilterWhenTargetFieldIsAutoDetectable(): void
-    {
-        /** @var ClassMetadata<object>&MockObject $metadata */
-        $metadata = $this->createMock(ClassMetadata::class);
-        $metadata->method('getName')->willReturn(SourceEntityStub::class);
-        $metadata->expects($this->once())->method('isCollectionValuedAssociation')->with('items')->willReturn(true);
-        $metadata->expects($this->once())->method('getAssociationTargetClass')->with('items')->willReturn(TargetWithAutoFilterStub::class);
-        $oneToManyMapping = new OneToManyAssociationMapping('items', SourceEntityStub::class, TargetWithAutoFilterStub::class);
-        $oneToManyMapping->mappedBy = 'name'; // no #[ColumnFilter] but auto-detected
-        $metadata->expects($this->once())->method('getAssociationMapping')->with('items')->willReturn($oneToManyMapping);
-
-        $this->em->method('getClassMetadata')->willReturn($metadata);
-        $this->entityDiscovery->expects($this->once())->method('isAdminEntity')->with(TargetWithAutoFilterStub::class)->willReturn(true);
-        $this->adminRouteRuntime->method('getRoute')->willReturn('app_admin_entity_index');
-        $this->adminRouteRuntime->method('isActionAccessible')->willReturn(true);
-
-        $this->router
-            ->expects($this->once())
-            ->method('generate')
-            ->with(
-                'app_admin_entity_index',
-                $this->callback(fn (array $params): bool => $this->hasColumnFilter($params, 'name', '1'))
-            )
-            ->willReturn('/admin/target?columnFilters[name]=1');
-
-        $runtime = $this->createRuntime(
-            $this->filterableProvider(),
-            $this->entityDiscovery,
-            $this->em,
-        );
-
-        $entity = new class { public function getId(): int { return 1; } };
-
-        $result = $runtime->getCollectionAdminUrl($entity, 'items');
-        $this->assertNotNull($result);
     }
 
     /** @param array<int|string, mixed> $params */
@@ -416,27 +286,8 @@ class AdminEntityUrlRuntimeTest extends TestCase
         return is_array($filters) && ($filters[$field] ?? null) === $expected;
     }
 
-    /** @param array<int|string, mixed> $params */
-    private function hasNoColumnFilters(array $params, string $expectedSlug): bool
+    private function ownerWithId(int $id): object
     {
-        return ($params['entitySlug'] ?? null) === $expectedSlug
-            && !isset($params['columnFilters']);
+        return (new TestEntity())->setId($id);
     }
-}
-class SourceEntityStub
-{
-    public function getId(): int { return 1; }
-}
-
-/** Target entity where the inverse field is explicitly disabled for filtering. */
-class TargetWithDisabledFilterStub
-{
-    #[ColumnFilter(enabled: false)]
-    public ?SourceEntityStub $owner = null;
-}
-
-/** Target entity where the inverse field has no ColumnFilter (auto-detectable). */
-class TargetWithAutoFilterStub
-{
-    public string $name = '';
 }

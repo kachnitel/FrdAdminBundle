@@ -12,6 +12,7 @@ use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
+use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
@@ -56,6 +57,7 @@ final class EntityListNavigationTest extends TestCase
             $this->createStub(EntityListColumnService::class),
             $this->createStub(ArchiveService::class),
             $this->createStub(ObjectAuthorizationChecker::class),
+            $this->createStub(CollectionScopeResolver::class),
         );
         $this->component->dataSourceId = 'test';
     }
