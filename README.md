@@ -1,7 +1,7 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1767%20passed-red>)
+![Tests](<https://img.shields.io/badge/tests-1767%20passed-brightgreen>)
 ![Coverage](<https://img.shields.io/badge/coverage-94%25-brightgreen>)
 ![Assertions](<https://img.shields.io/badge/assertions-4127-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
