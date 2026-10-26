@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Service;
 
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use ReflectionClass;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -135,7 +136,7 @@ class ColumnPermissionService
         string $action,
     ): bool {
         return $this->canPerformAction(
-            $entity::class,
+            ObjectHelper::getRealClass($entity),
             $columnName,
             $action
         );

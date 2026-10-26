@@ -102,6 +102,13 @@ arguments were moved to `RowActionVisibilityChecker`.
 from `RowActionRuntime`. The `$debug` binding belongs to
 `RowActionVisibilityChecker` instead.
 
+### Column permission dependencies are required (0.15 → 0.y)
+
+`AdminEditabilityResolver` and `AdminEntityDataRuntime` now require
+`ColumnPermissionService` in their constructors. The bundle's service container
+wires these automatically. Update any direct instantiations and custom service
+definitions to pass the service.
+
 ### `AbstractAdminController` constructor requires authorization checker (0.13 → 0.y)
 
 `AbstractAdminController::__construct()` now requires an

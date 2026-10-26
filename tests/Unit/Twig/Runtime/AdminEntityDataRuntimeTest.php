@@ -6,16 +6,22 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(AdminEntityDataRuntime::class)]
+#[UsesClass(DoctrineItemValueResolver::class)]
+#[UsesClass(ObjectHelper::class)]
 #[AllowMockObjectsWithoutExpectations]
 final class AdminEntityDataRuntimeTest extends TestCase
 {
@@ -23,18 +29,30 @@ final class AdminEntityDataRuntimeTest extends TestCase
     private ClassMetadata $metadata;
 
     private AdminEntityDataRuntime $runtime;
+    /** @var EntityManagerInterface&MockObject */
+    private EntityManagerInterface $em;
+
+    /** @var ColumnPermissionService&MockObject */
+    private ColumnPermissionService $columnPermissions;
+
+    /** @var list<string> */
+    private array $deniedColumns = [];
 
     protected function setUp(): void
     {
-        $em = $this->createMock(EntityManagerInterface::class);
+        $this->em = $this->createMock(EntityManagerInterface::class);
         $this->metadata = $this->createMock(ClassMetadata::class);
+        $this->columnPermissions = $this->createMock(ColumnPermissionService::class);
+        $this->columnPermissions->method('getDeniedColumnsForAction')
+            ->willReturnCallback(fn (): array => $this->deniedColumns);
 
-        $em->method('getClassMetadata')->willReturn($this->metadata);
+        $this->em->method('getClassMetadata')->willReturn($this->metadata);
 
         $this->runtime = new AdminEntityDataRuntime(
-            em: $em,
+            em: $this->em,
             attributeHelper: $this->createStub(AttributeHelper::class),
             resolver: new DoctrineItemValueResolver(),
+            columnPermissions: $this->columnPermissions,
         );
     }
 
@@ -264,5 +282,55 @@ final class AdminEntityDataRuntimeTest extends TestCase
         $this->assertContains('name', $columns);
         $this->assertContains('category', $columns);
         $this->assertNotContains('tags', $columns, 'Collection-valued associations must be excluded');
+    }
+
+    #[Test]
+    public function getColumnsOmitsDeniedFieldsAndAssociations(): void
+    {
+        $this->metadata->method('getFieldNames')->willReturn(['id', 'salary']);
+        $this->metadata->method('getAssociationNames')->willReturn(['department']);
+        $this->metadata->method('isCollectionValuedAssociation')->willReturn(false);
+        $this->deniedColumns = ['salary', 'department'];
+
+        $this->assertSame(['id'], $this->runtime->getColumns(\stdClass::class));
+    }
+    #[Test]
+    public function getColumnsResolvesProxyClassBeforeReadingMetadata(): void
+    {
+        $this->em->expects($this->once())
+            ->method('getClassMetadata')
+            ->with(RuntimeProxyBaseEntity::class)
+            ->willReturn($this->metadata);
+        $this->metadata->method('getFieldNames')->willReturn(['name']);
+        $this->metadata->method('getAssociationNames')->willReturn([]);
+        $this->deniedColumns = [];
+
+        $this->assertSame(['name'], $this->runtime->getColumns(RuntimeProxyEntity::class));
+    }
+
+    #[Test]
+    public function getDataOmitsDeniedFieldsAndAssociations(): void
+    {
+        $this->metadata->method('getFieldNames')->willReturn(['visible', 'secret']);
+        $this->metadata->method('getAssociationNames')->willReturn(['privateAssociation']);
+        $this->deniedColumns = ['secret', 'privateAssociation'];
+        $this->metadata->method('hasField')->willReturnCallback(static fn (string $field): bool => $field === 'visible');
+        $this->metadata->method('getFieldValue')->willReturn('shown');
+
+        $data = $this->runtime->getData(new \stdClass());
+
+        $this->assertSame(['visible' => 'shown'], $data);
+    }
+}
+class RuntimeProxyBaseEntity {}
+
+/** @implements Proxy<object> */
+class RuntimeProxyEntity extends RuntimeProxyBaseEntity implements Proxy
+{
+    public function __load(): void {}
+
+    public function __isInitialized(): bool
+    {
+        return true;
     }
 }

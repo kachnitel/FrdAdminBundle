@@ -14,6 +14,11 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
  * specific properties of an entity, complementing the entity-level permissions
  * defined in the #[Admin] attribute.
  *
+ * ADMIN_SHOW denied removes the field from generated forms and show/list data.
+ * ADMIN_SHOW allowed with ADMIN_EDIT denied keeps the value visible but disables
+ * form submission and inline editing. The page title/breadcrumb may still use
+ * a restricted property if configured as the entity label.
+ *
  * @example New API (since 0.6.0):
  * ```php
  * use Kachnitel\AdminBundle\Attribute\ColumnPermission;

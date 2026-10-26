@@ -31,7 +31,27 @@ class Employee
 
 **Role arrays:** Pass an array of roles for OR logic — user needs at least one.
 
-Columns restricted for `ADMIN_SHOW` are excluded from list views, filters, and the column visibility toggle picker. Uses Symfony's `AuthorizationCheckerInterface`, so role hierarchy is supported automatically.
+Uses Symfony's `AuthorizationCheckerInterface`, so role hierarchy is supported
+automatically. For the built-in admin UI, the permission behaviour is:
+
+| Permission state | Forms | Inline edit | Show/index data |
+|---|---|---|---|
+| No `ColumnPermission` restriction | Unchanged | Unchanged | Visible |
+| `ADMIN_SHOW` denied | Field removed | No trigger; direct saves are rejected | Hidden |
+| `ADMIN_SHOW` allowed, `ADMIN_EDIT` denied | Field disabled; submitted values ignored | No edit trigger; save is rejected | Visible |
+| Both allowed | Unchanged | Unchanged | Visible |
+
+`ADMIN_SHOW`-denied columns are excluded from list views, filters, the column
+visibility toggle picker, and entity show-page data. The entity's title or
+breadcrumb label may still expose a denied property if it is used by
+`admin_entity_label()` or a controller label getter.
+
+These rules apply to generated New and Edit forms. `ADMIN_EDIT` governs whether
+a field can be set on either form; there is no separate `ADMIN_NEW` column
+permission. A required field denied by `ADMIN_SHOW` is removed, and a field
+denied by `ADMIN_EDIT` is disabled, so either restriction can make a new entity
+form impossible to submit. Ensure required fields are visible and editable for
+users who need to create that entity.
 
 ## User Column Visibility Toggle
 

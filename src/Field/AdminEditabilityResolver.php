@@ -10,6 +10,8 @@ use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -20,8 +22,9 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * Enforces editability policy based on:
  *   1. #[AdminColumn(editable: ...)] attribute on the property (explicit opt-in/opt-out)
  *   2. #[Admin(enableInlineEdit: ...)] attribute on the entity class (default)
- *   3. Symfony ADMIN_EDIT voter for the entity type
- *   4. PropertyAccessor writability check (setter must exist)
+ *   3. Column permissions for both ADMIN_SHOW and ADMIN_EDIT
+ *   4. Symfony ADMIN_EDIT voter for the entity type
+ *   5. PropertyAccessor writability check (setter must exist)
  *
  * ## Precedence (checked in order)
  *
@@ -30,11 +33,12 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *   3. `editable: true`         → editable (entity default bypassed; still needs voter + writable)
  *   4. `editable: null`         → read entity's `#[Admin(enableInlineEdit: ...)]`
  *
- * After the above resolves to eligible, three more gates apply:
- *   5. ADMIN_EDIT voter (Symfony security) — class-level, keyed on the entity's short name
- *   5b. Object-level authorization via ObjectAuthorizationChecker — this specific entity
+ * After the above resolves to eligible, four more gates apply:
+ *   5. Column permissions must allow both ADMIN_SHOW and ADMIN_EDIT for the property
+ *   6. ADMIN_EDIT voter (Symfony security) — class-level, keyed on the entity's short name
+ *   7. Object-level authorization via ObjectAuthorizationChecker — this specific entity
  *       instance. No-op unless the entity's class has #[Admin(enableObjectAuth: true)].
- *   6. PropertyAccessor::isWritable() (setter presence)
+ *   8. PropertyAccessor::isWritable() (setter presence)
  *
  * ## This is the single choke point for inline-edit authorization
  *
@@ -66,6 +70,7 @@ final class AdminEditabilityResolver implements EditabilityResolverInterface
         private readonly AuthorizationCheckerInterface $authorizationChecker,
         private readonly PropertyAccessorInterface $propertyAccessor,
         private readonly ObjectAuthorizationChecker $objectAuthChecker,
+        private readonly ColumnPermissionService $columnPermissions,
     ) {}
 
     public function canEdit(object $entity, string $property): bool
@@ -81,19 +86,26 @@ final class AdminEditabilityResolver implements EditabilityResolverInterface
             return false;
         }
 
-        // 5. Voter check — AdminEntityVoter must grant ADMIN_EDIT for this entity type
+        $entityClass = ObjectHelper::getRealClass($entity);
+        if (!$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_SHOW)
+            || !$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_EDIT)
+        ) {
+            return false;
+        }
+
+        // 6. Voter check — AdminEntityVoter must grant ADMIN_EDIT for this entity type
         $shortClass = (new \ReflectionClass($entity))->getShortName();
         if (!$this->authorizationChecker->isGranted('ADMIN_EDIT', $shortClass)) {
             return false;
         }
 
-        // 5b. Object-level authorization — this specific entity instance. No-op
+        // 7. Object-level authorization — this specific entity instance. No-op
         // when the entity's class doesn't have #[Admin(enableObjectAuth: true)].
         if (!$this->objectAuthChecker->isGranted(AdminEntityVoter::ADMIN_EDIT, $entity)) {
             return false;
         }
 
-        // 6. Property must have a setter
+        // 8. Property must have a setter
         return $this->propertyAccessor->isWritable($entity, $property);
     }
 

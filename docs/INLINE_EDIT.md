@@ -109,14 +109,20 @@ The editability of a column is resolved in this order:
 3. `#[AdminColumn(editable: true)]` — **always eligible**; entity default bypassed
 4. `#[AdminColumn(editable: null)]` or **no** `#[AdminColumn]` — read entity-level `enableInlineEdit`
 
-After the above resolves to eligible, three additional gates apply:
+After the above resolves to eligible, four additional gates apply:
 
-5. **Voter** — `ADMIN_EDIT` must be granted for the entity type
-6. **Object-level authorization** — when `#[Admin(enableObjectAuth: true)]` is set, `ADMIN_EDIT`
+5. **Column permissions** — both `ADMIN_SHOW` and `ADMIN_EDIT` must be allowed for the property
+6. **Voter** — `ADMIN_EDIT` must be granted for the entity type
+7. **Object-level authorization** — when `#[Admin(enableObjectAuth: true)]` is set, `ADMIN_EDIT`
     must also be granted for this specific entity instance. See
     [Object-Level Authorization → Inline Editing](OBJECT_AUTHORIZATION.md#inline-editing) for the
     mechanism and a timing caveat worth knowing before you turn it on.
-7. **PropertyAccessor** — the property must have a setter
+8. **PropertyAccessor** — the property must have a setter
+
+`#[ColumnPermission]` controls visibility and write access: denying `ADMIN_SHOW`
+hides the column and also rejects a direct/tampered save. Allowing `ADMIN_SHOW`
+but denying `ADMIN_EDIT` leaves the value visible without an edit trigger, and
+the save path rejects a direct/tampered write.
 
 ---
 

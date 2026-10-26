@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -29,6 +30,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  */
 #[CoversClass(ColumnPermissionService::class)]
 #[UsesClass(ColumnPermission::class)]
+#[UsesClass(ObjectHelper::class)]
 #[Group('column-permissions')]
 #[AllowMockObjectsWithoutExpectations]
 final class ColumnPermissionServiceTest extends TestCase
@@ -221,10 +223,9 @@ final class ColumnPermissionServiceTest extends TestCase
         $this->assertNotContains('name', $denied);
     }
 
-    public function testCanPerformActionOnEntityInstance(): void
+    public function testProxyEntityUsesRealClassForPermissionAttributes(): void
     {
-        $entity = new TestEntityWithPermissions();
-
+        $entity = new TestEntityWithPermissionsProxy();
         $this->authorizationChecker
             ->expects($this->once())->method('isGranted')
             ->with('ROLE_HR')
@@ -233,7 +234,7 @@ final class ColumnPermissionServiceTest extends TestCase
         $result = $this->service->canPerformActionOnEntity(
             $entity,
             'salary',
-            AdminEntityVoter::ADMIN_SHOW
+            AdminEntityVoter::ADMIN_SHOW,
         );
 
         $this->assertTrue($result);
@@ -278,4 +279,15 @@ class TestEntityWithoutPermissions
 {
     private string $name = '';
     private string $email = '';
+}
+
+/** @implements \Doctrine\Persistence\Proxy<object> */
+class TestEntityWithPermissionsProxy extends TestEntityWithPermissions implements \Doctrine\Persistence\Proxy
+{
+    public function __load(): void {}
+
+    public function __isInitialized(): bool
+    {
+        return true;
+    }
 }

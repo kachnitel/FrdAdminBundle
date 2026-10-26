@@ -98,7 +98,7 @@
         {{- form_widget(form) -}}
         {{- form_errors(form) -}}
         {{- form_help(form) -}}
-        {%- if form.vars.attr['data-admin-entity-class'] is defined -%}
+        {%- if form.vars.attr['data-admin-entity-class'] is defined and not form.vars.disabled -%}
           {{- component('K:Admin:EntityType:AddButton', {
             targetEntityClass: form.vars.attr['data-admin-entity-class'],
             fieldName: form.vars.full_name,

@@ -89,6 +89,8 @@ the New and Edit buttons appear for every `#[Admin]` entity without any extra co
 |---|---|
 | Regular Doctrine fields (string, int, float, bool, date, datetime, time, enum) | ✅ Yes |
 | `#[AdminColumn(editable: false)]` on the property | ❌ Excluded |
+| `#[ColumnPermission]` denies `ADMIN_SHOW` | ❌ Removed from the generated form |
+| `#[ColumnPermission]` allows `ADMIN_SHOW` but denies `ADMIN_EDIT` | Rendered disabled; submitted values are ignored |
 | The primary identifier field (`id`) | ❌ Always excluded |
 | JSON, array, blob, binary fields | ❌ Skipped (no sensible widget) |
 | Single-valued associations (ManyToOne, OneToOne) | ✅ As `EntityType` select |
