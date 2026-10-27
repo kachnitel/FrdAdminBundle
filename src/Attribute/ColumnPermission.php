@@ -19,6 +19,11 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
  * form submission and inline editing. The page title/breadcrumb may still use
  * a restricted property if configured as the entity label.
  *
+ * Scope: enforcement in forms applies to the auto-generated form
+ * (DynamicEntityFormType) only. Hand-written FormTypes, including those set via
+ * #[Admin(formType: ...)], are out of scope and must apply the permissions
+ * themselves (see ColumnPermissionService).
+ *
  * @example New API (since 0.6.0):
  * ```php
  * use Kachnitel\AdminBundle\Attribute\ColumnPermission;

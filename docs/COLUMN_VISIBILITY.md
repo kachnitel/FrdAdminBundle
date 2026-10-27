@@ -41,6 +41,14 @@ automatically. For the built-in admin UI, the permission behaviour is:
 | `ADMIN_SHOW` allowed, `ADMIN_EDIT` denied | Field disabled; submitted values ignored | No edit trigger; save is rejected | Visible |
 | Both allowed | Unchanged | Unchanged | Visible |
 
+> **Scope:** form enforcement covers the auto-generated form
+> (`DynamicEntityFormType`) only. Hand-written form types — including a custom
+> `#[Admin(formType: ...)]` or an `App\Form\{Class}FormType` — are out of scope
+> and do not apply `#[ColumnPermission]` automatically. Inject
+> `ColumnPermissionService` in such a type and use `canPerformAction()` to omit or
+> disable fields yourself. Inline edit and show/index data are enforced regardless
+> of the form type.
+
 `ADMIN_SHOW`-denied columns are excluded from list views, filters, the column
 visibility toggle picker, and entity show-page data. The entity's title or
 breadcrumb label may still expose a denied property if it is used by

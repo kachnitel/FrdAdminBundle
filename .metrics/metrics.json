@@ -1,9 +1,9 @@
 {
-    "generated_at": "2026-10-26 06:29:45",
+    "generated_at": "2026-10-27 03:08:02",
     "tests": {
         "count": 1785,
         "assertions": 4182,
-        "status": "passing"
+        "status": "failing()"
     },
     "coverage": {
         "lines": 93.63,
