@@ -112,3 +112,17 @@ class DbAdminPreferencesStorage implements AdminPreferencesStorageInterface
 Keys follow the pattern `{preference_type}.{EntityShortName}`, e.g. `column_visibility.Product`. Values are arrays of hidden column names (e.g. `['price', 'stock']`). An empty array (the default) means all columns are visible.
 
 See `PreferenceKeys` for available preference type constants.
+
+### Required columns and creating entities
+
+`#[ColumnPermission]` also applies to the New form: a column the user may not see is removed, one they may see but not edit is disabled. That is correct for many "required" columns, but it makes **creation impossible** when the restricted column must be filled by the user (e.g. `NotBlank`, or `NOT NULL` with no default). Valid patterns that avoid this:
+
+| Pattern | Example |
+|---|---|
+| Required in the DB, but has a default | `status = 'draft'`, `approved = false`, `creditLimit = 0` |
+| Set by a constructor or lifecycle listener | `createdBy`, `tenant`, `slug`, `internalReference` |
+| Only the editing role may create | restrict `new` to the same role: `#[Admin(permissions: ['new' => 'ROLE_HR'])]` |
+| Computed on persist | `margin`, `fingerprint` |
+| Filled by import/API only | a compliance-restricted identifier |
+
+In `kernel.debug`, if a restricted column fails validation while a **new** entity is submitted, a warning is logged naming the column and the denied action. Production behaviour is unchanged. Only the root form is inspected, and "new" means the form was built with no data (what `AdminEntityForm` and the inline-add dialog do).

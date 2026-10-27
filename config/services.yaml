@@ -48,6 +48,8 @@ services:
         resource: '../src/Field'
 
     Kachnitel\AdminBundle\Form\Extension\ColumnPermissionFormExtension:
+        arguments:
+            $debug: '%kernel.debug%'
         tags: ['form.type_extension']
 
     # --- Registered by OverrideEditabilityResolversPass compiler pass, not here in services.yaml ---
