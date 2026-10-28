@@ -11,6 +11,7 @@ use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionResolverEntity;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -30,6 +31,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 #[UsesClass(ColumnPermission::class)]
 #[UsesClass(ColumnPermissionService::class)]
 #[UsesClass(AttributeHelper::class)]
+#[UsesClass(ObjectHelper::class)]
 #[Group('column-permission-form')]
 #[Group('dynamic-form')]
 final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
