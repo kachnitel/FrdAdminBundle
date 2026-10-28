@@ -9,7 +9,6 @@ use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\FormBuilderInterface;
-use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\Event\PostSubmitEvent;
 use Symfony\Component\Form\Event\PreSetDataEvent;
@@ -17,14 +16,12 @@ use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 
 /**
- * Applies #[ColumnPermission] to the auto-generated (DynamicEntityFormType) form.
+ * Dev diagnostics for #[ColumnPermission] on the auto-generated (DynamicEntityFormType) form.
  *
- *   ADMIN_SHOW denied -> field is removed (no value leak, nothing to submit)
- *   ADMIN_EDIT denied -> field is kept but disabled; Symfony ignores submitted
- *                        data for disabled fields, so this is server-enforced
- *
- * Runs after DynamicEntityFormType::buildForm(), so every generated child is
- * already present. Hand-written FormTypes are not covered.
+ * Enforcement itself is NOT done here: AdminColumnEditabilityResolver (the admin-bundle
+ * implementation of dynamic-form-bundle's FieldEditabilityResolverInterface) removes
+ * ADMIN_SHOW-denied fields via canEdit() and renders ADMIN_EDIT-denied fields disabled
+ * via isReadOnly(). This extension never mutates the form.
  *
  * ## Dev diagnostics (kernel.debug only)
  *
@@ -51,32 +48,29 @@ final class ColumnPermissionFormExtension extends AbstractTypeExtension
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        if (!$this->debug || $this->logger === null) {
+            return;
+        }
+
         $class = $options['data_class'] ?? $options['entity_class'] ?? null;
         if (!is_string($class) || !class_exists($class)) {
-            throw new InvalidArgumentException('DynamicEntityFormType requires a valid data_class or entity_class for column permissions.');
+            return;
         }
 
         $removed = [];
         $disabled = [];
 
         foreach (array_keys($this->columnPermissions->getColumnPermissionMap($class)) as $property) {
-            if (!$builder->has($property)) {
-                continue;
-            }
-
             if (!$this->columnPermissions->canPerformAction($class, $property, AdminEntityVoter::ADMIN_SHOW)) {
-                $builder->remove($property);
                 $removed[] = $property;
-                continue;
-            }
-
-            if (!$this->columnPermissions->canPerformAction($class, $property, AdminEntityVoter::ADMIN_EDIT)) {
-                $builder->get($property)->setDisabled(true);
+            } elseif ($builder->has($property)
+                && !$this->columnPermissions->canPerformAction($class, $property, AdminEntityVoter::ADMIN_EDIT)
+            ) {
                 $disabled[] = $property;
             }
         }
 
-        if ($this->debug && $this->logger !== null && ($removed !== [] || $disabled !== [])) {
+        if ($removed !== [] || $disabled !== []) {
             $this->registerCreateDiagnostics($builder, $class, $removed, $disabled, $this->logger);
         }
     }

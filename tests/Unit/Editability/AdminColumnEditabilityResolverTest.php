@@ -8,6 +8,7 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Editability\AdminColumnEditabilityResolver;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -49,10 +50,16 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         // own — using the real implementation keeps this test honest about how
         // #[AdminColumn] is actually read, rather than mocking away the one
         // collaborator whose interaction with the resolver matters most.
+        // Column permissions are covered in AdminColumnEditabilityResolverColumnPermissionTest;
+        // here every action is allowed so only the #[AdminColumn] precedence is exercised.
+        $columnPermissions = $this->createStub(ColumnPermissionService::class);
+        $columnPermissions->method('canPerformAction')->willReturn(true);
+
         $this->resolver = new AdminColumnEditabilityResolver(
             new AttributeHelper(),
             $this->expressionLanguage,
             $this->createStub(\Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface::class),
+            $columnPermissions,
         );
     }
 

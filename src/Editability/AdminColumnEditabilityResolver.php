@@ -6,7 +6,9 @@ namespace Kachnitel\AdminBundle\Editability;
 
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\DynamicFormBundle\Editability\FieldEditabilityResolverInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -41,6 +43,15 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *                                      re-checks once a real entity is bound.
  *   4. editable: true               → included
  *
+ * ## Column permissions (#[ColumnPermission])
+ *
+ * Applied after the #[AdminColumn] precedence above, so `editable: false` still wins:
+ *
+ *   ADMIN_SHOW denied                 → canEdit() false, isExplicitOverride() false
+ *                                        (field is not on the form at all)
+ *   ADMIN_SHOW ok, ADMIN_EDIT denied  → canEdit() true, isReadOnly() true
+ *                                        (rendered disabled; submitted data is ignored)
+ *
  * ## isExplicitOverride() precedence (checked in order)
  *
  * Consulted only to decide whether a structurally auto-skipped association
@@ -63,6 +74,7 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
         private readonly AttributeHelper $attributeHelper,
         private readonly RowActionExpressionLanguage $expressionLanguage,
         private readonly AuthorizationCheckerInterface $authorizationChecker,
+        private readonly ColumnPermissionService $columnPermissions,
     ) {}
 
     /**
@@ -72,12 +84,16 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
     {
         $column = $this->getAdminColumn($entityClass, $property);
 
-        if ($column === null) {
-            return true;
+        if ($column !== null && $column->editable === false) {
+            return false;
         }
 
-        if ($column->editable === false) {
+        if (!$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_SHOW)) {
             return false;
+        }
+
+        if ($column === null) {
+            return true;
         }
 
         if (is_string($column->editable)) {
@@ -103,6 +119,10 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
             return false;
         }
 
+        if (!$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_SHOW)) {
+            return false;
+        }
+
         if ($column->editable === true) {
             return true;
         }
@@ -112,6 +132,18 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
         }
 
         return false;
+    }
+
+    /**
+     * ADMIN_SHOW allowed but ADMIN_EDIT denied: show the value, don't let it change.
+     *
+     * Only consulted by DynamicEntityFormType for fields canEdit() accepted.
+     *
+     * @param class-string $entityClass
+     */
+    public function isReadOnly(string $entityClass, string $property, ?object $entity = null): bool
+    {
+        return !$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_EDIT);
     }
 
     /**
