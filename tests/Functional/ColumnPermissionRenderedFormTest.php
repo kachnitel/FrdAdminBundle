@@ -14,8 +14,6 @@ use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 
 /**
@@ -48,9 +46,7 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
     #[Test]
     public function addButtonIsRenderedForEditableAssociationsOnly(): void
     {
-        $this->setRoles(['ROLE_HR']);
-
-        $html = $this->renderEditForm();
+        $html = $this->renderEditForm(['ROLE_HR']);
 
         $fields = $this->addButtonFields($html);
         self::assertTrue($this->hasField($fields, 'owner'), 'SHOW-only restricted association stays editable');
@@ -62,9 +58,7 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
     #[Test]
     public function addButtonIsRenderedForEveryAssociationWhenFullyPermitted(): void
     {
-        $this->setRoles(['ROLE_HR', 'ROLE_HR_EDIT']);
-
-        $fields = $this->addButtonFields($this->renderEditForm());
+        $fields = $this->addButtonFields($this->renderEditForm(['ROLE_HR', 'ROLE_HR_EDIT']));
 
         foreach (['owner', 'reviewer', 'hiddenTags', 'lockedTags'] as $field) {
             self::assertTrue($this->hasField($fields, $field), $field);
@@ -74,9 +68,7 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
     #[Test]
     public function disabledCollectionRendersNoAddOrRemoveButtons(): void
     {
-        $this->setRoles(['ROLE_HR']);
-
-        $names = $this->collectionButtonNames($this->renderEditForm());
+        $names = $this->collectionButtonNames($this->renderEditForm(['ROLE_HR']));
 
         self::assertNotEmpty($this->matching($names, 'rows'), 'control: unrestricted collection renders its buttons');
         self::assertSame([], $this->matching($names, 'lockedRows'), 'disabled collection must render no Add/Remove buttons');
@@ -85,14 +77,19 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
     #[Test]
     public function permittedRestrictedCollectionRendersItsButtons(): void
     {
-        $this->setRoles(['ROLE_HR', 'ROLE_HR_EDIT']);
-
-        $names = $this->collectionButtonNames($this->renderEditForm());
+        $names = $this->collectionButtonNames($this->renderEditForm(['ROLE_HR', 'ROLE_HR_EDIT']));
 
         self::assertNotEmpty($this->matching($names, 'lockedRows'));
     }
 
-    private function renderEditForm(): string
+    /**
+     * Logs in as a user from TestKernel's provider carrying the given roles, via actingAs().
+     * A token set directly on the token storage did not reach the render (every restricted field
+     * was treated as ADMIN_SHOW-denied), and a user missing from the provider can't be refreshed.
+     *
+     * @param list<string> $roles
+     */
+    private function renderEditForm(array $roles): string
     {
         $parent = (new ColumnPermissionParent())->setName('Parent');
         $parent->addRow((new ColumnPermissionRow())->setDescription('Row')->setBudget('1000'));
@@ -107,7 +104,8 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
                 'entityId'      => $parent->getId(),
                 'formTypeClass' => DynamicEntityFormType::class,
             ],
-        )->render();
+        )->actingAs(new InMemoryUser(\in_array('ROLE_HR_EDIT', $roles, true) ? 'hr_edit' : 'hr', 'test', $roles))
+            ->render();
     }
 
     /** @return list<string> form field names that have an inline-add button */
@@ -151,18 +149,6 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
         return array_values(array_filter(
             $names,
             static fn (string $name): bool => preg_match('/(^|\[)' . preg_quote($property, '/') . '(\]|$)/', $name) === 1,
-        ));
-    }
-
-    /** @param list<string> $roles */
-    private function setRoles(array $roles): void
-    {
-        /** @var TokenStorageInterface $tokenStorage */
-        $tokenStorage = self::getContainer()->get('security.token_storage');
-        $tokenStorage->setToken(new UsernamePasswordToken(
-            new InMemoryUser('test', null, $roles),
-            'main',
-            $roles,
         ));
     }
 }
