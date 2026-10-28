@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionParent;
-use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionRelated;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionRow;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use PHPUnit\Framework\Attributes\Group;
@@ -90,13 +89,14 @@ final class ColumnPermissionNestedFormTest extends KernelTestCase
     {
         self::bootKernel();
         $this->setRoles(['ROLE_HR']);
-        $reviewer = (new ColumnPermissionRelated())->setName('Original reviewer');
-        $parent = (new ColumnPermissionParent())->setName('Parent')->setReviewer($reviewer);
+        // No reviewer is pre-set: EntityType only accepts managed entities as initial data and
+        // this test deliberately needs no schema. A tampered id must still never reach the entity.
+        $parent = (new ColumnPermissionParent())->setName('Parent');
 
         $form = $this->createForm($parent);
         $form->submit(['reviewer' => '999'], false);
 
-        self::assertSame($reviewer, $parent->getReviewer());
+        self::assertNull($parent->getReviewer());
     }
 
     #[Test]
