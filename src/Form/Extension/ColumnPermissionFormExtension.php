@@ -9,6 +9,8 @@ use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\Event\PostSubmitEvent;
 use Symfony\Component\Form\Event\PreSetDataEvent;
@@ -48,31 +50,52 @@ final class ColumnPermissionFormExtension extends AbstractTypeExtension
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        if (!$this->debug || $this->logger === null) {
+        $class = $this->diagnosableClass($options);
+        if ($class === null || $this->logger === null) {
             return;
+        }
+
+        [$removed, $disabled] = $this->classifyRestrictedColumns($builder, $class);
+
+        if ($removed !== [] || $disabled !== []) {
+            $this->registerCreateDiagnostics($builder, $class, $removed, $disabled, $this->logger);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @return class-string|null null when diagnostics are off or the class is unknown
+     */
+    private function diagnosableClass(array $options): ?string
+    {
+        if (!$this->debug) {
+            return null;
         }
 
         $class = $options['data_class'] ?? $options['entity_class'] ?? null;
-        if (!is_string($class) || !class_exists($class)) {
-            return;
-        }
 
+        return is_string($class) && class_exists($class) ? $class : null;
+    }
+
+    /**
+     * @param FormBuilderInterface<mixed> $builder
+     * @param class-string                $class
+     * @return array{0: list<string>, 1: list<string>} [ADMIN_SHOW-denied (removed), ADMIN_EDIT-denied (disabled)]
+     */
+    private function classifyRestrictedColumns(FormBuilderInterface $builder, string $class): array
+    {
         $removed = [];
         $disabled = [];
 
         foreach (array_keys($this->columnPermissions->getColumnPermissionMap($class)) as $property) {
             if (!$this->columnPermissions->canPerformAction($class, $property, AdminEntityVoter::ADMIN_SHOW)) {
                 $removed[] = $property;
-            } elseif ($builder->has($property)
-                && !$this->columnPermissions->canPerformAction($class, $property, AdminEntityVoter::ADMIN_EDIT)
-            ) {
+            } elseif ($builder->has($property) && !$this->columnPermissions->canPerformAction($class, $property, AdminEntityVoter::ADMIN_EDIT)) {
                 $disabled[] = $property;
             }
         }
 
-        if ($removed !== [] || $disabled !== []) {
-            $this->registerCreateDiagnostics($builder, $class, $removed, $disabled, $this->logger);
-        }
+        return [$removed, $disabled];
     }
 
     /**
@@ -102,24 +125,7 @@ final class ColumnPermissionFormExtension extends AbstractTypeExtension
                     return;
                 }
 
-                $offenders = [];
-                foreach ($disabled as $property) {
-                    if ($form->has($property) && \count($form->get($property)->getErrors(true)) > 0) {
-                        $offenders[$property] = AdminEntityVoter::ADMIN_EDIT;
-                    }
-                }
-                foreach ($form->getErrors() as $error) {
-                    $cause = $error->getCause();
-                    if (!$cause instanceof ConstraintViolationInterface) {
-                        continue;
-                    }
-                    $path = preg_replace('/^data\./', '', $cause->getPropertyPath()) ?? '';
-                    $property = preg_split('/[.\[]/', $path)[0] ?? '';
-                    if (\in_array($property, $removed, true)) {
-                        $offenders[$property] = AdminEntityVoter::ADMIN_SHOW;
-                    }
-                }
-
+                $offenders = self::findOffenders($form, $removed, $disabled);
                 foreach ($offenders as $property => $denied) {
                     $logger->warning(sprintf(
                         'Column "%s" on %s is %s-restricted but fails validation when creating a new entity, '
@@ -133,5 +139,44 @@ final class ColumnPermissionFormExtension extends AbstractTypeExtension
             },
             -1000,
         );
+    }
+
+    /**
+     * @param FormInterface<mixed> $form
+     * @param list<string>         $removed
+     * @param list<string>         $disabled
+     * @return array<string, string> property => denied action
+     */
+    private static function findOffenders(FormInterface $form, array $removed, array $disabled): array
+    {
+        $offenders = [];
+
+        foreach ($disabled as $property) {
+            if ($form->has($property) && \count($form->get($property)->getErrors(true)) > 0) {
+                $offenders[$property] = AdminEntityVoter::ADMIN_EDIT;
+            }
+        }
+
+        foreach ($form->getErrors() as $error) {
+            $property = self::violatedProperty($error);
+            if ($property !== null && \in_array($property, $removed, true)) {
+                $offenders[$property] = AdminEntityVoter::ADMIN_SHOW;
+            }
+        }
+
+        return $offenders;
+    }
+
+    /** Top-level property a root-form constraint violation points at, if any. */
+    private static function violatedProperty(FormError $error): ?string
+    {
+        $cause = $error->getCause();
+        if (!$cause instanceof ConstraintViolationInterface) {
+            return null;
+        }
+
+        $path = preg_replace('/^data\./', '', $cause->getPropertyPath()) ?? '';
+
+        return preg_split('/[.\[]/', $path)[0] ?? null;
     }
 }
