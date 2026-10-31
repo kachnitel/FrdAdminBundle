@@ -39,8 +39,11 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     private const E = ColumnPermissionResolverEntity::class;
 
     /** @param list<string> $roles */
-    private function resolverGranting(array $roles): AdminColumnEditabilityResolver
+    private function resolverGranting(array $roles, bool $expressionResult = true): AdminColumnEditabilityResolver
     {
+        $expression = $this->createStub(RowActionExpressionLanguage::class);
+        $expression->method('evaluate')->willReturn($expressionResult);
+
         $auth = $this->createStub(AuthorizationCheckerInterface::class);
         $auth->method('isGranted')->willReturnCallback(
             static fn (mixed $attribute): bool => \in_array($attribute, $roles, true),
@@ -48,7 +51,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
 
         return new AdminColumnEditabilityResolver(
             new AttributeHelper(),
-            $this->createStub(RowActionExpressionLanguage::class),
+            $expression,
             $auth,
             new ColumnPermissionService($auth),
         );
@@ -123,6 +126,41 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT']);
 
         self::assertFalse($resolver->canEdit(self::E, 'blocked'));
+    }
+
+    #[Test]
+    public function expressionAllowingEditStillLetsEditPermissionMakeTheFieldReadOnly(): void
+    {
+        $resolver = $this->resolverGranting(['ROLE_HR'], expressionResult: true);
+
+        self::assertTrue($resolver->canEdit(self::E, 'conditional', new ColumnPermissionResolverEntity()));
+        self::assertTrue($resolver->isReadOnly(self::E, 'conditional'));
+    }
+
+    #[Test]
+    public function expressionAllowingEditAndEditPermissionGrantedIsEditable(): void
+    {
+        $resolver = $this->resolverGranting(['ROLE_HR_EDIT'], expressionResult: true);
+
+        self::assertTrue($resolver->canEdit(self::E, 'conditional', new ColumnPermissionResolverEntity()));
+        self::assertFalse($resolver->isReadOnly(self::E, 'conditional'));
+    }
+
+    #[Test]
+    public function expressionDenyingEditExcludesTheFieldEvenWithEditPermission(): void
+    {
+        $resolver = $this->resolverGranting(['ROLE_HR_EDIT'], expressionResult: false);
+
+        self::assertFalse($resolver->canEdit(self::E, 'conditional', new ColumnPermissionResolverEntity()));
+    }
+
+    #[Test]
+    public function realPermissionServiceToleratesANonExistentEntityClass(): void
+    {
+        $resolver = $this->resolverGranting([]);
+
+        self::assertTrue($resolver->canEdit('App\\Entity\\ThisClassDoesNotExist', 'whatever'));
+        self::assertFalse($resolver->isReadOnly('App\\Entity\\ThisClassDoesNotExist', 'whatever'));
     }
 
     #[Test]

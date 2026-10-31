@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
+use Kachnitel\AdminBundle\Form\Extension\ColumnPermissionFormExtension;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionFormEntity;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use PHPUnit\Framework\Attributes\Group;
@@ -75,6 +76,28 @@ final class ColumnPermissionFormTest extends KernelTestCase
 
         self::assertFalse($form->isValid());
         self::assertSame('original ssn', $entity->getSsn());
+    }
+
+    public function testDiagnosticExtensionIsWiredOntoTheGeneratedFormType(): void
+    {
+        self::bootKernel();
+        $this->setRoles([]);
+
+        $extensions = $this->createForm(new ColumnPermissionFormEntity())
+            ->getConfig()->getType()->getTypeExtensions();
+        $extension = null;
+        foreach ($extensions as $candidate) {
+            if ($candidate instanceof ColumnPermissionFormExtension) {
+                $extension = $candidate;
+            }
+        }
+
+        self::assertNotNull($extension, 'form.type_extension tag missing from services.yaml');
+        self::assertSame(
+            self::getContainer()->getParameter('kernel.debug'),
+            (new \ReflectionProperty($extension, 'debug'))->getValue($extension),
+            '$debug must be bound to %kernel.debug%',
+        );
     }
 
     /** @return FormInterface<ColumnPermissionFormEntity> */
