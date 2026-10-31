@@ -92,7 +92,7 @@ Or exclude: `excludeColumns: ['costPrice']`
 
 **Level 3:** Role-based visibility:
 ```php
-#[ColumnPermission('ROLE_HR')]
+#[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR'])]
 private float $salary;
 ```
 

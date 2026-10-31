@@ -43,7 +43,8 @@ automatically. For the built-in admin UI, the permission behaviour is:
 
 > **Scope:** form enforcement covers the auto-generated form
 > (`DynamicEntityFormType`) only. Hand-written form types — including a custom
-> `#[Admin(formType: ...)]` or an `App\Form\{Class}FormType` — are out of scope
+> `#[Admin(formType: ...)]`, `#[Admin(formComponent: ...)]` or an
+> `App\Form\{Class}FormType` — are out of scope
 > and do not apply `#[ColumnPermission]` automatically. Inject
 > `ColumnPermissionService` in such a type and use `canPerformAction()` to omit or
 > disable fields yourself. Inline edit and show/index data are enforced regardless
@@ -81,6 +82,20 @@ is submitted, a warning is logged naming the column and the denied action.
 Production behaviour is unchanged. Only the root form is inspected, and "new"
 means the form was built with no data (what `AdminEntityForm` and the inline-add
 dialog do).
+
+### Nested forms and collections
+
+- **Disabled collections:** a collection whose column is `ADMIN_EDIT`-denied is
+  rendered read-only with no "Add" or "Remove" buttons, and added or removed rows
+  in a tampered submit are ignored (requires `kachnitel/dynamic-form-bundle` 0.2.2+).
+- **Collection rows:** each row is a form for the child entity, so the *child
+  class's own* `#[ColumnPermission]` attributes apply to its fields, independent
+  of the parent's.
+- **Debug warning:** only inspects the root form, not fields inside collection
+  rows or embedded forms.
+- **Association labels:** the choices of an `EntityType` field are labelled by
+  the related entity's `__toString()` / label property. If that exposes a property
+  the user may not see, the label leaks it; keep restricted values out of labels.
 
 ## User Column Visibility Toggle
 
