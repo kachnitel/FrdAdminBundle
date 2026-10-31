@@ -47,7 +47,7 @@ final class AdminEditabilityResolverTest extends TestCase
     /** @var ObjectAuthorizationChecker&MockObject */
     private ObjectAuthorizationChecker $objectAuthChecker;
 
-    /** @var ColumnPermissionService&MockObject */
+    /** @var ColumnPermissionService|ColumnPermissionService&MockObject */
     private ColumnPermissionService $columnPermissions;
 
     private AdminEditabilityResolver $resolver;
@@ -66,7 +66,7 @@ final class AdminEditabilityResolverTest extends TestCase
         $this->objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
         $this->objectAuthChecker->method('isGranted')->willReturn(true);
         $this->columnPermissions = $this->createMock(ColumnPermissionService::class);
-        $this->columnPermissions->method('canPerformAction')->willReturn(true);
+        $this->columnPermissions->method('canShowAndEdit')->willReturn(true);
 
         $this->resolver = $this->buildResolver();
     }
@@ -257,22 +257,15 @@ final class AdminEditabilityResolverTest extends TestCase
         $this->stubColumnAttr(new AdminColumn(editable: true));
         $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
         $entity = $this->makeEntity();
-        $checkedActions = [];
         $this->columnPermissions = $this->createMock(ColumnPermissionService::class);
         $this->resolver = $this->buildResolver();
-        $this->columnPermissions->expects($this->exactly(2))
-            ->method('canPerformAction')
-            ->willReturnCallback(function (string $class, string $property, string $action) use ($entity, &$checkedActions): bool {
-                self::assertSame($entity::class, $class);
-                self::assertSame('title', $property);
-                $checkedActions[] = $action;
-
-                return $action !== AdminEntityVoter::ADMIN_EDIT;
-            });
+        $this->columnPermissions->expects($this->once())
+            ->method('canShowAndEdit')
+            ->with($entity::class, 'title')
+            ->willReturn(false);
         $this->authChecker->expects($this->never())->method('isGranted');
 
         $this->assertFalse($this->resolver->canEdit($entity, 'title'));
-        $this->assertSame([AdminEntityVoter::ADMIN_SHOW, AdminEntityVoter::ADMIN_EDIT], $checkedActions);
     }
 
     #[PHPUnit\Test]
@@ -283,11 +276,7 @@ final class AdminEditabilityResolverTest extends TestCase
         $this->authChecker->method('isGranted')->willReturnCallback(
             static fn (string $attribute): bool => $attribute === AdminEntityVoter::ADMIN_EDIT,
         );
-        $columnPermissions = new ColumnPermissionService($this->authChecker);
-        $this->columnPermissions = $this->createMock(ColumnPermissionService::class);
-        $this->columnPermissions->method('canPerformAction')->willReturnCallback(
-            static fn (string $class, string $property, string $action): bool => $columnPermissions->canPerformAction($class, $property, $action),
-        );
+        $this->columnPermissions = new ColumnPermissionService($this->authChecker);
         $this->resolver = $this->buildResolver();
         $this->propertyAccessor->expects($this->never())->method('isWritable');
 
@@ -305,15 +294,10 @@ final class AdminEditabilityResolverTest extends TestCase
 
         $this->columnPermissions = $this->createMock(ColumnPermissionService::class);
         $this->resolver = $this->buildResolver();
-        $this->columnPermissions->expects($this->exactly(2))
-            ->method('canPerformAction')
-            ->willReturnCallback(static function (string $class, string $property, string $action): bool {
-                self::assertSame(AdminEditabilityBaseEntity::class, $class);
-                self::assertSame('title', $property);
-                self::assertContains($action, [AdminEntityVoter::ADMIN_SHOW, AdminEntityVoter::ADMIN_EDIT]);
-
-                return true;
-            });
+        $this->columnPermissions->expects($this->once())
+            ->method('canShowAndEdit')
+            ->with(AdminEditabilityBaseEntity::class, 'title')
+            ->willReturn(true);
 
         $this->assertTrue($this->resolver->canEdit($proxy, 'title'));
     }

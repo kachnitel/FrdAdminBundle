@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Service;
 
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use ReflectionClass;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -126,6 +127,18 @@ class ColumnPermissionService
         $requiredRoles = $columnPermissions[$action];
 
         return $this->checkRoles($requiredRoles);
+    }
+
+    /**
+     * Whether the column is both visible (ADMIN_SHOW) and editable (ADMIN_EDIT) for the
+     * current user — the combined gate for writing a column, e.g. inline edit.
+     *
+     * @param class-string $entityClass
+     */
+    public function canShowAndEdit(string $entityClass, string $columnName): bool
+    {
+        return $this->canPerformAction($entityClass, $columnName, AdminEntityVoter::ADMIN_SHOW)
+            && $this->canPerformAction($entityClass, $columnName, AdminEntityVoter::ADMIN_EDIT);
     }
 
     /**

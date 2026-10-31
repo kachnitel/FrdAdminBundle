@@ -87,9 +87,7 @@ final class AdminEditabilityResolver implements EditabilityResolverInterface
         }
 
         $entityClass = ObjectHelper::getRealClass($entity);
-        if (!$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_SHOW)
-            || !$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_EDIT)
-        ) {
+        if (!$this->columnPermissions->canShowAndEdit($entityClass, $property)) {
             return false;
         }
 

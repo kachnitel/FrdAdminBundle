@@ -249,6 +249,43 @@ final class ColumnPermissionServiceTest extends TestCase
         $this->assertContains('ssn', $denied);
         $this->assertNotContains('name', $denied);
     }
+
+    /**
+     * @param list<string> $roles
+     */
+    private function grantRoles(array $roles): void
+    {
+        $this->authorizationChecker->method('isGranted')
+            ->willReturnCallback(static fn (mixed $role): bool => \in_array($role, $roles, true));
+    }
+
+    public function testCanShowAndEditRequiresBothActions(): void
+    {
+        $this->grantRoles(['ROLE_HR', 'ROLE_HR_EDIT']);
+
+        $this->assertTrue($this->service->canShowAndEdit(TestEntityWithPermissions::class, 'salary'));
+    }
+
+    public function testCanShowAndEditIsFalseWhenOnlyShowIsGranted(): void
+    {
+        $this->grantRoles(['ROLE_HR']);
+
+        $this->assertFalse($this->service->canShowAndEdit(TestEntityWithPermissions::class, 'salary'));
+    }
+
+    public function testCanShowAndEditIsFalseWhenOnlyEditIsGranted(): void
+    {
+        $this->grantRoles(['ROLE_HR_EDIT']);
+
+        $this->assertFalse($this->service->canShowAndEdit(TestEntityWithPermissions::class, 'salary'));
+    }
+
+    public function testCanShowAndEditIsTrueForAnUnrestrictedColumn(): void
+    {
+        $this->grantRoles([]);
+
+        $this->assertTrue($this->service->canShowAndEdit(TestEntityWithPermissions::class, 'name'));
+    }
 }
 
 /**
