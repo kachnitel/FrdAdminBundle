@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
@@ -51,6 +52,8 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         // @phpstan-ignore argument.type (Test entity class doesn't exist)
         $this->qb->select('e')->from(self::ORDER, 'e');
 
+        // QueryBuilder::expr() delegates to the EntityManager; a mocked builder renders empty conditions.
+        $em->method('getExpressionBuilder')->willReturn(new Expr());
         $em->method('getRepository')->willReturn($repository);
         $em->method('getClassMetadata')->willReturn($metadata);
         $repository->method('createQueryBuilder')->willReturn($this->qb);
