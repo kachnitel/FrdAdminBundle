@@ -688,4 +688,43 @@ final class EntityListQueryServiceTest extends TestCase
         $this->assertStringContainsString('rel_category.name LIKE', $dql);
         $this->assertStringNotContainsString('rel_category.id =', $dql);
     }
+
+    #[Test]
+    public function buildQueryGlobalSearchSkipsExcludedFields(): void
+    {
+        $this->service->buildQuery(
+            'App\\Entity\\Product',
+            null,
+            'term',
+            [],
+            [],
+            'id',
+            'ASC',
+            searchExcludedFields: ['description'],
+        );
+
+        $this->assertCount(1, $this->andWhereCalls);
+        $where = $this->andWhereCalls[0];
+        $this->assertInstanceOf(\Stringable::class, $where);
+        $this->assertStringContainsString('e.name', (string) $where);
+        $this->assertStringNotContainsString('e.description', (string) $where);
+    }
+
+    #[Test]
+    public function buildQueryGlobalSearchWithEveryFieldExcludedAddsNoCondition(): void
+    {
+        $this->service->buildQuery(
+            'App\\Entity\\Product',
+            null,
+            'term',
+            [],
+            [],
+            'id',
+            'ASC',
+            searchExcludedFields: ['name', 'description'],
+        );
+
+        $this->assertEmpty($this->andWhereCalls);
+        $this->assertEmpty($this->setParameterCalls);
+    }
 }

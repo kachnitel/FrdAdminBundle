@@ -36,6 +36,7 @@ class EntityListQueryService
      * @param string|null $scopeDqlCondition   Pre-built DQL WHERE fragment from CollectionScopeResolver
      *                                         restricting the list to one owner's collection
      * @param array<string, mixed> $scopeParameters Bound parameters for $scopeDqlCondition
+     * @param list<string> $searchExcludedFields Fields global search must not match (ADMIN_SHOW-denied columns)
      * @return array{entities: array<object>, total: int, page: int}
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -53,6 +54,7 @@ class EntityListQueryService
         ?string $archiveDqlCondition = null,
         ?string $scopeDqlCondition = null,
         array $scopeParameters = [],
+        array $searchExcludedFields = [],
     ): array {
         $qb = $this->buildQuery(
             $entityClass,
@@ -65,6 +67,7 @@ class EntityListQueryService
             $archiveDqlCondition,
             $scopeDqlCondition,
             $scopeParameters,
+            $searchExcludedFields,
         );
 
         $page = max(1, $page);
@@ -101,6 +104,7 @@ class EntityListQueryService
      * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
      * @param string|null $scopeDqlCondition   Pre-built DQL WHERE fragment from CollectionScopeResolver
      * @param array<string, mixed> $scopeParameters Bound parameters for $scopeDqlCondition
+     * @param list<string> $searchExcludedFields Fields global search must not match (ADMIN_SHOW-denied columns)
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -115,6 +119,7 @@ class EntityListQueryService
         ?string $archiveDqlCondition = null,
         ?string $scopeDqlCondition = null,
         array $scopeParameters = [],
+        array $searchExcludedFields = [],
     ): QueryBuilder {
         /** @var \Doctrine\ORM\EntityRepository<object> $repository */
         $repository = $this->em->getRepository($entityClass);
@@ -127,7 +132,7 @@ class EntityListQueryService
         }
 
         if ($search) {
-            $this->applyGlobalSearch($qb, $entityClass, $search);
+            $this->applyGlobalSearch($qb, $entityClass, $search, $searchExcludedFields);
         }
 
         foreach ($columnFilters as $column => $value) {
@@ -191,15 +196,16 @@ class EntityListQueryService
 
     /**
      * @param class-string $entityClass
+     * @param list<string> $excludedFields Never matched, e.g. columns the user may not see
      */
-    private function applyGlobalSearch(QueryBuilder $qb, string $entityClass, string $search): void
+    private function applyGlobalSearch(QueryBuilder $qb, string $entityClass, string $search, array $excludedFields = []): void
     {
         $metadata = $this->em->getClassMetadata($entityClass);
         $searchableFields = [];
 
         foreach ($metadata->getFieldNames() as $field) {
             $type = $metadata->getTypeOfField($field);
-            if (in_array($type, ['string', 'text'])) {
+            if (in_array($type, ['string', 'text']) && !in_array($field, $excludedFields, true)) {
                 $searchableFields[] = $field;
             }
         }

@@ -197,4 +197,18 @@ final class DoctrineDataSourceSearchAwareTest extends TestCase
         $this->assertNotContains('Internal Code', $labels);
         $this->assertCount(1, $labels);
     }
+
+    #[Test]
+    public function omitsExplicitlyExcludedFieldsFromLabels(): void
+    {
+        $this->stubDoctrineFields(['id' => 'integer', 'name' => 'string', 'internalNotes' => 'text']);
+        $this->queryService->method('getSearchableFieldNames')
+            ->willReturn(['name', 'internalNotes']);
+
+        $labels = $this->makeDataSource()->getGlobalSearchColumnLabels(['internalNotes']);
+
+        $this->assertContains('Name', $labels);
+        $this->assertNotContains('Internal Notes', $labels);
+        $this->assertCount(1, $labels);
+    }
 }

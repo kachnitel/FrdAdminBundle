@@ -36,15 +36,33 @@ class EntityListColumnService
             return $allColumns;
         }
 
-        /** @var class-string $entityClass */
-        $denied = $this->columnPermissionService->getDeniedColumnsForAction(
-            $entityClass,
-            AdminEntityVoter::ADMIN_SHOW
-        );
+        $denied = $this->getDeniedColumns($entityClass);
 
         return array_values(array_filter(
             $allColumns,
             fn(string $col): bool => !in_array($col, $denied, true)
+        ));
+    }
+
+    /**
+     * Columns the user may not see (ADMIN_SHOW denied).
+     *
+     * Beyond hiding them, callers must keep these out of every query input the client can
+     * write (search, sort, filters): otherwise their values can be inferred without being shown.
+     * Empty for non-Doctrine data sources (entityClass = '').
+     *
+     * @return list<string>
+     */
+    public function getDeniedColumns(string $entityClass): array
+    {
+        if ($entityClass === '') {
+            return [];
+        }
+
+        /** @var class-string $entityClass */
+        return array_values($this->columnPermissionService->getDeniedColumnsForAction(
+            $entityClass,
+            AdminEntityVoter::ADMIN_SHOW
         ));
     }
 

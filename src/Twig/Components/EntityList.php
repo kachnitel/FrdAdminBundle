@@ -138,6 +138,7 @@ class EntityList
      *     columnSlots?: list<string|ColumnGroup>,
      *     dataSource?: DataSourceInterface,
      *     visibilityLoaded?: bool,
+     *     deniedColumns?: list<string>,
      *     scope?: array{0: string, 1: array<string, mixed>}
      * }
      */
@@ -315,6 +316,10 @@ class EntityList
             return [];
         }
 
+        if ($dataSource instanceof DoctrineDataSource) {
+            return $dataSource->getGlobalSearchColumnLabels($this->getDeniedColumns());
+        }
+
         return $dataSource->getGlobalSearchColumnLabels();
     }
 
@@ -430,11 +435,13 @@ class EntityList
         }
         if ($dataSource instanceof DoctrineDataSource) {
             $dataSource->setScopeCondition($scope[0] ?? null, $scope[1] ?? []);
+            // Global search must not reach columns the user may not see (it would reveal their values).
+            $dataSource->setSearchExcludedFields($this->getDeniedColumns());
         }
 
         $this->cache['queryResult'] = $dataSource->query(
             search: $this->search,
-            filters: $this->columnFilters,
+            filters: $this->permittedColumnFilters(),
             sortBy: $this->sortBy,
             sortDirection: $this->sortDirection,
             page: $this->page,
@@ -743,6 +750,11 @@ class EntityList
 
     private function isSortableColumn(string $column): bool
     {
+        // Sorting by a column the user may not see would reveal its ordering.
+        if (in_array($column, $this->getDeniedColumns(), true)) {
+            return false;
+        }
+
         $columns = $this->getDataSource()->getColumns();
 
         if (!isset($columns[$column])) {
@@ -750,5 +762,28 @@ class EntityList
         }
 
         return $columns[$column]->sortable;
+    }
+
+    /**
+     * Columns the user may not see (ADMIN_SHOW denied). Empty for non-Doctrine data sources.
+     *
+     * @return list<string>
+     */
+    private function getDeniedColumns(): array
+    {
+        return $this->cache['deniedColumns'] ??= $this->columnService->getDeniedColumns($this->entityClass);
+    }
+
+    /**
+     * Client-supplied column filters minus those on columns the user may not see.
+     *
+     * `columnFilters` is a writable, URL-bound LiveProp; a filter on a hidden column would
+     * let the user probe its values through which rows come back.
+     *
+     * @return array<string, mixed>
+     */
+    private function permittedColumnFilters(): array
+    {
+        return array_diff_key($this->columnFilters, array_flip($this->getDeniedColumns()));
     }
 }
