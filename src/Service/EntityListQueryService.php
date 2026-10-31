@@ -320,6 +320,14 @@ class EntityListQueryService
             return;
         }
 
+        $this->applyFilterByType($qb, $column, $value, $metadata);
+    }
+
+    /**
+     * @param array<string, mixed> $metadata
+     */
+    private function applyFilterByType(QueryBuilder $qb, string $column, mixed $value, array $metadata): void
+    {
         $type = $metadata['type'];
 
         switch ($type) {
