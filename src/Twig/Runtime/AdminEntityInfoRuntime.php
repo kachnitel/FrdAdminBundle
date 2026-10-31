@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 
 class AdminEntityInfoRuntime
 {
@@ -199,7 +200,7 @@ class AdminEntityInfoRuntime
         }
 
         try {
-            $reflProp = (new \ReflectionClass($entityClass))->getProperty($column);
+            $reflProp = PropertyReflection::get(new \ReflectionClass($entityClass), $column);
             $type     = $reflProp->getType();
             return $type instanceof \ReflectionNamedType
                 && !$type->isBuiltin()

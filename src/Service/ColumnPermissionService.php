@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Service;
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use ReflectionClass;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -74,7 +75,7 @@ class ColumnPermissionService
         $map = [];
         $reflection = new ReflectionClass($entityClass);
 
-        foreach ($reflection->getProperties() as $property) {
+        foreach (PropertyReflection::all($reflection) as $property) {
             $attributes = $property->getAttributes(ColumnPermission::class);
 
             if (empty($attributes)) {

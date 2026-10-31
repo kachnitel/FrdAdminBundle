@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\Traits\AssociationFilterConfigTrait;
 use Kachnitel\AdminBundle\Service\Traits\FieldFilterConfigTrait;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use Kachnitel\AdminBundle\Utils\Text;
 use ReflectionClass;
 use ReflectionProperty;
@@ -46,11 +47,11 @@ class FilterMetadataProvider
         $filters = [];
 
         foreach ($metadata->getFieldNames() as $fieldName) {
-            $this->addFilterIfEnabled($filters, $reflection->getProperty($fieldName), $metadata, $fieldName);
+            $this->addFilterIfEnabled($filters, PropertyReflection::get($reflection, $fieldName), $metadata, $fieldName);
         }
 
         foreach ($metadata->getAssociationNames() as $associationName) {
-            $property = $reflection->getProperty($associationName);
+            $property = PropertyReflection::get($reflection, $associationName);
 
             // Collection associations require explicit ColumnFilter attribute
             if ($metadata->isCollectionValuedAssociation($associationName)) {
