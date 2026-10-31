@@ -33,17 +33,7 @@
     {# Check if it's an entity/object with common display properties #}
     {% elseif value.name is defined or value.label is defined or value.title is defined or value.id is defined %}
         {% set entityUrl = admin_entity_url(value, true) %}
-        {% set label %}
-            {% if value.name is defined %}
-                {{ value.name }}
-            {% elseif value.label is defined %}
-                {{ value.label }}
-            {% elseif value.title is defined %}
-                {{ value.title }}
-            {% else %}
-                #{{ value.id }}
-            {% endif %}
-        {% endset %}
+        {% set label = admin_entity_label(value) %}
         {% if entityUrl %}
             <a href="{{ entityUrl }}">{{ label }}</a>
         {% else %}

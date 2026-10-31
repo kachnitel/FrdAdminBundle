@@ -7,15 +7,17 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
-use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
+use Kachnitel\AdminBundle\Utils\EntityHelper;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(AdminEntityDataRuntime::class)]
+#[UsesClass(EntityHelper::class)]
 #[AllowMockObjectsWithoutExpectations]
 final class AdminEntityDataRuntimeTest extends TestCase
 {
@@ -33,7 +35,6 @@ final class AdminEntityDataRuntimeTest extends TestCase
 
         $this->runtime = new AdminEntityDataRuntime(
             em: $em,
-            attributeHelper: $this->createStub(AttributeHelper::class),
             resolver: new DoctrineItemValueResolver(),
         );
     }

@@ -68,80 +68,6 @@ final class AbstractAdminControllerTest extends TestCase
     }
 
     #[Test]
-    public function getEntityLabelUsingGetName(): void
-    {
-        $entity = new class {
-            public function getId(): int { return 1; }
-            public function getName(): string { return 'Test Product'; }
-        };
-
-        $label = $this->controller->getEntityLabel($entity);
-        $this->assertSame('Test Product', $label);
-    }
-
-    #[Test]
-    public function getEntityLabelUsingGetLabel(): void
-    {
-        $entity = new class {
-            public function getId(): int { return 2; }
-            public function getLabel(): string { return 'Test Label'; }
-        };
-
-        $label = $this->controller->getEntityLabel($entity);
-        $this->assertSame('Test Label', $label);
-    }
-
-    #[Test]
-    public function getEntityLabelUsingGetValue(): void
-    {
-        $entity = new class {
-            public function getId(): int { return 3; }
-            public function getValue(): string { return 'Test Value'; }
-        };
-
-        $label = $this->controller->getEntityLabel($entity);
-        $this->assertSame('Test Value', $label);
-    }
-
-    #[Test]
-    public function getEntityLabelFallsBackToId(): void
-    {
-        $entity = new class {
-            public function getId(): int { return 42; }
-        };
-
-        $label = $this->controller->getEntityLabel($entity);
-        $this->assertSame('#42', $label);
-    }
-
-    #[Test]
-    public function getEntityLabelPrefersNameOverOthers(): void
-    {
-        $entity = new class {
-            public function getId(): int { return 1; }
-            public function getName(): string { return 'Name'; }
-            public function getLabel(): string { return 'Label'; }
-            public function getValue(): string { return 'Value'; }
-        };
-
-        $label = $this->controller->getEntityLabel($entity);
-        $this->assertSame('Name', $label);
-    }
-
-    #[Test]
-    public function getEntityLabelPrefersLabelOverValue(): void
-    {
-        $entity = new class {
-            public function getId(): int { return 1; }
-            public function getLabel(): string { return 'Label'; }
-            public function getValue(): string { return 'Value'; }
-        };
-
-        $label = $this->controller->getEntityLabel($entity);
-        $this->assertSame('Label', $label);
-    }
-
-    #[Test]
     public function getIndexTemplate(): void
     {
         $template = $this->controller->getIndexTemplate('Product');
@@ -196,11 +122,6 @@ class ConcreteAdminController extends AbstractAdminController
     protected function getSupportedEntities(): array
     {
         return ['Product', 'Order', 'Customer'];
-    }
-
-    public function getEntityLabel(object $entity): string
-    {
-        return parent::getEntityLabel($entity);
     }
 
     public function getRoutePrefix(): string
