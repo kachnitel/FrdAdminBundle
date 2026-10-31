@@ -10,6 +10,7 @@ use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
+use Kachnitel\AdminBundle\Utils\EntityHelper;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -21,6 +22,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AdminEntityDataRuntime::class)]
 #[UsesClass(DoctrineItemValueResolver::class)]
 #[UsesClass(ObjectHelper::class)]
+#[UsesClass(EntityHelper::class)]
 #[AllowMockObjectsWithoutExpectations]
 final class AdminEntityDataRuntimeTest extends TestCase
 {

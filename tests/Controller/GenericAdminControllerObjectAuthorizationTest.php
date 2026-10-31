@@ -15,6 +15,7 @@ use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeletableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\GenericAdminControllerTestDouble;
+use Kachnitel\AdminBundle\Utils\EntityHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -45,6 +46,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  */
 #[CoversClass(GenericAdminController::class)]
 #[UsesClass(ArchiveConfig::class)]
+#[UsesClass(EntityHelper::class)]
 #[Group('controller')]
 #[Group('object-authorization')]
 final class GenericAdminControllerObjectAuthorizationTest extends TestCase

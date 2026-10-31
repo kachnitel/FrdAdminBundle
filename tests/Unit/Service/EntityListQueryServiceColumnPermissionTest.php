@@ -40,7 +40,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
     /** @var list<string> */
     private array $orderBy = [];
 
-    /** @var list<mixed> */
+    /** @var list<string> */
     private array $andWhere = [];
 
     protected function setUp(): void
@@ -61,7 +61,13 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
             return $qb;
         });
         $qb->method('andWhere')->willReturnCallback(function (mixed $where) use ($qb): QueryBuilder {
-            $this->andWhere[] = (string) $where;
+            if (is_string($where)) {
+                $this->andWhere[] = $where;
+            } elseif ($where instanceof \Stringable) {
+                $this->andWhere[] = $where->__toString();
+            } else {
+                self::fail('Expected a string or stringable where expression.');
+            }
 
             return $qb;
         });
@@ -84,7 +90,6 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
     private function denyOnShow(array $denied): void
     {
         $this->permissions->method('getDeniedColumnsForAction')
-            ->with(self::ENTITY, AdminEntityVoter::ADMIN_SHOW)
             ->willReturn($denied);
     }
 

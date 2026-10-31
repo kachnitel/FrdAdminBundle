@@ -139,6 +139,7 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
      *
      * Only consulted by DynamicEntityFormType for fields canEdit() accepted.
      *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      * @param class-string $entityClass
      */
     public function isReadOnly(string $entityClass, string $property, ?object $entity = null): bool
