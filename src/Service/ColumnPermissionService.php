@@ -71,10 +71,6 @@ class ColumnPermissionService
             return $this->permissionMapCache[$entityClass];
         }
 
-        if (!class_exists($entityClass)) {
-            return [];
-        }
-
         $map = [];
         $reflection = new ReflectionClass($entityClass);
 

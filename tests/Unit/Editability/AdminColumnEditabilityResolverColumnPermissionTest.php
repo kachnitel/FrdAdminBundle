@@ -155,12 +155,13 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     }
 
     #[Test]
-    public function realPermissionServiceToleratesANonExistentEntityClass(): void
+    public function unknownEntityClassFailsClosedInsteadOfBeingTreatedAsUnrestricted(): void
     {
         $resolver = $this->resolverGranting([]);
 
-        self::assertTrue($resolver->canEdit('App\\Entity\\ThisClassDoesNotExist', 'whatever'));
-        self::assertFalse($resolver->isReadOnly('App\\Entity\\ThisClassDoesNotExist', 'whatever'));
+        $this->expectException(\ReflectionException::class);
+
+        $resolver->canEdit('App\\Entity\\ThisClassDoesNotExist', 'whatever');
     }
 
     #[Test]
