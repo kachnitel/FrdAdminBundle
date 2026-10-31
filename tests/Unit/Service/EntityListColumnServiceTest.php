@@ -201,24 +201,4 @@ final class EntityListColumnServiceTest extends TestCase
 
         $this->assertSame($filter->toArray(), $result['price']);
     }
-
-    // --- getDeniedColumns ---
-
-    #[Test]
-    public function getDeniedColumnsReturnsEmptyAndSkipsPermissionCheckWhenNoEntityClass(): void
-    {
-        $this->columnPermissionService->expects($this->never())->method('getDeniedColumnsForAction');
-
-        $this->assertSame([], $this->service->getDeniedColumns(''));
-    }
-
-    #[Test]
-    public function getDeniedColumnsReturnsColumnsDeniedForShow(): void
-    {
-        $this->columnPermissionService->expects($this->once())->method('getDeniedColumnsForAction')
-            ->with('App\\Entity\\Employee', AdminEntityVoter::ADMIN_SHOW)
-            ->willReturn(['salary', 'ssn']);
-
-        $this->assertSame(['salary', 'ssn'], $this->service->getDeniedColumns('App\\Entity\\Employee'));
-    }
 }

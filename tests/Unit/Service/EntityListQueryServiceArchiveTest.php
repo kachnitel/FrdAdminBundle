@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\Group;
@@ -68,7 +69,7 @@ final class EntityListQueryServiceArchiveTest extends TestCase
         $classMetadata->method('hasField')->willReturn(true);
         $classMetadata->method('getTypeOfField')->willReturn('string');
 
-        $this->service = new EntityListQueryService($em);
+        $this->service = new EntityListQueryService($em, $this->createStub(ColumnPermissionService::class));
     }
 
     #[Test]

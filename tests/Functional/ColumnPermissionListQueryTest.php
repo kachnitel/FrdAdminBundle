@@ -74,13 +74,12 @@ final class ColumnPermissionListQueryTest extends ComponentTestCase
     }
 
     #[Test]
-    public function sortByDeniedColumnFallsBackToDefaultOrder(): void
+    public function sortByDeniedColumnFallsBackToIdentifierOrder(): void
     {
-        // Sorting by salary ASC would yield Alice, Carol, Bob; the default order is id DESC.
+        // Sorting by salary ASC would yield Alice, Carol, Bob; identifier ASC yields Alice, Bob, Carol.
         $list = $this->list(['sortBy' => 'salary', 'sortDirection' => 'ASC']);
 
-        $this->assertSame(['Carol', 'Bob', 'Alice'], $this->names($list));
-        $this->assertNotSame('salary', $list->sortBy);
+        $this->assertSame(['Alice', 'Bob', 'Carol'], $this->names($list));
     }
 
     #[Test]

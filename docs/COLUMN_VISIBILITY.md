@@ -52,9 +52,10 @@ automatically. For the built-in admin UI, the permission behaviour is:
 `ADMIN_SHOW`-denied columns are excluded from list views, filters, the column
 visibility toggle picker, and entity show-page data. They are also kept out of
 the list **query**, so their values can't be inferred from results the user can't
-see: sorting by a denied column (e.g. `?sortBy=salary`) falls back to the default
-sort, column filters on it are ignored, and global search doesn't match it (nor
-list it in the search help text). The entity's title or breadcrumb label may
+see: sorting by a denied column (e.g. `?sortBy=salary`) falls back to ordering by the
+identifier, column filters on it are ignored, and global search doesn't match it
+(nor list it in the search help text). This is decided in one place,
+`EntityListQueryService`, so every list built on it is covered. The entity's title or breadcrumb label may
 still expose a denied property if it is used by `admin_entity_label()` or a
 controller label getter.
 

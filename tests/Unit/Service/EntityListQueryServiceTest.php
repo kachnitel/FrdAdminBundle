@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\Group;
@@ -75,7 +76,7 @@ final class EntityListQueryServiceTest extends TestCase
             default => 'string',
         });
 
-        $this->service = new EntityListQueryService($this->em);
+        $this->service = new EntityListQueryService($this->em, $this->createStub(ColumnPermissionService::class));
     }
 
     #[Test]
@@ -575,7 +576,7 @@ final class EntityListQueryServiceTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $repository->method('createQueryBuilder')->willReturn($realQb);
 
-        $service = new EntityListQueryService($em);
+        $service = new EntityListQueryService($em, $this->createStub(ColumnPermissionService::class));
 
         $filters = ['attributes' => 'searchterm'];
         $filterMetadata = [
@@ -621,7 +622,7 @@ final class EntityListQueryServiceTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $repository->method('createQueryBuilder')->willReturn($realQb);
 
-        $service = new EntityListQueryService($em);
+        $service = new EntityListQueryService($em, $this->createStub(ColumnPermissionService::class));
 
         $filters = ['category' => '42'];
         $filterMetadata = [
@@ -662,7 +663,7 @@ final class EntityListQueryServiceTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $repository->method('createQueryBuilder')->willReturn($realQb);
 
-        $service = new EntityListQueryService($em);
+        $service = new EntityListQueryService($em, $this->createStub(ColumnPermissionService::class));
 
         $filters = ['category' => 'Electronics'];
         $filterMetadata = [
@@ -687,44 +688,5 @@ final class EntityListQueryServiceTest extends TestCase
         // Verify LIKE is present but not exact ID match
         $this->assertStringContainsString('rel_category.name LIKE', $dql);
         $this->assertStringNotContainsString('rel_category.id =', $dql);
-    }
-
-    #[Test]
-    public function buildQueryGlobalSearchSkipsExcludedFields(): void
-    {
-        $this->service->buildQuery(
-            'App\\Entity\\Product',
-            null,
-            'term',
-            [],
-            [],
-            'id',
-            'ASC',
-            searchExcludedFields: ['description'],
-        );
-
-        $this->assertCount(1, $this->andWhereCalls);
-        $where = $this->andWhereCalls[0];
-        $this->assertInstanceOf(\Stringable::class, $where);
-        $this->assertStringContainsString('e.name', (string) $where);
-        $this->assertStringNotContainsString('e.description', (string) $where);
-    }
-
-    #[Test]
-    public function buildQueryGlobalSearchWithEveryFieldExcludedAddsNoCondition(): void
-    {
-        $this->service->buildQuery(
-            'App\\Entity\\Product',
-            null,
-            'term',
-            [],
-            [],
-            'id',
-            'ASC',
-            searchExcludedFields: ['name', 'description'],
-        );
-
-        $this->assertEmpty($this->andWhereCalls);
-        $this->assertEmpty($this->setParameterCalls);
     }
 }

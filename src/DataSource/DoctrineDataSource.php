@@ -58,17 +58,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     private array $scopeParameters = [];
 
     /**
-     * Fields the next query()'s global search must skip: the columns the current user may not
-     * see (ADMIN_SHOW denied), set by EntityList.
-     *
-     * Consumed and cleared by query() like the archive and scope conditions, so one user's
-     * exclusions never outlive the query they were set for.
-     *
-     * @var list<string>
-     */
-    private array $searchExcludedFields = [];
-
-    /**
      * @param class-string $entityClass Fully-qualified entity class name
      */
     public function __construct(
@@ -123,18 +112,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     {
         $this->scopeDqlCondition = $dql;
         $this->scopeParameters   = $parameters;
-    }
-
-    // ── Global search exclusions ───────────────────────────────────────────────
-
-    /**
-     * Set the fields the next query() must not match in global search. Pass [] to clear.
-     *
-     * @param list<string> $fields
-     */
-    public function setSearchExcludedFields(array $fields): void
-    {
-        $this->searchExcludedFields = $fields;
     }
 
     // ── DataSourceInterface ────────────────────────────────────────────────────
@@ -247,9 +224,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         $this->scopeDqlCondition = null;
         $this->scopeParameters   = [];
 
-        $searchExcludedFields       = $this->searchExcludedFields;
-        $this->searchExcludedFields = [];
-
         $filterMetadata = [];
         foreach ($this->getFilters() as $name => $filter) {
             $filterMetadata[$name] = $filter->toArray();
@@ -268,7 +242,6 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
             archiveDqlCondition: $archiveDqlCondition,
             scopeDqlCondition: $scopeDqlCondition,
             scopeParameters: $scopeParameters,
-            searchExcludedFields: $searchExcludedFields,
         );
 
         return PaginatedResult::fromQueryResult($result, $itemsPerPage);
@@ -323,11 +296,9 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
     }
 
     /**
-     * @param list<string> $excludedFields Fields global search skips (see setSearchExcludedFields());
-     *                                     their labels are left out so the help text matches the search
      * @return array<string>
      */
-    public function getGlobalSearchColumnLabels(array $excludedFields = []): array
+    public function getGlobalSearchColumnLabels(): array
     {
         $searchableFields = $this->queryService->getSearchableFieldNames($this->entityClass);
 
@@ -339,7 +310,7 @@ class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceIn
         $labels  = [];
 
         foreach ($searchableFields as $field) {
-            if (isset($columns[$field]) && !in_array($field, $excludedFields, true)) {
+            if (isset($columns[$field])) {
                 $labels[] = $columns[$field]->label;
             }
         }

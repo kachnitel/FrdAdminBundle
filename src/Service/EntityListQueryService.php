@@ -8,12 +8,20 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\Traits\AssociationFilterTrait;
 use Kachnitel\AdminBundle\Service\Traits\DateFilterTrait;
 use Kachnitel\AdminBundle\Service\Traits\ScalarFilterTrait;
 
 /**
  * Service responsible for building database queries for entity lists.
+ *
+ * Columns the current user may not see (#[ColumnPermission] ADMIN_SHOW denied) are not
+ * queryable: global search skips them, filters on them are dropped and sorting by them
+ * falls back to the identifier. `search`, `sortBy` and `columnFilters` are client-writable,
+ * so hiding a column from the UI alone would still let its values be inferred from the
+ * results. All of that is decided in deniedColumns(); this is the one place every list
+ * query passes through.
  */
 class EntityListQueryService
 {
@@ -22,7 +30,8 @@ class EntityListQueryService
     use AssociationFilterTrait;
 
     public function __construct(
-        private EntityManagerInterface $em
+        private EntityManagerInterface $em,
+        private ColumnPermissionService $columnPermissions,
     ) {}
 
     /**
@@ -36,7 +45,6 @@ class EntityListQueryService
      * @param string|null $scopeDqlCondition   Pre-built DQL WHERE fragment from CollectionScopeResolver
      *                                         restricting the list to one owner's collection
      * @param array<string, mixed> $scopeParameters Bound parameters for $scopeDqlCondition
-     * @param list<string> $searchExcludedFields Fields global search must not match (ADMIN_SHOW-denied columns)
      * @return array{entities: array<object>, total: int, page: int}
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -54,7 +62,6 @@ class EntityListQueryService
         ?string $archiveDqlCondition = null,
         ?string $scopeDqlCondition = null,
         array $scopeParameters = [],
-        array $searchExcludedFields = [],
     ): array {
         $qb = $this->buildQuery(
             $entityClass,
@@ -67,7 +74,6 @@ class EntityListQueryService
             $archiveDqlCondition,
             $scopeDqlCondition,
             $scopeParameters,
-            $searchExcludedFields,
         );
 
         $page = max(1, $page);
@@ -104,7 +110,6 @@ class EntityListQueryService
      * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
      * @param string|null $scopeDqlCondition   Pre-built DQL WHERE fragment from CollectionScopeResolver
      * @param array<string, mixed> $scopeParameters Bound parameters for $scopeDqlCondition
-     * @param list<string> $searchExcludedFields Fields global search must not match (ADMIN_SHOW-denied columns)
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -119,7 +124,6 @@ class EntityListQueryService
         ?string $archiveDqlCondition = null,
         ?string $scopeDqlCondition = null,
         array $scopeParameters = [],
-        array $searchExcludedFields = [],
     ): QueryBuilder {
         /** @var \Doctrine\ORM\EntityRepository<object> $repository */
         $repository = $this->em->getRepository($entityClass);
@@ -131,11 +135,13 @@ class EntityListQueryService
             $qb = $repository->createQueryBuilder('e');
         }
 
+        $denied = $this->deniedColumns($entityClass);
+
         if ($search) {
-            $this->applyGlobalSearch($qb, $entityClass, $search, $searchExcludedFields);
+            $this->applyGlobalSearch($qb, $entityClass, $search);
         }
 
-        foreach ($columnFilters as $column => $value) {
+        foreach (array_diff_key($columnFilters, array_flip($denied)) as $column => $value) {
             if (isset($filterMetadata[$column]) && $value !== null && $value !== '') {
                 $this->applyColumnFilter($qb, $column, $value, $filterMetadata[$column]);
             }
@@ -143,7 +149,7 @@ class EntityListQueryService
 
         $this->applyRestrictions($qb, $archiveDqlCondition, $scopeDqlCondition, $scopeParameters);
 
-        $qb->orderBy('e.' . $sortBy, $sortDirection);
+        $qb->orderBy('e.' . $this->sortField($entityClass, $sortBy, $denied), $sortDirection);
 
         return $qb;
     }
@@ -176,17 +182,21 @@ class EntityListQueryService
     /**
      * Return the names of entity fields included in global search.
      *
+     * Fields the user may not see are left out, so the search (and any help text built
+     * from this list) never covers them.
+     *
      * @param class-string $entityClass
      * @return array<string>
      */
     public function getSearchableFieldNames(string $entityClass): array
     {
         $metadata = $this->em->getClassMetadata($entityClass);
+        $denied = $this->deniedColumns($entityClass);
         $fields = [];
 
         foreach ($metadata->getFieldNames() as $field) {
             $type = $metadata->getTypeOfField($field);
-            if (in_array($type, ['string', 'text'], true)) {
+            if (in_array($type, ['string', 'text'], true) && !in_array($field, $denied, true)) {
                 $fields[] = $field;
             }
         }
@@ -195,20 +205,43 @@ class EntityListQueryService
     }
 
     /**
+     * Columns the current user may not see (ADMIN_SHOW denied): the single policy deciding
+     * what the list query refuses to search, filter or sort by.
+     *
      * @param class-string $entityClass
-     * @param list<string> $excludedFields Never matched, e.g. columns the user may not see
+     * @return list<string>
      */
-    private function applyGlobalSearch(QueryBuilder $qb, string $entityClass, string $search, array $excludedFields = []): void
+    private function deniedColumns(string $entityClass): array
     {
-        $metadata = $this->em->getClassMetadata($entityClass);
-        $searchableFields = [];
+        return array_values($this->columnPermissions->getDeniedColumnsForAction(
+            $entityClass,
+            AdminEntityVoter::ADMIN_SHOW,
+        ));
+    }
 
-        foreach ($metadata->getFieldNames() as $field) {
-            $type = $metadata->getTypeOfField($field);
-            if (in_array($type, ['string', 'text']) && !in_array($field, $excludedFields, true)) {
-                $searchableFields[] = $field;
-            }
+    /**
+     * The field to ORDER BY: a denied column would reveal its ordering, so it is replaced
+     * by the identifier.
+     *
+     * @param class-string $entityClass
+     * @param list<string> $denied
+     */
+    private function sortField(string $entityClass, string $sortBy, array $denied): string
+    {
+        // Compare the root segment so a dotted path ("salary.x") can't sidestep the check.
+        if (!in_array(explode('.', $sortBy, 2)[0], $denied, true)) {
+            return $sortBy;
         }
+
+        return $this->em->getClassMetadata($entityClass)->getIdentifierFieldNames()[0] ?? 'id';
+    }
+
+    /**
+     * @param class-string $entityClass
+     */
+    private function applyGlobalSearch(QueryBuilder $qb, string $entityClass, string $search): void
+    {
+        $searchableFields = $this->getSearchableFieldNames($entityClass);
 
         if (empty($searchableFields)) {
             return;

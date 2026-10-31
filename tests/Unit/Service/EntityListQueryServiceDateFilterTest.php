@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\Traits\DateFilterTrait;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -61,7 +62,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
         });
         $this->qb->method('orderBy')->willReturnSelf();
 
-        $this->service = new EntityListQueryService($em);
+        $this->service = new EntityListQueryService($em, $this->createStub(ColumnPermissionService::class));
     }
 
     private function buildQueryWithFilter(string $column, mixed $value, string $type): void
