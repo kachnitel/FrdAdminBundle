@@ -1,23 +1,23 @@
 {
-    "generated_at": "2026-10-31 05:33:04",
+    "generated_at": "2026-10-31 06:04:23",
     "tests": {
-        "count": 1822,
-        "assertions": 4291,
-        "status": "passing"
+        "count": 1816,
+        "assertions": 4285,
+        "status": "failing(risky)"
     },
     "coverage": {
-        "lines": 93.75,
+        "lines": 93.62,
         "percentage": 94,
         "html_report": ".coverage\/index.html"
     },
     "phpstan": {
         "level": 10,
-        "status": "errors"
+        "status": "pass"
     },
     "phpmd": {
         "ran": true,
-        "violations": 2,
-        "status": "violations"
+        "violations": 0,
+        "status": "clean"
     },
     "code_style": {
         "ran": true,

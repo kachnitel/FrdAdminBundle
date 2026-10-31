@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
-use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
@@ -50,7 +49,6 @@ final class AdminEntityDataRuntimeTest extends TestCase
 
         $this->runtime = new AdminEntityDataRuntime(
             em: $this->em,
-            attributeHelper: $this->createStub(AttributeHelper::class),
             resolver: new DoctrineItemValueResolver(),
             columnPermissions: $this->columnPermissions,
         );

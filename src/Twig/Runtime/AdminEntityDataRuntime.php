@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Utils\EntityHelper;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
-use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -20,7 +20,6 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private AttributeHelper $attributeHelper,
         private DoctrineItemValueResolver $resolver,
         private ColumnPermissionService $columnPermissions,
         private ?NormalizerInterface $normalizer = null
@@ -163,34 +162,11 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
      */
     public function getEntityLabel(object $entity, ?string $getter = null): string
     {
-        // Handle object methods and public properties
-        foreach (array_filter([$getter, 'label', 'name', 'title']) as $prop) {
-            // Use exact name for custom $getter, otherwise prepend 'get' and capitalize
-            $method = $prop === $getter ? $getter : 'get' . ucfirst($prop);
-
-            if (method_exists($entity, $method)) {
-                return $this->stringifyEntityValue($entity->$method());
-            }
-
-            if (isset($entity->$prop)) {
-                return $this->stringifyEntityValue($entity->$prop);
-            }
+        if ($getter !== null && method_exists($entity, $getter)) {
+            return $this->stringifyEntityValue($entity->$getter());
         }
 
-        if (method_exists($entity, '__toString')) {
-            return (string) $entity;
-        }
-
-        // Fallbacks
-        if (method_exists($entity, 'getId')) {
-            return '#' . $this->stringifyEntityValue($entity->getId());
-        }
-
-        if (isset($entity->id)) {
-            return '#' . $this->stringifyEntityValue($entity->id);
-        }
-
-        return (new \ReflectionClass($entity))->getShortName();
+        return EntityHelper::getEntityLabel($entity);
     }
 
     private function stringifyEntityValue(mixed $value): string

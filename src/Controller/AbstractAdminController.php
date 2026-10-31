@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Doctrine\ORM\EntityManagerInterface;
+use Kachnitel\AdminBundle\Utils\EntityHelper;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -224,7 +225,7 @@ abstract class AbstractAdminController extends AbstractController
         ]];
 
         if ($entity !== null) {
-            $entityLabel = $this->getEntityLabel($entity);
+            $entityLabel = EntityHelper::getEntityLabel($entity);
             $entityId = method_exists($entity, 'getId') ? $entity->getId() : null;
             $breadcrumbs[] = [
                 'url' => $this->generateUrl($this->getRoutePrefix() . '_show', [
@@ -236,26 +237,6 @@ abstract class AbstractAdminController extends AbstractController
         }
 
         return $breadcrumbs;
-    }
-
-    /**
-     * Get label for entity (tries name, label, value, or falls back to ID).
-     */
-    protected function getEntityLabel(object $entity): string
-    {
-        if (method_exists($entity, 'getName') && $entity->getName()) {
-            return $this->stringifyEntityValue($entity->getName());
-        }
-        if (method_exists($entity, 'getLabel') && $entity->getLabel()) {
-            return $this->stringifyEntityValue($entity->getLabel());
-        }
-        if (method_exists($entity, 'getValue') && $entity->getValue()) {
-            return $this->stringifyEntityValue($entity->getValue());
-        }
-        if (method_exists($entity, 'getId')) {
-            return '#' . $this->stringifyEntityValue($entity->getId());
-        }
-        return '#unknown';
     }
 
     protected function getAdminEntityLabel(string $class): string
@@ -270,11 +251,6 @@ abstract class AbstractAdminController extends AbstractController
         $label = $attributes[0]->newInstance()->getLabel();
 
         return $label !== null && $label !== '' ? $label : $class;
-    }
-
-    private function stringifyEntityValue(mixed $value): string
-    {
-        return is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
     }
 
     // Template resolution methods (can be overridden for custom template paths)
