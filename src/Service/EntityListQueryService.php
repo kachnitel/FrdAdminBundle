@@ -220,6 +220,60 @@ class EntityListQueryService
     }
 
     /**
+     * Relation and collection filters search fields of the TARGET entity, so those fields
+     * are checked against the target class's own #[ColumnPermission] (otherwise filtering
+     * Order.customer by an email would reveal whether that email exists).
+     *
+     * Returns the metadata with only permitted search fields, or null when every configured
+     * field was denied, so the filter is dropped instead of falling back to another field.
+     *
+     * @param array<string, mixed> $metadata
+     * @return array<string, mixed>|null
+     */
+    private function restrictAssociationSearchFields(array $metadata): ?array
+    {
+        $targetClass = $metadata['targetClass'] ?? null;
+        $fields = $metadata['searchFields'] ?? [];
+
+        if (!is_string($targetClass) || !is_array($fields) || $fields === []) {
+            return $metadata;
+        }
+
+        /** @var class-string $targetClass */
+
+        $permitted = array_values(array_filter(
+            $fields,
+            fn (mixed $field): bool => is_string($field) && $this->canSearchPath($targetClass, $field),
+        ));
+
+        return $permitted === [] ? null : ['searchFields' => $permitted] + $metadata;
+    }
+
+    /**
+     * Whether every segment of a (dotted) search path is visible to the user, walking
+     * through Doctrine associations so each segment is checked against its own class.
+     *
+     * @param class-string $class
+     */
+    private function canSearchPath(string $class, string $path): bool
+    {
+        foreach (explode('.', $path) as $segment) {
+            if (!$this->columnPermissions->canPerformAction($class, $segment, AdminEntityVoter::ADMIN_SHOW)) {
+                return false;
+            }
+
+            $metadata = $this->em->getClassMetadata($class);
+            if (!$metadata->hasAssociation($segment)) {
+                return true; // plain or embedded field: nothing further to walk
+            }
+
+            $class = $metadata->getAssociationTargetClass($segment);
+        }
+
+        return true;
+    }
+
+    /**
      * The field to ORDER BY: a denied column would reveal its ordering, so it is replaced
      * by the identifier.
      *
@@ -261,6 +315,11 @@ class EntityListQueryService
      */
     private function applyColumnFilter(QueryBuilder $qb, string $column, mixed $value, array $metadata): void
     {
+        $metadata = $this->restrictAssociationSearchFields($metadata);
+        if ($metadata === null) {
+            return;
+        }
+
         $type = $metadata['type'];
 
         switch ($type) {

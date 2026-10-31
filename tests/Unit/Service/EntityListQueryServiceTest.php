@@ -76,7 +76,15 @@ final class EntityListQueryServiceTest extends TestCase
             default => 'string',
         });
 
-        $this->service = new EntityListQueryService($this->em, $this->createStub(ColumnPermissionService::class));
+        $this->service = new EntityListQueryService($this->em, $this->permissiveColumnPermissions());
+    }
+
+    private function permissiveColumnPermissions(): ColumnPermissionService
+    {
+        $permissions = $this->createStub(ColumnPermissionService::class);
+        $permissions->method('canPerformAction')->willReturn(true);
+
+        return $permissions;
     }
 
     #[Test]
@@ -576,7 +584,7 @@ final class EntityListQueryServiceTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $repository->method('createQueryBuilder')->willReturn($realQb);
 
-        $service = new EntityListQueryService($em, $this->createStub(ColumnPermissionService::class));
+        $service = new EntityListQueryService($em, $this->permissiveColumnPermissions());
 
         $filters = ['attributes' => 'searchterm'];
         $filterMetadata = [
@@ -622,7 +630,7 @@ final class EntityListQueryServiceTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $repository->method('createQueryBuilder')->willReturn($realQb);
 
-        $service = new EntityListQueryService($em, $this->createStub(ColumnPermissionService::class));
+        $service = new EntityListQueryService($em, $this->permissiveColumnPermissions());
 
         $filters = ['category' => '42'];
         $filterMetadata = [
@@ -663,7 +671,7 @@ final class EntityListQueryServiceTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $repository->method('createQueryBuilder')->willReturn($realQb);
 
-        $service = new EntityListQueryService($em, $this->createStub(ColumnPermissionService::class));
+        $service = new EntityListQueryService($em, $this->permissiveColumnPermissions());
 
         $filters = ['category' => 'Electronics'];
         $filterMetadata = [
