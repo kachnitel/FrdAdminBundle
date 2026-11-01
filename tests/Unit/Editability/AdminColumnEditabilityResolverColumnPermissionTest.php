@@ -121,11 +121,21 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     }
 
     #[Test]
-    public function editableFalseStillWinsOverColumnPermissions(): void
+    public function editableFalseIsReadOnlyEvenWithEditPermission(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT']);
 
-        self::assertFalse($resolver->canEdit(self::E, 'blocked'));
+        self::assertTrue($resolver->canEdit(self::E, 'blocked'));
+        self::assertTrue($resolver->isReadOnly(self::E, 'blocked'));
+    }
+
+    #[Test]
+    public function editableFalseDoesNotOverrideAShowDenial(): void
+    {
+        $resolver = $this->resolverGranting([]);
+
+        self::assertTrue($resolver->canEdit(self::E, 'blocked'), 'control: no SHOW restriction on this column');
+        self::assertFalse($resolver->canEdit(self::E, 'salary'), 'SHOW denial is what hides a field');
     }
 
     #[Test]

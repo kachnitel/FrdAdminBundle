@@ -81,17 +81,20 @@ final class AdminColumnEditabilityResolverTest extends TestCase
     // ── canEdit(): explicit false ──────────────────────────────────────────────
 
     #[Test]
-    public function canEditExcludesAFieldMarkedEditableFalse(): void
+    public function editableFalseKeepsTheFieldButMakesItReadOnly(): void
     {
-        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'blocked'));
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'blocked'));
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'blocked'));
     }
 
     #[Test]
-    public function canEditExcludesEditableFalseEvenWithAnEntityProvided(): void
+    public function editableFalseIsReadOnlyWithAnEntityProvidedAndNeverEvaluatesAnExpression(): void
     {
+        $this->expressionLanguage->expects($this->never())->method('evaluate');
         $entity = new ResolverTestEntity();
 
-        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'blocked', $entity));
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'blocked', $entity));
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'blocked', $entity));
     }
 
     // ── canEdit(): explicit true ───────────────────────────────────────────────

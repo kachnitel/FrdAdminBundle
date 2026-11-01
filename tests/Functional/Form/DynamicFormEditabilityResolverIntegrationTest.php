@@ -76,7 +76,7 @@ final class DynamicFormEditabilityResolverIntegrationTest extends KernelTestCase
         parent::tearDown();
     }
 
-    public function testEditableFalseCollectionIsAbsentFromRootFormViaTheRealContainerBinding(): void
+    public function testEditableFalseCollectionIsDisabledInRootFormViaTheRealContainerBinding(): void
     {
         $form = $this->getFormFactory()->create(DynamicEntityFormType::class, new OrderWithLines(), [
             'entity_class'    => OrderWithLines::class,
@@ -85,11 +85,11 @@ final class DynamicFormEditabilityResolverIntegrationTest extends KernelTestCase
             'is_root'         => true,
         ]);
 
-        $this->assertFalse(
-            $form->has('blockedTags'),
+        $this->assertTrue($form->has('blockedTags'), 'editable: false no longer hides a field');
+        $this->assertTrue(
+            $form->get('blockedTags')->isDisabled(),
             'AdminColumnEditabilityResolver must be the live FieldEditabilityResolverInterface '
-            . 'binding in this application — excluding #[AdminColumn(editable: false)] collections '
-            . 'exactly as DynamicEntityFormType did before the dynamic-form-bundle extraction.'
+            . 'binding in this application — rendering #[AdminColumn(editable: false)] collections read-only.'
         );
     }
 

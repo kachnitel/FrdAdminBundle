@@ -190,10 +190,10 @@ class ProductFormType extends AbstractType { /* ... */ }
 final class PurchaseOrderForm extends AdminEntityForm { /* ... */ }
 ```
 
-**Level 4:** Control which fields appear:
+**Level 4:** Control which fields can be edited (use `ColumnPermission` to hide them):
 ```php
-#[AdminColumn(editable: false)]                         // exclude from the form
-#[AdminColumn(editable: 'entity.status != "locked"')]   // conditional
+#[AdminColumn(editable: false)]                         // read-only (disabled) on the form
+#[AdminColumn(editable: 'entity.status != "locked"')]   // read-only when the expression is false
 ```
 
 **Details:** [Forms Guide](docs/FORMS.md)

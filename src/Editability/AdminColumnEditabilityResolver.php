@@ -33,17 +33,19 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * enableInlineEdit: true would lose every field from its auto-generated form —
  * this class must never read #[Admin] at all.
  *
- * ## canEdit() precedence (checked in order)
+ * ## Visibility vs editability
  *
- *   1. No #[AdminColumn] attribute  → included (permissive default)
- *   2. editable: false              → excluded (short-circuits everything)
- *   3. editable: 'expression'       → included; isReadOnly() evaluates it (false → the
- *                                      field is rendered disabled, not removed)
- *   4. editable: true               → included
+ * Only #[ColumnPermission] ADMIN_SHOW can remove a field; #[AdminColumn(editable)] never does.
+ * It only decides whether a visible field can be changed (see isReadOnly()):
+ *
+ *   1. No #[AdminColumn] attribute  → editable (permissive default)
+ *   2. editable: false              → read-only (rendered disabled)
+ *   3. editable: 'expression'       → read-only when it evaluates to false
+ *   4. editable: true               → editable
  *
  * ## Column permissions (#[ColumnPermission])
  *
- * Applied after the #[AdminColumn] precedence above, so `editable: false` still wins:
+ * Combined with the above (either one makes a visible field read-only):
  *
  *   ADMIN_SHOW denied                 → canEdit() false, isExplicitOverride() false
  *                                        (field is not on the form at all)
@@ -80,23 +82,9 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
      */
     public function canEdit(string $entityClass, string $property, ?object $entity = null): bool
     {
-        $column = $this->getAdminColumn($entityClass, $property);
-
-        if ($column !== null && $column->editable === false) {
-            return false;
-        }
-
-        if (!$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_SHOW)) {
-            return false;
-        }
-
-        if ($column === null) {
-            return true;
-        }
-
-        // editable: true or an expression — included. An expression is evaluated by
-        // isReadOnly(): a false result renders the field disabled instead of removing it.
-        return true;
+        // Visibility is decided by #[ColumnPermission] ADMIN_SHOW alone. #[AdminColumn(editable)]
+        // only decides whether a visible field can be changed, see isReadOnly().
+        return $this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_SHOW);
     }
 
     /**
@@ -126,11 +114,11 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
     }
 
     /**
-     * Show the value but don't let it change: ADMIN_EDIT denied, or an
+     * Show the value but don't let it change: ADMIN_EDIT denied, `editable: false`, or an
      * `editable: 'expression'` that evaluates to false for the bound entity.
      *
      * Only consulted by DynamicEntityFormType for fields canEdit() accepted. With no
-     * entity yet the expression can't be evaluated, so the field is built editable and
+     * entity yet an expression can't be evaluated, so the field is built editable and
      * DynamicFormEditabilityListener drops it once a real entity is bound if the
      * expression turns out false (it can't disable an already-built field).
      *
@@ -142,18 +130,13 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
             return true;
         }
 
-        return $entity !== null && !$this->expressionAllowsEditing($entityClass, $property, $entity);
-    }
-
-    /**
-     * @param class-string $entityClass
-     */
-    private function expressionAllowsEditing(string $entityClass, string $property, object $entity): bool
-    {
         $editable = $this->getAdminColumn($entityClass, $property)?->editable;
 
-        return !is_string($editable)
-            || $this->expressionLanguage->evaluate($editable, $entity, $this->authorizationChecker);
+        if (is_string($editable)) {
+            return $entity !== null && !$this->expressionLanguage->evaluate($editable, $entity, $this->authorizationChecker);
+        }
+
+        return $editable === false;
     }
 
     /**

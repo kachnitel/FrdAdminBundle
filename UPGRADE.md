@@ -27,6 +27,12 @@ Check the CHANGELOG for your version. If breaking changes are listed, see "Break
 
 ## Breaking Changes
 
+### `AdminColumn(editable)` no longer hides form fields (0.x → 0.y)
+
+On the auto-generated form, `#[AdminColumn(editable: false)]` and an `editable: 'expression'` that evaluates to false used to remove the field. They now render it **disabled** (submitted values are ignored), like an `ADMIN_EDIT` denial. Only `#[ColumnPermission]` with `ADMIN_SHOW` denied hides a field.
+
+**Action:** if you used `editable: false` to keep a field off the form entirely (for example a password hash), switch to `#[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_...'])]`. A disabled required field can also fail validation when creating an entity; give the column a default. Inline edit is unchanged.
+
 ### Extracting Packages (0.x → 0.y)
 
 Several internal packages were extracted into standalone repositories with their own release cycles:
