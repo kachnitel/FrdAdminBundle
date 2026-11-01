@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Service;
 
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use ReflectionClass;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -72,7 +75,7 @@ class ColumnPermissionService
         $map = [];
         $reflection = new ReflectionClass($entityClass);
 
-        foreach ($reflection->getProperties() as $property) {
+        foreach (PropertyReflection::all($reflection) as $property) {
             $attributes = $property->getAttributes(ColumnPermission::class);
 
             if (empty($attributes)) {
@@ -124,6 +127,18 @@ class ColumnPermissionService
     }
 
     /**
+     * Whether the column is both visible (ADMIN_SHOW) and editable (ADMIN_EDIT) for the
+     * current user — the combined gate for writing a column, e.g. inline edit.
+     *
+     * @param class-string $entityClass
+     */
+    public function canShowAndEdit(string $entityClass, string $columnName): bool
+    {
+        return $this->canPerformAction($entityClass, $columnName, AdminEntityVoter::ADMIN_SHOW)
+            && $this->canPerformAction($entityClass, $columnName, AdminEntityVoter::ADMIN_EDIT);
+    }
+
+    /**
      * Check if the current user can perform a specific action on a column of an entity instance.
      *
      * @param object $entity Entity instance
@@ -135,7 +150,7 @@ class ColumnPermissionService
         string $action,
     ): bool {
         return $this->canPerformAction(
-            $entity::class,
+            ObjectHelper::getRealClass($entity),
             $columnName,
             $action
         );

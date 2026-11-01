@@ -10,6 +10,7 @@ use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityInfoRuntime;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AdminEntityInfoRuntime::class)]
 #[UsesClass(ObjectHelper::class)]
 #[UsesClass(AdminColumn::class)]
+#[UsesClass(PropertyReflection::class)]
 #[AllowMockObjectsWithoutExpectations]
 final class AdminEntityInfoRuntimeTest extends TestCase
 {

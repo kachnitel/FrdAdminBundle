@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\Group;
@@ -75,7 +76,15 @@ final class EntityListQueryServiceTest extends TestCase
             default => 'string',
         });
 
-        $this->service = new EntityListQueryService($this->em);
+        $this->service = new EntityListQueryService($this->em, $this->permissiveColumnPermissions());
+    }
+
+    private function permissiveColumnPermissions(): ColumnPermissionService
+    {
+        $permissions = $this->createStub(ColumnPermissionService::class);
+        $permissions->method('canPerformAction')->willReturn(true);
+
+        return $permissions;
     }
 
     #[Test]
@@ -575,7 +584,7 @@ final class EntityListQueryServiceTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $repository->method('createQueryBuilder')->willReturn($realQb);
 
-        $service = new EntityListQueryService($em);
+        $service = new EntityListQueryService($em, $this->permissiveColumnPermissions());
 
         $filters = ['attributes' => 'searchterm'];
         $filterMetadata = [
@@ -621,7 +630,7 @@ final class EntityListQueryServiceTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $repository->method('createQueryBuilder')->willReturn($realQb);
 
-        $service = new EntityListQueryService($em);
+        $service = new EntityListQueryService($em, $this->permissiveColumnPermissions());
 
         $filters = ['category' => '42'];
         $filterMetadata = [
@@ -662,7 +671,7 @@ final class EntityListQueryServiceTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $repository->method('createQueryBuilder')->willReturn($realQb);
 
-        $service = new EntityListQueryService($em);
+        $service = new EntityListQueryService($em, $this->permissiveColumnPermissions());
 
         $filters = ['category' => 'Electronics'];
         $filterMetadata = [

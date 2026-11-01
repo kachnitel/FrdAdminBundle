@@ -7,6 +7,7 @@ Collection-association handling (`OneToMany`, `ManyToMany`) for the zero-config 
 Two things stay specific to this bundle:
 
 - **`#[AdminColumn(editable: ...)]`** is *how* you opt a collection in or out here — see [Forms → Excluding a field](FORMS.md#excluding-a-field) and [Inline Editing](INLINE_EDIT.md#admincolumn-vs-columnpermission). Under the hood it's `AdminColumnEditabilityResolver`, this bundle's binding of dynamic-form-bundle's [`FieldEditabilityResolverInterface`](https://github.com/kachnitel/dynamic-form-bundle/blob/master/docs/EDITABILITY.md).
+- **`#[ColumnPermission]`** also applies to collections: an `ADMIN_SHOW`-denied collection is removed from the form, and an `ADMIN_EDIT`-denied one is rendered disabled without Add/Remove (dynamic-form-bundle 0.2.2+). See [Column Visibility → Nested forms and collections](COLUMN_VISIBILITY.md#nested-forms-and-collections).
 - **The inline "+ Add" button** next to `EntityType` autocomplete fields (`EntityTypeAddButton`, the `admin-inline-add` Stimulus controller, the `K:Admin:EntityType:InlineForm` dialog) is entirely this bundle's own feature, consuming a `data-admin-entity-class` hook that dynamic-form-bundle adds to association fields for exactly this purpose. See [Inline Add](INLINE_ADD.md).
 
 ## Troubleshooting

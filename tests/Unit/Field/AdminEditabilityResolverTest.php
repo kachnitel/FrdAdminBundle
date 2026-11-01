@@ -11,6 +11,12 @@ use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
+use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionFormEntity;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use Doctrine\Persistence\Proxy;
+use Kachnitel\AdminBundle\Attribute\ColumnPermission;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -21,6 +27,10 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 #[PHPUnit\UsesClass(Admin::class)]
 #[PHPUnit\UsesClass(AdminColumn::class)]
 #[PHPUnit\UsesClass(RowActionExpressionLanguage::class)]
+#[PHPUnit\UsesClass(ObjectHelper::class)]
+#[PHPUnit\UsesClass(ColumnPermission::class)]
+#[PHPUnit\UsesClass(ColumnPermissionService::class)]
+#[PHPUnit\UsesClass(PropertyReflection::class)]
 #[PHPUnit\CoversClass(AdminEditabilityResolver::class)]
 #[PHPUnit\Group('inline-edit')]
 #[PHPUnit\Group('object-authorization')]
@@ -39,6 +49,9 @@ final class AdminEditabilityResolverTest extends TestCase
     /** @var ObjectAuthorizationChecker&MockObject */
     private ObjectAuthorizationChecker $objectAuthChecker;
 
+    /** @var ColumnPermissionService|ColumnPermissionService&MockObject */
+    private ColumnPermissionService $columnPermissions;
+
     private AdminEditabilityResolver $resolver;
 
     protected function setUp(): void
@@ -54,6 +67,8 @@ final class AdminEditabilityResolverTest extends TestCase
         // expectation on this one) and rebuild $this->resolver against it.
         $this->objectAuthChecker = $this->createMock(ObjectAuthorizationChecker::class);
         $this->objectAuthChecker->method('isGranted')->willReturn(true);
+        $this->columnPermissions = $this->createMock(ColumnPermissionService::class);
+        $this->columnPermissions->method('canShowAndEdit')->willReturn(true);
 
         $this->resolver = $this->buildResolver();
     }
@@ -66,6 +81,7 @@ final class AdminEditabilityResolverTest extends TestCase
             $this->authChecker,
             $this->propertyAccessor,
             $this->objectAuthChecker,
+            $this->columnPermissions,
         );
     }
 
@@ -235,6 +251,57 @@ final class AdminEditabilityResolverTest extends TestCase
         $this->propertyAccessor->expects($this->never())->method('isWritable');
 
         $this->assertFalse($this->resolver->canEdit($this->makeEntity(), 'title'));
+    }
+
+    #[PHPUnit\Test]
+    public function showOnlyAndEditPermissionsAreBothRequiredForInlineEditing(): void
+    {
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $entity = $this->makeEntity();
+        $this->columnPermissions = $this->createMock(ColumnPermissionService::class);
+        $this->resolver = $this->buildResolver();
+        $this->columnPermissions->expects($this->once())
+            ->method('canShowAndEdit')
+            ->with($entity::class, 'title')
+            ->willReturn(false);
+        $this->authChecker->expects($this->never())->method('isGranted');
+
+        $this->assertFalse($this->resolver->canEdit($entity, 'title'));
+    }
+
+    #[PHPUnit\Test]
+    public function showOnlyColumnPermissionBlocksInlineEditing(): void
+    {
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->authChecker->method('isGranted')->willReturnCallback(
+            static fn (string $attribute): bool => $attribute === AdminEntityVoter::ADMIN_EDIT,
+        );
+        $this->columnPermissions = new ColumnPermissionService($this->authChecker);
+        $this->resolver = $this->buildResolver();
+        $this->propertyAccessor->expects($this->never())->method('isWritable');
+
+        $this->assertFalse($this->resolver->canEdit(new ColumnPermissionFormEntity(), 'ssn'));
+    }
+
+    #[PHPUnit\Test]
+    public function proxyEntityUsesItsRealClassForColumnPermissionChecks(): void
+    {
+        $this->stubColumnAttr(new AdminColumn(editable: true));
+        $this->stubEntityAdmin(new Admin(enableInlineEdit: true));
+        $this->stubVoterGranted(true);
+        $this->stubWritable(true);
+        $proxy = new AdminEditabilityProxyEntity();
+
+        $this->columnPermissions = $this->createMock(ColumnPermissionService::class);
+        $this->resolver = $this->buildResolver();
+        $this->columnPermissions->expects($this->once())
+            ->method('canShowAndEdit')
+            ->with(AdminEditabilityBaseEntity::class, 'title')
+            ->willReturn(true);
+
+        $this->assertTrue($this->resolver->canEdit($proxy, 'title'));
     }
 
     // ── editable: expression ──────────────────────────────────────────────────
@@ -436,5 +503,21 @@ final class AdminEditabilityResolverTest extends TestCase
         $this->resolver = $this->buildResolver();
 
         $this->resolver->canEdit($entity, 'title');
+    }
+}
+
+class AdminEditabilityBaseEntity
+{
+    public string $title = '';
+}
+
+/** @implements Proxy<object> */
+class AdminEditabilityProxyEntity extends AdminEditabilityBaseEntity implements Proxy
+{
+    public function __load(): void {}
+
+    public function __isInitialized(): bool
+    {
+        return true;
     }
 }

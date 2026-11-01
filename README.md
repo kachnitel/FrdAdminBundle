@@ -1,11 +1,11 @@
 # Kachnitel Admin Bundle
 
 <!-- BADGES -->
-![Tests](<https://img.shields.io/badge/tests-1761%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-93%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-4121-blue>)
+![Tests](<https://img.shields.io/badge/tests-1852%20passed-brightgreen>)
+![Coverage](<https://img.shields.io/badge/coverage-94%25-brightgreen>)
+![Assertions](<https://img.shields.io/badge/assertions-4347-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
-![PHPMD](<https://img.shields.io/badge/PHPMD-clean-brightgreen>)
+![PHPMD](<https://img.shields.io/badge/PHPMD-1%20issues-yellow>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
 ![Vitest](<https://img.shields.io/badge/vitest-37%20passed-brightgreen>)
 ![PHP](<https://img.shields.io/badge/PHP-&gt;=8.4-777BB4?logo=php&logoColor=white>)
@@ -92,7 +92,7 @@ Or exclude: `excludeColumns: ['costPrice']`
 
 **Level 3:** Role-based visibility:
 ```php
-#[ColumnPermission('ROLE_HR')]
+#[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR'])]
 private float $salary;
 ```
 

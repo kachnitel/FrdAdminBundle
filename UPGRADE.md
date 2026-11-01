@@ -102,6 +102,18 @@ arguments were moved to `RowActionVisibilityChecker`.
 from `RowActionRuntime`. The `$debug` binding belongs to
 `RowActionVisibilityChecker` instead.
 
+### Column permission dependencies are required (0.15 → 0.y)
+
+`AdminEditabilityResolver`, `AdminColumnEditabilityResolver` and
+`AdminEntityDataRuntime` now require `ColumnPermissionService` in their
+constructors. The bundle's service container wires these automatically. Update
+any direct instantiations and custom service definitions to pass the service.
+
+Requires `kachnitel/dynamic-form-bundle` `^0.2.0`: generated-form enforcement of
+`#[ColumnPermission]` uses its `FieldEditabilityResolverInterface::isReadOnly()`.
+Custom resolvers implementing that interface must add `isReadOnly()` (return
+`false` to keep current behaviour).
+
 ### `AbstractAdminController` constructor requires authorization checker (0.13 → 0.y)
 
 `AbstractAdminController::__construct()` now requires an

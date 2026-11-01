@@ -7,6 +7,8 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -29,6 +31,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  */
 #[CoversClass(ColumnPermissionService::class)]
 #[UsesClass(ColumnPermission::class)]
+#[UsesClass(ObjectHelper::class)]
+#[UsesClass(PropertyReflection::class)]
 #[Group('column-permissions')]
 #[AllowMockObjectsWithoutExpectations]
 final class ColumnPermissionServiceTest extends TestCase
@@ -221,10 +225,9 @@ final class ColumnPermissionServiceTest extends TestCase
         $this->assertNotContains('name', $denied);
     }
 
-    public function testCanPerformActionOnEntityInstance(): void
+    public function testProxyEntityUsesRealClassForPermissionAttributes(): void
     {
-        $entity = new TestEntityWithPermissions();
-
+        $entity = new TestEntityWithPermissionsProxy();
         $this->authorizationChecker
             ->expects($this->once())->method('isGranted')
             ->with('ROLE_HR')
@@ -233,7 +236,7 @@ final class ColumnPermissionServiceTest extends TestCase
         $result = $this->service->canPerformActionOnEntity(
             $entity,
             'salary',
-            AdminEntityVoter::ADMIN_SHOW
+            AdminEntityVoter::ADMIN_SHOW,
         );
 
         $this->assertTrue($result);
@@ -247,6 +250,43 @@ final class ColumnPermissionServiceTest extends TestCase
         $this->assertContains('salary', $denied);
         $this->assertContains('ssn', $denied);
         $this->assertNotContains('name', $denied);
+    }
+
+    /**
+     * @param list<string> $roles
+     */
+    private function grantRoles(array $roles): void
+    {
+        $this->authorizationChecker->method('isGranted')
+            ->willReturnCallback(static fn (mixed $role): bool => \in_array($role, $roles, true));
+    }
+
+    public function testCanShowAndEditRequiresBothActions(): void
+    {
+        $this->grantRoles(['ROLE_HR', 'ROLE_HR_EDIT']);
+
+        $this->assertTrue($this->service->canShowAndEdit(TestEntityWithPermissions::class, 'salary'));
+    }
+
+    public function testCanShowAndEditIsFalseWhenOnlyShowIsGranted(): void
+    {
+        $this->grantRoles(['ROLE_HR']);
+
+        $this->assertFalse($this->service->canShowAndEdit(TestEntityWithPermissions::class, 'salary'));
+    }
+
+    public function testCanShowAndEditIsFalseWhenOnlyEditIsGranted(): void
+    {
+        $this->grantRoles(['ROLE_HR_EDIT']);
+
+        $this->assertFalse($this->service->canShowAndEdit(TestEntityWithPermissions::class, 'salary'));
+    }
+
+    public function testCanShowAndEditIsTrueForAnUnrestrictedColumn(): void
+    {
+        $this->grantRoles([]);
+
+        $this->assertTrue($this->service->canShowAndEdit(TestEntityWithPermissions::class, 'name'));
     }
 }
 
@@ -278,4 +318,15 @@ class TestEntityWithoutPermissions
 {
     private string $name = '';
     private string $email = '';
+}
+
+/** @implements \Doctrine\Persistence\Proxy<object> */
+class TestEntityWithPermissionsProxy extends TestEntityWithPermissions implements \Doctrine\Persistence\Proxy
+{
+    public function __load(): void {}
+
+    public function __isInitialized(): bool
+    {
+        return true;
+    }
 }

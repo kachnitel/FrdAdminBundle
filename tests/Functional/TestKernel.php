@@ -127,6 +127,10 @@ class TestKernel extends Kernel
                             'editor' => ['password' => 'editor', 'roles' => ['ROLE_EDITOR']],
                             'test_viewer' => ['password' => 'test', 'roles' => ['ROLE_TEST_VIEW']],
                             'test_editor' => ['password' => 'test', 'roles' => ['ROLE_TEST_EDIT']],
+                            // ColumnPermission fixtures: roles come from the logged-in user, which must be
+                            // refreshable from this provider (KernelBrowser::loginUser / actingAs).
+                            'hr' => ['password' => 'test', 'roles' => ['ROLE_HR']],
+                            'hr_edit' => ['password' => 'test', 'roles' => ['ROLE_HR', 'ROLE_HR_EDIT']],
                         ],
                     ],
                 ],

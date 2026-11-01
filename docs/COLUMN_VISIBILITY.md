@@ -31,7 +31,71 @@ class Employee
 
 **Role arrays:** Pass an array of roles for OR logic — user needs at least one.
 
-Columns restricted for `ADMIN_SHOW` are excluded from list views, filters, and the column visibility toggle picker. Uses Symfony's `AuthorizationCheckerInterface`, so role hierarchy is supported automatically.
+Uses Symfony's `AuthorizationCheckerInterface`, so role hierarchy is supported
+automatically. For the built-in admin UI, the permission behaviour is:
+
+| Permission state | Forms | Inline edit | Show/index data |
+|---|---|---|---|
+| No `ColumnPermission` restriction | Unchanged | Unchanged | Visible |
+| `ADMIN_SHOW` denied | Field removed | No trigger; direct saves are rejected | Hidden |
+| `ADMIN_SHOW` allowed, `ADMIN_EDIT` denied | Field disabled; submitted values ignored | No edit trigger; save is rejected | Visible |
+| Both allowed | Unchanged | Unchanged | Visible |
+
+> **Scope:** form enforcement covers the auto-generated form
+> (`DynamicEntityFormType`) only. Hand-written form types — including a custom
+> `#[Admin(formType: ...)]`, `#[Admin(formComponent: ...)]` or an
+> `App\Form\{Class}FormType` — are out of scope
+> and do not apply `#[ColumnPermission]` automatically. Inject
+> `ColumnPermissionService` in such a type and use `canPerformAction()` to omit or
+> disable fields yourself. Inline edit and show/index data are enforced regardless
+> of the form type.
+
+`ADMIN_SHOW`-denied columns are excluded from list views, filters, the column
+visibility toggle picker, and entity show-page data. They are also kept out of
+the list **query**, so their values can't be inferred from results the user can't
+see: sorting by a denied column (e.g. `?sortBy=salary`) falls back to ordering by the
+identifier, column filters on it are ignored, and global search doesn't match it
+(nor list it in the search help text). This is decided in one place,
+`EntityListQueryService`, so every list built on it is covered. The entity's title or breadcrumb label may
+still expose a denied property if it is used by `admin_entity_label()` or a
+controller label getter.
+
+### Required columns and creating entities
+
+These rules apply to generated New and Edit forms. `ADMIN_EDIT` governs whether
+a field can be set on either form; there is no separate `ADMIN_NEW` column
+permission. A column the user may not see is removed and one they may see but
+not edit is disabled, so either restriction makes **creation impossible** when
+the column must be filled by the user (e.g. `NotBlank`, or `NOT NULL` with no
+default). Valid patterns that avoid this:
+
+| Pattern | Example |
+|---|---|
+| Required in the DB, but has a default | `status = 'draft'`, `approved = false`, `creditLimit = 0` |
+| Set by a constructor or lifecycle listener | `createdBy`, `tenant`, `slug`, `internalReference` |
+| Only the editing role may create | restrict `new` to the same role: `#[Admin(permissions: ['new' => 'ROLE_HR'])]` |
+| Computed on persist | `margin`, `fingerprint` |
+| Filled by import/API only | a compliance-restricted identifier |
+
+In `kernel.debug`, if a restricted column fails validation while a **new** entity
+is submitted, a warning is logged naming the column and the denied action.
+Production behaviour is unchanged. Only the root form is inspected, and "new"
+means the form was built with no data (what `AdminEntityForm` and the inline-add
+dialog do).
+
+### Nested forms and collections
+
+- **Disabled collections:** a collection whose column is `ADMIN_EDIT`-denied is
+  rendered read-only with no "Add" or "Remove" buttons, and added or removed rows
+  in a tampered submit are ignored (requires `kachnitel/dynamic-form-bundle` 0.2.2+).
+- **Collection rows:** each row is a form for the child entity, so the *child
+  class's own* `#[ColumnPermission]` attributes apply to its fields, independent
+  of the parent's.
+- **Debug warning:** only inspects the root form, not fields inside collection
+  rows or embedded forms.
+- **Association labels:** the choices of an `EntityType` field are labelled by
+  the related entity's `__toString()` / label property. If that exposes a property
+  the user may not see, the label leaks it; keep restricted values out of labels.
 
 ## User Column Visibility Toggle
 

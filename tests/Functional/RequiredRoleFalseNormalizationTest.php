@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\DependencyInjection\Compiler\OverrideEditabilityResolversPass;
 use Kachnitel\AdminBundle\DependencyInjection\Compiler\OverrideTypeGuesserPass;
+use Kachnitel\AdminBundle\Form\Extension\ColumnPermissionFormExtension;
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -40,6 +41,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 #[CoversClass(KachnitelAdminBundle::class)]
 #[UsesClass(OverrideEditabilityResolversPass::class)]
 #[UsesClass(OverrideTypeGuesserPass::class)]
+#[UsesClass(ColumnPermissionFormExtension::class)]
 #[Group('dependency-injection')]
 #[Group('bundle-config')]
 final class RequiredRoleFalseNormalizationTest extends TestCase

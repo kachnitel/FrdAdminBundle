@@ -7,6 +7,9 @@ namespace Kachnitel\AdminBundle\Twig\Runtime;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Utils\EntityHelper;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use Kachnitel\AdminBundle\Service\ColumnPermissionService;
+use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
 
@@ -18,6 +21,7 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
     public function __construct(
         private EntityManagerInterface $em,
         private DoctrineItemValueResolver $resolver,
+        private ColumnPermissionService $columnPermissions,
         private ?NormalizerInterface $normalizer = null
     ) {}
 
@@ -30,17 +34,27 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
      */
     public function getData(object $entity): array
     {
-        $metadata = $this->em->getClassMetadata(get_class($entity));
+        $class = ObjectHelper::getRealClass($entity);
+        $denied = array_flip($this->deniedColumns($class));
+        $metadata = $this->em->getClassMetadata($class);
         $fields = $metadata->getFieldNames();
 
         $data = [];
         foreach ($fields as $field) {
+            if (isset($denied[$field])) {
+                continue;
+            }
+
             $value = $this->resolver->resolve($entity, $field, $metadata);
             $data[$field] = $this->normalizeValue($value);
         }
 
         $associations = $metadata->getAssociationNames();
         foreach ($associations as $association) {
+            if (isset($denied[$association])) {
+                continue;
+            }
+
             $value = $this->resolver->resolve($entity, $association, $metadata);
 
             // For collection-valued associations, return the collection object itself
@@ -60,10 +74,12 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
      * Get column names for an entity class.
      *
      * Note: Collection-valued associations are excluded from columns.
+     * @param class-string $entityClass
      * @return array<string>
      */
     public function getColumns(string $entityClass): array
     {
+        $entityClass = ObjectHelper::getRealClass($entityClass);
         $metadata = $this->em->getClassMetadata($entityClass);
         $columns = $metadata->getFieldNames();
 
@@ -74,7 +90,19 @@ class AdminEntityDataRuntime implements RuntimeExtensionInterface
             }
         }
 
-        return $columns;
+        return array_values(array_diff($columns, $this->deniedColumns($entityClass)));
+    }
+
+    /**
+     * @param class-string $class
+     * @return list<string>
+     */
+    private function deniedColumns(string $class): array
+    {
+        return array_values($this->columnPermissions->getDeniedColumnsForAction(
+            $class,
+            AdminEntityVoter::ADMIN_SHOW,
+        ));
     }
 
     /**
