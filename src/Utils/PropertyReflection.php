@@ -18,7 +18,7 @@ use ReflectionProperty;
 final class PropertyReflection
 {
     /**
-     * @param ReflectionClass<object> $class
+    * @param ReflectionClass<*> $class
      * @return array<string, ReflectionProperty> keyed by property name
      */
     public static function all(ReflectionClass $class): array
@@ -35,7 +35,7 @@ final class PropertyReflection
     }
 
     /**
-     * @param ReflectionClass<object> $class
+    * @param ReflectionClass<*> $class
      * @throws \ReflectionException when no class in the hierarchy declares the property
      */
     public static function get(ReflectionClass $class, string $name): ReflectionProperty
@@ -45,7 +45,7 @@ final class PropertyReflection
     }
 
     /**
-     * @param ReflectionClass<object> $class
+    * @param ReflectionClass<*> $class
      */
     public static function find(ReflectionClass $class, string $name): ?ReflectionProperty
     {

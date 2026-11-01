@@ -23,6 +23,7 @@ abstract class InheritedPrivateBase
     #[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR'])]
     private ?string $shadowed = null;
 
+    /** @return array{?string, ?string, ?string} */
     public function reveal(): array
     {
         return [$this->secret, $this->locked, $this->shadowed];
