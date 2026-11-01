@@ -102,10 +102,19 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'forced'));
     }
 
-    // ── canEdit(): expression, entity available ────────────────────────────────
+    // ── expression: the field stays; isReadOnly() carries the answer ───────────
 
     #[Test]
-    public function canEditEvaluatesTheExpressionWhenAnEntityIsAvailable(): void
+    public function canEditKeepsAnExpressionFieldWithoutEvaluatingIt(): void
+    {
+        $this->expressionLanguage->expects($this->never())->method('evaluate');
+
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status', new ResolverTestEntity()));
+        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status'));
+    }
+
+    #[Test]
+    public function isReadOnlyEvaluatesTheExpressionWhenAnEntityIsAvailable(): void
     {
         $entity          = new ResolverTestEntity();
         $entity->enabled = true;
@@ -114,27 +123,32 @@ final class AdminColumnEditabilityResolverTest extends TestCase
             ->with('entity.enabled', $entity, $this->createStub(\Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface::class))
             ->willReturn(true);
 
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status', $entity));
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'status', $entity));
     }
 
     #[Test]
-    public function canEditExcludesWhenTheExpressionEvaluatesFalse(): void
+    public function isReadOnlyIsTrueWhenTheExpressionEvaluatesFalse(): void
     {
-        $entity = new ResolverTestEntity();
-
         $this->expressionLanguage->method('evaluate')->willReturn(false);
 
-        $this->assertFalse($this->resolver->canEdit(ResolverTestEntity::class, 'status', $entity));
+        $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'status', new ResolverTestEntity()));
     }
 
-    // ── canEdit(): expression, no entity yet ───────────────────────────────────
-
     #[Test]
-    public function canEditIncludesAnExpressionFieldWhenNoEntityIsAvailableYet(): void
+    public function isReadOnlyDoesNotEvaluateTheExpressionWithoutAnEntity(): void
     {
         $this->expressionLanguage->expects($this->never())->method('evaluate');
 
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status'));
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'status'));
+    }
+
+    #[Test]
+    public function isReadOnlyIsFalseForFieldsWithoutAnExpression(): void
+    {
+        $this->expressionLanguage->expects($this->never())->method('evaluate');
+
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'plain', new ResolverTestEntity()));
+        $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'forced', new ResolverTestEntity()));
     }
 
     // ── canEdit(): reflection failures fall back to permissive ────────────────

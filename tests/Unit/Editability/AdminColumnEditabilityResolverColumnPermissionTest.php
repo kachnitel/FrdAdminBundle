@@ -132,24 +132,36 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     public function expressionAllowingEditStillLetsEditPermissionMakeTheFieldReadOnly(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR'], expressionResult: true);
+        $entity = new ColumnPermissionResolverEntity();
 
-        self::assertTrue($resolver->canEdit(self::E, 'conditional', new ColumnPermissionResolverEntity()));
-        self::assertTrue($resolver->isReadOnly(self::E, 'conditional'));
+        self::assertTrue($resolver->canEdit(self::E, 'conditional', $entity));
+        self::assertTrue($resolver->isReadOnly(self::E, 'conditional', $entity));
     }
 
     #[Test]
     public function expressionAllowingEditAndEditPermissionGrantedIsEditable(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT'], expressionResult: true);
+        $entity = new ColumnPermissionResolverEntity();
 
-        self::assertTrue($resolver->canEdit(self::E, 'conditional', new ColumnPermissionResolverEntity()));
-        self::assertFalse($resolver->isReadOnly(self::E, 'conditional'));
+        self::assertTrue($resolver->canEdit(self::E, 'conditional', $entity));
+        self::assertFalse($resolver->isReadOnly(self::E, 'conditional', $entity));
     }
 
     #[Test]
-    public function expressionDenyingEditExcludesTheFieldEvenWithEditPermission(): void
+    public function expressionDenyingEditMakesTheFieldReadOnlyEvenWithEditPermission(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT'], expressionResult: false);
+        $entity = new ColumnPermissionResolverEntity();
+
+        self::assertTrue($resolver->canEdit(self::E, 'conditional', $entity), 'the field stays on the form');
+        self::assertTrue($resolver->isReadOnly(self::E, 'conditional', $entity));
+    }
+
+    #[Test]
+    public function showDeniedStillRemovesTheFieldWhateverTheExpressionSays(): void
+    {
+        $resolver = $this->resolverGranting([], expressionResult: true);
 
         self::assertFalse($resolver->canEdit(self::E, 'conditional', new ColumnPermissionResolverEntity()));
     }

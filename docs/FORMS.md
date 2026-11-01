@@ -89,6 +89,7 @@ the New and Edit buttons appear for every `#[Admin]` entity without any extra co
 |---|---|
 | Regular Doctrine fields (string, int, float, bool, date, datetime, time, enum) | ✅ Yes |
 | `#[AdminColumn(editable: false)]` on the property | ❌ Excluded |
+| `#[AdminColumn(editable: 'expression')]` evaluating to false | Rendered disabled; submitted values are ignored |
 | `#[ColumnPermission]` denies `ADMIN_SHOW` | ❌ Removed from the generated form |
 | `#[ColumnPermission]` allows `ADMIN_SHOW` but denies `ADMIN_EDIT` | Rendered disabled; submitted values are ignored |
 | The primary identifier field (`id`) | ❌ Always excluded |
@@ -130,6 +131,13 @@ The same resolver applies `#[ColumnPermission]`: `canEdit()` returns `false` whe
 `ADMIN_SHOW` is denied (the field is removed), and `isReadOnly()` returns `true` when
 `ADMIN_SHOW` is allowed but `ADMIN_EDIT` is denied (the field is rendered disabled).
 `isReadOnly()` requires dynamic-form-bundle `^0.2`.
+
+An `editable: 'expression'` follows the same rule: when it evaluates to false for the
+entity being edited, the field stays on the form but is rendered disabled, just like an
+`ADMIN_EDIT` denial. Use `#[ColumnPermission]` for *who* may edit and the expression for
+*when* (entity state). Only `editable: false` removes the field outright. On a brand-new
+entity the expression cannot be evaluated while the form is built, so such a field is
+dropped once the entity is bound instead of being rendered disabled.
 
 **This resolver deliberately never reads `#[Admin(enableInlineEdit: ...)]`.** That flag
 gates the separate list-view inline-edit feature (see [Inline Editing](INLINE_EDIT.md))

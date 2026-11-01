@@ -37,10 +37,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *
  *   1. No #[AdminColumn] attribute  → included (permissive default)
  *   2. editable: false              → excluded (short-circuits everything)
- *   3. editable: 'expression'       → evaluate; the result IS the answer. If no
- *                                      $entity is available yet, included
- *                                      provisionally — DynamicFormEditabilityListener
- *                                      re-checks once a real entity is bound.
+ *   3. editable: 'expression'       → included; isReadOnly() evaluates it (false → the
+ *                                      field is rendered disabled, not removed)
  *   4. editable: true               → included
  *
  * ## Column permissions (#[ColumnPermission])
@@ -96,15 +94,8 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
             return true;
         }
 
-        if (is_string($column->editable)) {
-            if ($entity === null) {
-                return true; // unresolved — DynamicFormEditabilityListener re-checks later
-            }
-
-            return $this->expressionLanguage->evaluate($column->editable, $entity, $this->authorizationChecker);
-        }
-
-        // editable: true (or any other case) — included
+        // editable: true or an expression — included. An expression is evaluated by
+        // isReadOnly(): a false result renders the field disabled instead of removing it.
         return true;
     }
 
@@ -135,16 +126,34 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
     }
 
     /**
-     * ADMIN_SHOW allowed but ADMIN_EDIT denied: show the value, don't let it change.
+     * Show the value but don't let it change: ADMIN_EDIT denied, or an
+     * `editable: 'expression'` that evaluates to false for the bound entity.
      *
-     * Only consulted by DynamicEntityFormType for fields canEdit() accepted.
+     * Only consulted by DynamicEntityFormType for fields canEdit() accepted. With no
+     * entity yet the expression can't be evaluated, so the field is built editable and
+     * DynamicFormEditabilityListener drops it once a real entity is bound if the
+     * expression turns out false (it can't disable an already-built field).
      *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      * @param class-string $entityClass
      */
     public function isReadOnly(string $entityClass, string $property, ?object $entity = null): bool
     {
-        return !$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_EDIT);
+        if (!$this->columnPermissions->canPerformAction($entityClass, $property, AdminEntityVoter::ADMIN_EDIT)) {
+            return true;
+        }
+
+        return $entity !== null && !$this->expressionAllowsEditing($entityClass, $property, $entity);
+    }
+
+    /**
+     * @param class-string $entityClass
+     */
+    private function expressionAllowsEditing(string $entityClass, string $property, object $entity): bool
+    {
+        $editable = $this->getAdminColumn($entityClass, $property)?->editable;
+
+        return !is_string($editable)
+            || $this->expressionLanguage->evaluate($editable, $entity, $this->authorizationChecker);
     }
 
     /**
