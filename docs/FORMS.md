@@ -136,13 +136,11 @@ The same resolver applies `#[ColumnPermission]`: `canEdit()` returns `false` whe
 `ADMIN_SHOW` is allowed but `ADMIN_EDIT` is denied (the field is rendered disabled).
 `isReadOnly()` requires dynamic-form-bundle `^0.2`.
 
-`#[AdminColumn(editable: ...)]` never hides a field: `editable: false`, and an
-`editable: 'expression'` that evaluates to false for the entity being edited, render it
-disabled, just like an `ADMIN_EDIT` denial. Hiding is done by `#[ColumnPermission]`
-(`ADMIN_SHOW`) alone. Use `#[ColumnPermission]` for *who* may see or edit a column and
-`editable` for *when* (entity state) or a fixed read-only column. On a brand-new entity an
-expression cannot be evaluated while the form is built, so such a field is dropped once
-the entity is bound instead of being rendered disabled.
+`#[AdminColumn(editable: ...)]` never hides a field: `editable: false`, or an expression
+that evaluates to false for the entity being edited, renders it disabled, like an
+`ADMIN_EDIT` denial. Only `#[ColumnPermission]` (`ADMIN_SHOW`) hides one. (On a new
+entity an expression can't be evaluated at build time, so that field is dropped once
+the entity binds.)
 
 **This resolver deliberately never reads `#[Admin(enableInlineEdit: ...)]`.** That flag
 gates the separate list-view inline-edit feature (see [Inline Editing](INLINE_EDIT.md))

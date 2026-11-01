@@ -135,7 +135,7 @@ class OrderLine {
 
 ## Disabling the Inline-Add Button
 
-* **Per field:** Set `#[AdminColumn(editable: false)]` on the specific property (the field stays visible, disabled, in the dialog).
+* **Per field:** Set `#[AdminColumn(editable: false)]` on the specific property.
 * **Per entity:** Restrict the `new` permission to a role no user holds, or override `EntityTypeAddButton.html.twig` to return empty for that entity.
 
 ---
