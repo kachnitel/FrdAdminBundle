@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Service;
 
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 
 /**
  * Helper service for working with PHP attributes on entities.
@@ -51,7 +52,7 @@ class AttributeHelper
         $realClass = ObjectHelper::getRealClass($class);
 
         $reflectionClass = new \ReflectionClass($realClass);
-        $reflectionProperty = $reflectionClass->getProperty($property);
+        $reflectionProperty = PropertyReflection::get($reflectionClass, $property);
         $reflectionAttr = $reflectionProperty->getAttributes($attributeClass)[0] ?? null;
 
         return $reflectionAttr ? $reflectionAttr->newInstance() : null;

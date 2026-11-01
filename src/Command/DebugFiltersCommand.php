@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use ReflectionClass;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -318,11 +319,11 @@ class DebugFiltersCommand extends Command
     {
         $reflection = new ReflectionClass($entityClass);
 
-        if (!$reflection->hasProperty($column)) {
+        $property = PropertyReflection::find($reflection, $column);
+        if ($property === null) {
             return [false, null];
         }
 
-        $property = $reflection->getProperty($column);
         $attributes = $property->getAttributes(ColumnFilter::class);
 
         if (empty($attributes)) {
@@ -460,11 +461,12 @@ class DebugFiltersCommand extends Command
     private function showExplicitSearchFields(SymfonyStyle $io, ClassMetadata $metadata, string $column): bool
     {
         $reflection = new ReflectionClass($metadata->getName());
-        if (!$reflection->hasProperty($column)) {
+        $property = PropertyReflection::find($reflection, $column);
+        if ($property === null) {
             return false;
         }
 
-        $attributes = $reflection->getProperty($column)->getAttributes(ColumnFilter::class);
+        $attributes = $property->getAttributes(ColumnFilter::class);
         if (empty($attributes)) {
             return false;
         }
@@ -546,7 +548,7 @@ class DebugFiltersCommand extends Command
     ): array {
         $skipped = [];
 
-        foreach ($reflection->getProperties() as $property) {
+        foreach (PropertyReflection::all($reflection) as $property) {
             $propertyName = $property->getName();
 
             if (isset($configuredFilters[$propertyName])) {

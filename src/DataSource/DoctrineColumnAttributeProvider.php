@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
+use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use Kachnitel\AdminBundle\Utils\Text;
 use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
@@ -35,7 +36,7 @@ class DoctrineColumnAttributeProvider
         $reflection = new \ReflectionClass($entityClass);
         $result = [];
 
-        foreach ($reflection->getProperties() as $property) {
+        foreach (PropertyReflection::all($reflection) as $property) {
             $attributes = $property->getAttributes(AdminColumn::class);
 
             if ($attributes === []) {
