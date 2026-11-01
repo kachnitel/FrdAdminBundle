@@ -63,7 +63,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         );
     }
 
-    // ── canEdit(): the key behavioural difference from AdminEditabilityResolver ──
+    // ── canShow(): the key behavioural difference from AdminEditabilityResolver ──
 
     /**
      * ResolverTestEntity carries no #[Admin] attribute at all — enableInlineEdit
@@ -73,17 +73,17 @@ final class AdminColumnEditabilityResolverTest extends TestCase
      * class docblock.
      */
     #[Test]
-    public function canEditNeverConsultsEnableInlineEdit(): void
+    public function canShowNeverConsultsEnableInlineEdit(): void
     {
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'plain'));
+        $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'plain'));
     }
 
-    // ── canEdit(): explicit false ──────────────────────────────────────────────
+    // ── canShow(): explicit false ──────────────────────────────────────────────
 
     #[Test]
     public function editableFalseKeepsTheFieldButMakesItReadOnly(): void
     {
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'blocked'));
+        $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'blocked'));
         $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'blocked'));
     }
 
@@ -93,27 +93,27 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         $this->expressionLanguage->expects($this->never())->method('evaluate');
         $entity = new ResolverTestEntity();
 
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'blocked', $entity));
+        $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'blocked', $entity));
         $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'blocked', $entity));
     }
 
-    // ── canEdit(): explicit true ───────────────────────────────────────────────
+    // ── canShow(): explicit true ───────────────────────────────────────────────
 
     #[Test]
-    public function canEditIncludesAFieldMarkedEditableTrue(): void
+    public function canShowIncludesAFieldMarkedEditableTrue(): void
     {
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'forced'));
+        $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'forced'));
     }
 
     // ── expression: the field stays; isReadOnly() carries the answer ───────────
 
     #[Test]
-    public function canEditKeepsAnExpressionFieldWithoutEvaluatingIt(): void
+    public function canShowKeepsAnExpressionFieldWithoutEvaluatingIt(): void
     {
         $this->expressionLanguage->expects($this->never())->method('evaluate');
 
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status', new ResolverTestEntity()));
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'status'));
+        $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'status', new ResolverTestEntity()));
+        $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'status'));
     }
 
     #[Test]
@@ -154,18 +154,18 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'forced', new ResolverTestEntity()));
     }
 
-    // ── canEdit(): reflection failures fall back to permissive ────────────────
+    // ── canShow(): reflection failures fall back to permissive ────────────────
 
     #[Test]
-    public function canEditIncludesAPropertyThatDoesNotExistOnTheClass(): void
+    public function canShowIncludesAPropertyThatDoesNotExistOnTheClass(): void
     {
-        $this->assertTrue($this->resolver->canEdit(ResolverTestEntity::class, 'thisPropertyDoesNotExist'));
+        $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'thisPropertyDoesNotExist'));
     }
 
     #[Test]
-    public function canEditIncludesWhenTheEntityClassDoesNotExist(): void
+    public function canShowIncludesWhenTheEntityClassDoesNotExist(): void
     {
-        $this->assertTrue($this->resolver->canEdit('App\\Entity\\ThisClassDoesNotExist', 'whatever'));
+        $this->assertTrue($this->resolver->canShow('App\\Entity\\ThisClassDoesNotExist', 'whatever'));
     }
 
     // ── isExplicitOverride(): no attribute → not overridden ────────────────────
@@ -216,7 +216,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
     }
 
     /**
-     * Unlike canEdit(), an unresolved expression must NOT count as an override —
+     * Unlike canShow(), an unresolved expression must NOT count as an override —
      * see FieldEditabilityResolverInterface's docblock for why: falling back to
      * "yes, overridden" here would pull an auto-skipped inverse-side association
      * into a brand-new entity's form before there's ever a real instance to

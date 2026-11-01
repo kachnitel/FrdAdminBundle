@@ -47,9 +47,9 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *
  * Combined with the above (either one makes a visible field read-only):
  *
- *   ADMIN_SHOW denied                 → canEdit() false, isExplicitOverride() false
+ *   ADMIN_SHOW denied                 → canShow() false, isExplicitOverride() false
  *                                        (field is not on the form at all)
- *   ADMIN_SHOW ok, ADMIN_EDIT denied  → canEdit() true, isReadOnly() true
+ *   ADMIN_SHOW ok, ADMIN_EDIT denied  → canShow() true, isReadOnly() true
  *                                        (rendered disabled; submitted data is ignored)
  *
  * ## isExplicitOverride() precedence (checked in order)
@@ -57,7 +57,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * Consulted only to decide whether a structurally auto-skipped association
  * (inverse side / parent back-reference) should be added back into the form —
  * see FieldEditabilityResolverInterface's docblock. Must NOT fall back to any
- * entity-level default, unlike canEdit().
+ * entity-level default, unlike canShow().
  *
  *   1. No #[AdminColumn] attribute  → not overridden
  *   2. editable: false              → not overridden
@@ -80,7 +80,7 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
     /**
      * @param class-string $entityClass
      */
-    public function canEdit(string $entityClass, string $property, ?object $entity = null): bool
+    public function canShow(string $entityClass, string $property, ?object $entity = null): bool
     {
         // Visibility is decided by #[ColumnPermission] ADMIN_SHOW alone. #[AdminColumn(editable)]
         // only decides whether a visible field can be changed, see isReadOnly().
@@ -117,7 +117,7 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
      * Show the value but don't let it change: ADMIN_EDIT denied, `editable: false`, or an
      * `editable: 'expression'` that evaluates to false for the bound entity.
      *
-     * Only consulted by DynamicEntityFormType for fields canEdit() accepted. With no
+     * Only consulted by DynamicEntityFormType for fields canShow() accepted. With no
      * entity yet an expression can't be evaluated, so the field is built editable and
      * DynamicFormEditabilityListener drops it once a real entity is bound if the
      * expression turns out false (it can't disable an already-built field).

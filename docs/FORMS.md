@@ -131,7 +131,7 @@ service alias, because dynamic-form-bundle ships its own permissive default alia
 that same interface — the compiler pass guarantees this bundle's resolver wins no
 matter what order bundles are registered in.
 
-The same resolver applies `#[ColumnPermission]`: `canEdit()` returns `false` when
+The same resolver applies `#[ColumnPermission]`: `canShow()` returns `false` when
 `ADMIN_SHOW` is denied (the field is removed), and `isReadOnly()` returns `true` when
 `ADMIN_SHOW` is allowed but `ADMIN_EDIT` is denied (the field is rendered disabled).
 `isReadOnly()` requires dynamic-form-bundle `^0.2`.
