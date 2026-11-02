@@ -11,6 +11,7 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
+use Kachnitel\AdminBundle\Service\ListQueryColumnGuard;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -69,7 +70,7 @@ final class EntityListQueryServiceArchiveTest extends TestCase
         $classMetadata->method('hasField')->willReturn(true);
         $classMetadata->method('getTypeOfField')->willReturn('string');
 
-        $this->service = new EntityListQueryService($em, $this->createStub(ColumnPermissionService::class));
+        $this->service = new EntityListQueryService($em, new ListQueryColumnGuard($em, $this->createStub(ColumnPermissionService::class)));
     }
 
     #[Test]

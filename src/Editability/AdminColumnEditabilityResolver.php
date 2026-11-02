@@ -87,6 +87,7 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
     ) {}
 
     /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $entity is part of the interface contract
      * @param class-string $entityClass
      */
     public function canShow(string $entityClass, string $property, ?object $entity = null): bool

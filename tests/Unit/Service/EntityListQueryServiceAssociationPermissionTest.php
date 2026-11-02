@@ -12,6 +12,7 @@ use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
+use Kachnitel\AdminBundle\Service\ListQueryColumnGuard;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -70,7 +71,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
             },
         );
 
-        $this->service = new EntityListQueryService($em, $permissions);
+        $this->service = new EntityListQueryService($em, new ListQueryColumnGuard($em, $permissions));
     }
 
     /**

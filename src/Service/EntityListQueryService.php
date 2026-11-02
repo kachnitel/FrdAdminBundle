@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Kachnitel\AdminBundle\Attribute\ColumnFilter;
-use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\Traits\AssociationFilterTrait;
 use Kachnitel\AdminBundle\Service\Traits\DateFilterTrait;
 use Kachnitel\AdminBundle\Service\Traits\ScalarFilterTrait;
@@ -16,12 +15,8 @@ use Kachnitel\AdminBundle\Service\Traits\ScalarFilterTrait;
 /**
  * Service responsible for building database queries for entity lists.
  *
- * Columns the current user may not see (#[ColumnPermission] ADMIN_SHOW denied) are not
- * queryable: global search skips them, filters on them are dropped and sorting by them
- * falls back to the identifier. `search`, `sortBy` and `columnFilters` are client-writable,
- * so hiding a column from the UI alone would still let its values be inferred from the
- * results. All of that is decided in deniedColumns(); this is the one place every list
- * query passes through.
+ * Columns the current user may not see (#[ColumnPermission] ADMIN_SHOW denied) are kept out
+ * of search, filters and sorting; that policy lives in ListQueryColumnGuard.
  */
 class EntityListQueryService
 {
@@ -31,7 +26,7 @@ class EntityListQueryService
 
     public function __construct(
         private EntityManagerInterface $em,
-        private ColumnPermissionService $columnPermissions,
+        private ListQueryColumnGuard $columnGuard,
     ) {}
 
     /**
@@ -135,7 +130,7 @@ class EntityListQueryService
             $qb = $repository->createQueryBuilder('e');
         }
 
-        $denied = $this->deniedColumns($entityClass);
+        $denied = $this->columnGuard->deniedColumns($entityClass);
 
         if ($search) {
             $this->applyGlobalSearch($qb, $entityClass, $search);
@@ -149,7 +144,7 @@ class EntityListQueryService
 
         $this->applyRestrictions($qb, $archiveDqlCondition, $scopeDqlCondition, $scopeParameters);
 
-        $qb->orderBy('e.' . $this->sortField($entityClass, $sortBy, $denied), $sortDirection);
+        $qb->orderBy('e.' . $this->columnGuard->sortField($entityClass, $sortBy, $denied), $sortDirection);
 
         return $qb;
     }
@@ -191,7 +186,7 @@ class EntityListQueryService
     public function getSearchableFieldNames(string $entityClass): array
     {
         $metadata = $this->em->getClassMetadata($entityClass);
-        $denied = $this->deniedColumns($entityClass);
+        $denied = $this->columnGuard->deniedColumns($entityClass);
         $fields = [];
 
         foreach ($metadata->getFieldNames() as $field) {
@@ -202,92 +197,6 @@ class EntityListQueryService
         }
 
         return $fields;
-    }
-
-    /**
-     * Columns the current user may not see (ADMIN_SHOW denied): the single policy deciding
-     * what the list query refuses to search, filter or sort by.
-     *
-     * @param class-string $entityClass
-     * @return list<string>
-     */
-    private function deniedColumns(string $entityClass): array
-    {
-        return array_values($this->columnPermissions->getDeniedColumnsForAction(
-            $entityClass,
-            AdminEntityVoter::ADMIN_SHOW,
-        ));
-    }
-
-    /**
-     * Relation and collection filters search fields of the TARGET entity, so those fields
-     * are checked against the target class's own #[ColumnPermission] (otherwise filtering
-     * Order.customer by an email would reveal whether that email exists).
-     *
-     * Returns the metadata with only permitted search fields, or null when every configured
-     * field was denied, so the filter is dropped instead of falling back to another field.
-     *
-     * @param array<string, mixed> $metadata
-     * @return array<string, mixed>|null
-     */
-    private function restrictAssociationSearchFields(array $metadata): ?array
-    {
-        $targetClass = $metadata['targetClass'] ?? null;
-        $fields = $metadata['searchFields'] ?? [];
-
-        if (!is_string($targetClass) || !is_array($fields) || $fields === []) {
-            return $metadata;
-        }
-
-        /** @var class-string $targetClass */
-
-        $permitted = array_values(array_filter(
-            $fields,
-            fn (mixed $field): bool => is_string($field) && $this->canSearchPath($targetClass, $field),
-        ));
-
-        return $permitted === [] ? null : ['searchFields' => $permitted] + $metadata;
-    }
-
-    /**
-     * Whether every segment of a (dotted) search path is visible to the user, walking
-     * through Doctrine associations so each segment is checked against its own class.
-     *
-     * @param class-string $class
-     */
-    private function canSearchPath(string $class, string $path): bool
-    {
-        foreach (explode('.', $path) as $segment) {
-            if (!$this->columnPermissions->canPerformAction($class, $segment, AdminEntityVoter::ADMIN_SHOW)) {
-                return false;
-            }
-
-            $metadata = $this->em->getClassMetadata($class);
-            if (!$metadata->hasAssociation($segment)) {
-                return true; // plain or embedded field: nothing further to walk
-            }
-
-            $class = $metadata->getAssociationTargetClass($segment);
-        }
-
-        return true;
-    }
-
-    /**
-     * The field to ORDER BY: a denied column would reveal its ordering, so it is replaced
-     * by the identifier.
-     *
-     * @param class-string $entityClass
-     * @param list<string> $denied
-     */
-    private function sortField(string $entityClass, string $sortBy, array $denied): string
-    {
-        // Compare the root segment so a dotted path ("salary.x") can't sidestep the check.
-        if (!in_array(explode('.', $sortBy, 2)[0], $denied, true)) {
-            return $sortBy;
-        }
-
-        return $this->em->getClassMetadata($entityClass)->getIdentifierFieldNames()[0] ?? 'id';
     }
 
     /**
@@ -315,7 +224,7 @@ class EntityListQueryService
      */
     private function applyColumnFilter(QueryBuilder $qb, string $column, mixed $value, array $metadata): void
     {
-        $metadata = $this->restrictAssociationSearchFields($metadata);
+        $metadata = $this->columnGuard->restrictAssociationSearchFields($metadata);
         if ($metadata === null) {
             return;
         }
