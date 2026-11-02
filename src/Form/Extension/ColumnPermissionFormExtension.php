@@ -22,7 +22,7 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
  *
  * Enforcement itself is NOT done here: AdminColumnEditabilityResolver (the admin-bundle
  * implementation of dynamic-form-bundle's FieldEditabilityResolverInterface) removes
- * ADMIN_SHOW-denied fields via canEdit() and renders ADMIN_EDIT-denied fields disabled
+ * ADMIN_SHOW-denied fields via canShow() and renders ADMIN_EDIT-denied fields disabled
  * via isReadOnly(). This extension never mutates the form.
  *
  * ## Dev diagnostics (kernel.debug only)

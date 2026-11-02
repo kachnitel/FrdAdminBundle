@@ -8,7 +8,6 @@ use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
-use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -32,7 +31,6 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 #[CoversClass(ColumnPermissionService::class)]
 #[UsesClass(ColumnPermission::class)]
 #[UsesClass(ObjectHelper::class)]
-#[UsesClass(PropertyReflection::class)]
 #[Group('column-permissions')]
 #[AllowMockObjectsWithoutExpectations]
 final class ColumnPermissionServiceTest extends TestCase

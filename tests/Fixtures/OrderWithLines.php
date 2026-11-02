@@ -55,7 +55,7 @@ class OrderWithLines
     private Collection $tags;
 
     /**
-     * ManyToMany that is blocked from the form via editable:false.
+     * ManyToMany that is read-only on the form via editable:false.
      *
      * @var Collection<int, TagFixture>
      */

@@ -12,7 +12,6 @@ use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionResolverEntity;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
-use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -24,8 +23,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * #[ColumnPermission] enforcement on the generated form goes through the resolver
  * contract of kachnitel/dynamic-form-bundle:
  *
- *   ADMIN_SHOW denied                 -> canEdit() false (field not on the form)
- *   ADMIN_SHOW ok, ADMIN_EDIT denied  -> canEdit() true + isReadOnly() true (disabled)
+ *   ADMIN_SHOW denied                 -> canShow() false (field not on the form)
+ *   ADMIN_SHOW ok, ADMIN_EDIT denied  -> canShow() true + isReadOnly() true (disabled)
  */
 #[CoversClass(AdminColumnEditabilityResolver::class)]
 #[UsesClass(AdminColumn::class)]
@@ -33,7 +32,6 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 #[UsesClass(ColumnPermissionService::class)]
 #[UsesClass(AttributeHelper::class)]
 #[UsesClass(ObjectHelper::class)]
-#[UsesClass(PropertyReflection::class)]
 #[Group('column-permission-form')]
 #[Group('dynamic-form')]
 final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
@@ -64,7 +62,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     {
         $resolver = $this->resolverGranting([]);
 
-        self::assertTrue($resolver->canEdit(self::E, 'plain'));
+        self::assertTrue($resolver->canShow(self::E, 'plain'));
         self::assertFalse($resolver->isReadOnly(self::E, 'plain'));
     }
 
@@ -73,8 +71,8 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     {
         $resolver = $this->resolverGranting([]);
 
-        self::assertFalse($resolver->canEdit(self::E, 'salary'));
-        self::assertFalse($resolver->canEdit(self::E, 'ssn'));
+        self::assertFalse($resolver->canShow(self::E, 'salary'));
+        self::assertFalse($resolver->canShow(self::E, 'ssn'));
     }
 
     #[Test]
@@ -82,7 +80,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     {
         $resolver = $this->resolverGranting(['ROLE_HR']);
 
-        self::assertTrue($resolver->canEdit(self::E, 'salary'));
+        self::assertTrue($resolver->canShow(self::E, 'salary'));
         self::assertTrue($resolver->isReadOnly(self::E, 'salary'));
     }
 
@@ -91,7 +89,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     {
         $resolver = $this->resolverGranting(['ROLE_HR', 'ROLE_HR_EDIT']);
 
-        self::assertTrue($resolver->canEdit(self::E, 'salary'));
+        self::assertTrue($resolver->canShow(self::E, 'salary'));
         self::assertFalse($resolver->isReadOnly(self::E, 'salary'));
     }
 
@@ -100,7 +98,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     {
         $resolver = $this->resolverGranting(['ROLE_HR']);
 
-        self::assertTrue($resolver->canEdit(self::E, 'ssn'));
+        self::assertTrue($resolver->canShow(self::E, 'ssn'));
         self::assertFalse($resolver->isReadOnly(self::E, 'ssn'));
     }
 
@@ -109,7 +107,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     {
         $resolver = $this->resolverGranting([]);
 
-        self::assertFalse($resolver->canEdit(self::E, 'forced'));
+        self::assertFalse($resolver->canShow(self::E, 'forced'));
         self::assertFalse($resolver->isExplicitOverride(self::E, 'forced'));
     }
 
@@ -118,42 +116,64 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     {
         $resolver = $this->resolverGranting(['ROLE_HR']);
 
-        self::assertTrue($resolver->canEdit(self::E, 'forced'));
+        self::assertTrue($resolver->canShow(self::E, 'forced'));
         self::assertTrue($resolver->isExplicitOverride(self::E, 'forced'));
     }
 
     #[Test]
-    public function editableFalseStillWinsOverColumnPermissions(): void
+    public function editableFalseIsReadOnlyEvenWithEditPermission(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT']);
 
-        self::assertFalse($resolver->canEdit(self::E, 'blocked'));
+        self::assertTrue($resolver->canShow(self::E, 'blocked'));
+        self::assertTrue($resolver->isReadOnly(self::E, 'blocked'));
+    }
+
+    #[Test]
+    public function editableFalseDoesNotOverrideAShowDenial(): void
+    {
+        $resolver = $this->resolverGranting([]);
+
+        self::assertTrue($resolver->canShow(self::E, 'blocked'), 'control: no SHOW restriction on this column');
+        self::assertFalse($resolver->canShow(self::E, 'salary'), 'SHOW denial is what hides a field');
     }
 
     #[Test]
     public function expressionAllowingEditStillLetsEditPermissionMakeTheFieldReadOnly(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR'], expressionResult: true);
+        $entity = new ColumnPermissionResolverEntity();
 
-        self::assertTrue($resolver->canEdit(self::E, 'conditional', new ColumnPermissionResolverEntity()));
-        self::assertTrue($resolver->isReadOnly(self::E, 'conditional'));
+        self::assertTrue($resolver->canShow(self::E, 'conditional', $entity));
+        self::assertTrue($resolver->isReadOnly(self::E, 'conditional', $entity));
     }
 
     #[Test]
     public function expressionAllowingEditAndEditPermissionGrantedIsEditable(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT'], expressionResult: true);
+        $entity = new ColumnPermissionResolverEntity();
 
-        self::assertTrue($resolver->canEdit(self::E, 'conditional', new ColumnPermissionResolverEntity()));
-        self::assertFalse($resolver->isReadOnly(self::E, 'conditional'));
+        self::assertTrue($resolver->canShow(self::E, 'conditional', $entity));
+        self::assertFalse($resolver->isReadOnly(self::E, 'conditional', $entity));
     }
 
     #[Test]
-    public function expressionDenyingEditExcludesTheFieldEvenWithEditPermission(): void
+    public function expressionDenyingEditMakesTheFieldReadOnlyEvenWithEditPermission(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT'], expressionResult: false);
+        $entity = new ColumnPermissionResolverEntity();
 
-        self::assertFalse($resolver->canEdit(self::E, 'conditional', new ColumnPermissionResolverEntity()));
+        self::assertTrue($resolver->canShow(self::E, 'conditional', $entity), 'the field stays on the form');
+        self::assertTrue($resolver->isReadOnly(self::E, 'conditional', $entity));
+    }
+
+    #[Test]
+    public function showDeniedStillRemovesTheFieldWhateverTheExpressionSays(): void
+    {
+        $resolver = $this->resolverGranting([], expressionResult: true);
+
+        self::assertFalse($resolver->canShow(self::E, 'conditional', new ColumnPermissionResolverEntity()));
     }
 
     #[Test]
@@ -163,7 +183,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
 
         $this->expectException(\ReflectionException::class);
 
-        $resolver->canEdit('App\\Entity\\ThisClassDoesNotExist', 'whatever');
+        $resolver->canShow('App\\Entity\\ThisClassDoesNotExist', 'whatever');
     }
 
     #[Test]

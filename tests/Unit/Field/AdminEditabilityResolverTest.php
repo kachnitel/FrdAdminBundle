@@ -16,7 +16,6 @@ use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionFormEntity;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
-use Kachnitel\AdminBundle\Utils\PropertyReflection;
 use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -30,7 +29,6 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 #[PHPUnit\UsesClass(ObjectHelper::class)]
 #[PHPUnit\UsesClass(ColumnPermission::class)]
 #[PHPUnit\UsesClass(ColumnPermissionService::class)]
-#[PHPUnit\UsesClass(PropertyReflection::class)]
 #[PHPUnit\CoversClass(AdminEditabilityResolver::class)]
 #[PHPUnit\Group('inline-edit')]
 #[PHPUnit\Group('object-authorization')]

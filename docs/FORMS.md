@@ -88,7 +88,8 @@ the New and Edit buttons appear for every `#[Admin]` entity without any extra co
 | Condition | Included |
 |---|---|
 | Regular Doctrine fields (string, int, float, bool, date, datetime, time, enum) | ✅ Yes |
-| `#[AdminColumn(editable: false)]` on the property | ❌ Excluded |
+| `#[AdminColumn(editable: false)]` on the property | Rendered disabled; submitted values are ignored |
+| `#[AdminColumn(editable: 'expression')]` evaluating to false | Rendered disabled; submitted values are ignored |
 | `#[ColumnPermission]` denies `ADMIN_SHOW` | ❌ Removed from the generated form |
 | `#[ColumnPermission]` allows `ADMIN_SHOW` but denies `ADMIN_EDIT` | Rendered disabled; submitted values are ignored |
 | The primary identifier field (`id`) | ❌ Always excluded |
@@ -112,8 +113,12 @@ class User
     private string $email = '';          // included
 
     #[ORM\Column]
+    #[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_SUPER_ADMIN'])]
+    private string $passwordHash = '';   // removed from the form for everyone else
+
+    #[ORM\Column]
     #[AdminColumn(editable: false)]
-    private string $passwordHash = '';   // excluded from the auto-form
+    private string $slug = '';           // shown, but disabled
 }
 ```
 
@@ -126,17 +131,24 @@ service alias, because dynamic-form-bundle ships its own permissive default alia
 that same interface — the compiler pass guarantees this bundle's resolver wins no
 matter what order bundles are registered in.
 
-The same resolver applies `#[ColumnPermission]`: `canEdit()` returns `false` when
+The same resolver applies `#[ColumnPermission]`: `canShow()` returns `false` when
 `ADMIN_SHOW` is denied (the field is removed), and `isReadOnly()` returns `true` when
 `ADMIN_SHOW` is allowed but `ADMIN_EDIT` is denied (the field is rendered disabled).
 `isReadOnly()` requires dynamic-form-bundle `^0.2`.
+
+`#[AdminColumn(editable: ...)]` never hides a field: `editable: false`, or an expression
+that evaluates to false for the entity being edited, renders it disabled, like an
+`ADMIN_EDIT` denial. Only `#[ColumnPermission]` (`ADMIN_SHOW`) hides one. (On a new
+entity an expression can't be evaluated at build time, so that field is dropped once
+the entity binds.)
 
 **This resolver deliberately never reads `#[Admin(enableInlineEdit: ...)]`.** That flag
 gates the separate list-view inline-edit feature (see [Inline Editing](INLINE_EDIT.md))
 and has no bearing on the New/Edit form — a property with no `#[AdminColumn]` attribute
 at all is included on the form regardless of whether `enableInlineEdit` is set anywhere.
-To keep a field off the form specifically, use `#[AdminColumn(editable: false)]`;
-`enableInlineEdit: false` (or omitting it) won't remove it there.
+To keep a field off the form specifically, deny `ADMIN_SHOW` with `#[ColumnPermission]`;
+`enableInlineEdit: false` (or omitting it) won't remove it there, and neither does
+`#[AdminColumn(editable: false)]`, which only makes it read-only.
 
 #### Doctrine → Symfony form type mapping
 
