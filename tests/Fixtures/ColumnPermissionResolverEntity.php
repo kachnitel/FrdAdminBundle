@@ -32,6 +32,10 @@ class ColumnPermissionResolverEntity
     #[ColumnPermission([AdminEntityVoter::ADMIN_EDIT => 'ROLE_HR_EDIT'])]
     public ?string $conditional = null;
 
+    #[AdminColumn(editable: 'entity.plain === "open"')]
+    #[ColumnPermission([AdminEntityVoter::ADMIN_SHOW => 'ROLE_HR'])]
+    public ?string $hiddenConditional = null;
+
     #[AdminColumn(editable: false)]
     #[ColumnPermission([AdminEntityVoter::ADMIN_EDIT => 'ROLE_HR_EDIT'])]
     public ?string $blocked = null;

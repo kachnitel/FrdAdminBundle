@@ -173,7 +173,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
     {
         $resolver = $this->resolverGranting([], expressionResult: true);
 
-        self::assertFalse($resolver->canShow(self::E, 'conditional', new ColumnPermissionResolverEntity()));
+        self::assertFalse($resolver->canShow(self::E, 'hiddenConditional', new ColumnPermissionResolverEntity()));
     }
 
     #[Test]
