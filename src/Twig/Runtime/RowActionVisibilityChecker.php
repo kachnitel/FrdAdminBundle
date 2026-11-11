@@ -19,14 +19,6 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * instance: class-level voter/route access, object-level authorization,
  * direct permission/role checks, and visibility conditions (string
  * expression or [ServiceClass::class, 'method'] DI tuple).
- *
- * Extracted from RowActionRuntime to keep that class's coupling, and this
- * logic's own cyclomatic complexity, under PHPMD's thresholds — the same
- * reasoning DataSourceController was split out of GenericAdminController
- * for (see that class's docblock). RowActionRuntime keeps its public
- * getRowActions() / getVisibleRowActions() / isActionVisible() methods —
- * they're bound directly to Twig functions in RowActionExtension and can't
- * move — but isActionVisible() is now a thin delegate to isVisible() here.
  */
 class RowActionVisibilityChecker
 {

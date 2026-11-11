@@ -19,9 +19,6 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *  3. Form availability for new/edit actions:
  *     - Satisfied by a registered hand-written Symfony FormType, OR
  *     - Satisfied by DynamicEntityFormType (available for any resolvable Doctrine entity)
- *
- * Extracted from AdminRouteRuntime to keep that class below the cyclomatic
- * complexity threshold.
  */
 final class ActionAccessibilityChecker
 {

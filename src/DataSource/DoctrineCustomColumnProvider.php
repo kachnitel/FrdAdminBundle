@@ -11,9 +11,6 @@ use Kachnitel\DataSourceContracts\ColumnMetadata;
 /**
  * Reads #[AdminCustomColumn] attributes from an entity class and converts them
  * to ColumnMetadata objects ready for use in DoctrineDataSource::getColumns().
- *
- * Extracted to a dedicated service so it can be independently unit-tested and
- * potentially reused by other services in the future.
  */
 class DoctrineCustomColumnProvider
 {

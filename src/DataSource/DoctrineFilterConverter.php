@@ -10,9 +10,6 @@ use Kachnitel\DataSourceContracts\FilterMetadata;
 /**
  * Converts the legacy array filter configuration produced by FilterMetadataProvider
  * into a typed FilterMetadata value object.
- *
- * Extracted from DoctrineDataSource to isolate the array-to-DTO conversion concern.
- * This service is stateless and has no framework dependencies.
  */
 class DoctrineFilterConverter
 {

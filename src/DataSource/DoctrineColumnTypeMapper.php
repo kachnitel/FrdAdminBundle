@@ -9,9 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 /**
  * Maps Doctrine field/association types to admin column type strings.
  *
- * Extracted from DoctrineDataSource to keep that class within PHPMD's
- * ExcessiveClassComplexity threshold. This service is a pure, stateless
- * mapping concern with no framework dependencies.
+ * @see DoctrineDataSource
  */
 class DoctrineColumnTypeMapper
 {

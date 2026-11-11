@@ -102,8 +102,6 @@ class RowActionRegistry
     /**
      * Process a single action from a provider into the accumulator maps.
      *
-     * Extracted from the inner loop of getActions() to reduce its cyclomatic complexity.
-     *
      * @param class-string                   $entityClass
      * @param array<string, RowAction>       $actionsByName  Accumulator — passed by reference
      * @param array<string, RowAction>       $overrides      Accumulator — passed by reference

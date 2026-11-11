@@ -22,8 +22,6 @@ use Doctrine\ORM\Mapping\ClassMetadata;
  * The caller is responsible for the custom-column null-short-circuit
  * (custom columns have no backing Doctrine field; their value is always null
  * and rendered entirely by a Twig template).
- *
- * Extracted from DoctrineDataSource to isolate the value-resolution concern.
  */
 class DoctrineItemValueResolver
 {
