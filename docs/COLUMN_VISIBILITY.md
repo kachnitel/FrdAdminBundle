@@ -120,28 +120,7 @@ A "Columns" dropdown will appear in the list view, allowing users to toggle colu
 
 When combined with `#[ColumnPermission]`, users can only toggle columns they have permission to see.
 
-### Custom Storage
-
-To persist preferences beyond the session (e.g., in a database), implement `AdminPreferencesStorageInterface` and add `#[AsAlias]` to register it as the active storage:
-
-```php
-use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
-use Symfony\Component\DependencyInjection\Attribute\AsAlias;
-
-#[AsAlias(AdminPreferencesStorageInterface::class)]
-class DbAdminPreferencesStorage implements AdminPreferencesStorageInterface
-{
-    public function get(string $key, mixed $default = null): mixed
-    {
-        // Retrieve stored value for $key, or return $default
-    }
-
-    public function set(string $key, mixed $value): void
-    {
-        // Persist $key => $value
-    }
-}
-```
+For persistent preference storage beyond the default session implementation, see [Preferences Storage](PREFERENCES_STORAGE.md).
 
 ### Storage Keys
 
