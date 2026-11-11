@@ -7,7 +7,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!-- END HEADER -->
 
-## [0.16.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.15.0...v0.16.0) (2026-11-11)
+## [0.16.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.16.0...v0.16.1) (2026-11-11)
+
+### Features
+
+* Enhance RowActionExpressionLanguage with debug logging and expression error handling ([7e75ab](https://github.com/kachnitel/FrdAdminBundle/commit/7e75abd39a58454a552642ef203a077aa63e7f47))
+
+### Bug Fixes
+
+
+##### Docs
+
+* Replace obsolete Action condition examples ([9cc1f3](https://github.com/kachnitel/FrdAdminBundle/commit/9cc1f33caa1777a21a3d1bbc35dfff7c0adfc99e))
+
+### Code Refactoring
+
+
+##### Di
+
+* Remove unused KachnitelAdminExtension and Configuration ([3130ee](https://github.com/kachnitel/FrdAdminBundle/commit/3130ee7834719cfdd3c0bc711e0f6e08df0b64c4))
+
+##### Filter
+
+* Remove unused legacy Filter classes ([1385ff](https://github.com/kachnitel/FrdAdminBundle/commit/1385ff1fc71b2ed725134427a0cb6e397b9e2722))
+
+### Tests
+
+* EntityHelper util test ([8d8894](https://github.com/kachnitel/FrdAdminBundle/commit/8d8894a4a2bba23e5351b2c2e443c054755a4d72))
+
+### Documentation
+
+* Clean up AI refactor notes ([59bc53](https://github.com/kachnitel/FrdAdminBundle/commit/59bc537d9fbac9d633ad382c25eb99994182473b))
+
+
+---
+
+## [0.16.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.15.0...v0.16.0) (2026-11-10)
 
 ### ⚠ BREAKING CHANGES
 
