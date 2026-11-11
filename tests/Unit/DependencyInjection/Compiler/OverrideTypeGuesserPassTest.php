@@ -24,9 +24,6 @@ use Symfony\Component\Form\FormTypeGuesserChain;
  *
  * Uses a real ContainerBuilder (not a mock) — the standard Symfony approach for
  * testing compiler passes.
- *
- * @group type-guessing
- * @group auto-form
  */
 #[CoversClass(OverrideTypeGuesserPass::class)]
 #[Group('type-guessing')]

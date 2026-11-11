@@ -6,12 +6,11 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminCustomColumn;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group custom-columns
- */
+#[Group('custom-columns')]
 final class AdminCustomColumnTest extends TestCase
 {
     #[Test]

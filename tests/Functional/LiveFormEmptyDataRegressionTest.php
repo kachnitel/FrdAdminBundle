@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Tests\Fixtures\RequiredFieldsEntity;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -43,10 +44,10 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  *
  *
  * @see RequiredFieldsEntity
- * @group auto-form
- * @group admin-entity-form
- * @group live-form-defaults
  */
+#[Group('live-form-defaults')]
+#[Group('auto-form')]
+#[Group('admin-entity-form')]
 final class LiveFormEmptyDataRegressionTest extends ComponentTestCase
 {
     /**

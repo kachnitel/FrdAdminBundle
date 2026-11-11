@@ -6,15 +6,15 @@ namespace Kachnitel\AdminBundle\Tests\Unit\RowAction;
 
 use Kachnitel\AdminBundle\Attribute\AdminAction;
 use Kachnitel\AdminBundle\RowAction\AttributeRowActionProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests that AttributeRowActionProvider filters out batch-only actions.
- *
- * @group batch-actions
- * @group row-actions
  */
+#[Group('batch-actions')]
+#[Group('row-actions')]
 final class AttributeRowActionProviderBatchFilterTest extends TestCase
 {
     private AttributeRowActionProvider $provider;

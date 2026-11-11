@@ -15,6 +15,8 @@ use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -23,11 +25,10 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * Unit tests for EntityList archive toggle behaviour.
- *
- * @group archive
- * @covers \Kachnitel\AdminBundle\Twig\Components\EntityList::canToggleArchive
- * @covers \Kachnitel\AdminBundle\Twig\Components\EntityList::toggleArchive
  */
+#[Group('archive')]
+#[CoversMethod(EntityList::class, 'canToggleArchive')]
+#[CoversMethod(EntityList::class, 'toggleArchive')]
 #[UsesClass(EntityListConfig::class)]
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 final class EntityListArchiveToggleTest extends TestCase

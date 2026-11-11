@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Command;
 
 use Kachnitel\AdminBundle\Command\SyncTestTemplatesCommand;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
-/**
- * @group sync-test-templates
- */
+#[Group('sync-test-templates')]
 final class SyncTestTemplatesCommandTest extends TestCase
 {
     private string $projectDir;

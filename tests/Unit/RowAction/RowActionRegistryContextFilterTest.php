@@ -26,11 +26,7 @@ use PHPUnit\Framework\TestCase;
  * This matters for security: the InlineEditButton liveComponent fires live#action on
  * the parent EntityList — which does not exist on show/edit pages. If it appeared there
  * it would both be non-functional and could mask the navigable Edit link.
- *
- * @covers \Kachnitel\AdminBundle\RowAction\RowActionRegistry::getActions
- * @group row-actions
  */
-
 #[Group('row-action')]
 #[CoversClass(RowActionRegistry::class)]
 #[UsesClass(RowAction::class)]

@@ -7,12 +7,11 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnGroup;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group composite-columns
- */
+#[Group('composite-columns')]
 final class AdminColumnGroupTest extends TestCase
 {
     #[Test]

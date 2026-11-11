@@ -9,12 +9,11 @@ use Kachnitel\AdminBundle\BatchAction\AttributeBatchActionProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithRowActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\ValueObject\BatchAction;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group batch-actions
- */
+#[Group('batch-actions')]
 final class AttributeBatchActionProviderTest extends TestCase
 {
     private AttributeBatchActionProvider $provider;

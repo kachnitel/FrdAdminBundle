@@ -7,15 +7,15 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithCustomColumns;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithRelationInColumns;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Verifies that the EntityList component handles non-sortable columns correctly:
  * - Sort buttons are not rendered for non-sortable columns
  * - Sorting by a non-sortable column (e.g. via URL manipulation) silently falls back to default
- *
- * @group sorting
  */
+#[Group('sorting')]
 final class EntityListSortingTest extends ComponentTestCase
 {
     /**

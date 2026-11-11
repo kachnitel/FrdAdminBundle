@@ -15,6 +15,8 @@ use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -28,10 +30,10 @@ use PHPUnit\Framework\TestCase;
  *      bleed into a subsequent query() call on the same instance.
  *   3. null condition is forwarded as null (no WHERE added).
  *
- * @covers \Kachnitel\AdminBundle\DataSource\DoctrineDataSource::setArchiveDqlCondition
- * @covers \Kachnitel\AdminBundle\DataSource\DoctrineDataSource::query
- * @group archive
  */
+#[CoversClass('\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::setArchiveDqlCondition')]
+#[CoversClass('\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::query')]
+#[Group('archive')]
 #[UsesClass(Admin::class)]
 #[UsesClass(DoctrineDataSource::class)]
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]

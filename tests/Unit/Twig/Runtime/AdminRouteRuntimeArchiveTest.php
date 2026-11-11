@@ -29,10 +29,10 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *   - Both actions have generic routes defined in getGenericAdminRoute()
  *   - The voter attribute constant ADMIN_ARCHIVE must be used (not 'admin_archive')
  *
- * @covers \Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime::isActionAccessible
- * @covers \Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime::getGenericAdminRoute
- * @group archive
  */
+#[CoversClass('\Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime::isActionAccessible')]
+#[CoversClass('\Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime::getGenericAdminRoute')]
+#[Group('archive')]
 #[CoversClass(AdminRouteRuntime::class)]
 #[UsesClass(ActionAccessibilityChecker::class)]
 #[UsesClass(AdminRoutes::class)]

@@ -6,13 +6,13 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Functional tests for global search tooltip UX in EntityList.
- *
- * @group global-search
  */
+#[Group('global-search')]
 final class EntityListGlobalSearchUxTest extends ComponentTestCase
 {
     #[Test]

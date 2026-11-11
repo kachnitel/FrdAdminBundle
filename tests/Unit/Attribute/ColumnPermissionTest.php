@@ -6,12 +6,11 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Kachnitel\AdminBundle\Attribute\ColumnPermission
- */
+#[CoversClass(ColumnPermission::class)]
 final class ColumnPermissionTest extends TestCase
 {
     public function testEmptyPermissionsIsDefault(): void

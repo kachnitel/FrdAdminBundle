@@ -17,6 +17,7 @@ use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -27,9 +28,9 @@ use PHPUnit\Framework\TestCase;
  * Tests that DoctrineDataSource implements SearchAwareDataSourceInterface
  * and returns correct human-readable column labels for searchable fields.
  *
- * @group global-search
- * @covers \Kachnitel\AdminBundle\DataSource\DoctrineDataSource::getGlobalSearchColumnLabels
  */
+#[Group('global-search')]
+#[CoversMethod(DoctrineDataSource::class, 'getGlobalSearchColumnLabels')]
 #[UsesClass(Admin::class)]
 #[UsesClass(DoctrineDataSource::class)]
 #[Group('global-search')]

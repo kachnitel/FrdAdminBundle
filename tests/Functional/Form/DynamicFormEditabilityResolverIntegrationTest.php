@@ -13,6 +13,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\OrderWithLines;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagFixture;
 use Kachnitel\AdminBundle\Tests\Functional\TestKernel;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 
@@ -29,10 +30,10 @@ use Symfony\Component\Form\FormFactoryInterface;
  * knowledge of #[AdminColumn] at all and so can never prove this exclusion —
  * only admin-bundle's kernel has the real alias override.
  *
- * @group dynamic-form
- * @group collections
- * @group editability
  */
+#[Group('dynamic-form')]
+#[Group('collections')]
+#[Group('editability')]
 final class DynamicFormEditabilityResolverIntegrationTest extends KernelTestCase
 {
     /** @var array<class-string> */

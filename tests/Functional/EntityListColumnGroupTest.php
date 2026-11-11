@@ -8,13 +8,13 @@ use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithGroupedColumns;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Functional tests for composite/grouped columns feature.
- *
- * @group composite-columns
  */
+#[Group('composite-columns')]
 final class EntityListColumnGroupTest extends ComponentTestCase
 {
     // ──────────────────────────────────────────────────────────────────────────

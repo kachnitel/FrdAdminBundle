@@ -6,12 +6,11 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group inline-edit
- */
+#[Group('inline-edit')]
 final class AdminColumnTest extends TestCase
 {
     #[Test]

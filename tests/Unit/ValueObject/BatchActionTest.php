@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 
 use Kachnitel\AdminBundle\ValueObject\BatchAction;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group batch-actions
- */
+#[Group('batch-actions')]
 final class BatchActionTest extends TestCase
 {
     #[Test]

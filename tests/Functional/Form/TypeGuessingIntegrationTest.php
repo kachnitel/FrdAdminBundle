@@ -31,9 +31,9 @@ use Symfony\Component\Form\Extension\Core\Type\UrlType;
  * ClassMetadata — no Doctrine entity or schema migration needed, since
  * ConventionalFieldTypeGuesser only inspects the field name.
  *
- * @group type-guessing
- * @group auto-form
  */
+#[Group('type-guessing')]
+#[Group('auto-form')]
 #[Group('type-guessing')]
 #[Group('auto-form')]
 #[AllowMockObjectsWithoutExpectations]

@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter
- */
+#[CoversClass('\Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter')]
 final class DoctrineFilterConverterTest extends TestCase
 {
     private DoctrineFilterConverter $converter;

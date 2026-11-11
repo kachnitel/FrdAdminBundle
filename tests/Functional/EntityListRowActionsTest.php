@@ -7,10 +7,9 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithRowActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use PHPUnit\Framework\Attributes\Group;
 
-/**
- * @group row-actions
- */
+#[Group('row-actions')]
 final class EntityListRowActionsTest extends ComponentTestCase
 {
     private EntityManagerInterface $entityManager;

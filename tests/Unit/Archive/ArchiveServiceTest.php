@@ -11,14 +11,13 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
-/**
- * @group archive
- */
+#[Group('archive')]
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 final class ArchiveServiceTest extends TestCase
 {

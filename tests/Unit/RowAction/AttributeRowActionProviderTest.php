@@ -10,12 +10,11 @@ use Kachnitel\AdminBundle\RowAction\AttributeRowActionProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithRowActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group row-actions
- */
+#[Group('row-actions')]
 final class AttributeRowActionProviderTest extends TestCase
 {
     private AttributeRowActionProvider $provider;

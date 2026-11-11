@@ -6,12 +6,11 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminAction;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group row-actions
- */
+#[Group('row-actions')]
 final class AdminActionTest extends TestCase
 {
     #[Test]

@@ -16,17 +16,15 @@ use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Unit tests for EntityList::getGlobalSearchColumnLabels().
- *
- * @group global-search
- * @covers \Kachnitel\AdminBundle\Twig\Components\EntityList::getGlobalSearchColumnLabels
- */
+#[Group('global-search')]
+#[CoversMethod(EntityList::class, 'getGlobalSearchColumnLabels')]
 #[UsesClass(EntityListConfig::class)]
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 final class EntityListGlobalSearchLabelsTest extends TestCase

@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Tests\Fixtures\RequiredFieldsStrictEntity;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -46,11 +47,11 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * No changes to DoctrineFormTypeMapper or DynamicEntityFormType are included
  * here — deliberately held back pending review of the transformer itself.
  *
- * @group auto-form
- * @group admin-entity-form
- * @group live-form-defaults
- * @group strict-nullability
  */
+#[Group('auto-form')]
+#[Group('admin-entity-form')]
+#[Group('live-form-defaults')]
+#[Group('strict-nullability')]
 final class LiveFormStrictScalarRegressionTest extends ComponentTestCase
 {
     private const FORM_NAME = 'dynamic_entity_form';

@@ -10,7 +10,9 @@ use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -24,10 +26,9 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
  *   - extractField() complex expressions that look like simple ones but aren't
  *   - buildDqlCondition() alias 'e' vs custom alias
  *   - resolveConfig() when field type exists but is unsupported (e.g. string)
- *
- * @covers \Kachnitel\AdminBundle\Archive\ArchiveService
- * @group archive
  */
+#[CoversClass(ArchiveService::class)]
+#[Group('archive')]
 #[UsesClass(Admin::class)]
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 final class ArchiveServiceExtractFieldTest extends TestCase

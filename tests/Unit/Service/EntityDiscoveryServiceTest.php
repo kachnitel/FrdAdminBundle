@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-
 #[Group('entity-list')]
 #[AllowMockObjectsWithoutExpectations]
 final class EntityDiscoveryServiceTest extends TestCase

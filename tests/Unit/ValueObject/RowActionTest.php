@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group row-actions
- */
+#[Group('row-actions')]
 final class RowActionTest extends TestCase
 {
     #[Test]

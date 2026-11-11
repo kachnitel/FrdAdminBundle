@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithConfiguredGroups;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithGroupedColumns;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
@@ -19,9 +20,8 @@ use PHPUnit\Framework\Attributes\Test;
  *   - 'address_block' → HEADER_TEXT,        SUB_LABELS_HIDDEN
  *
  * EntityWithGroupedColumns fixture (no AdminColumnGroup) → HEADER_TEXT default.
- *
- * @group composite-columns
  */
+#[Group('composite-columns')]
 final class EntityListColumnGroupConfigTest extends ComponentTestCase
 {
     // ──────────────────────────────────────────────────────────────────────────

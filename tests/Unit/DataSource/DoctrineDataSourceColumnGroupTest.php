@@ -18,13 +18,12 @@ use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group composite-columns
- */
+#[Group('composite-columns')]
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceColumnGroupTest extends TestCase
 {

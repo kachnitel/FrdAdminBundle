@@ -15,7 +15,6 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-
 #[Group('row-action')]
 #[AllowMockObjectsWithoutExpectations]
 final class RowActionRegistryTest extends TestCase

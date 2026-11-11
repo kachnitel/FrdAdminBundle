@@ -15,7 +15,6 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-
 #[CoversClass(DataSourceRegistry::class)]
 #[Group('data-source')]
 #[AllowMockObjectsWithoutExpectations]

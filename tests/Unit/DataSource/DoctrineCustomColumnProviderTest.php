@@ -7,12 +7,11 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 use Kachnitel\AdminBundle\Attribute\AdminCustomColumn;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group custom-columns
- */
+#[Group('custom-columns')]
 final class DoctrineCustomColumnProviderTest extends TestCase
 {
     private DoctrineCustomColumnProvider $provider;

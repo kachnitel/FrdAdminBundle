@@ -6,12 +6,11 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group composite-columns
- */
+#[Group('composite-columns')]
 final class DoctrineColumnAttributeProviderTest extends TestCase
 {
     private DoctrineColumnAttributeProvider $provider;

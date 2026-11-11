@@ -9,12 +9,11 @@ use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group composite-columns
- */
+#[Group('composite-columns')]
 final class DoctrineColumnAttributeProviderGroupTest extends TestCase
 {
     private DoctrineColumnAttributeProvider $provider;

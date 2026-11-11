@@ -26,7 +26,6 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * - Handle entities without any column permissions
  * - Support role hierarchy through AuthorizationChecker
  *
- * @covers \Kachnitel\AdminBundle\Service\ColumnPermissionService
  */
 #[CoversClass(ColumnPermissionService::class)]
 #[UsesClass(ColumnPermission::class)]

@@ -17,13 +17,12 @@ use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group custom-columns
- */
+#[Group('custom-columns')]
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceCustomColumnTest extends TestCase
 {

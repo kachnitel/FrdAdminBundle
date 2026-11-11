@@ -6,12 +6,11 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Utils;
 
 use Doctrine\Persistence\Proxy;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Kachnitel\AdminBundle\Utils\ObjectHelper
- */
+#[CoversClass(ObjectHelper::class)]
 final class ObjectHelperTest extends TestCase
 {
     // ── getClassName ───────────────────────────────────────────────────────────

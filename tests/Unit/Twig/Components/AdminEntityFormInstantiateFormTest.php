@@ -17,9 +17,6 @@ use Symfony\Component\Form\FormInterface;
 /**
  * Verifies that AdminEntityForm::instantiateForm() passes the correct options
  * to createForm() when using DynamicEntityFormType vs a custom FormType.
- *
- * @group auto-form
- * @group collections
  */
 #[CoversClass(AdminEntityForm::class)]
 #[Group('auto-form')]

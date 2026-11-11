@@ -6,10 +6,9 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithBatchActions;
+use PHPUnit\Framework\Attributes\Group;
 
-/**
- * @group batch-actions
- */
+#[Group('batch-actions')]
 final class EntityListCustomBatchActionsTest extends ComponentTestCase
 {
     private EntityManagerInterface $entityManager;

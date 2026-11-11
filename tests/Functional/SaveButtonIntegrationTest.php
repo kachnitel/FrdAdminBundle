@@ -36,8 +36,6 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * (Panther), which the project's own notes mark as currently blocked —
  * flagging it here as a known gap rather than silently pretending this is
  * full E2E coverage.
- *
- * @group save-button
  */
 #[Group('save-button')]
 final class SaveButtonIntegrationTest extends ComponentTestCase

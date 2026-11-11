@@ -13,14 +13,14 @@ use Kachnitel\AdminBundle\Tests\Fixtures\MiddleEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\SourceEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests filtering via dot-notation search fields for both relation and collection types:
  *   relation:   #[ColumnFilter(searchFields: ['title', 'deep.label', 'deep.source.code'])]
  *   collection: #[ColumnFilter(type: 'collection', searchFields: ['name', 'tag.label', 'tag.group.name'], ...)]
- *
- * @group nested-filter
  */
+#[Group('nested-filter')]
 final class FilterNestedRelationTest extends ComponentTestCase
 {
     protected function setUp(): void

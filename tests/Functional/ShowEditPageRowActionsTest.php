@@ -10,6 +10,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\BasicAdminEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithRowActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\InlineEditEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -34,9 +35,8 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  *   - TestEntity — enableInlineEdit: true WITH permissions: ['edit' => 'ROLE_TEST_EDIT'] → edit
  *     action is correctly hidden for anonymous users (no login in NoAuthTestKernel); not used for
  *     edit visibility assertions
- *
- * @group show-edit-row-actions
  */
+#[Group('show-edit-row-actions')]
 final class ShowEditPageRowActionsTest extends WebTestCase
 {
     protected static function getKernelClass(): string

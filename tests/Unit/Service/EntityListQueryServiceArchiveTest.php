@@ -13,6 +13,7 @@ use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\ListQueryColumnGuard;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -20,10 +21,9 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for the archiveDqlCondition parameter of EntityListQueryService.
- *
- * @covers \Kachnitel\AdminBundle\Service\EntityListQueryService::buildQuery
- * @covers \Kachnitel\AdminBundle\Service\EntityListQueryService::getEntities
  */
+#[CoversMethod(EntityListQueryService::class, 'buildQuery')]
+#[CoversMethod(EntityListQueryService::class, 'getEntities')]
 #[UsesClass(EntityListQueryService::class)]
 #[Group('archive')]
 #[AllowMockObjectsWithoutExpectations]

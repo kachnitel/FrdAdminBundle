@@ -8,11 +8,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithCollectionDisplay;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
-/**
- * @group collection-display
- */
+#[Group('collection-display')]
 final class CollectionDisplayTest extends ComponentTestCase
 {
     // private EntityManagerInterface $em;

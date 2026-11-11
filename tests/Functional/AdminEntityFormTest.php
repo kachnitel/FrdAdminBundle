@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -32,8 +33,8 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * The form name is derived from the form type class name by Symfony's naming convention:
  * strip the `Type` suffix, convert to snake_case. `TestEntityFormType` → `test_entity_form`.
  *
- * @group admin-entity-form
  */
+#[Group('admin-entity-form')]
 final class AdminEntityFormTest extends ComponentTestCase
 {
     /**

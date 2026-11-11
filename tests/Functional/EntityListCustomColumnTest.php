@@ -8,13 +8,13 @@ use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithCustomColumns;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Functional tests for #[AdminCustomColumn] rendered in EntityList.
- *
- * @group custom-columns
  */
+#[Group('custom-columns')]
 final class EntityListCustomColumnTest extends ComponentTestCase
 {
     // -------------------------------------------------------------------------

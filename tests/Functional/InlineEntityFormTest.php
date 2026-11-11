@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -32,10 +33,9 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * This unique prefix prevents HTML id collisions when the same entity type
  * appears in both the page form (K:Admin:EntityForm) and the inline dialog
  * simultaneously.
- *
- * @group inline-add
- * @group admin-entity-form
  */
+#[Group('admin-entity-form')]
+#[Group('inline-add')]
 final class InlineEntityFormTest extends ComponentTestCase
 {
     private const FORM_NAME = 'inline_kachnitel_adminbundle_tests_fixtures_testentity';

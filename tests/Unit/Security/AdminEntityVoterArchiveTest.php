@@ -6,13 +6,13 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Security;
 
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group archive
- * @covers \Kachnitel\AdminBundle\Security\AdminEntityVoter
- */
+#[Group('archive')]
+#[CoversClass(AdminEntityVoter::class)]
 #[UsesClass(Admin::class)]
 final class AdminEntityVoterArchiveTest extends TestCase
 {

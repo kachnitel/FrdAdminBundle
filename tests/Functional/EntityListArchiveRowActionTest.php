@@ -9,13 +9,13 @@ use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\ArchivableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\SoftDeleteEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests that archive and unarchive row action buttons appear correctly
  * in the EntityList based on the entity's current archive state.
- *
- * @group archive
  */
+#[Group('archive')]
 final class EntityListArchiveRowActionTest extends ComponentTestCase
 {
     public function testArchiveButtonAppearsForNonArchivedEntity(): void

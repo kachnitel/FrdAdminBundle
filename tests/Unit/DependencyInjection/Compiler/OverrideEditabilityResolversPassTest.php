@@ -12,6 +12,7 @@ use Kachnitel\DynamicFormBundle\Editability\FieldEditabilityResolverInterface;
 use Kachnitel\EntityComponentsBundle\Components\Field\DefaultEditabilityResolver;
 use Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -30,9 +31,8 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  * is referenced by name only, taken from that bundle's own docblocks
  * (mirrored in EditabilityResolverWiringTest) — adjust the import if the
  * actual class name differs.
- *
- * @group editability
  */
+#[Group('editability')]
 #[CoversClass(OverrideEditabilityResolversPass::class)]
 final class OverrideEditabilityResolversPassTest extends TestCase
 {
