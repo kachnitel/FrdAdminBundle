@@ -1,13 +1,100 @@
-<!--- BEGIN HEADER -->
+<!-- BEGIN HEADER -->
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-<!--- END HEADER -->
+<!-- END HEADER -->
 
-## [0.15.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.14.3...v0.15.0) (2026-10-25)
+## [0.16.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.15.0...v0.16.0) (2026-11-11)
+
+### ⚠ BREAKING CHANGES
+
+
+##### Editability
+
+* Follow dynamic-form-bundle canEdit() -> canShow() rename ([164653](https://github.com/kachnitel/FrdAdminBundle/commit/16465395727a2dfe15c8f9e47c82b53d6f1224c8))
+
+##### Form
+
+* Editable: false no longer removes the field from the form. ([b12997](https://github.com/kachnitel/FrdAdminBundle/commit/b12997fe496ebda5946be26f8dd2641971468776))
+* Editable no longer hides fields; false renders read-only ([b12997](https://github.com/kachnitel/FrdAdminBundle/commit/b12997fe496ebda5946be26f8dd2641971468776))
+
+### Features
+
+* Introduce column permission handling for forms and data visibility ([95b7ad](https://github.com/kachnitel/FrdAdminBundle/commit/95b7ad47312f3c2859a57f27618ee4bde79f97ef))
+* Read only form fields in dynamic form; respect ColumnPermission ([07ab93](https://github.com/kachnitel/FrdAdminBundle/commit/07ab93e4ded65e192a1e7806c6c74849cf08a368))
+
+##### Form
+
+* Render false editable expressions read-only instead of removing the field ([58338a](https://github.com/kachnitel/FrdAdminBundle/commit/58338a604f988f229c0d29b261858af8b1977157))
+* Warn in debug when a column permission blocks entity creation ([d4d1c6](https://github.com/kachnitel/FrdAdminBundle/commit/d4d1c6b7d8f7b7275871dfb7344863463d76b766))
+
+### Bug Fixes
+
+* Show correct entity label in _preview template ([097bcb](https://github.com/kachnitel/FrdAdminBundle/commit/097bcb5108a330bca70954e6df19d40f5d6fc41e), [316f25](https://github.com/kachnitel/FrdAdminBundle/commit/316f2507ad48d09e633c21bb95b6824c6604cfff))
+
+##### Dialog
+
+* Close dialogs before Turbo cache snapshots ([b0a181](https://github.com/kachnitel/FrdAdminBundle/commit/b0a18191140b2a16bc9943102239662b4f641697))
+
+##### Security
+
+* Apply target-class ColumnPermission to relation and collection filters ([f005cd](https://github.com/kachnitel/FrdAdminBundle/commit/f005cdf69cdbb442acb9e0ed9876adac353aa1e5))
+* Fail closed for an unknown class in ColumnPermissionService ([d8629b](https://github.com/kachnitel/FrdAdminBundle/commit/d8629b4d38a6752e415ae39ffab756c58a355a08))
+* Keep ADMIN_SHOW-denied columns out of list sort, filters and search ([18b589](https://github.com/kachnitel/FrdAdminBundle/commit/18b589f2c1653230711225e5de551b7bb1283068))
+* See attributes on private properties of parent classes ([85f84a](https://github.com/kachnitel/FrdAdminBundle/commit/85f84a36a280d84720a194da222c5b223b7b1575))
+
+##### Tests
+
+* Mising UsesClass(ObjectHelper) in AdminColumnEditabilityResolverColumnPermissionTest ([7e5e2d](https://github.com/kachnitel/FrdAdminBundle/commit/7e5e2d59bf70b4ac7fc7c1c51124612aa0638905))
+
+### Code Refactoring
+
+
+##### Form
+
+* Enforce ColumnPermission via editability resolver ([2357bd](https://github.com/kachnitel/FrdAdminBundle/commit/2357bd926705ba32890ec041339be919ab97a1e2))
+* Split ColumnPermissionFormExtension to cut complexity ([eaaf5b](https://github.com/kachnitel/FrdAdminBundle/commit/eaaf5bb214bda22484c63c6a90723f7dcc0faef5))
+
+##### Security
+
+* Decide column permission in EntityListQueryService ([c6a08d](https://github.com/kachnitel/FrdAdminBundle/commit/c6a08d3b60c64a9ead1d479f62e44e1df3234b2c))
+* Extract ListQueryColumnGuard from EntityListQueryService ([9500f7](https://github.com/kachnitel/FrdAdminBundle/commit/9500f7f0c3a2b9950c3e2236787b6c1b196f75a4))
+* Share SHOW+EDIT column check via ColumnPermissionService ([febbc4](https://github.com/kachnitel/FrdAdminBundle/commit/febbc4281227d846897673c53f96a42aa1b16e28))
+
+### Tests
+
+
+##### Column-permission
+
+* Give association filter test a real Expr builder ([d790be](https://github.com/kachnitel/FrdAdminBundle/commit/d790be8921eaa1f27c8399bf7fadb52e792bbe1a))
+* Use a SHOW-restricted expression column for the removal case ([96bb1f](https://github.com/kachnitel/FrdAdminBundle/commit/96bb1f05bc63c4f1ab7eb085f1a87f20d88261d7))
+* Wiring, expression precedence, inline form; guard missing class ([73e10a](https://github.com/kachnitel/FrdAdminBundle/commit/73e10a79a6b64517d9248b62981b4d9d3fc4e660))
+
+##### Form
+
+* Authenticate rendered-form tests with actingAs ([ff125e](https://github.com/kachnitel/FrdAdminBundle/commit/ff125e9590519f6ea18e4b5714d5bcf007506cbd))
+* Avoid unmanaged entity as EntityType initial data ([a9a77b](https://github.com/kachnitel/FrdAdminBundle/commit/a9a77b7c5ceab6aec92528dda02605419069fe57))
+* Cover ColumnPermission on associations and collection rows ([a5d02a](https://github.com/kachnitel/FrdAdminBundle/commit/a5d02a08f7d69a867df8306b8a2098afde1f0391))
+* Render tests for + Add guard and disabled collection buttons ([a0c060](https://github.com/kachnitel/FrdAdminBundle/commit/a0c060a5d7cbbdd70311a89a21c7c10251b6c9a3))
+
+### Documentation
+
+* Extract custom admin preference storage into dedicated guide ([861d59](https://github.com/kachnitel/FrdAdminBundle/commit/861d59dfc31ae33574592456b056470c58c59ed0))
+* Note ColumnPermission custom form limitation ([d13fd0](https://github.com/kachnitel/FrdAdminBundle/commit/d13fd0f9bf7799be92e5d68351a06905a1969244))
+* Trim editable/ColumnPermission notes, drop upgrade entry ([76a526](https://github.com/kachnitel/FrdAdminBundle/commit/76a5268f0d0039466c1e222449e9b945b8d32acc))
+
+##### Column-permission
+
+* Array form, formComponent scope, nested behaviour ([83d168](https://github.com/kachnitel/FrdAdminBundle/commit/83d168d245bcf81d4624f5db9e8dad39498499a1))
+* Dedupe creation guidance, document query enforcement ([3d1fc7](https://github.com/kachnitel/FrdAdminBundle/commit/3d1fc752ebabaea74bbc6931863494a525da4dfd))
+
+
+---
+
+## [0.15.0](https://github.com/kachnitel/FrdAdminBundle/compare/v0.14.3...v0.15.0) (2026-10-24)
 
 ### Features
 
