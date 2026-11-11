@@ -40,9 +40,9 @@ final class AdminColumnTest extends TestCase
     #[Test]
     public function editableCanBeSetToExpressionString(): void
     {
-        $attr = new AdminColumn(editable: 'entity.status != "locked"');
+        $attr = new AdminColumn(editable: 'entity.getStatus() != "locked"');
 
-        $this->assertSame('entity.status != "locked"', $attr->editable);
+        $this->assertSame('entity.getStatus() != "locked"', $attr->editable);
     }
 
     #[Test]
@@ -98,7 +98,7 @@ final class AdminColumnTest extends TestCase
     public function canBeReadFromPropertyWithExpression(): void
     {
         $entity = new class {
-            #[AdminColumn(editable: 'entity.status != "locked"')]
+            #[AdminColumn(editable: 'entity.getStatus() != "locked"')]
             public string $statusField = '';
         };
 
@@ -107,6 +107,6 @@ final class AdminColumnTest extends TestCase
 
         $this->assertCount(1, $attributes);
         $attr = $attributes[0]->newInstance();
-        $this->assertSame('entity.status != "locked"', $attr->editable);
+        $this->assertSame('entity.getStatus() != "locked"', $attr->editable);
     }
 }

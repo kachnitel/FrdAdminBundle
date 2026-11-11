@@ -63,7 +63,7 @@ final class RowActionExpressionLanguageTest extends TestCase
         $lang = new RowActionExpressionLanguage(new ExpressionLanguage());
         $entity = $this->entity(status: 'pending');
 
-        $this->assertTrue($lang->evaluate('entity.status == "pending"', $entity));
+        $this->assertTrue($lang->evaluate('entity.getStatus() == "pending"', $entity));
     }
 
     #[Test]
@@ -72,7 +72,7 @@ final class RowActionExpressionLanguageTest extends TestCase
         $lang = new RowActionExpressionLanguage(new ExpressionLanguage());
         $entity = $this->entity(status: 'archived');
 
-        $this->assertFalse($lang->evaluate('entity.status == "pending"', $entity));
+        $this->assertFalse($lang->evaluate('entity.getStatus() == "pending"', $entity));
     }
 
     #[Test]
@@ -81,7 +81,7 @@ final class RowActionExpressionLanguageTest extends TestCase
         $lang = new RowActionExpressionLanguage(new ExpressionLanguage());
         $entity = $this->entity(status: 'archived');
 
-        $this->assertFalse($lang->evaluate('entity.status != "archived"', $entity));
+        $this->assertFalse($lang->evaluate('entity.getStatus() != "archived"', $entity));
     }
 
     #[Test]
@@ -139,8 +139,8 @@ final class RowActionExpressionLanguageTest extends TestCase
         $lang = new RowActionExpressionLanguage(new ExpressionLanguage());
         $entity = $this->entity(status: 'pending', active: true);
 
-        $this->assertTrue($lang->evaluate('entity.status == "pending" && entity.active', $entity));
-        $this->assertFalse($lang->evaluate('entity.status == "pending" && !entity.active', $entity));
+        $this->assertTrue($lang->evaluate('entity.getStatus() == "pending" && entity.active', $entity));
+        $this->assertFalse($lang->evaluate('entity.getStatus() == "pending" && !entity.active', $entity));
     }
 
     #[Test]
@@ -149,8 +149,8 @@ final class RowActionExpressionLanguageTest extends TestCase
         $lang = new RowActionExpressionLanguage(new ExpressionLanguage());
         $entity = $this->entity(status: 'archived', active: true);
 
-        $this->assertTrue($lang->evaluate('entity.status == "pending" || entity.active', $entity));
-        $this->assertFalse($lang->evaluate('entity.status == "pending" || !entity.active', $entity));
+        $this->assertTrue($lang->evaluate('entity.getStatus() == "pending" || entity.active', $entity));
+        $this->assertFalse($lang->evaluate('entity.getStatus() == "pending" || !entity.active', $entity));
     }
 
     #[Test]
@@ -161,7 +161,7 @@ final class RowActionExpressionLanguageTest extends TestCase
 
         $this->assertTrue(
             $lang->evaluate(
-                'entity.status == "pending" && entity.stock > 0',
+                'entity.getStatus() == "pending" && entity.stock > 0',
                 $entity,
             )
         );
@@ -209,7 +209,7 @@ final class RowActionExpressionLanguageTest extends TestCase
 
         $this->assertTrue(
             $lang->evaluate(
-                'entity.status == "pending" && is_granted("ROLE_EDITOR")',
+                'entity.getStatus() == "pending" && is_granted("ROLE_EDITOR")',
                 $entity,
                 $this->authChecker,
             )
@@ -225,7 +225,7 @@ final class RowActionExpressionLanguageTest extends TestCase
 
         $this->assertFalse(
             $lang->evaluate(
-                'entity.status == "pending" && is_granted("ROLE_EDITOR")',
+                'entity.getStatus() == "pending" && is_granted("ROLE_EDITOR")',
                 $entity,
                 $this->authChecker,
             )

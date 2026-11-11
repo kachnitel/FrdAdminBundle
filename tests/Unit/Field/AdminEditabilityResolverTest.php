@@ -322,7 +322,7 @@ final class AdminEditabilityResolverTest extends TestCase
     {
         $entity = new class { public string $status = 'published'; };
 
-        $this->stubColumnAttr(new AdminColumn(editable: 'entity.status == "draft"'));
+        $this->stubColumnAttr(new AdminColumn(editable: 'entity.getStatus() == "draft"'));
         $this->stubEntityAdmin(new Admin(enableInlineEdit: true)); // entity default irrelevant
 
         // When expression is false, voter and writable must not be consulted
@@ -396,7 +396,7 @@ final class AdminEditabilityResolverTest extends TestCase
             public string $status = 'published'; // not draft
         };
 
-        $this->stubColumnAttr(new AdminColumn(editable: 'entity.status == "draft" && is_granted("ROLE_EDITOR")'));
+        $this->stubColumnAttr(new AdminColumn(editable: 'entity.getStatus() == "draft" && is_granted("ROLE_EDITOR")'));
         $this->stubEntityAdmin(new Admin(enableInlineEdit: false));
 
         $this->authChecker->method('isGranted')->willReturn(true);

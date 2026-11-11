@@ -144,7 +144,7 @@ templates/bundles/KachnitelAdminBundle/types/App/Entity/Product/price.html.twig
 
 **Level 2:** With a condition (expression):
 ```php
-#[AdminAction(name: 'approve', label: 'Approve', condition: 'entity.status == "pending"')]
+#[AdminAction(name: 'approve', label: 'Approve', condition: 'entity.getStatus() == "pending"')]
 ```
 
 **Level 3:** With a condition (service logic) and confirmation:
@@ -193,7 +193,7 @@ final class PurchaseOrderForm extends AdminEntityForm { /* ... */ }
 **Level 4:** Control which fields can be edited (use `ColumnPermission` to hide them):
 ```php
 #[AdminColumn(editable: false)]                         // read-only (disabled) on the form
-#[AdminColumn(editable: 'entity.status != "locked"')]   // read-only when the expression is false
+#[AdminColumn(editable: 'entity.getStatus() != "locked"')]   // read-only when the expression is false
 ```
 
 **Details:** [Forms Guide](docs/FORMS.md)

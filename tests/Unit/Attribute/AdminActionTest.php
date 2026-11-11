@@ -42,10 +42,10 @@ final class AdminActionTest extends TestCase
         $action = new AdminAction(
             name: 'approve',
             label: 'Approve',
-            condition: 'entity.status == "pending"',
+            condition: 'entity.getStatus() == "pending"',
         );
 
-        $this->assertSame('entity.status == "pending"', $action->condition);
+        $this->assertSame('entity.getStatus() == "pending"', $action->condition);
     }
 
     #[Test]
@@ -60,7 +60,7 @@ final class AdminActionTest extends TestCase
             url: null,
             permission: 'ROLE_EDITOR',
             voterAttribute: 'ADMIN_EDIT',
-            condition: 'entity.status != "archived"',
+            condition: 'entity.getStatus() != "archived"',
             cssClass: 'btn-warning',
             confirmMessage: 'Archive this item?',
             openInNewTab: false,
@@ -71,7 +71,7 @@ final class AdminActionTest extends TestCase
         );
 
         $this->assertSame('archive', $action->name);
-        $this->assertSame('entity.status != "archived"', $action->condition);
+        $this->assertSame('entity.getStatus() != "archived"', $action->condition);
         $this->assertSame(50, $action->priority);
         $this->assertTrue($action->override);
     }

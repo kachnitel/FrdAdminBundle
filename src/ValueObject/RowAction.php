@@ -10,8 +10,8 @@ namespace Kachnitel\AdminBundle\ValueObject;
  *
  * Conditions can be expressed in two ways:
  *
- *   1. String expression (simple property checks):
- *      condition: 'entity.status == "pending"'
+ *   1. String expression:
+ *      condition: 'entity.getStatus() == "pending"'
  *      condition: '!entity.isArchived()'
  *
  *   2. DI tuple (complex logic with injected dependencies):

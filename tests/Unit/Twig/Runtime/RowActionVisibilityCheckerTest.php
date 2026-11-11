@@ -93,7 +93,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: 'entity.status == "pending"',
+            condition: 'entity.getStatus() == "pending"',
         );
 
         $checker = $this->createChecker();
@@ -107,7 +107,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: 'entity.status == "pending"',
+            condition: 'entity.getStatus() == "pending"',
         );
 
         $checker = $this->createChecker();
@@ -139,7 +139,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
     public function expressionInequalityCheck(): void
     {
         $entity = $this->makeEntity(status: 'archived');
-        $action = new RowAction(name: 'edit', label: 'Edit', condition: 'entity.status != "archived"');
+        $action = new RowAction(name: 'edit', label: 'Edit', condition: 'entity.getStatus() != "archived"');
 
         $checker = $this->createChecker();
         $this->assertFalse($checker->isVisible($action, $entity, 'Product'));
@@ -167,7 +167,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: 'entity.status == "pending" && entity.active',
+            condition: 'entity.getStatus() == "pending" && entity.active',
         );
 
         $checker = $this->createChecker();
@@ -181,7 +181,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: 'entity.status == "pending" && entity.active',
+            condition: 'entity.getStatus() == "pending" && entity.active',
         );
 
         $checker = $this->createChecker();
@@ -195,7 +195,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $action = new RowAction(
             name: 'view',
             label: 'View',
-            condition: 'entity.status == "pending" || entity.active',
+            condition: 'entity.getStatus() == "pending" || entity.active',
         );
 
         $checker = $this->createChecker();
@@ -209,7 +209,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $action = new RowAction(
             name: 'view',
             label: 'View',
-            condition: 'entity.status == "pending" || entity.active',
+            condition: 'entity.getStatus() == "pending" || entity.active',
         );
 
         $checker = $this->createChecker();
@@ -261,7 +261,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: 'entity.status == "pending" && is_granted("ROLE_EDITOR")',
+            condition: 'entity.getStatus() == "pending" && is_granted("ROLE_EDITOR")',
         );
 
         $checker = $this->createChecker();
@@ -277,7 +277,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: 'entity.status == "pending" && is_granted("ROLE_EDITOR")',
+            condition: 'entity.getStatus() == "pending" && is_granted("ROLE_EDITOR")',
         );
 
         $checker = $this->createChecker();

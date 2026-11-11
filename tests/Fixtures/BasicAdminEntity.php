@@ -11,7 +11,7 @@ use Kachnitel\AdminBundle\Attribute\Admin;
  * Test fixture entity for row actions feature tests.
  *
  * Covers:
- *  - String expression conditions using PropertyAccess syntax (entity.status)
+ *  - String expression conditions using PropertyAccess syntax (entity.getStatus())
  *  - AdminActionsConfig(exclude: ['edit']) — no Edit button
  *  - POST form action with confirmMessage
  *  - Static URL (no routing dependency in tests)

@@ -40,10 +40,10 @@ final class RowActionTest extends TestCase
         $action = new RowAction(
             name: 'approve',
             label: 'Approve',
-            condition: 'entity.status == "pending"',
+            condition: 'entity.getStatus() == "pending"',
         );
 
-        $this->assertSame('entity.status == "pending"', $action->condition);
+        $this->assertSame('entity.getStatus() == "pending"', $action->condition);
         $this->assertFalse($action->hasDiCondition());
     }
 
@@ -113,9 +113,9 @@ final class RowActionTest extends TestCase
             condition: $condition,
         );
 
-        $modified = $original->with(['condition' => 'entity.status == "pending"']);
+        $modified = $original->with(['condition' => 'entity.getStatus() == "pending"']);
 
-        $this->assertSame('entity.status == "pending"', $modified->condition);
+        $this->assertSame('entity.getStatus() == "pending"', $modified->condition);
         $this->assertFalse($modified->hasDiCondition());
     }
 

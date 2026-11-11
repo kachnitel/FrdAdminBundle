@@ -26,7 +26,7 @@ use Kachnitel\AdminBundle\ValueObject\RowAction;
  * Can be repeated on the same entity class for multiple actions:
  *
  *   #[AdminAction(name: 'approve', label: 'Approve', icon: '✅', route: 'app_approve',
- *                 condition: 'entity.status == "pending"')]
+ *                 condition: 'entity.getStatus() == "pending"')]
  *   #[AdminAction(name: 'quick-edit', liveComponent: App\Twig\Components\QuickEditButton::class)]
  *   #[AdminAction(name: 'bulk-archive', label: 'Archive Selected', icon: '📦',
  *                 route: 'app_bulk_archive', actionType: AdminAction::ACTION_TYPE_BATCH,
