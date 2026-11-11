@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass('\Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter')]
+#[CoversClass(DoctrineFilterConverter::class)]
 final class DoctrineFilterConverterTest extends TestCase
 {
     private DoctrineFilterConverter $converter;

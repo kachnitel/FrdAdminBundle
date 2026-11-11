@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -26,6 +27,7 @@ use PHPUnit\Framework\TestCase;
  * email would otherwise reveal whether that email exists.
  */
 #[CoversClass(EntityListQueryService::class)]
+#[UsesClass(ListQueryColumnGuard::class)]
 #[Group('column-permission-query')]
 #[Group('entity-list')]
 #[AllowMockObjectsWithoutExpectations]

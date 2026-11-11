@@ -16,6 +16,7 @@ use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -23,10 +24,11 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[Group('global-search')]
 #[CoversMethod(EntityList::class, 'getGlobalSearchColumnLabels')]
 #[UsesClass(EntityListConfig::class)]
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+#[UsesClass(EntityList::class)]
+#[Group('global-search')]
+#[AllowMockObjectsWithoutExpectations]
 final class EntityListGlobalSearchLabelsTest extends TestCase
 {
     /** @var DataSourceRegistry&MockObject */

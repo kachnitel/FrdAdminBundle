@@ -25,6 +25,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversTrait(DateFilterTrait::class)]
 #[UsesClass(EntityListQueryService::class)]
+#[UsesClass(ListQueryColumnGuard::class)]
 #[Group('entity-list')]
 #[Group('query')]
 #[Group('date-filter')]

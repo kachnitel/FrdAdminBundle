@@ -15,7 +15,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -31,8 +31,8 @@ use PHPUnit\Framework\TestCase;
  *   3. null condition is forwarded as null (no WHERE added).
  *
  */
-#[CoversClass('\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::setArchiveDqlCondition')]
-#[CoversClass('\Kachnitel\AdminBundle\DataSource\DoctrineDataSource::query')]
+#[CoversMethod(DoctrineDataSource::class, 'setArchiveDqlCondition')]
+#[CoversMethod(DoctrineDataSource::class, 'query')]
 #[Group('archive')]
 #[UsesClass(Admin::class)]
 #[UsesClass(DoctrineDataSource::class)]

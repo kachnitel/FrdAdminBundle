@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesMethod;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -29,7 +30,9 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 #[Group('archive')]
 #[CoversMethod(EntityList::class, 'canToggleArchive')]
 #[CoversMethod(EntityList::class, 'toggleArchive')]
+#[UsesClass(EntityList::class)]
 #[UsesClass(EntityListConfig::class)]
+#[UsesMethod(ArchiveConfig::class, '__construct')]
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 final class EntityListArchiveToggleTest extends TestCase
 {

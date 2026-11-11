@@ -10,7 +10,7 @@ use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -30,10 +30,9 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *   - The voter attribute constant ADMIN_ARCHIVE must be used (not 'admin_archive')
  *
  */
-#[CoversClass('\Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime::isActionAccessible')]
-#[CoversClass('\Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime::getGenericAdminRoute')]
-#[Group('archive')]
-#[CoversClass(AdminRouteRuntime::class)]
+#[CoversMethod(AdminRouteRuntime::class, 'isActionAccessible')]
+#[CoversMethod(AdminRouteRuntime::class, 'getGenericAdminRoute')]
+#[UsesClass(AdminRouteRuntime::class)]
 #[UsesClass(ActionAccessibilityChecker::class)]
 #[UsesClass(AdminRoutes::class)]
 #[Group('archive')]

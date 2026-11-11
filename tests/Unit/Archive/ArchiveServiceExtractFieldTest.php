@@ -6,6 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Archive;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
@@ -30,6 +31,8 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 #[CoversClass(ArchiveService::class)]
 #[Group('archive')]
 #[UsesClass(Admin::class)]
+#[UsesClass(RowActionExpressionLanguage::class)]
+#[UsesClass(ArchiveConfig::class)]
 #[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 final class ArchiveServiceExtractFieldTest extends TestCase
 {

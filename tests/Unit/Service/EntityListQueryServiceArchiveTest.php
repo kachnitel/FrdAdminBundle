@@ -25,6 +25,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(EntityListQueryService::class, 'buildQuery')]
 #[CoversMethod(EntityListQueryService::class, 'getEntities')]
 #[UsesClass(EntityListQueryService::class)]
+#[UsesClass(ListQueryColumnGuard::class)]
 #[Group('archive')]
 #[AllowMockObjectsWithoutExpectations]
 final class EntityListQueryServiceArchiveTest extends TestCase
