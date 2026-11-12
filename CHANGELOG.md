@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!-- END HEADER -->
 
+## [0.16.2](https://github.com/kachnitel/FrdAdminBundle/compare/v0.16.1...v0.16.2) (2026-11-12)
+
+### Features
+
+
+##### Security
+
+* Disable admin route with #[Admin(permissions: ['new' => false])] ([7fee8a](https://github.com/kachnitel/FrdAdminBundle/commit/7fee8aef8d78f7cad475108a4c52457dd2da6a33))
+
+
+---
+
 ## [0.16.1](https://github.com/kachnitel/FrdAdminBundle/compare/v0.16.0...v0.16.1) (2026-11-11)
 
 ### Features
