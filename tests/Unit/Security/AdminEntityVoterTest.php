@@ -275,6 +275,50 @@ final class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
+    #[Group('action-disabling')]
+    public function testDeniesDisabledActionEvenWhenUserHasRequiredRole(): void
+    {
+        $this->stubDiscovery(new Admin(permissions: ['new' => false]));
+        $this->stubAuthenticatedUser('ROLE_ADMIN');
+
+        $result = $this->makeVoter()->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_NEW]);
+
+        $this->assertSame(VoterInterface::ACCESS_DENIED, $result);
+    }
+
+    #[Group('action-disabling')]
+    public function testDeniesDisabledActionWhenDefaultRequiredRoleIsNull(): void
+    {
+        $this->stubDiscovery(new Admin(permissions: ['new' => false]));
+        $this->token->expects($this->never())->method('getUser');
+
+        $result = $this->makeVoter(defaultRole: null)->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_NEW]);
+
+        $this->assertSame(VoterInterface::ACCESS_DENIED, $result);
+    }
+
+    #[Group('action-disabling')]
+    public function testSiblingActionWithRolePermissionRemainsAccessible(): void
+    {
+        $this->stubDiscovery(new Admin(permissions: ['new' => false, 'edit' => 'ROLE_EDITOR']));
+        $this->stubAuthenticatedUser('ROLE_EDITOR');
+
+        $result = $this->makeVoter()->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_EDIT]);
+
+        $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    #[Group('action-disabling')]
+    public function testEntityWithoutPermissionsStillUsesDefaultRole(): void
+    {
+        $this->stubDiscovery(new Admin());
+        $this->stubAuthenticatedUser('ROLE_ADMIN');
+
+        $result = $this->makeVoter()->vote($this->token, 'Product', [AdminEntityVoter::ADMIN_NEW]);
+
+        $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
     // -------------------------------------------------------------------------
     // Entity resolution edge cases
     // -------------------------------------------------------------------------

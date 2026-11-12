@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Kachnitel\AdminBundle\Attribute\Admin;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -141,6 +142,27 @@ final class AdminTest extends TestCase
 
         $this->assertNull($admin->getPermissionForAction('delete'));
         $this->assertNull($admin->getPermissionForAction('nonexistent'));
+    }
+
+    #[Test]
+    #[Group('action-disabling')]
+    public function getPermissionForActionReturnsNullWhenActionIsDisabled(): void
+    {
+        $admin = new Admin(permissions: ['new' => false]);
+
+        $this->assertNull($admin->getPermissionForAction('new'));
+    }
+
+    #[Test]
+    #[Group('action-disabling')]
+    public function isActionDisabledIsTrueOnlyForLiteralFalse(): void
+    {
+        $admin = new Admin(permissions: ['new' => false, 'edit' => 'ROLE_EDITOR']);
+
+        $this->assertTrue($admin->isActionDisabled('new'));
+        $this->assertFalse($admin->isActionDisabled('edit'));
+        $this->assertFalse($admin->isActionDisabled('delete'));
+        $this->assertFalse((new Admin())->isActionDisabled('new'));
     }
 
     #[Test]

@@ -49,6 +49,11 @@ class AdminEntityVoter extends Voter
         self::ADMIN_DELETE  => 'delete',
     ];
 
+    public static function actionFor(string $attribute): string
+    {
+        return self::ACTION_MAP[$attribute] ?? throw new \InvalidArgumentException(sprintf('Unknown admin voter attribute "%s".', $attribute));
+    }
+
     public function __construct(
         private readonly EntityDiscoveryService $entityDiscovery,
         private readonly ?string $defaultRequiredRole,
@@ -77,7 +82,12 @@ class AdminEntityVoter extends Voter
      */
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
-        $action = self::ACTION_MAP[$attribute];
+        $action = self::actionFor($attribute);
+
+        if ($this->isActionDisabled($subject, $action)) {
+            return false;
+        }
+
         $requiredRole = $this->getRequiredRole($subject, $action);
 
         if ($requiredRole === null) {
@@ -91,6 +101,16 @@ class AdminEntityVoter extends Voter
         }
 
         return $this->hasRole($token, $requiredRole);
+    }
+
+    private function isActionDisabled(string $entityName, string $action): bool
+    {
+        $entityClass = $this->entityDiscovery->resolveEntityClass($entityName, $this->entityNamespace);
+        if ($entityClass === null) {
+            return false;
+        }
+
+        return $this->entityDiscovery->getAdminAttribute($entityClass)?->isActionDisabled($action) ?? false;
     }
 
     /**

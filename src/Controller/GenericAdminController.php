@@ -295,6 +295,13 @@ class GenericAdminController extends AbstractAdminController
 
     private function checkEntityPermission(string $attribute, string $entityName): void
     {
+        $entityClass = $this->entityDiscovery->resolveEntityClass($entityName, $this->entityNamespace);
+        $admin = $entityClass !== null ? $this->entityDiscovery->getAdminAttribute($entityClass) : null;
+
+        if ($admin?->isActionDisabled(AdminEntityVoter::actionFor($attribute))) {
+            throw $this->createAccessDeniedException(sprintf('%s is disabled for %s.', $attribute, $entityName));
+        }
+
         if ($this->requiredRole !== null) {
             $this->denyAccessUnlessGranted($attribute, $entityName);
         }

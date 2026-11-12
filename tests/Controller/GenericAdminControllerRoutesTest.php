@@ -7,6 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
+use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeletableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\GenericAdminControllerTestDouble;
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * Covers index()/new()/delete() and the resolveEntityName() 404 path. See
@@ -53,7 +55,7 @@ final class GenericAdminControllerRoutesTest extends TestCase
         $this->formRegistry->method('hasType')->willReturn(false);
     }
 
-    private function makeController(): GenericAdminControllerTestDouble
+    private function makeController(?string $requiredRole = 'ROLE_ADMIN'): GenericAdminControllerTestDouble
     {
         return new GenericAdminControllerTestDouble(
             em: $this->em,
@@ -62,6 +64,7 @@ final class GenericAdminControllerRoutesTest extends TestCase
             formNamespace: 'App\\Form\\',
             formSuffix: 'FormType',
             formRegistry: $this->formRegistry,
+            requiredRole: $requiredRole,
         );
     }
 
@@ -151,6 +154,20 @@ final class GenericAdminControllerRoutesTest extends TestCase
         $this->assertSame('K:Admin:EntityForm', $lastRender['parameters']['formComponentName']);
         $this->assertCount(1, $lastRender['parameters']['breadcrumbs']);
         $this->assertSame('DeletableEntity', $lastRender['parameters']['breadcrumbs'][0]['label']);
+    }
+
+    #[Test]
+    #[Group('action-disabling')]
+    public function newThrowsAccessDeniedWhenDisabledAndRequiredRoleIsNull(): void
+    {
+        $this->entityDiscovery = $this->createStub(EntityDiscoveryService::class);
+        $this->entityDiscovery->method('getAdminEntityShortNames')->willReturn(['DeletableEntity']);
+        $this->entityDiscovery->method('resolveEntityClass')->willReturn(DeletableEntity::class);
+        $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin(permissions: ['new' => false]));
+
+        $this->expectException(AccessDeniedException::class);
+
+        $this->makeController(requiredRole: null)->new('deletable-entity');
     }
 
     // ── delete() ─────────────────────────────────────────────────────────

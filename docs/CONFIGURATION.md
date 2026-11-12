@@ -524,6 +524,30 @@ class Article
 }
 ```
 
+### Disabling an action
+
+Set an action's permission to `false` to disable it for everyone, regardless of
+the user's roles or the global `kachnitel_admin.required_role` setting:
+
+```php
+#[Admin(
+    permissions: [
+        'index'  => 'ROLE_WAREHOUSE',
+        'show'   => 'ROLE_WAREHOUSE',
+        'new'    => false,
+        'edit'   => false,
+        'delete' => false,
+    ]
+)]
+class StockMovement
+{
+    // ...
+}
+```
+
+An omitted action is not disabled; it falls back to `required_role`. For an
+append-only ledger, explicitly set `new`, `edit`, and `delete` to `false`.
+
 ### Permission Hierarchy
 
 1. **Entity-specific permission** (highest priority)
@@ -538,9 +562,11 @@ class Article
 #[Admin(
     label: 'Audit Logs',
     permissions: [
-        'index' => 'ROLE_ADMIN',
-        'show' => 'ROLE_ADMIN',
-        // No 'new', 'edit', or 'delete' - those actions won't be available
+        'index'  => 'ROLE_ADMIN',
+        'show'   => 'ROLE_ADMIN',
+        'new'    => false,
+        'edit'   => false,
+        'delete' => false,
     ]
 )]
 class AuditLog
@@ -595,7 +621,13 @@ class User { }
 // Read-only (no create/edit/delete)
 #[Admin(
     label: 'Audit Logs',
-    permissions: ['index' => 'ROLE_ADMIN', 'show' => 'ROLE_ADMIN']
+    permissions: [
+        'index' => 'ROLE_ADMIN',
+        'show' => 'ROLE_ADMIN',
+        'new' => false,
+        'edit' => false,
+        'delete' => false,
+    ]
 )]
 class AuditLog { }
 
@@ -777,7 +809,7 @@ class User implements UserInterface
 - `icon: ?string` — Icon string (emoji by default; see [Icons](TEMPLATE_OVERRIDES.md#icons))
 - `columns: ?array<string>` — Visible columns (auto-detect if null)
 - `excludeColumns: ?array<string>` — Exclude from auto-detect
-- `permissions: ?array<string, string>` — Role map (index, show, new, edit, delete)
+- `permissions: ?array<string, string|false>` — Per-action role map; `false` disables an action
 - `enableFilters: bool = true`
 - `enableBatchActions: bool = false`
 - `enableColumnVisibility: bool = false` — user-toggleable column show/hide (see [Column Visibility](COLUMN_VISIBILITY.md))

@@ -9,6 +9,7 @@ use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -67,6 +68,19 @@ final class ActionAccessibilityCheckerTest extends TestCase
 
         $this->assertFalse(
             $this->checker->isActionAccessible('Product', 'show', routeExists: true)
+        );
+    }
+
+    #[Test]
+    #[Group('action-disabling')]
+    public function returnsFalseForNewActionWhenVoterDeniesDisabledAction(): void
+    {
+        $this->authChecker->expects($this->once())->method('isGranted')
+            ->with(AdminEntityVoter::ADMIN_NEW, 'StockMovement')
+            ->willReturn(false);
+
+        $this->assertFalse(
+            $this->checker->isActionAccessible('StockMovement', 'new', routeExists: true)
         );
     }
 

@@ -31,7 +31,9 @@ class Admin
      * @param array<string>|null $columns Explicit list of columns to display (null = auto-detect)
      * @param array<string>|null $excludeColumns Columns to exclude from display
      * @param array<string>|null $filterableColumns Columns that can be filtered (null = all visible)
-     * @param array<string, string>|null $permissions Per-action permission requirements
+     * @param array<string, string|false>|null $permissions Per-action permission requirements.
+     *   A role string requires that role. `false` disables the action for everyone,
+     *   regardless of role or `kachnitel_admin.required_role`.
      * @param int|null $itemsPerPage Default items per page (null = use global default)
      * @param string|null $sortBy Default sort column (null = 'id')
      * @param string|null $sortDirection Default sort direction 'ASC' or 'DESC' (null = 'DESC')
@@ -142,7 +144,7 @@ class Admin
     }
 
     /**
-     * @return array<string, string>|null
+     * @return array<string, string|false>|null
      */
     public function getPermissions(): ?array
     {
@@ -166,7 +168,14 @@ class Admin
 
     public function getPermissionForAction(string $action): ?string
     {
-        return $this->permissions[$action] ?? null;
+        $permission = $this->permissions[$action] ?? null;
+
+        return is_string($permission) ? $permission : null;
+    }
+
+    public function isActionDisabled(string $action): bool
+    {
+        return ($this->permissions[$action] ?? null) === false;
     }
 
     public function getFormComponent(): ?string
