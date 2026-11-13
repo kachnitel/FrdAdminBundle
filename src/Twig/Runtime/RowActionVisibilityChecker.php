@@ -6,10 +6,10 @@ namespace Kachnitel\AdminBundle\Twig\Runtime;
 
 use Kachnitel\AdminBundle\RowAction\RowActionConditionInterface;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -22,7 +22,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  */
 class RowActionVisibilityChecker
 {
-    private LoggerInterface $logger;
+    private ?LoggerInterface $logger;
 
     /**
      * @param ServiceLocator<object>|null $conditionLocator
@@ -37,7 +37,7 @@ class RowActionVisibilityChecker
         private readonly bool $debug = false,
         private readonly ?ObjectAuthorizationChecker $objectAuthChecker = null,
     ) {
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger;
     }
 
     /**
@@ -86,7 +86,7 @@ class RowActionVisibilityChecker
                 || $this->authChecker->isGranted($action->voterAttribute, $entityShortClass);
         }
 
-        $actionName = $this->mapVoterAttributeToActionName($action->voterAttribute);
+        $actionName = AdminEntityVoter::actionFor($action->voterAttribute);
 
         return $this->routeRuntime->isActionAccessible($entityShortClass, $actionName);
     }
@@ -159,7 +159,7 @@ class RowActionVisibilityChecker
                 );
             }
 
-            $this->logger->warning(
+            $this->logger?->warning(
                 'Row action DI condition failed — action will be hidden.',
                 [
                     'service'   => $serviceClass,
@@ -173,18 +173,4 @@ class RowActionVisibilityChecker
         }
     }
 
-    /**
-     * Map a voter attribute constant to the action name used by AdminRouteRuntime.
-     */
-    private function mapVoterAttributeToActionName(string $voterAttribute): string
-    {
-        return match ($voterAttribute) {
-            'ADMIN_EDIT'    => 'edit',
-            'ADMIN_SHOW'    => 'show',
-            'ADMIN_DELETE'  => 'delete',
-            'ADMIN_NEW'     => 'new',
-            'ADMIN_ARCHIVE' => 'archive',
-            default         => strtolower($voterAttribute),
-        };
-    }
 }

@@ -85,6 +85,30 @@ final class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_ABSTAIN, $result);
     }
 
+    #[DataProvider('actionNamesProvider')]
+    public function testActionForMapsEveryAdminAttribute(string $attribute, string $expectedAction): void
+    {
+        $this->assertSame($expectedAction, AdminEntityVoter::actionFor($attribute));
+    }
+
+    public function testActionForThrowsForUnknownAttribute(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        AdminEntityVoter::actionFor('ROLE_SOMETHING');
+    }
+
+    /** @return \Iterator<string, array{string, string}> */
+    public static function actionNamesProvider(): \Iterator
+    {
+        yield 'index' => [AdminEntityVoter::ADMIN_INDEX, 'index'];
+        yield 'show' => [AdminEntityVoter::ADMIN_SHOW, 'show'];
+        yield 'new' => [AdminEntityVoter::ADMIN_NEW, 'new'];
+        yield 'edit' => [AdminEntityVoter::ADMIN_EDIT, 'edit'];
+        yield 'archive' => [AdminEntityVoter::ADMIN_ARCHIVE, 'archive'];
+        yield 'delete' => [AdminEntityVoter::ADMIN_DELETE, 'delete'];
+    }
+
     // -------------------------------------------------------------------------
     // All five ADMIN_* attributes are evaluated (not just INDEX)
     // -------------------------------------------------------------------------

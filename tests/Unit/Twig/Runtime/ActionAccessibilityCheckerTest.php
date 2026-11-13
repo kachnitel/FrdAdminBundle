@@ -220,37 +220,6 @@ final class ActionAccessibilityCheckerTest extends TestCase
         $this->checker->isActionAccessible('Product', 'unarchive', routeExists: true);
     }
 
-    // ── getVoterAttribute ─────────────────────────────────────────────────────
-
-    #[Test]
-    public function getVoterAttributeReturnsCorrectConstantForKnownActions(): void
-    {
-        $this->assertSame(AdminEntityVoter::ADMIN_INDEX, $this->checker->getVoterAttribute('index'));
-        $this->assertSame(AdminEntityVoter::ADMIN_SHOW, $this->checker->getVoterAttribute('show'));
-        $this->assertSame(AdminEntityVoter::ADMIN_NEW, $this->checker->getVoterAttribute('new'));
-        $this->assertSame(AdminEntityVoter::ADMIN_EDIT, $this->checker->getVoterAttribute('edit'));
-        $this->assertSame(AdminEntityVoter::ADMIN_ARCHIVE, $this->checker->getVoterAttribute('archive'));
-        $this->assertSame(AdminEntityVoter::ADMIN_ARCHIVE, $this->checker->getVoterAttribute('unarchive'));
-        $this->assertSame(AdminEntityVoter::ADMIN_DELETE, $this->checker->getVoterAttribute('delete'));
-    }
-
-    #[Test]
-    public function getVoterAttributeReturnsNullForUnknownAction(): void
-    {
-        $this->assertNull($this->checker->getVoterAttribute('unknown_action'));
-    }
-
-    // ── mapVoterAttributeToAction ─────────────────────────────────────────────
-
-    #[Test]
-    public function mapVoterAttributeToActionReturnsCorrectActionName(): void
-    {
-        $this->assertSame('index', $this->checker->mapVoterAttributeToAction(AdminEntityVoter::ADMIN_INDEX));
-        $this->assertSame('show', $this->checker->mapVoterAttributeToAction(AdminEntityVoter::ADMIN_SHOW));
-        $this->assertSame('edit', $this->checker->mapVoterAttributeToAction(AdminEntityVoter::ADMIN_EDIT));
-        $this->assertSame('delete', $this->checker->mapVoterAttributeToAction(AdminEntityVoter::ADMIN_DELETE));
-    }
-
     // ── custom formType from Admin attribute ──────────────────────────────────
 
     #[Test]

@@ -63,18 +63,7 @@ class AdminEntityVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        if (!in_array($attribute, [
-            self::ADMIN_INDEX,
-            self::ADMIN_SHOW,
-            self::ADMIN_NEW,
-            self::ADMIN_EDIT,
-            self::ADMIN_ARCHIVE,
-            self::ADMIN_DELETE,
-        ], true)) {
-            return false;
-        }
-
-        return is_string($subject);
+        return isset(self::ACTION_MAP[$attribute]) && is_string($subject);
     }
 
     /**

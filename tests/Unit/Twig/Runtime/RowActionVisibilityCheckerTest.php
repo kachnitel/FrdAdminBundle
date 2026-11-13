@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Tests\Unit\ValueObject\ApprovalService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionVisibilityChecker;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -436,6 +438,31 @@ final class RowActionVisibilityCheckerTest extends TestCase
 
         $checker = $this->createChecker();
         $this->assertFalse($checker->isVisible($action, $entity, 'Product'));
+    }
+
+    #[Test]
+    #[DataProvider('adminVoterActionMappings')]
+    public function voterAttributeChecksRouteUsingMappedActionName(string $attribute, string $expectedAction): void
+    {
+        $this->routeRuntime->expects($this->once())
+            ->method('isActionAccessible')
+            ->with('Product', $expectedAction)
+            ->willReturn(true);
+
+        $action = new RowAction(name: 'custom', label: 'Custom', voterAttribute: $attribute);
+
+        $this->assertTrue($this->createChecker()->isVisible($action, $this->makeEntity(), 'Product'));
+    }
+
+    /** @return \Iterator<string, array{string, string}> */
+    public static function adminVoterActionMappings(): \Iterator
+    {
+        yield 'index' => [AdminEntityVoter::ADMIN_INDEX, 'index'];
+        yield 'show' => [AdminEntityVoter::ADMIN_SHOW, 'show'];
+        yield 'new' => [AdminEntityVoter::ADMIN_NEW, 'new'];
+        yield 'edit' => [AdminEntityVoter::ADMIN_EDIT, 'edit'];
+        yield 'archive' => [AdminEntityVoter::ADMIN_ARCHIVE, 'archive'];
+        yield 'delete' => [AdminEntityVoter::ADMIN_DELETE, 'delete'];
     }
 
     #[Test]

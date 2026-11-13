@@ -63,24 +63,6 @@ final class ActionAccessibilityChecker
         return !in_array($action, ['new', 'edit'], true) || $this->hasForm($entityShortName);
     }
 
-    /**
-     * Map a voter attribute constant to the action name used elsewhere.
-     */
-    public function mapVoterAttributeToAction(string $voterAttribute): string
-    {
-        /** @var array<string, string> $flipped */
-        $flipped = array_flip(array_unique(self::VOTER_MAP));
-        return $flipped[$voterAttribute] ?? strtolower($voterAttribute);
-    }
-
-    /**
-     * Get the voter attribute for an action name, or null if unknown.
-     */
-    public function getVoterAttribute(string $action): ?string
-    {
-        return self::VOTER_MAP[$action] ?? null;
-    }
-
     private function isGrantedForAction(string $entityShortName, string $action): bool
     {
         if ($this->authChecker === null) {
