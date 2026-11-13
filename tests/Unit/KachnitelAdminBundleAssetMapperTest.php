@@ -9,10 +9,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
+use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
+use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 /**
@@ -48,6 +50,7 @@ final class KachnitelAdminBundleAssetMapperTest extends TestCase
     #[Test]
     public function prependsNothingWhenAssetMapperIsNotInstalled(): void
     {
+        /** @disregard P1009 AssetMapper skipped */
         if (interface_exists(AssetMapperInterface::class)) {
             self::markTestSkipped('symfony/asset-mapper is installed.');
         }
@@ -99,7 +102,13 @@ final class KachnitelAdminBundleAssetMapperTest extends TestCase
 
         $config = $builder->getExtensionConfig('framework');
         self::assertCount(1, $config);
-        $paths = $config[0]['asset_mapper']['paths'];
+        $extensionConfig = $config[0];
+        self::assertArrayHasKey('asset_mapper', $extensionConfig);
+        $assetMapperConfig = $extensionConfig['asset_mapper'];
+        self::assertIsArray($assetMapperConfig);
+        self::assertArrayHasKey('paths', $assetMapperConfig);
+        $paths = $assetMapperConfig['paths'];
+        self::assertIsArray($paths);
         self::assertCount(1, $paths);
         self::assertSame('@kachnitel/admin-bundle', reset($paths));
         self::assertStringEndsWith('/assets', (string) array_key_first($paths));
@@ -107,13 +116,19 @@ final class KachnitelAdminBundleAssetMapperTest extends TestCase
 
     private function prepend(ContainerBuilder $builder): void
     {
-        /** @var ContainerConfigurator&MockObject $configurator */
-        $configurator = $this->createMock(ContainerConfigurator::class);
-        $configurator->expects(self::once())
-            ->method('extension')
-            ->with('twig_component', self::arrayHasKey('defaults'));
+        $twigComponentExtension = $this->createStub(ExtensionInterface::class);
+        $twigComponentExtension->method('getAlias')->willReturn('twig_component');
+        $builder->registerExtension($twigComponentExtension);
+
+        $loader = new PhpFileLoader($builder, new FileLocator());
+        $instanceof = [];
+        $configurator = new ContainerConfigurator($builder, $loader, $instanceof, __DIR__, __FILE__);
 
         (new KachnitelAdminBundle())->prependExtension($configurator, $builder);
+
+        $twigComponentConfig = $builder->getExtensionConfig('twig_component');
+        self::assertCount(1, $twigComponentConfig);
+        self::assertArrayHasKey('defaults', $twigComponentConfig[0]);
     }
 
     /**
@@ -134,6 +149,7 @@ final class KachnitelAdminBundleAssetMapperTest extends TestCase
 
     private function declareAssetMapperStub(): void
     {
+        /** @disregard P1009 AssetMapper stubbing */
         if (!interface_exists(AssetMapperInterface::class)) {
             eval('namespace Symfony\Component\AssetMapper; interface AssetMapperInterface {}');
         }

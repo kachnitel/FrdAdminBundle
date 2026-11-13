@@ -374,15 +374,20 @@ class DebugFiltersCommand extends Command
     private function getAssociationReason(ClassMetadata $metadata, string $column): string
     {
         $assocType = $metadata->getAssociationMapping($column)['type'] ?? 0;
-        $assocTypeName = match ($assocType) {
+        $assocTypeName = self::getAssociationTypeName($assocType);
+
+        return sprintf('<info>✓</info> Detected as relation (Doctrine %s association)', $assocTypeName);
+    }
+
+    private static function getAssociationTypeName(mixed $assocType): string
+    {
+        return match ($assocType) {
             ClassMetadata::ONE_TO_ONE => 'OneToOne',
             ClassMetadata::MANY_TO_ONE => 'ManyToOne',
             ClassMetadata::ONE_TO_MANY => 'OneToMany',
             ClassMetadata::MANY_TO_MANY => 'ManyToMany',
             default => 'Unknown',
         };
-
-        return sprintf('<info>✓</info> Detected as relation (Doctrine %s association)', $assocTypeName);
     }
 
     /**

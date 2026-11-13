@@ -182,6 +182,13 @@ final class DebugDataSourceCommandTest extends TestCase
                 /** @phpstan-ignore-next-line Testing with string literal for display purposes */
                 enumOptions: FilterEnumOptions::fromEnumClass('App\\Enum\\ProductStatus')
             ),
+            'empty' => new FilterMetadata(
+                name: 'empty',
+                type: 'enum',
+                label: 'Empty',
+                operator: '=',
+                enumOptions: new FilterEnumOptions()
+            ),
         ];
 
         $dataSource = $this->createMock(DataSourceInterface::class);
@@ -217,6 +224,7 @@ final class DebugDataSourceCommandTest extends TestCase
         $this->assertStringContainsString('Status', $output);
         $this->assertStringContainsString('3', $output); // 3 enum options for category
         $this->assertStringContainsString('App\\Enum\\ProductStatus', $output);
+        $this->assertMatchesRegularExpression('/\bempty\s+Empty\s+enum\s+=\s+-\s*\n/', $output);
     }
 
     public function testShowSupportedActions(): void
