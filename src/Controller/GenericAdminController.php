@@ -53,7 +53,6 @@ class GenericAdminController extends AbstractAdminController
         private readonly FormRegistryInterface $formRegistry,
         ObjectAuthorizationChecker $objectAuthChecker,
         private readonly string $routePrefix = 'app_admin_entity',
-        private readonly string $dashboardRoute = 'app_admin_dashboard',
         private readonly ?string $requiredRole = 'ROLE_ADMIN',
     ) {
         parent::__construct($em, $objectAuthChecker);

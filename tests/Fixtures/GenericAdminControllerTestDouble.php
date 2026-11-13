@@ -66,7 +66,6 @@ final class GenericAdminControllerTestDouble extends GenericAdminController
         string $formSuffix,
         FormRegistryInterface $formRegistry,
         string $routePrefix = 'app_admin_entity',
-        string $dashboardRoute = 'app_admin_dashboard',
         ?string $requiredRole = 'ROLE_ADMIN',
         ?ObjectAuthorizationChecker $objectAuthChecker = null,
     ) {
@@ -79,7 +78,6 @@ final class GenericAdminControllerTestDouble extends GenericAdminController
             formRegistry: $formRegistry,
             objectAuthChecker: $objectAuthChecker ?? new PermissiveObjectAuthorizationChecker(),
             routePrefix: $routePrefix,
-            dashboardRoute: $dashboardRoute,
             requiredRole: $requiredRole,
         );
     }

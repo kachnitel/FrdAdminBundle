@@ -71,7 +71,6 @@ kachnitel_admin:
     # Layout and routing
     base_layout: 'layout.html.twig'     # Your app's base layout (optional)
     route_prefix: 'app_admin_entity'    # Route prefix for CRUD operations
-    dashboard_route: 'app_admin_dashboard'  # Dashboard route name
 
     # Security
     required_role: 'ROLE_ADMIN'         # Default required role

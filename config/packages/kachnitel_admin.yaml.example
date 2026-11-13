@@ -20,7 +20,6 @@ kachnitel_admin:
 
     # Route configuration (usually don't need to change)
     # route_prefix: 'app_admin_entity'
-    # dashboard_route: 'app_admin_dashboard'
 
     # Pagination
     # pagination:

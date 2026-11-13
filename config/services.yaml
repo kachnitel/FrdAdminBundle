@@ -132,7 +132,6 @@ services:
             $formRegistry: '@form.registry'
             $objectAuthChecker: '@Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker'
             $routePrefix: '%kachnitel_admin.route_prefix%'
-            $dashboardRoute: '%kachnitel_admin.dashboard_route%'
             $requiredRole: '%kachnitel_admin.required_role%'
         tags: ['controller.service_arguments']
 

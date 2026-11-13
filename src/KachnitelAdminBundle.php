@@ -55,10 +55,6 @@ class KachnitelAdminBundle extends AbstractBundle
                     ->defaultValue('app_admin_entity')
                     ->info('Route prefix for generic entity CRUD operations')
                 ->end()
-                ->scalarNode('dashboard_route')
-                    ->defaultValue('app_admin_dashboard')
-                    ->info('Dashboard route name')
-                ->end()
                 ->scalarNode('required_role')
                     ->defaultValue('ROLE_ADMIN')
                     ->info('Required role for accessing admin. Set to false to disable authentication.')
@@ -123,7 +119,6 @@ class KachnitelAdminBundle extends AbstractBundle
         *     form_namespace: string,
         *     form_suffix: string,
         *     route_prefix: string,
-        *     dashboard_route: string,
         *     required_role: string|null,
         *     base_layout: string|null,
         *     enable_generic_controller: bool,
@@ -138,7 +133,6 @@ class KachnitelAdminBundle extends AbstractBundle
         $builder->setParameter('kachnitel_admin.form_namespace', $config['form_namespace']);
         $builder->setParameter('kachnitel_admin.form_suffix', $config['form_suffix']);
         $builder->setParameter('kachnitel_admin.route_prefix', $config['route_prefix']);
-        $builder->setParameter('kachnitel_admin.dashboard_route', $config['dashboard_route']);
         $builder->setParameter('kachnitel_admin.required_role', $config['required_role']);
         $builder->setParameter('kachnitel_admin.base_layout', $config['base_layout']);
         $builder->setParameter('kachnitel_admin.enable_generic_controller', $config['enable_generic_controller']);
