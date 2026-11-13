@@ -17,6 +17,7 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 #[PHPUnit\CoversClass(RowActionVisibilityChecker::class)]
 #[PHPUnit\UsesClass(RowAction::class)]
 #[PHPUnit\UsesClass(RowActionExpressionLanguage::class)]
+#[PHPUnit\UsesClass(AdminEntityVoter::class)]
 #[PHPUnit\Group('archive')]
 #[PHPUnit\Group('row-actions')]
 final class RowActionVisibilityCheckerArchiveTest extends TestCase

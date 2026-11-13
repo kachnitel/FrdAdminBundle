@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\Attribute\Admin;
+use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeletableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\GenericAdminControllerTestDouble;
@@ -30,6 +31,8 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  */
 #[CoversClass(GenericAdminController::class)]
 #[UsesClass(CollectionScopeParameter::class)]
+#[UsesClass(Admin::class)]
+#[UsesClass(AdminEntityVoter::class)]
 #[Group('controller')]
 final class GenericAdminControllerRoutesTest extends TestCase
 {
