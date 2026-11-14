@@ -217,4 +217,17 @@ final class ArchiveEntityServiceTest extends TestCase
 
         $this->service->archive($entity, $config);
     }
+
+    #[Test]
+    public function unarchiveThrowsForUnsupportedDoctrineTypeWithoutFlushing(): void
+    {
+        $entity = new class {};
+        $config = new ArchiveConfig('item.status', 'status', 'string', null);
+        $this->em->expects($this->never())->method('flush');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageIs('Unsupported archive field type: string');
+
+        $this->service->unarchive($entity, $config);
+    }
 }

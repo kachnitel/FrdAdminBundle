@@ -185,6 +185,18 @@ final class ArchiveServiceExtractFieldTest extends TestCase
         $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
     }
 
+    #[Test]
+    public function resolveConfigReturnsNullForExpressionThatCannotMapToAField(): void
+    {
+        $this->entityDiscovery->method('getAdminAttribute')
+            ->willReturn(new Admin(archiveExpression: 'item.isArchived() == true'));
+        $this->em->expects($this->never())->method('getClassMetadata');
+
+        $config = $this->makeService()->resolveConfig('App\\Entity\\Product'); // @phpstan-ignore argument.type
+
+        $this->assertNull($config);
+    }
+
     // ── buildDqlCondition: datetimetz types ───────────────────────────────────
 
     #[Test]
