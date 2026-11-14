@@ -7,6 +7,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <!-- END HEADER -->
 
+## [0.16.3](https://github.com/kachnitel/FrdAdminBundle/compare/v0.16.2...v0.16.3) (2026-11-14)
+
+### Features
+
+
+##### Tests
+
+* Improve archive coverage ([c21d76](https://github.com/kachnitel/FrdAdminBundle/commit/c21d761c673ee30d84ab703132502fc3d7fac487))
+* Improve command coverage ([bf09a8](https://github.com/kachnitel/FrdAdminBundle/commit/bf09a82a12351f65537ce691473ec375c6acbf8a))
+
+### Bug Fixes
+
+* Recognize Doctrine data source when used with dataSourceId ([f64d26](https://github.com/kachnitel/FrdAdminBundle/commit/f64d268ce72bb3a0f51d59eb7706728bcd4f40e4))
+* Remove dead "dashboard_route" config ([03c571](https://github.com/kachnitel/FrdAdminBundle/commit/03c571940a36ae092f2a2f05f69f1a3851476fd1))
+
+### Code Refactoring
+
+
+##### Accessibility
+
+* Remove duplicate voter mapping ([fafdb6](https://github.com/kachnitel/FrdAdminBundle/commit/fafdb6f064353563fc90887e432de01a1be42799))
+
+### Tests
+
+
+##### Bundle
+
+* Cover asset-mapper prepend and availability checks ([55b063](https://github.com/kachnitel/FrdAdminBundle/commit/55b06352cadd9dfc9981650eaa72a3719945848b))
+
+
+---
+
 ## [0.16.2](https://github.com/kachnitel/FrdAdminBundle/compare/v0.16.1...v0.16.2) (2026-11-12)
 
 ### Features
