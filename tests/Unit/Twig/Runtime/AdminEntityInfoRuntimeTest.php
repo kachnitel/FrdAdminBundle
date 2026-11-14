@@ -11,18 +11,15 @@ use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityInfoRuntime;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Kachnitel\AdminBundle\Utils\PropertyReflection;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(AdminEntityInfoRuntime::class)]
-#[UsesClass(ObjectHelper::class)]
-#[UsesClass(AdminColumn::class)]
-#[UsesClass(PropertyReflection::class)]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(AdminEntityInfoRuntime::class)]
+#[PHPUnit\UsesClass(ObjectHelper::class)]
+#[PHPUnit\UsesClass(AdminColumn::class)]
+#[PHPUnit\UsesClass(PropertyReflection::class)]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class AdminEntityInfoRuntimeTest extends TestCase
 {
     /** @var ClassMetadata<object>&MockObject */
@@ -49,7 +46,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
 
     // ── getColumnTemplates ────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnTemplatesForDoctrineEntityReturnsEntitySpecificPathFirst(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -62,7 +59,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertStringContainsString('App/Entity/Product/price.html.twig', $templates[0]);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnTemplatesIncludesTypeSpecificTemplate(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -76,7 +73,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertNotEmpty($typeTemplate, 'A datetime type-specific template should be in the list');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnTemplatesAlwaysIncludesFallbackTemplate(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -91,7 +88,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertStringContainsString('types/_preview.html.twig', $last);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnTemplatesForDataSourceUsesDataSourcePath(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -104,7 +101,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertStringContainsString('types/data/audit-log/action', $templates[0]);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnTemplatesForCollectionUsesCollectionTemplateName(): void
     {
         $templates = $this->runtime->getColumnTemplates(
@@ -124,7 +121,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
 
     // ── getEntityColumnTemplates ──────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityColumnTemplatesReturnsCorrectTemplatesForField(): void
     {
         $entity = new \stdClass();
@@ -140,7 +137,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertStringContainsString('stdClass/name', $templates[0]);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityColumnTemplatesUsesCollectionTemplateForCollection(): void
     {
         $entity = new \stdClass();
@@ -159,7 +156,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
 
     // ── getFieldComponentName ─────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFieldComponentNameReturnsStringFieldForStringType(): void
     {
         $entity = new \stdClass();
@@ -175,7 +172,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:String', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFieldComponentNameReturnsIntFieldForIntegerType(): void
     {
         $entity = new \stdClass();
@@ -191,7 +188,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Int', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFieldComponentNameReturnsFloatFieldForDecimalType(): void
     {
         $entity = new \stdClass();
@@ -207,7 +204,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Float', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFieldComponentNameReturnsBoolFieldForBooleanType(): void
     {
         $entity = new \stdClass();
@@ -223,7 +220,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Bool', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFieldComponentNameReturnsDateFieldForDatetimeType(): void
     {
         $entity = new \stdClass();
@@ -239,7 +236,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Date', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFieldComponentNameReturnsRelationshipForSingleValuedAssociation(): void
     {
         $entity = new \stdClass();
@@ -251,7 +248,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Relationship', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFieldComponentNameReturnsCollectionForCollectionValuedAssociation(): void
     {
         $entity = new \stdClass();
@@ -263,7 +260,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame('K:Entity:Field:Collection', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFieldComponentNameReturnsNullForUnmappedProperty(): void
     {
         $entity = new \stdClass();
@@ -277,7 +274,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
 
     // ── getColumnAttribute ────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnAttributeReturnsAttributeWhenPresent(): void
     {
         $entity = new \stdClass();
@@ -292,7 +289,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertSame($attr, $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnAttributeReturnsNullWhenAttributeAbsent(): void
     {
         $entity = new \stdClass();
@@ -304,7 +301,7 @@ final class AdminEntityInfoRuntimeTest extends TestCase
         $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Attribute\AdminColumn::class, $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnAttributeReturnsNullOnReflectionException(): void
     {
         $entity = new \stdClass();

@@ -9,19 +9,16 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\ListQueryColumnGuard;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
  * The guard in isolation; EntityListQueryService*PermissionTest cover it through the service.
  */
-#[CoversClass(ListQueryColumnGuard::class)]
-#[Group('column-permission-query')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(ListQueryColumnGuard::class)]
+#[PHPUnit\Group('column-permission-query')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class ListQueryColumnGuardTest extends TestCase
 {
     private const CUSTOMER = 'App\\Entity\\Customer';
@@ -44,7 +41,7 @@ final class ListQueryColumnGuardTest extends TestCase
         $this->guard = new ListQueryColumnGuard($em, $this->permissions);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deniedColumnsAreTheShowDeniedOnes(): void
     {
         $this->permissions->expects($this->once())->method('getDeniedColumnsForAction')
@@ -54,7 +51,7 @@ final class ListQueryColumnGuardTest extends TestCase
         $this->assertSame(['salary'], $this->guard->deniedColumns(self::CUSTOMER));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sortFieldFallsBackToTheIdentifierForADeniedColumn(): void
     {
         $this->assertSame('uuid', $this->guard->sortField(self::CUSTOMER, 'salary', ['salary']));
@@ -62,7 +59,7 @@ final class ListQueryColumnGuardTest extends TestCase
         $this->assertSame('name', $this->guard->sortField(self::CUSTOMER, 'name', ['salary']), 'control');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function filterMetadataWithoutSearchFieldsPassesThrough(): void
     {
         $metadata = ['type' => 'relation', 'targetClass' => self::CUSTOMER];
@@ -70,7 +67,7 @@ final class ListQueryColumnGuardTest extends TestCase
         $this->assertSame($metadata, $this->guard->restrictAssociationSearchFields($metadata));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deniedSearchFieldsAreDroppedAndPermittedOnesKept(): void
     {
         $this->permissions->method('canPerformAction')->willReturnCallback(
@@ -87,7 +84,7 @@ final class ListQueryColumnGuardTest extends TestCase
         $this->assertSame('relation', $result['type'] ?? null);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function filterIsDroppedWhenEverySearchFieldIsDenied(): void
     {
         $this->permissions->method('canPerformAction')->willReturn(false);

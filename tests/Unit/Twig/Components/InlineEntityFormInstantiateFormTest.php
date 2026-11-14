@@ -6,10 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Components;
 
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -27,16 +24,16 @@ use Symfony\Component\Form\FormInterface;
  *   - null is always passed as form data (inline add is creation-only — no DB lookup)
  *   - The EntityManager's find() is never called (entityId is intentionally ignored)
  */
-#[CoversClass(InlineEntityForm::class)]
-#[Group('inline-add')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(InlineEntityForm::class)]
+#[PHPUnit\Group('inline-add')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class InlineEntityFormInstantiateFormTest extends TestCase
 {
     protected function setUp(): void {}
 
     // ── Form name derivation ───────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function formNameIsPrefixedWithInline(): void
     {
         $capturedName = '';
@@ -50,7 +47,7 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
         $this->assertStringStartsWith('inline_', $capturedName);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function differentEntityClassesProduceDifferentFormNames(): void
     {
         $nameA = '';
@@ -70,7 +67,7 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
         $this->assertNotSame($nameA, $nameB, 'Different entity types must produce distinct form names');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sameEntityClassAlwaysProducesSameFormName(): void
     {
         $nameA = '';
@@ -92,7 +89,7 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
 
     // ── DynamicEntityFormType options ──────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dynamicEntityFormTypeReceivesEntityClassOption(): void
     {
         $capturedName    = '';
@@ -106,7 +103,7 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
         $this->assertSame(InlineFormFixtureEntity::class, $capturedOptions['entity_class']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dynamicEntityFormTypeReceivesDataClassOption(): void
     {
         $capturedName    = '';
@@ -120,7 +117,7 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
         $this->assertSame(InlineFormFixtureEntity::class, $capturedOptions['data_class']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dynamicEntityFormTypeReceivesIsRootTrue(): void
     {
         $capturedName    = '';
@@ -134,7 +131,7 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
         $this->assertTrue($capturedOptions['is_root']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dynamicEntityFormTypeDisablesCsrf(): void
     {
         $capturedName    = '';
@@ -149,7 +146,7 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
 
     // ── Custom FormType options ────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function customFormTypeDoesNotReceiveEntityClassOption(): void
     {
         $capturedName    = '';
@@ -162,7 +159,7 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
         $this->assertArrayNotHasKey('entity_class', $capturedOptions);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function customFormTypeDoesNotReceiveIsRootOption(): void
     {
         $capturedName    = '';
@@ -175,7 +172,7 @@ final class InlineEntityFormInstantiateFormTest extends TestCase
         $this->assertArrayNotHasKey('is_root', $capturedOptions);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function customFormTypeStillDisablesCsrf(): void
     {
         $capturedName    = '';

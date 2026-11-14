@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Twig\Components\EnumMultiFilter;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
 final class EnumMultiFilterComponentTest extends ComponentTestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function deserializeValueParsesJsonArray(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -26,7 +26,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame(['pending', 'approved'], $component->selectedValues);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deserializeValueHandlesEmptyValue(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -43,7 +43,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame([], $component->selectedValues);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deserializeValueFallsBackToSingleValueForNonJson(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -60,7 +60,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame(['pending'], $component->selectedValues);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function onSelectedValuesUpdatedSerializesToJson(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -79,7 +79,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame('["pending","approved"]', $component->value);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function onSelectedValuesUpdatedSetsEmptyStringWhenNoSelection(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -98,7 +98,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame('', $component->value);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function clearResetsState(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -118,7 +118,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame([], $component->selectedValues);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getChoicesReturnsEnumCasesWhenEnumClass(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -136,7 +136,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame(['active' => 'ACTIVE', 'inactive' => 'INACTIVE', 'archived' => 'ARCHIVED'], $choices);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getChoicesReturnsOptionsWhenNoEnumClass(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -156,7 +156,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rendersWithStringOptions(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -174,7 +174,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertStringContainsString('food', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function selectionWorksWithStringOptions(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -193,7 +193,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame('["electronics","food"]', $component->value);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function clearWorksWithStringOptions(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -213,7 +213,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertSame([], $component->selectedValues);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rendersWithEnumClassOptions(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -231,7 +231,7 @@ final class EnumMultiFilterComponentTest extends ComponentTestCase
         $this->assertStringContainsString('INACTIVE', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rendersSelectedCheckboxesAsChecked(): void
     {
         $testComponent = $this->createLiveComponent(

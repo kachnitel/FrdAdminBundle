@@ -18,14 +18,12 @@ use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[Group('composite-columns')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('composite-columns')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceColumnGroupConfigTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -96,7 +94,7 @@ final class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnGroupDefaultsToTextHeader(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'lastName']);
@@ -115,7 +113,7 @@ final class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_TEXT, $group->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function collapsibleConfigIsApplied(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'lastName']);
@@ -143,7 +141,7 @@ final class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_COLLAPSIBLE, $group->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fullConfigIsApplied(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['city', 'country']);
@@ -169,7 +167,7 @@ final class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_FULL, $group->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function configIsPreservedWhenSubsequentMemberIsAppended(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'email', 'lastName']);
@@ -199,7 +197,7 @@ final class DoctrineDataSourceColumnGroupConfigTest extends TestCase
         $this->assertArrayHasKey('lastName', $groupSlot->columns);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unconfiguredGroupGetsDefaultTextHeader(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['city', 'country']);

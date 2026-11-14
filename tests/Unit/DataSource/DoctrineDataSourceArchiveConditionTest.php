@@ -15,10 +15,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use PHPUnit\Framework\Attributes\CoversMethod;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -31,12 +28,12 @@ use PHPUnit\Framework\TestCase;
  *   3. null condition is forwarded as null (no WHERE added).
  *
  */
-#[CoversMethod(DoctrineDataSource::class, 'setArchiveDqlCondition')]
-#[CoversMethod(DoctrineDataSource::class, 'query')]
-#[Group('archive')]
-#[UsesClass(Admin::class)]
-#[UsesClass(DoctrineDataSource::class)]
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversMethod(DoctrineDataSource::class, 'setArchiveDqlCondition')]
+#[PHPUnit\CoversMethod(DoctrineDataSource::class, 'query')]
+#[PHPUnit\Group('archive')]
+#[PHPUnit\UsesClass(Admin::class)]
+#[PHPUnit\UsesClass(DoctrineDataSource::class)]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceArchiveConditionTest extends TestCase
 {
     /** @var EntityListQueryService&MockObject */
@@ -89,7 +86,7 @@ final class DoctrineDataSourceArchiveConditionTest extends TestCase
 
     // ── Condition forwarded to query service ──────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveDqlConditionIsPassedToQueryService(): void
     {
         $this->queryService
@@ -113,7 +110,7 @@ final class DoctrineDataSourceArchiveConditionTest extends TestCase
         $this->dataSource->query('', [], 'id', 'DESC', 1, 20);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function nullConditionIsPassedAsNullToQueryService(): void
     {
         $this->queryService
@@ -139,7 +136,7 @@ final class DoctrineDataSourceArchiveConditionTest extends TestCase
 
     // ── Condition is cleared after first query() ──────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveConditionIsNotPassedOnSecondQueryCall(): void
     {
         /** @var list<string|null> $capturedConditions */
@@ -178,7 +175,7 @@ final class DoctrineDataSourceArchiveConditionTest extends TestCase
         $this->assertNull($capturedConditions[1], 'Second query must NOT receive the condition — it must be cleared after first use.');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveConditionCanBeSetAgainAfterFirstQuery(): void
     {
         /** @var list<string|null> $capturedConditions */
@@ -216,7 +213,7 @@ final class DoctrineDataSourceArchiveConditionTest extends TestCase
         $this->assertSame('e.archived = false', $capturedConditions[1], 'Re-setting condition before second query must work.');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function settingNullConditionExplicitlyAfterSetClearsIt(): void
     {
         /** @var list<string|null> $capturedConditions */

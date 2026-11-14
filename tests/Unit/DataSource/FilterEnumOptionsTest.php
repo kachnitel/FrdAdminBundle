@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Kachnitel\DataSourceContracts\FilterEnumOptions;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
 enum TestEnumStatus: string
@@ -22,7 +22,7 @@ enum TestEnumPriority: int
 
 final class FilterEnumOptionsTest extends TestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultValuesAreNull(): void
     {
         $options = new FilterEnumOptions();
@@ -33,7 +33,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertFalse($options->multiple);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function valuesCanBeSet(): void
     {
         $values = ['active', 'inactive', 'pending'];
@@ -43,7 +43,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertNull($options->enumClass);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function enumClassCanBeSet(): void
     {
         $options = new FilterEnumOptions(enumClass: 'App\\Enum\\Status');
@@ -52,7 +52,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertSame('App\\Enum\\Status', $options->enumClass);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showAllOptionCanBeDisabled(): void
     {
         $options = new FilterEnumOptions(showAllOption: false);
@@ -60,7 +60,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertFalse($options->showAllOption);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function allParametersCanBeSetTogether(): void
     {
         $values = ['option1', 'option2'];
@@ -75,7 +75,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertFalse($options->showAllOption);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fromValuesCreatesInstanceWithValues(): void
     {
         $values = ['red', 'green', 'blue'];
@@ -86,7 +86,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertTrue($options->showAllOption);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fromValuesCanDisableShowAllOption(): void
     {
         $values = ['yes', 'no'];
@@ -96,7 +96,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertFalse($options->showAllOption);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fromEnumClassCreatesInstanceWithEnumClass(): void
     {
         $options = FilterEnumOptions::fromEnumClass(TestEnumStatus::class);
@@ -106,7 +106,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertTrue($options->showAllOption);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fromEnumClassCanDisableShowAllOption(): void
     {
         $options = FilterEnumOptions::fromEnumClass(TestEnumPriority::class, showAllOption: false);
@@ -115,14 +115,14 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertFalse($options->showAllOption);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isReadonly(): void
     {
         $reflection = new \ReflectionClass(FilterEnumOptions::class);
         $this->assertTrue($reflection->isReadOnly());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function valuesCanBeEmptyArray(): void
     {
         $options = FilterEnumOptions::fromValues([]);
@@ -130,7 +130,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertSame([], $options->values);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function bothValuesAndEnumClassCanBeSet(): void
     {
         // Although typically you'd use one or the other,
@@ -144,7 +144,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertSame('App\\Enum\\Status', $options->enumClass);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function multipleCanBeEnabled(): void
     {
         $options = new FilterEnumOptions(multiple: true);
@@ -152,7 +152,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertTrue($options->multiple);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fromValuesWithMultiple(): void
     {
         $values = ['pending', 'approved', 'rejected'];
@@ -163,7 +163,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertTrue($options->multiple);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fromEnumClassWithMultiple(): void
     {
         $options = FilterEnumOptions::fromEnumClass(TestEnumStatus::class, showAllOption: false, multiple: true);
@@ -173,7 +173,7 @@ final class FilterEnumOptionsTest extends TestCase
         $this->assertTrue($options->multiple);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function allParametersIncludingMultipleCanBeSet(): void
     {
         $values = ['a', 'b', 'c'];

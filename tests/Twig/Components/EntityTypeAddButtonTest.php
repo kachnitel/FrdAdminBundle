@@ -9,19 +9,15 @@ use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Twig\Components\EntityTypeAddButton;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-#[CoversClass(EntityTypeAddButton::class)]
-#[UsesClass(Admin::class)]
-#[Group('inline-add')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(EntityTypeAddButton::class)]
+#[PHPUnit\UsesClass(Admin::class)]
+#[PHPUnit\Group('inline-add')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityTypeAddButtonTest extends TestCase
 {
     /** @var AuthorizationCheckerInterface&MockObject */
@@ -46,7 +42,7 @@ final class EntityTypeAddButtonTest extends TestCase
 
     // ── canCreate() ────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canCreateReturnsTrueWhenUserHasAdminNewPermission(): void
     {
         $this->authChecker->expects($this->once())->method('isGranted')
@@ -56,7 +52,7 @@ final class EntityTypeAddButtonTest extends TestCase
         $this->assertTrue($this->makeButton()->canCreate());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canCreateReturnsFalseWhenUserLacksPermission(): void
     {
         $this->authChecker->method('isGranted')->willReturn(false);
@@ -64,7 +60,7 @@ final class EntityTypeAddButtonTest extends TestCase
         $this->assertFalse($this->makeButton()->canCreate());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canCreateReturnsFalseWhenTargetEntityClassIsEmpty(): void
     {
         $button = new EntityTypeAddButton($this->authChecker, $this->entityDiscovery);
@@ -73,7 +69,7 @@ final class EntityTypeAddButtonTest extends TestCase
         $this->assertFalse($button->canCreate());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canCreateReturnsFalseWhenAuthCheckerThrows(): void
     {
         $this->authChecker->method('isGranted')
@@ -84,19 +80,19 @@ final class EntityTypeAddButtonTest extends TestCase
 
     // ── getEntityShortName() ───────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityShortNameExtractsLastSegmentOfFqcn(): void
     {
         $this->assertSame('Category', $this->makeButton('App\Entity\Category')->getEntityShortName());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityShortNameWorksWithoutNamespace(): void
     {
         $this->assertSame('Category', $this->makeButton('Category')->getEntityShortName());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityShortNameWorksWithDeeplyNestedNamespace(): void
     {
         $this->assertSame(
@@ -107,7 +103,7 @@ final class EntityTypeAddButtonTest extends TestCase
 
     // ── getEntityLabel() ───────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityLabelReturnsAdminAttributeLabel(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -116,7 +112,7 @@ final class EntityTypeAddButtonTest extends TestCase
         $this->assertSame('Product Categories', $this->makeButton()->getEntityLabel());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityLabelFallsBackToShortNameWhenNoAdminAttribute(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
@@ -124,7 +120,7 @@ final class EntityTypeAddButtonTest extends TestCase
         $this->assertSame('Category', $this->makeButton()->getEntityLabel());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityLabelFallsBackToShortNameWhenAdminAttributeHasNoLabel(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -135,7 +131,7 @@ final class EntityTypeAddButtonTest extends TestCase
 
     // ── getFormTypeClass() ────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFormTypeClassReturnsExplicitFormTypeFromAdminAttribute(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -144,7 +140,7 @@ final class EntityTypeAddButtonTest extends TestCase
         $this->assertSame('App\Form\CategoryFormType', $this->makeButton()->getFormTypeClass());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFormTypeClassFallsBackToDynamicEntityFormTypeWhenNoAdminAttribute(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
@@ -152,7 +148,7 @@ final class EntityTypeAddButtonTest extends TestCase
         $this->assertSame(DynamicEntityFormType::class, $this->makeButton()->getFormTypeClass());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFormTypeClassFallsBackToDynamicEntityFormTypeWhenAdminAttributeHasNoFormType(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -163,7 +159,7 @@ final class EntityTypeAddButtonTest extends TestCase
 
     // ── Permission uses short name, not FQCN ──────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canCreateChecksVoterWithShortNameNotFqcn(): void
     {
         $this->authChecker->expects($this->once())

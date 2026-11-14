@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
@@ -19,7 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  *   - EntityWithRowActions     no specific index perm → fallback ROLE_ADMIN
  *
  */
-#[Group('dashboard-permissions')]
+#[PHPUnit\Group('dashboard-permissions')]
 final class DashboardPermissionTest extends WebTestCase
 {
     protected static function getKernelClass(): string

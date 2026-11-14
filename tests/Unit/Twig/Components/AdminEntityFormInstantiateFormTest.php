@@ -7,9 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Components;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormInterface;
@@ -18,10 +16,10 @@ use Symfony\Component\Form\FormInterface;
  * Verifies that AdminEntityForm::instantiateForm() passes the correct options
  * to createForm() when using DynamicEntityFormType vs a custom FormType.
  */
-#[CoversClass(AdminEntityForm::class)]
-#[Group('auto-form')]
-#[Group('collections')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(AdminEntityForm::class)]
+#[PHPUnit\Group('auto-form')]
+#[PHPUnit\Group('collections')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class AdminEntityFormInstantiateFormTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */

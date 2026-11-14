@@ -15,17 +15,16 @@ use Kachnitel\AdminBundle\Service\EntityListColumnService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for EntityList row-level editing.
  */
-#[CoversClass(EntityList::class)]
-#[UsesClass(EntityListConfig::class)]
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(EntityList::class)]
+#[PHPUnit\UsesClass(EntityListConfig::class)]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListEditTest extends TestCase
 {
     private EntityList $component;

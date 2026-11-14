@@ -6,15 +6,14 @@ namespace Kachnitel\AdminBundle\Tests\Unit\RowAction;
 
 use Kachnitel\AdminBundle\Attribute\AdminAction;
 use Kachnitel\AdminBundle\RowAction\AttributeRowActionProvider;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests that AttributeRowActionProvider filters out batch-only actions.
  */
-#[Group('batch-actions')]
-#[Group('row-actions')]
+#[PHPUnit\Group('batch-actions')]
+#[PHPUnit\Group('row-actions')]
 final class AttributeRowActionProviderBatchFilterTest extends TestCase
 {
     private AttributeRowActionProvider $provider;
@@ -24,7 +23,7 @@ final class AttributeRowActionProviderBatchFilterTest extends TestCase
         $this->provider = new AttributeRowActionProvider();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchOnlyActionIsExcludedFromRowActions(): void
     {
         $actions = $this->provider->getActions(EntityWithMixedActionTypes::class);
@@ -33,7 +32,7 @@ final class AttributeRowActionProviderBatchFilterTest extends TestCase
         $this->assertNotContains('bulk-publish', $names, 'BATCH-only action must not appear as row action');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rowOnlyActionIsIncluded(): void
     {
         $actions = $this->provider->getActions(EntityWithMixedActionTypes::class);
@@ -42,7 +41,7 @@ final class AttributeRowActionProviderBatchFilterTest extends TestCase
         $this->assertContains('approve', $names);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function bothTypeActionIsIncludedAsRowAction(): void
     {
         $actions = $this->provider->getActions(EntityWithMixedActionTypes::class);
@@ -51,7 +50,7 @@ final class AttributeRowActionProviderBatchFilterTest extends TestCase
         $this->assertContains('archive', $names);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultActionTypeIsRow(): void
     {
         $actions = $this->provider->getActions(EntityWithDefaultActionType::class);

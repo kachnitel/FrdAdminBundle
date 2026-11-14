@@ -9,8 +9,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithConfiguredGroups;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithGroupedColumns;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
 /**
  * Functional tests for composite column display configuration.
@@ -21,14 +20,14 @@ use PHPUnit\Framework\Attributes\Test;
  *
  * EntityWithGroupedColumns fixture (no AdminColumnGroup) → HEADER_TEXT default.
  */
-#[Group('composite-columns')]
+#[PHPUnit\Group('composite-columns')]
 final class EntityListColumnGroupConfigTest extends ComponentTestCase
 {
     // ──────────────────────────────────────────────────────────────────────────
     // Data source: config propagation
     // ──────────────────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceAppliesAdminColumnGroupConfig(): void
     {
         /** @var DoctrineDataSourceFactory $factory */
@@ -56,7 +55,7 @@ final class EntityListColumnGroupConfigTest extends ComponentTestCase
     // header: 'text' mode
     // ──────────────────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function headerTextModeRendersGroupLabelWithNoSortOrFilterRows(): void
     {
         // address_block uses HEADER_TEXT — plain label, no sort/filter rows for its columns.
@@ -81,7 +80,7 @@ final class EntityListColumnGroupConfigTest extends ComponentTestCase
         $this->assertSame(1, substr_count($html, '<details'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultGroupWithNoConfigUsesTextHeader(): void
     {
         // EntityWithGroupedColumns has no AdminColumnGroup — must default to HEADER_TEXT.
@@ -111,7 +110,7 @@ final class EntityListColumnGroupConfigTest extends ComponentTestCase
     // header: 'collapsible' mode
     // ──────────────────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function headerCollapsibleModeRendersDetailsElement(): void
     {
         $entity = new EntityWithConfiguredGroups();
@@ -141,7 +140,7 @@ final class EntityListColumnGroupConfigTest extends ComponentTestCase
         $this->assertStringNotContainsString('<details open', $html);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function headerCollapsibleModeContainsSubColumnFiltersInDom(): void
     {
         $testComponent = $this->createLiveComponent(
@@ -163,7 +162,7 @@ final class EntityListColumnGroupConfigTest extends ComponentTestCase
     // header: 'full' mode — template branch distinguishable from collapsible
     // ──────────────────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function headerCollapsibleUsesDetailsSummaryNotPlainDiv(): void
     {
         // HEADER_FULL renders: <div class="admin-composite-group-label">
@@ -188,7 +187,7 @@ final class EntityListColumnGroupConfigTest extends ComponentTestCase
     // subLabels modes
     // ──────────────────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function subLabelsIconModeRendersIconWithColumnLabelTitle(): void
     {
         $entity = new EntityWithConfiguredGroups();
@@ -213,7 +212,7 @@ final class EntityListColumnGroupConfigTest extends ComponentTestCase
         $this->assertStringContainsString('title="Last name"', $html);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function subLabelsHiddenModeRendersNoLabelSpan(): void
     {
         $entity = new EntityWithConfiguredGroups();
@@ -243,7 +242,7 @@ final class EntityListColumnGroupConfigTest extends ComponentTestCase
     // rowspan fix
     // ──────────────────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function compositeThAlwaysHasRowspan2(): void
     {
         $testComponent = $this->createLiveComponent(

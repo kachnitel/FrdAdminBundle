@@ -16,15 +16,13 @@ use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[Group('sorting')]
-#[Group('data-source')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('sorting')]
+#[PHPUnit\Group('data-source')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceSortableTest extends TestCase
 {
     /** @var ClassMetadata<object>&MockObject */
@@ -77,7 +75,7 @@ final class DoctrineDataSourceSortableTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function regularFieldsAreSortable(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'createdAt']);
@@ -93,7 +91,7 @@ final class DoctrineDataSourceSortableTest extends TestCase
         $this->assertTrue($columns['createdAt']->sortable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function manyToOneAssociationIsNotSortable(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id']);
@@ -109,7 +107,7 @@ final class DoctrineDataSourceSortableTest extends TestCase
         $this->assertFalse($columns['category']->sortable, 'ManyToOne association must not be sortable');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function oneToManyAssociationIsNotSortable(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id']);
@@ -125,7 +123,7 @@ final class DoctrineDataSourceSortableTest extends TestCase
         $this->assertFalse($columns['tags']->sortable, 'OneToMany/ManyToMany association must not be sortable');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function customColumnIsNotSortableByDefault(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id']);

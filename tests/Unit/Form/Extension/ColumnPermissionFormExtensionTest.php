@@ -8,7 +8,7 @@ use Kachnitel\AdminBundle\Form\Extension\ColumnPermissionFormExtension;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionFormEntity;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -20,7 +20,7 @@ use Symfony\Component\Form\Forms;
  * Enforcement lives in AdminColumnEditabilityResolver; the extension must never
  * mutate the generated form (see ColumnPermissionCreateWarningTest for diagnostics).
  */
-#[Group('column-permission-form')]
+#[PHPUnit\Group('column-permission-form')]
 final class ColumnPermissionFormExtensionTest extends TestCase
 {
     public function testExtendsDynamicEntityFormType(): void
@@ -44,6 +44,7 @@ final class ColumnPermissionFormExtensionTest extends TestCase
         }
     }
 
+    #[PHPUnit\DoesNotPerformAssertions]
     public function testMissingEntityClassIsIgnored(): void
     {
         $extension = new ColumnPermissionFormExtension(
@@ -53,8 +54,6 @@ final class ColumnPermissionFormExtensionTest extends TestCase
         );
 
         $extension->buildForm($this->builder(), []);
-
-        $this->addToAssertionCount(1);
     }
 
     /**

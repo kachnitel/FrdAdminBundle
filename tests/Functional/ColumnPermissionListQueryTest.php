@@ -6,8 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Tests\Fixtures\PermissionTestEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -22,8 +21,8 @@ use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
  * No user is authenticated, so PermissionTestEntity::$salary (ROLE_HR) and ::$internalNotes
  * (ROLE_MANAGER) are denied. Each "denied" assertion has a permitted-column control.
  */
-#[Group('column-permission-query')]
-#[Group('entity-list')]
+#[PHPUnit\Group('column-permission-query')]
+#[PHPUnit\Group('entity-list')]
 final class ColumnPermissionListQueryTest extends ComponentTestCase
 {
     protected function setUp(): void
@@ -48,32 +47,32 @@ final class ColumnPermissionListQueryTest extends ComponentTestCase
         $this->em->flush();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function searchDoesNotMatchDeniedColumns(): void
     {
         $this->assertSame([], $this->names($this->list(['search' => 'alpha-secret'])));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function searchStillMatchesPermittedColumns(): void
     {
         $this->assertSame(['Alice'], $this->names($this->list(['search' => 'Alice'])));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnFilterOnDeniedColumnIsIgnored(): void
     {
         $this->assertCount(3, $this->names($this->list(['columnFilters' => ['internalNotes' => 'alpha']])));
         $this->assertCount(3, $this->names($this->list(['columnFilters' => ['salary' => '50000.00']])));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnFilterOnPermittedColumnStillApplies(): void
     {
         $this->assertSame(['Alice'], $this->names($this->list(['columnFilters' => ['name' => 'Alice']])));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sortByDeniedColumnFallsBackToIdentifierOrder(): void
     {
         // Sorting by salary ASC would yield Alice, Carol, Bob; identifier ASC yields Alice, Bob, Carol.
@@ -82,7 +81,7 @@ final class ColumnPermissionListQueryTest extends ComponentTestCase
         $this->assertSame(['Alice', 'Bob', 'Carol'], $this->names($list));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sortByPermittedColumnStillApplies(): void
     {
         $list = $this->list(['sortBy' => 'name', 'sortDirection' => 'ASC']);
@@ -90,7 +89,7 @@ final class ColumnPermissionListQueryTest extends ComponentTestCase
         $this->assertSame(['Alice', 'Bob', 'Carol'], $this->names($list));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function searchHelpLabelsOmitDeniedColumns(): void
     {
         $labels = $this->list([])->getGlobalSearchColumnLabels();

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Kachnitel\AdminBundle\Attribute\AdminRoutes;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
 final class AdminRoutesTest extends TestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultRoutesIsEmptyArray(): void
     {
         $routes = new AdminRoutes();
@@ -18,7 +18,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertSame([], $routes->all());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function routesCanBeSetViaConstructor(): void
     {
         $routeMap = [
@@ -34,7 +34,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertSame($routeMap, $routes->all());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getReturnsRouteForKey(): void
     {
         $routes = new AdminRoutes([
@@ -46,7 +46,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertSame('app_product_edit', $routes->get('edit'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getReturnsNullForUndefinedKey(): void
     {
         $routes = new AdminRoutes(['index' => 'app_product_index']);
@@ -55,7 +55,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertNull($routes->get('nonexistent'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasReturnsTrueForExistingKey(): void
     {
         $routes = new AdminRoutes([
@@ -67,7 +67,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertTrue($routes->has('edit'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasReturnsFalseForMissingKey(): void
     {
         $routes = new AdminRoutes(['index' => 'app_product_index']);
@@ -76,7 +76,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertFalse($routes->has('nonexistent'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasReturnsFalseForEmptyRoutes(): void
     {
         $routes = new AdminRoutes();
@@ -84,7 +84,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertFalse($routes->has('index'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function allReturnsAllRoutes(): void
     {
         $routeMap = [
@@ -97,7 +97,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertSame($routeMap, $routes->all());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function attributeCanBeAppliedToClass(): void
     {
         $reflection = new \ReflectionClass(AdminRoutes::class);
@@ -109,7 +109,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertSame(\Attribute::TARGET_CLASS, $attrInstance->flags);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canDefinePartialRoutes(): void
     {
         $routes = new AdminRoutes([
@@ -124,7 +124,7 @@ final class AdminRoutesTest extends TestCase
         $this->assertFalse($routes->has('delete'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function routeNamesCanContainAnyString(): void
     {
         $routes = new AdminRoutes([

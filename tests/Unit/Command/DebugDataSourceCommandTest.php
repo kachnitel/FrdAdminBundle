@@ -11,14 +11,13 @@ use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\DataSourceContracts\FilterEnumOptions;
 use Kachnitel\DataSourceContracts\FilterMetadata;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
-#[Group('command')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('command')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DebugDataSourceCommandTest extends TestCase
 {
     /** @var DataSourceRegistry&MockObject */

@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\ValueObject;
 
 use Kachnitel\AdminBundle\ValueObject\RowAction;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('row-actions')]
+#[PHPUnit\Group('row-actions')]
 final class RowActionTest extends TestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function itCreatesActionWithRequiredFieldsOnly(): void
     {
         $action = new RowAction(name: 'show', label: 'Show');
@@ -34,7 +33,7 @@ final class RowActionTest extends TestCase
         $this->assertNull($action->template);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itAcceptsStringExpressionCondition(): void
     {
         $action = new RowAction(
@@ -47,7 +46,7 @@ final class RowActionTest extends TestCase
         $this->assertFalse($action->hasDiCondition());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itAcceptsDiTupleCondition(): void
     {
         /** @var array{class-string, string} $condition */
@@ -63,21 +62,21 @@ final class RowActionTest extends TestCase
         $this->assertTrue($action->hasDiCondition());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasDiConditionReturnsFalseForStringCondition(): void
     {
         $action = new RowAction(name: 'show', label: 'Show', condition: '!entity.archived');
         $this->assertFalse($action->hasDiCondition());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasDiConditionReturnsFalseWhenNoCondition(): void
     {
         $action = new RowAction(name: 'show', label: 'Show');
         $this->assertFalse($action->hasDiCondition());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function withCreatesModifiedCopy(): void
     {
         $original = new RowAction(name: 'show', label: 'Show', icon: '👀');
@@ -92,7 +91,7 @@ final class RowActionTest extends TestCase
         $this->assertSame('👀', $original->icon);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function withCanExplicitlySetNull(): void
     {
         $original = new RowAction(name: 'show', label: 'Show', icon: '👀');
@@ -102,7 +101,7 @@ final class RowActionTest extends TestCase
         $this->assertSame('👀', $original->icon);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function withCanReplaceDiConditionWithExpression(): void
     {
         /** @var array{class-string, string} $condition */
@@ -119,7 +118,7 @@ final class RowActionTest extends TestCase
         $this->assertFalse($modified->hasDiCondition());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function mergeKeepsOriginalValuesWhenOverrideHasNulls(): void
     {
         $original = new RowAction(
@@ -147,7 +146,7 @@ final class RowActionTest extends TestCase
         $this->assertSame('ADMIN_SHOW', $merged->voterAttribute); // kept from original
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function mergePropagatesDiTupleConditionFromOverride(): void
     {
         $original = new RowAction(name: 'approve', label: 'Approve', priority: 10);
@@ -165,49 +164,49 @@ final class RowActionTest extends TestCase
         $this->assertTrue($merged->hasDiCondition());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasRouteReturnsTrueWhenRouteIsSet(): void
     {
         $action = new RowAction(name: 'edit', label: 'Edit', route: 'app_edit');
         $this->assertTrue($action->hasRoute());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasRouteReturnsFalseWhenNoRoute(): void
     {
         $action = new RowAction(name: 'edit', label: 'Edit');
         $this->assertFalse($action->hasRoute());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function requiresConfirmationReturnsTrueWhenMessageSet(): void
     {
         $action = new RowAction(name: 'delete', label: 'Delete', confirmMessage: 'Are you sure?');
         $this->assertTrue($action->requiresConfirmation());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function requiresConfirmationReturnsFalseWhenNoMessage(): void
     {
         $action = new RowAction(name: 'edit', label: 'Edit');
         $this->assertFalse($action->requiresConfirmation());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isFormActionReturnsTrueWhenMethodIsSet(): void
     {
         $action = new RowAction(name: 'delete', label: 'Delete', method: 'DELETE');
         $this->assertTrue($action->isFormAction());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isFormActionReturnsFalseWhenNoMethod(): void
     {
         $action = new RowAction(name: 'show', label: 'Show');
         $this->assertFalse($action->isFormAction());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function mergeKeepsOriginalPriorityWhenOtherUsesDefaultPriority(): void
     {
         $original = new RowAction(name: 'show', label: 'Show', priority: 10);
@@ -220,7 +219,7 @@ final class RowActionTest extends TestCase
         $this->assertSame(10, $merged->priority);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function mergeUsesOtherPriorityWhenExplicitlySet(): void
     {
         $original = new RowAction(name: 'show', label: 'Show', priority: 10);
@@ -231,7 +230,7 @@ final class RowActionTest extends TestCase
         $this->assertSame(5, $merged->priority);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultPriorityIsUsedWhenNotExplicitlySet(): void
     {
         $action = new RowAction(name: 'show', label: 'Show');

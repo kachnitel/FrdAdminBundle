@@ -16,11 +16,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversMethod;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -29,12 +25,12 @@ use PHPUnit\Framework\TestCase;
  * and returns correct human-readable column labels for searchable fields.
  *
  */
-#[Group('global-search')]
-#[CoversMethod(DoctrineDataSource::class, 'getGlobalSearchColumnLabels')]
-#[UsesClass(Admin::class)]
-#[UsesClass(DoctrineDataSource::class)]
-#[Group('global-search')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('global-search')]
+#[PHPUnit\CoversMethod(DoctrineDataSource::class, 'getGlobalSearchColumnLabels')]
+#[PHPUnit\UsesClass(Admin::class)]
+#[PHPUnit\UsesClass(DoctrineDataSource::class)]
+#[PHPUnit\Group('global-search')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceSearchAwareTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -118,7 +114,7 @@ final class DoctrineDataSourceSearchAwareTest extends TestCase
         $this->classMetadata->method('getAssociationNames')->willReturn([]);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function implementsSearchAwareDataSourceInterface(): void
     {
         $interfaces = class_implements(DoctrineDataSource::class);
@@ -128,7 +124,7 @@ final class DoctrineDataSourceSearchAwareTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsEmptyArrayWhenNoSearchableFields(): void
     {
         $this->queryService->method('getSearchableFieldNames')->willReturn([]);
@@ -138,7 +134,7 @@ final class DoctrineDataSourceSearchAwareTest extends TestCase
         $this->assertSame([], $labels);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsLabelsForSearchableColumnsVisibleInList(): void
     {
         $this->stubDoctrineFields(['id' => 'integer', 'name' => 'string', 'email' => 'string']);
@@ -150,7 +146,7 @@ final class DoctrineDataSourceSearchAwareTest extends TestCase
         $this->assertContains('Email', $labels);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function excludesSearchableFieldsNotPresentAsColumns(): void
     {
         $this->stubDoctrineFields(['id' => 'integer', 'name' => 'string']);
@@ -163,7 +159,7 @@ final class DoctrineDataSourceSearchAwareTest extends TestCase
         $this->assertNotContains('Hidden field', $labels);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsLabelsForStringAndTextFieldsInColumns(): void
     {
         $this->stubDoctrineFields([
@@ -185,7 +181,7 @@ final class DoctrineDataSourceSearchAwareTest extends TestCase
         $this->assertCount(2, $labels);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function skipsSearchableFieldsNotInVisibleColumns(): void
     {
         $this->stubDoctrineFields(['id' => 'integer', 'name' => 'string', 'internalCode' => 'string']);

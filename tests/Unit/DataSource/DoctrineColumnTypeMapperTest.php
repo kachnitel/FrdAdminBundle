@@ -6,19 +6,15 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnTypeMapper;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(DoctrineColumnTypeMapper::class)]
-#[Group('doctrine-data-source')]
-#[Group('data-source')]
-#[Group('doctrine')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(DoctrineColumnTypeMapper::class)]
+#[PHPUnit\Group('doctrine-data-source')]
+#[PHPUnit\Group('data-source')]
+#[PHPUnit\Group('doctrine')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineColumnTypeMapperTest extends TestCase
 {
     private DoctrineColumnTypeMapper $mapper;
@@ -34,8 +30,8 @@ final class DoctrineColumnTypeMapperTest extends TestCase
 
     // ── Regular Doctrine field types ──────────────────────────────────────────
 
-    #[Test]
-    #[DataProvider('provideFieldTypes')]
+    #[PHPUnit\Test]
+    #[PHPUnit\DataProvider('provideFieldTypes')]
     public function itMapsDoctrineFieldTypeToAdminColumnType(string $doctrineType, string $expected): void
     {
         $this->metadata->method('hasField')->willReturn(true);
@@ -75,7 +71,7 @@ final class DoctrineColumnTypeMapperTest extends TestCase
 
     // ── Association types ─────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itReturnCollectionForCollectionValuedAssociation(): void
     {
         $this->metadata->method('hasField')->willReturn(false);
@@ -85,7 +81,7 @@ final class DoctrineColumnTypeMapperTest extends TestCase
         $this->assertSame('collection', $this->mapper->getColumnType($this->metadata, 'tags'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itReturnsRelationForSingleValuedAssociation(): void
     {
         $this->metadata->method('hasField')->willReturn(false);
@@ -97,7 +93,7 @@ final class DoctrineColumnTypeMapperTest extends TestCase
 
     // ── Unknown / custom columns ──────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itReturnsStringForColumnWithNoDoctrineMapping(): void
     {
         $this->metadata->method('hasField')->willReturn(false);

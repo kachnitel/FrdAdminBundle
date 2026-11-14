@@ -10,10 +10,7 @@ use Kachnitel\AdminBundle\Twig\Components\ColumnFilter;
 use Kachnitel\AdminBundle\Twig\Components\DateRangeFilter;
 use Kachnitel\AdminBundle\Twig\Components\EmitsToListTrait;
 use Kachnitel\AdminBundle\Twig\Components\EnumMultiFilter;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\CoversTrait;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\UX\LiveComponent\LiveResponder;
 
@@ -25,18 +22,18 @@ use Symfony\UX\LiveComponent\LiveResponder;
  *
  * @see https://symfony.com/bundles/ux-live-component/current/index.html#scoping-events
  */
-#[CoversClass(ColumnFilter::class)]
-#[CoversClass(DateRangeFilter::class)]
-#[CoversClass(EnumMultiFilter::class)]
-#[CoversTrait(EmitsToListTrait::class)]
-#[CoversTrait(BatchActionTrait::class)]
-#[Group('collection-dialog')]
-#[Group('collection-scope')]
+#[PHPUnit\CoversClass(ColumnFilter::class)]
+#[PHPUnit\CoversClass(DateRangeFilter::class)]
+#[PHPUnit\CoversClass(EnumMultiFilter::class)]
+#[PHPUnit\CoversTrait(EmitsToListTrait::class)]
+#[PHPUnit\CoversTrait(BatchActionTrait::class)]
+#[PHPUnit\Group('collection-dialog')]
+#[PHPUnit\Group('collection-scope')]
 final class ListEventScopingTest extends TestCase
 {
     private const EMBEDDED = 'K:Admin:EntityListEmbedded';
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnFilterTargetsItsListComponent(): void
     {
         $filter = new ColumnFilter();
@@ -51,7 +48,7 @@ final class ListEventScopingTest extends TestCase
         $this->assertEmitUp($responder, 'filter:updated', ['column' => 'name', 'value' => 'abc'], self::EMBEDDED);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnFilterWithoutListComponentKeepsLegacyBroadcast(): void
     {
         // Custom templates that don't pass listComponent behave exactly as before.
@@ -65,7 +62,7 @@ final class ListEventScopingTest extends TestCase
         $this->assertEmitUp($responder, 'filter:updated', ['column' => 'name', 'value' => ''], null);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateRangeFilterTargetsItsListComponent(): void
     {
         $filter = new DateRangeFilter();
@@ -79,7 +76,7 @@ final class ListEventScopingTest extends TestCase
         $this->assertEmitUp($responder, 'filter:updated', ['column' => 'createdAt', 'value' => ''], self::EMBEDDED);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function enumMultiFilterTargetsItsListComponent(): void
     {
         $filter = new EnumMultiFilter();
@@ -93,7 +90,7 @@ final class ListEventScopingTest extends TestCase
         $this->assertEmitUp($responder, 'filter:updated', ['column' => 'status', 'value' => ''], self::EMBEDDED);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchActionsTargetTheirListComponent(): void
     {
         $action = new class implements BatchActionComponentInterface {

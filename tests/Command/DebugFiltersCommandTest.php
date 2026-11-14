@@ -13,26 +13,23 @@ use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Command\DebugFiltersCommand;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Utils\PropertyReflection;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 
-#[CoversClass(DebugFiltersCommand::class)]
-#[UsesClass(ColumnFilter::class)]
-#[UsesClass(PropertyReflection::class)]
-#[Group('debug-filters')]
+#[PHPUnit\CoversClass(DebugFiltersCommand::class)]
+#[PHPUnit\UsesClass(ColumnFilter::class)]
+#[PHPUnit\UsesClass(PropertyReflection::class)]
+#[PHPUnit\Group('debug-filters')]
 final class DebugFiltersCommandTest extends TestCase
 {
     private const VERBOSE = ['verbosity' => OutputInterface::VERBOSITY_VERBOSE];
 
     // ── listEntities() ────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function listWarnsWhenNoAdminEntitiesExist(): void
     {
         $tester = $this->makeTester(allMetadata: [new ClassMetadata(DebugFiltersPlainEntity::class)]);
@@ -43,7 +40,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('No entities found. Use --all', $tester->getDisplay());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function listWithAllOptionIncludesNonAdminEntities(): void
     {
         $tester = $this->makeTester(allMetadata: [
@@ -61,7 +58,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('No', $display);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function listPromptsForEntityAndShowsItsFilters(): void
     {
         $tester = $this->makeTester(
@@ -80,7 +77,7 @@ final class DebugFiltersCommandTest extends TestCase
 
     // ── Entity resolution ─────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function reportsErrorWhenEntityCannotBeResolved(): void
     {
         $tester = $this->makeTester();
@@ -90,7 +87,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('Entity "DoesNotExist" not found.', $tester->getDisplay());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolvesFullyQualifiedClassName(): void
     {
         $tester = $this->makeTester();
@@ -100,7 +97,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('Filter Metadata for ' . DebugFiltersAdminEntity::class, $tester->getDisplay());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolvesViaCommonNamespaces(): void
     {
         if (!class_exists('App\\Entity\\DebugFiltersAliased', false)) {
@@ -121,7 +118,7 @@ final class DebugFiltersCommandTest extends TestCase
 
     // ── showEntityFilters() ───────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function reportsErrorWhenFilterProviderThrows(): void
     {
         $tester = $this->makeTester(filterError: new \RuntimeException('boom'));
@@ -131,7 +128,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('Error getting filters: boom', $tester->getDisplay());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function warnsWhenEntityHasNoFilters(): void
     {
         $tester = $this->makeTester(filters: []);
@@ -143,7 +140,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringNotContainsString('Possible reasons', $display);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function verboseNoFiltersListsPossibleReasons(): void
     {
         $tester = $this->makeTester(filters: []);
@@ -155,7 +152,7 @@ final class DebugFiltersCommandTest extends TestCase
 
     // ── printFilterConfig(): common + type-specific details (non-verbose) ────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function printsCommonFilterDetailsAndDisabledMarker(): void
     {
         $tester = $this->makeTester(filters: [
@@ -179,7 +176,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('Priority', $display);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function nonScalarDetailValuesAreStringifiedAsEmpty(): void
     {
         $tester = $this->makeTester(filters: [
@@ -191,7 +188,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('Label', $tester->getDisplay());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function filterWithoutTypeOrDetailsIsLabelledUnknown(): void
     {
         $tester = $this->makeTester(filters: ['title' => []]);
@@ -201,7 +198,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('title (unknown)', $tester->getDisplay());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function printsEnumDetails(): void
     {
         $tester = $this->makeTester(filters: [
@@ -217,7 +214,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('Show All Option', $display);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function printsRelationDetails(): void
     {
         $tester = $this->makeTester(filters: [
@@ -242,7 +239,7 @@ final class DebugFiltersCommandTest extends TestCase
 
     // ── Verbose: type detection + search-field detection ─────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function verboseExplainsTypeDetectionForEveryBranch(): void
     {
         $tester = $this->makeTester(filters: [
@@ -272,7 +269,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('Doctrine ManyToMany association', $display);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function associationTypeNameIsUnknownForUnrecognizedType(): void
     {
         $method = new \ReflectionMethod(DebugFiltersCommand::class, 'getAssociationTypeName');
@@ -280,7 +277,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertSame('Unknown', $method->invoke(null, 0));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function verboseExplainsSearchFieldDetection(): void
     {
         $tester = $this->makeTester(filters: [
@@ -338,7 +335,7 @@ final class DebugFiltersCommandTest extends TestCase
 
     // ── Verbose: skipped properties ──────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function verboseListsSkippedPropertiesWithReasons(): void
     {
         $tester = $this->makeTester(filters: ['title' => ['type' => 'text']]);
@@ -352,7 +349,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('Collection association (OneToMany/ManyToMany) - add #[ColumnFilter] to enable', $display);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function verboseOmitsSkippedSectionWhenEverythingIsConfigured(): void
     {
         $tester = $this->makeTester(filters: [

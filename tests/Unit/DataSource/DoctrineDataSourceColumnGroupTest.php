@@ -18,13 +18,12 @@ use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[Group('composite-columns')]
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('composite-columns')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceColumnGroupTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -94,7 +93,7 @@ final class DoctrineDataSourceColumnGroupTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnGroupsReturnsAllColumnsAsStringsWhenNoGroupsDefined(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'name', 'email']);
@@ -107,7 +106,7 @@ final class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertSame(['id', 'name', 'email'], $slots);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnGroupsGroupsConsecutiveColumnsWithSameGroupId(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['id', 'firstName', 'lastName', 'email']);
@@ -134,7 +133,7 @@ final class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertArrayHasKey('lastName', $group->columns);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnGroupsPreservesColumnOrderWithinGroup(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'lastName']);
@@ -153,7 +152,7 @@ final class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertSame(['firstName', 'lastName'], array_keys($group->columns));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnGroupsHandlesNonContiguousColumnsInSameGroup(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName', 'email', 'lastName']);
@@ -175,7 +174,7 @@ final class DoctrineDataSourceColumnGroupTest extends TestCase
         $this->assertSame('email', $slots[1]);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnMetadataGroupIsSetFromAttribute(): void
     {
         $this->metadata->method('getFieldNames')->willReturn(['firstName']);

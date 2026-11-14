@@ -12,22 +12,18 @@ use Doctrine\ORM\QueryBuilder;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\ListQueryColumnGuard;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversMethod;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for the archiveDqlCondition parameter of EntityListQueryService.
  */
-#[CoversMethod(EntityListQueryService::class, 'buildQuery')]
-#[CoversMethod(EntityListQueryService::class, 'getEntities')]
-#[UsesClass(EntityListQueryService::class)]
-#[UsesClass(ListQueryColumnGuard::class)]
-#[Group('archive')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversMethod(EntityListQueryService::class, 'buildQuery')]
+#[PHPUnit\CoversMethod(EntityListQueryService::class, 'getEntities')]
+#[PHPUnit\UsesClass(EntityListQueryService::class)]
+#[PHPUnit\UsesClass(ListQueryColumnGuard::class)]
+#[PHPUnit\Group('archive')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListQueryServiceArchiveTest extends TestCase
 {
     /** @var list<string> */
@@ -74,7 +70,7 @@ final class EntityListQueryServiceArchiveTest extends TestCase
         $this->service = new EntityListQueryService($em, new ListQueryColumnGuard($em, $this->createStub(ColumnPermissionService::class)));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildQueryWithoutArchiveConditionAddsNoExtraWhere(): void
     {
         $this->service->buildQuery('App\\Entity\\Product', null, '', [], [], 'id', 'ASC');
@@ -82,7 +78,7 @@ final class EntityListQueryServiceArchiveTest extends TestCase
         $this->assertEmpty($this->andWhereCalls);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildQueryAppliesArchiveConditionAsAndWhere(): void
     {
         $this->service->buildQuery(
@@ -99,7 +95,7 @@ final class EntityListQueryServiceArchiveTest extends TestCase
         $this->assertContains('e.deletedAt IS NULL', $this->andWhereCalls);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildQueryAppliesArchiveConditionAfterColumnFilters(): void
     {
         $this->service->buildQuery(
@@ -119,7 +115,7 @@ final class EntityListQueryServiceArchiveTest extends TestCase
         $this->assertGreaterThan(0, $archiveIdx);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildQueryAppliesArchiveConditionBeforeOrderBy(): void
     {
         $this->service->buildQuery(
@@ -138,7 +134,7 @@ final class EntityListQueryServiceArchiveTest extends TestCase
         $this->assertContains(['e.createdAt', 'DESC'], $this->orderByCalls);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function nullArchiveConditionIsIgnored(): void
     {
         $this->service->buildQuery('App\\Entity\\Product', null, '', [], [], 'id', 'ASC', null);

@@ -16,19 +16,15 @@ use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversMethod;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[CoversMethod(EntityList::class, 'getGlobalSearchColumnLabels')]
-#[UsesClass(EntityListConfig::class)]
-#[UsesClass(EntityList::class)]
-#[Group('global-search')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversMethod(EntityList::class, 'getGlobalSearchColumnLabels')]
+#[PHPUnit\UsesClass(EntityListConfig::class)]
+#[PHPUnit\UsesClass(EntityList::class)]
+#[PHPUnit\Group('global-search')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListGlobalSearchLabelsTest extends TestCase
 {
     /** @var DataSourceRegistry&MockObject */
@@ -62,7 +58,7 @@ final class EntityListGlobalSearchLabelsTest extends TestCase
         $this->permissionService->method('canViewList')->willReturn(true);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsLabelsFromSearchAwareDataSource(): void
     {
         /** @var DataSourceInterface&SearchAwareDataSourceInterface&MockObject $dataSource */
@@ -80,7 +76,7 @@ final class EntityListGlobalSearchLabelsTest extends TestCase
         $this->assertSame(['Name', 'Description', 'Email'], $labels);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsEmptyArrayForNonSearchAwareDataSource(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */

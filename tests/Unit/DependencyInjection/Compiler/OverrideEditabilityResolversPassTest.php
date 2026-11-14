@@ -11,9 +11,7 @@ use Kachnitel\DynamicFormBundle\Editability\AlwaysEditableFieldResolver;
 use Kachnitel\DynamicFormBundle\Editability\FieldEditabilityResolverInterface;
 use Kachnitel\EntityComponentsBundle\Components\Field\DefaultEditabilityResolver;
 use Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -32,11 +30,11 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  * (mirrored in EditabilityResolverWiringTest) — adjust the import if the
  * actual class name differs.
  */
-#[Group('editability')]
-#[CoversClass(OverrideEditabilityResolversPass::class)]
+#[PHPUnit\Group('editability')]
+#[PHPUnit\CoversClass(OverrideEditabilityResolversPass::class)]
 final class OverrideEditabilityResolversPassTest extends TestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function overridesAnAlreadySetAliasFromDynamicFormBundle(): void
     {
         $container = new ContainerBuilder();
@@ -54,7 +52,7 @@ final class OverrideEditabilityResolversPassTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function overridesAnAlreadySetAliasFromEntityComponentsBundle(): void
     {
         $container = new ContainerBuilder();
@@ -70,7 +68,7 @@ final class OverrideEditabilityResolversPassTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function setsBothAliasesFromScratchWhenNeitherExistedYet(): void
     {
         $container = new ContainerBuilder();

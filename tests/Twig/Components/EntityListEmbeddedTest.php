@@ -19,11 +19,7 @@ use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\AdminBundle\Twig\Components\EntityListEmbedded;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\DataSourceContracts\PaginatedResult;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
@@ -34,11 +30,11 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
  * Covers the EntityList / EntityListEmbedded inheritance and the `scope` LiveProp's
  * wiring into the data source.
  */
-#[CoversClass(EntityList::class)]
-#[CoversClass(EntityListEmbedded::class)]
-#[UsesClass(EntityListConfig::class)]
-#[Group('collection-dialog')]
-#[Group('entity-list')]
+#[PHPUnit\CoversClass(EntityList::class)]
+#[PHPUnit\CoversClass(EntityListEmbedded::class)]
+#[PHPUnit\UsesClass(EntityListConfig::class)]
+#[PHPUnit\Group('collection-dialog')]
+#[PHPUnit\Group('entity-list')]
 final class EntityListEmbeddedTest extends TestCase
 {
     private const URL_PROPS = ['search', 'sortBy', 'sortDirection', 'columnFilters', 'page', 'itemsPerPage', 'showArchived'];
@@ -55,8 +51,8 @@ final class EntityListEmbeddedTest extends TestCase
 
     // ── URL binding is the only difference ────────────────────────────────────
 
-    #[Test]
-    #[DataProvider('urlProps')]
+    #[PHPUnit\Test]
+    #[PHPUnit\DataProvider('urlProps')]
     public function listIsUrlBoundButEmbeddedIsNot(string $prop): void
     {
         $this->assertNotFalse(
@@ -69,15 +65,15 @@ final class EntityListEmbeddedTest extends TestCase
         );
     }
 
-    #[Test]
-    #[DataProvider('urlProps')]
+    #[PHPUnit\Test]
+    #[PHPUnit\DataProvider('urlProps')]
     public function urlPropsAreWritableOnBoth(string $prop): void
     {
         $this->assertTrue($this->liveProp(EntityList::class, $prop)->isIdentityWritable());
         $this->assertTrue($this->liveProp(EntityListEmbedded::class, $prop)->isIdentityWritable());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function bothRenderTheSameTemplate(): void
     {
         $this->assertSame(
@@ -86,7 +82,7 @@ final class EntityListEmbeddedTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function embeddedListExtendsEntityList(): void
     {
         $parent = (new \ReflectionClass(EntityListEmbedded::class))->getParentClass();
@@ -95,7 +91,7 @@ final class EntityListEmbeddedTest extends TestCase
         $this->assertSame(EntityList::class, $parent->getName());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function scopeIsANonWritableLiveProp(): void
     {
         foreach ([EntityList::class, EntityListEmbedded::class] as $class) {
@@ -106,7 +102,7 @@ final class EntityListEmbeddedTest extends TestCase
         }
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function embeddedInitialisesItemsPerPageFromConfig(): void
     {
         $component = $this->makeComponent(EntityListEmbedded::class);
@@ -116,7 +112,7 @@ final class EntityListEmbeddedTest extends TestCase
 
     // ── Scope wiring ───────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntitiesPassesResolvedScopeToDoctrineDataSource(): void
     {
         $dataSource = $this->createMock(DoctrineDataSource::class);
@@ -134,7 +130,7 @@ final class EntityListEmbeddedTest extends TestCase
         $component->getEntities();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntitiesClearsScopeWhenUnscoped(): void
     {
         $dataSource = $this->createMock(DoctrineDataSource::class);
@@ -147,7 +143,7 @@ final class EntityListEmbeddedTest extends TestCase
         $component->getEntities();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function scopeIsResolvedOncePerComponentInstance(): void
     {
         $dataSource = $this->createStub(DoctrineDataSource::class);
@@ -163,7 +159,7 @@ final class EntityListEmbeddedTest extends TestCase
         $component->getEntities();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function scopeOnNonDoctrineDataSourceFailsClosed(): void
     {
         $resolver = $this->createStub(CollectionScopeResolver::class);
@@ -181,7 +177,7 @@ final class EntityListEmbeddedTest extends TestCase
         $component->getEntities();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function checkPermissionsPropagatesScopeDenial(): void
     {
         $resolver = $this->createStub(CollectionScopeResolver::class);
@@ -195,8 +191,8 @@ final class EntityListEmbeddedTest extends TestCase
         $component->checkPermissions();
     }
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function scopeIsBoundToTheListsOwnEntityClass(): void
     {
         $dataSource = $this->createStub(DoctrineDataSource::class);
@@ -214,7 +210,7 @@ final class EntityListEmbeddedTest extends TestCase
         $component->checkPermissions();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function emptyScopeNeverTouchesTheResolver(): void
     {
         $resolver = $this->createMock(CollectionScopeResolver::class);
@@ -227,8 +223,8 @@ final class EntityListEmbeddedTest extends TestCase
 
     // ── Event scoping ──────────────────────────────────────────────────────────
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function listComponentNameIsTheRegisteredNameOfTheConcreteClass(): void
     {
         $this->assertSame('K:Admin:EntityList', $this->makeComponent(EntityList::class)->getListComponentName());

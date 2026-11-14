@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Tests\Fixtures\ObjectAuthEntity;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
-#[Group('object-authorization')]
-#[Group('row-actions')]
+#[PHPUnit\Group('object-authorization')]
+#[PHPUnit\Group('row-actions')]
 final class EntityListObjectAuthorizationTest extends ComponentTestCase
 {
     protected static function getKernelClass(): string

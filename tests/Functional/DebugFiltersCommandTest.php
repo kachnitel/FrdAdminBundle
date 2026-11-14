@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Command\DebugFiltersCommand;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -29,7 +29,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         return TestKernel::class;
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function commandIsRegistered(): void
     {
         $container = static::getContainer();
@@ -38,7 +38,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         $this->assertInstanceOf(DebugFiltersCommand::class, $command);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function listEntitiesShowsAdminEntitiesAndPromptsForSelection(): void
     {
         $this->commandTester->setInputs(['TestEntity']);
@@ -53,7 +53,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         $this->assertStringContainsString('Select an entity to inspect:', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showFiltersForTestEntity(): void
     {
         $this->commandTester->execute(['entityClass' => 'TestEntity']);
@@ -69,7 +69,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         $this->assertStringContainsString('number', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showFiltersDisplaysEnumType(): void
     {
         $this->commandTester->execute(['entityClass' => 'TestEntity']);
@@ -83,7 +83,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         $this->assertStringContainsString('TestStatus', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showFiltersDisplaysRelationType(): void
     {
         $this->commandTester->execute(['entityClass' => 'TestEntity']);
@@ -97,7 +97,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         $this->assertStringContainsString('Search Fields', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showFiltersWithVerboseOutput(): void
     {
         $this->commandTester->execute(
@@ -112,7 +112,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         $this->assertStringContainsString('Type detection:', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showErrorForNonExistentEntity(): void
     {
         $this->commandTester->execute(['entityClass' => 'NonExistentEntity']);
@@ -121,7 +121,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         $this->assertStringContainsString('not found', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showAllOptionListsNonAdminEntities(): void
     {
         $this->commandTester->setInputs(['RelatedEntity']);
@@ -134,7 +134,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         $this->assertStringContainsString('RelatedEntity', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showSkippedPropertiesInVerboseMode(): void
     {
         $this->commandTester->execute(
@@ -151,7 +151,7 @@ final class DebugFiltersCommandTest extends KernelTestCase
         $this->assertStringContainsString('disabledFilter', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showMultiplePropertyForEnumFilters(): void
     {
         $this->commandTester->execute(['entityClass' => 'TestEntity']);

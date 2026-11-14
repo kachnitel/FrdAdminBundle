@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Tests\Fixtures\RequiredFieldsEntity;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -45,9 +44,9 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  *
  * @see RequiredFieldsEntity
  */
-#[Group('live-form-defaults')]
-#[Group('auto-form')]
-#[Group('admin-entity-form')]
+#[PHPUnit\Group('live-form-defaults')]
+#[PHPUnit\Group('auto-form')]
+#[PHPUnit\Group('admin-entity-form')]
 final class LiveFormEmptyDataRegressionTest extends ComponentTestCase
 {
     /**
@@ -146,7 +145,7 @@ final class LiveFormEmptyDataRegressionTest extends ComponentTestCase
 
     // ── First render, before any user interaction ──────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function newFormFirstRenderLeavesRequiredIntegerFieldBlank(): void
     {
         $component = $this->mountNewForm();
@@ -159,7 +158,7 @@ final class LiveFormEmptyDataRegressionTest extends ComponentTestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function newFormFirstRenderLeavesRequiredDateTimeFieldBlank(): void
     {
         $component = $this->mountNewForm();
@@ -191,7 +190,7 @@ final class LiveFormEmptyDataRegressionTest extends ComponentTestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editingOneFieldDoesNotBackfillUntouchedDateTimeFieldWithEpoch(): void
     {
         $component = $this->mountNewForm();
@@ -230,7 +229,7 @@ final class LiveFormEmptyDataRegressionTest extends ComponentTestCase
 
     // ── Editing an existing entity: fail, don't preserve ────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editingAnExistingEntityFieldFailsValidationOnBlankResubmit(): void
     {
         $entity = $this->createEntity('Original', 5, new \DateTimeImmutable('2024-03-10'));

@@ -6,14 +6,13 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminAction;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('row-actions')]
+#[PHPUnit\Group('row-actions')]
 final class AdminActionTest extends TestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function itCreatesAttributeWithRequiredFieldsOnly(): void
     {
         $action = new AdminAction(name: 'duplicate', label: 'Duplicate');
@@ -36,7 +35,7 @@ final class AdminActionTest extends TestCase
         $this->assertFalse($action->override);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itAcceptsStringExpressionCondition(): void
     {
         $action = new AdminAction(
@@ -48,7 +47,7 @@ final class AdminActionTest extends TestCase
         $this->assertSame('entity.getStatus() == "pending"', $action->condition);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itCreatesAttributeWithAllFields(): void
     {
         $action = new AdminAction(
@@ -76,7 +75,7 @@ final class AdminActionTest extends TestCase
         $this->assertTrue($action->override);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itIsRepeatableAttribute(): void
     {
         $reflection = new \ReflectionClass(AdminAction::class);
@@ -85,7 +84,7 @@ final class AdminActionTest extends TestCase
         $this->assertNotSame(0, $attrInstance->flags & Attribute::IS_REPEATABLE);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itTargetsClasses(): void
     {
         $reflection = new \ReflectionClass(AdminAction::class);
@@ -94,7 +93,7 @@ final class AdminActionTest extends TestCase
         $this->assertNotSame(0, $attrInstance->flags & Attribute::TARGET_CLASS);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function conditionTypeIsFlexible(): void
     {
         // Both forms must be accepted without type errors

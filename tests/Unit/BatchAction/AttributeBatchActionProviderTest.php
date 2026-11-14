@@ -9,11 +9,10 @@ use Kachnitel\AdminBundle\BatchAction\AttributeBatchActionProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithRowActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\ValueObject\BatchAction;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('batch-actions')]
+#[PHPUnit\Group('batch-actions')]
 final class AttributeBatchActionProviderTest extends TestCase
 {
     private AttributeBatchActionProvider $provider;
@@ -23,13 +22,13 @@ final class AttributeBatchActionProviderTest extends TestCase
         $this->provider = new AttributeBatchActionProvider();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function supportsAnyExistingClass(): void
     {
         $this->assertTrue($this->provider->supports(TestEntity::class));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function doesNotSupportNonExistentClass(): void
     {
         /** @var class-string $missing */
@@ -37,14 +36,14 @@ final class AttributeBatchActionProviderTest extends TestCase
         $this->assertFalse($this->provider->supports($missing));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsEmptyArrayForEntityWithNoBatchActions(): void
     {
         // TestEntity has no batch AdminAction attributes
         $this->assertSame([], $this->provider->getActions(TestEntity::class));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsEmptyArrayForNonExistentEntityClass(): void
     {
         /** @var class-string $missing */
@@ -53,14 +52,14 @@ final class AttributeBatchActionProviderTest extends TestCase
         $this->assertSame([], $this->provider->getActions($missing));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsEmptyArrayForEntityWithOnlyRowActions(): void
     {
         // EntityWithRowActions has row-type actions only
         $this->assertSame([], $this->provider->getActions(EntityWithRowActions::class));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function readsBatchActionAttributesFromEntityClass(): void
     {
         $actions = $this->provider->getActions(EntityWithBatchActions::class);
@@ -69,7 +68,7 @@ final class AttributeBatchActionProviderTest extends TestCase
         $this->assertContainsOnlyInstancesOf(BatchAction::class, $actions);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function actionNameAndLabelAreReadCorrectly(): void
     {
         $actions = $this->provider->getActions(EntityWithBatchActions::class);
@@ -79,7 +78,7 @@ final class AttributeBatchActionProviderTest extends TestCase
         $this->assertSame('Publish All', $actions[0]->label);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function actionWithBothTypeIsIncluded(): void
     {
         $actions = $this->provider->getActions(EntityWithBothTypeAction::class);
@@ -88,13 +87,13 @@ final class AttributeBatchActionProviderTest extends TestCase
         $this->assertSame('manage', $actions[0]->name);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function priorityIs50(): void
     {
         $this->assertSame(50, $this->provider->getPriority());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resultIsCachedOnSecondCall(): void
     {
         $first = $this->provider->getActions(EntityWithBatchActions::class);

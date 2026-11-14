@@ -7,7 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\ValueObject\BatchAction;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -19,7 +19,7 @@ use Twig\Environment;
  * Applications customise icon output by overriding it in
  * templates/bundles/KachnitelAdminBundle/components/_Icon.html.twig.
  */
-#[Group('icons')]
+#[PHPUnit\Group('icons')]
 final class IconPartialTest extends KernelTestCase
 {
     private const PARTIAL = '@KachnitelAdmin/components/_Icon.html.twig';

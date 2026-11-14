@@ -17,15 +17,13 @@ use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\DataSourceContracts\PaginatedResult;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(EntityList::class)]
-#[UsesClass(EntityListConfig::class)]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(EntityList::class)]
+#[PHPUnit\UsesClass(EntityListConfig::class)]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListNavigationTest extends TestCase
 {
     /** @var DataSourceInterface&MockObject */

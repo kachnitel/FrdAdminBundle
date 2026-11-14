@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\ObjectAuthEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\ObjectAuthEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -33,7 +32,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * @see \Kachnitel\AdminBundle\Tests\Fixtures\ObjectAuthVoter
  * @see \Kachnitel\AdminBundle\Tests\Functional\ObjectAuthorizationTestKernel
  */
-#[Group('object-authorization')]
+#[PHPUnit\Group('object-authorization')]
 final class AdminEntityFormObjectAuthorizationTest extends ComponentTestCase
 {
     private const FORM_NAME = 'object_auth_entity_form';
@@ -56,7 +55,7 @@ final class AdminEntityFormObjectAuthorizationTest extends ComponentTestCase
 
     // ── New entity (ADMIN_NEW) ──────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingNewAllowedEntitySucceeds(): void
     {
         $component = $this->mountNewForm();
@@ -68,7 +67,7 @@ final class AdminEntityFormObjectAuthorizationTest extends ComponentTestCase
         $this->assertCount(1, $all);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingNewForbiddenEntityIsDeniedAndNotPersisted(): void
     {
         $component = $this->mountNewForm();
@@ -88,7 +87,7 @@ final class AdminEntityFormObjectAuthorizationTest extends ComponentTestCase
 
     // ── Existing entity (ADMIN_EDIT) ────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingEditToAnAllowedEntitySucceeds(): void
     {
         $entity = $this->persistedEntity(ObjectAuthEntity::KIND_ALLOWED);
@@ -111,7 +110,7 @@ final class AdminEntityFormObjectAuthorizationTest extends ComponentTestCase
      * doSubmitForm() binds the new kind), not the state it had when the
      * component mounted; otherwise this exact bypass would go uncaught.
      */
-    #[Test]
+    #[PHPUnit\Test]
     public function savingEditThatChangesKindToForbiddenIsDeniedAndNotPersisted(): void
     {
         $entity = $this->persistedEntity(ObjectAuthEntity::KIND_ALLOWED);
@@ -152,7 +151,7 @@ final class AdminEntityFormObjectAuthorizationTest extends ComponentTestCase
      * this override still calls: there's no other way to retrieve the
      * bound entity at all.
      */
-    #[Test]
+    #[PHPUnit\Test]
     public function objectAuthorizationSurvivesAFullyOverriddenSave(): void
     {
         $component = $this->createLiveComponent(

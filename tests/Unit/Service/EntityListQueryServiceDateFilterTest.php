@@ -12,10 +12,7 @@ use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\ListQueryColumnGuard;
 use Kachnitel\AdminBundle\Service\Traits\DateFilterTrait;
-use PHPUnit\Framework\Attributes\CoversTrait;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
@@ -23,12 +20,12 @@ use PHPUnit\Framework\TestCase;
  * DateFilterTrait has no public surface of its own — it's exercised entirely
  * through EntityListQueryService::buildQuery(), the only class that composes it.
  */
-#[CoversTrait(DateFilterTrait::class)]
-#[UsesClass(EntityListQueryService::class)]
-#[UsesClass(ListQueryColumnGuard::class)]
-#[Group('entity-list')]
-#[Group('query')]
-#[Group('date-filter')]
+#[PHPUnit\CoversTrait(DateFilterTrait::class)]
+#[PHPUnit\UsesClass(EntityListQueryService::class)]
+#[PHPUnit\UsesClass(ListQueryColumnGuard::class)]
+#[PHPUnit\Group('entity-list')]
+#[PHPUnit\Group('query')]
+#[PHPUnit\Group('date-filter')]
 final class EntityListQueryServiceDateFilterTest extends TestCase
 {
     private EntityListQueryService $service;
@@ -93,7 +90,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
 
     // ── applyDateFilter (ColumnFilter::TYPE_DATE) ───────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateFilterWithStringValueMatchesFullDay(): void
     {
         $this->buildQueryWithFilter('eventDate', '2026-03-15', ColumnFilter::TYPE_DATE);
@@ -107,7 +104,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
         $this->assertDateTimeParam($this->setParameterCalls, 1, 'filter_eventDate_end', '2026-03-15 23:59:59');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateFilterAcceptsDateTimeInterfaceValueDirectly(): void
     {
         $this->buildQueryWithFilter('eventDate', new \DateTimeImmutable('2026-06-01 14:30:00'), ColumnFilter::TYPE_DATE);
@@ -116,7 +113,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
         $this->assertDateTimeParam($this->setParameterCalls, 1, 'filter_eventDate_end', '2026-06-01 23:59:59');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateFilterDerivesParamNameFromColumn(): void
     {
         $this->buildQueryWithFilter('publishedAt', '2026-01-01', ColumnFilter::TYPE_DATE);
@@ -129,7 +126,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
 
     // ── applyDateRangeFilter (ColumnFilter::TYPE_DATERANGE) ─────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateRangeFilterWithJsonStringAppliesBothBounds(): void
     {
         $this->buildQueryWithFilter(
@@ -146,7 +143,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
         $this->assertDateTimeParam($this->setParameterCalls, 1, 'filter_eventDate_to', '2026-01-31 23:59:59');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateRangeFilterAcceptsArrayValueDirectly(): void
     {
         $this->buildQueryWithFilter(
@@ -158,7 +155,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
         $this->assertCount(2, $this->andWhereCalls);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateRangeFilterWithOnlyFromAppliesLowerBoundOnly(): void
     {
         $this->buildQueryWithFilter(
@@ -171,7 +168,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
         $this->assertCount(1, $this->setParameterCalls);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateRangeFilterWithOnlyToAppliesUpperBoundOnly(): void
     {
         $this->buildQueryWithFilter(
@@ -184,7 +181,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
         $this->assertCount(1, $this->setParameterCalls);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateRangeFilterTreatsEmptyStringBoundsAsNotProvided(): void
     {
         $this->buildQueryWithFilter(
@@ -197,7 +194,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
         $this->assertEmpty($this->setParameterCalls);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateRangeFilterWithNonArrayValueIsNoOp(): void
     {
         // A JSON-encoded scalar decodes to a non-array — must not error, just skip.
@@ -207,7 +204,7 @@ final class EntityListQueryServiceDateFilterTest extends TestCase
         $this->assertEmpty($this->setParameterCalls);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dateRangeFilterAcceptsDateTimeInterfaceBoundsDirectly(): void
     {
         $this->buildQueryWithFilter(

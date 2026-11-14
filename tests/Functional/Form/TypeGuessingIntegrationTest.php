@@ -8,10 +8,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\FieldMapping;
 use Kachnitel\AdminBundle\Tests\Functional\TestKernel;
 use Kachnitel\DynamicFormBundle\Form\DoctrineFormTypeMapper;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\Extension\Core\Type\ColorType;
@@ -32,11 +29,11 @@ use Symfony\Component\Form\Extension\Core\Type\UrlType;
  * ConventionalFieldTypeGuesser only inspects the field name.
  *
  */
-#[Group('type-guessing')]
-#[Group('auto-form')]
-#[Group('type-guessing')]
-#[Group('auto-form')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('type-guessing')]
+#[PHPUnit\Group('auto-form')]
+#[PHPUnit\Group('type-guessing')]
+#[PHPUnit\Group('auto-form')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class TypeGuessingIntegrationTest extends KernelTestCase
 {
     private DoctrineFormTypeMapper $mapper;
@@ -87,8 +84,8 @@ final class TypeGuessingIntegrationTest extends KernelTestCase
     //     ];
     // }
 
-    #[Test]
-    #[DataProvider('emailFieldNamesProvider')]
+    #[PHPUnit\Test]
+    #[PHPUnit\DataProvider('emailFieldNamesProvider')]
     public function emailNamedFieldWithoutConstraintProducesEmailType(string $fieldName): void
     {
         $config = $this->mapper->getFieldConfig(
@@ -116,8 +113,8 @@ final class TypeGuessingIntegrationTest extends KernelTestCase
         ];
     }
 
-    #[Test]
-    #[DataProvider('telFieldNamesProvider')]
+    #[PHPUnit\Test]
+    #[PHPUnit\DataProvider('telFieldNamesProvider')]
     public function phoneNamedFieldProducesTelType(string $fieldName): void
     {
         $config = $this->mapper->getFieldConfig(
@@ -141,7 +138,7 @@ final class TypeGuessingIntegrationTest extends KernelTestCase
         ];
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function websiteUrlFieldProducesUrlTypeWithNullDefaultProtocol(): void
     {
         $config = $this->mapper->getFieldConfig(
@@ -158,7 +155,7 @@ final class TypeGuessingIntegrationTest extends KernelTestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function colorNamedFieldProducesColorType(): void
     {
         $config = $this->mapper->getFieldConfig(
@@ -172,7 +169,7 @@ final class TypeGuessingIntegrationTest extends KernelTestCase
 
     // ── Fallback: unrelated names still produce TextType ─────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unrelatedStringFieldFallsBackToTextType(): void
     {
         $config = $this->mapper->getFieldConfig(

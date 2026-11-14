@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionFormEntity;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -18,8 +17,8 @@ use Symfony\Component\Security\Core\User\InMemoryUser;
  * #[ColumnPermission] on the "+ Add" dialog (InlineEntityForm), which builds a new,
  * data-less generated form: the same resolver contract must apply as in AdminEntityForm.
  */
-#[Group('column-permission-form')]
-#[Group('inline-add')]
+#[PHPUnit\Group('column-permission-form')]
+#[PHPUnit\Group('inline-add')]
 final class ColumnPermissionInlineFormTest extends ComponentTestCase
 {
     protected function setUp(): void
@@ -31,7 +30,7 @@ final class ColumnPermissionInlineFormTest extends ComponentTestCase
         self::getContainer()->get('request_stack')->push($request);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showDeniedFieldsAreNotRendered(): void
     {
         $html = $this->render(new InMemoryUser('user', 'test', ['ROLE_USER']));
@@ -41,7 +40,7 @@ final class ColumnPermissionInlineFormTest extends ComponentTestCase
         self::assertDoesNotMatchRegularExpression('/\[ssn]/', $html);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editDeniedFieldIsRenderedDisabled(): void
     {
         $html = $this->render(new InMemoryUser('hr', 'test', ['ROLE_HR']));
@@ -51,7 +50,7 @@ final class ColumnPermissionInlineFormTest extends ComponentTestCase
         self::assertMatchesRegularExpression('/\[ssn]/', $html);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fieldsAreEditableWithBothRoles(): void
     {
         $html = $this->render(new InMemoryUser('hr_edit', 'test', ['ROLE_HR', 'ROLE_HR_EDIT']));

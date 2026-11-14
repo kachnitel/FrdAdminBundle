@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -34,8 +33,8 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * appears in both the page form (K:Admin:EntityForm) and the inline dialog
  * simultaneously.
  */
-#[Group('admin-entity-form')]
-#[Group('inline-add')]
+#[PHPUnit\Group('admin-entity-form')]
+#[PHPUnit\Group('inline-add')]
 final class InlineEntityFormTest extends ComponentTestCase
 {
     private const FORM_NAME = 'inline_kachnitel_adminbundle_tests_fixtures_testentity';
@@ -67,7 +66,7 @@ final class InlineEntityFormTest extends ComponentTestCase
 
     // ── Render ────────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function formRendersWithFormElementAndSaveButton(): void
     {
         $rendered = (string) $this->mountForm()->render();
@@ -94,7 +93,7 @@ final class InlineEntityFormTest extends ComponentTestCase
 
     // ── Save: valid data ──────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveWithValidDataCreatesEntity(): void
     {
         $component = $this->mountForm();
@@ -106,7 +105,7 @@ final class InlineEntityFormTest extends ComponentTestCase
         $this->assertCount(1, $entities);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savedEntityHasPositiveId(): void
     {
         $component = $this->mountForm();
@@ -122,7 +121,7 @@ final class InlineEntityFormTest extends ComponentTestCase
 
     // ── Save: invalid data ────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveWithBlankNameShowsValidationError(): void
     {
         $component = $this->mountForm();
@@ -134,7 +133,7 @@ final class InlineEntityFormTest extends ComponentTestCase
         $this->assertStringContainsString('Name is required.', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveWithBlankNameDoesNotInsertRow(): void
     {
         $component = $this->mountForm();

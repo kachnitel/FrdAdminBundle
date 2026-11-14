@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Twig\Components;
 
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -33,12 +32,12 @@ use PHPUnit\Framework\TestCase;
  * @see https://github.com/kachnitel/FrdAdminBundle/issues/12
  * @see \Kachnitel\AdminBundle\Twig\Components\InlineEntityForm
  */
-#[Group('inline-add')]
+#[PHPUnit\Group('inline-add')]
 final class EntityTypeAddButtonLazyLoadingRegressionTest extends TestCase
 {
     private const TEMPLATE_PATH = __DIR__ . '/../../../templates/components/EntityTypeAddButton.html.twig';
 
-    #[Test]
+    #[PHPUnit\Test]
     public function templateFileExists(): void
     {
         $this->assertFileExists(
@@ -47,7 +46,7 @@ final class EntityTypeAddButtonLazyLoadingRegressionTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function inlineFormComponentIsMountedWithLoadingLazy(): void
     {
         $source = file_get_contents(self::TEMPLATE_PATH);

@@ -7,7 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Form\Extension\ColumnPermissionFormExtension;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionFormEntity;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -15,7 +15,7 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
-#[Group('column-permission-form')]
+#[PHPUnit\Group('column-permission-form')]
 final class ColumnPermissionFormTest extends KernelTestCase
 {
     protected static function getKernelClass(): string

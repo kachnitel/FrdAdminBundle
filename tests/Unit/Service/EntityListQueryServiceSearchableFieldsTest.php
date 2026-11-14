@@ -9,21 +9,17 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\ListQueryColumnGuard;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for EntityListQueryService::getSearchableFieldNames().
  */
-#[CoversClass(EntityListQueryService::class)]
-#[UsesClass(ListQueryColumnGuard::class)]
-#[Group('global-search')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(EntityListQueryService::class)]
+#[PHPUnit\UsesClass(ListQueryColumnGuard::class)]
+#[PHPUnit\Group('global-search')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListQueryServiceSearchableFieldsTest extends TestCase
 {
     /** @var ClassMetadata<object>&MockObject */
@@ -44,7 +40,7 @@ final class EntityListQueryServiceSearchableFieldsTest extends TestCase
         $this->service = new EntityListQueryService($em, new ListQueryColumnGuard($em, $this->createStub(ColumnPermissionService::class)));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsStringAndTextFields(): void
     {
         $this->classMetadata->method('getFieldNames')
@@ -65,7 +61,7 @@ final class EntityListQueryServiceSearchableFieldsTest extends TestCase
         $this->assertSame(['name', 'description'], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsEmptyArrayWhenNoStringOrTextField(): void
     {
         $this->classMetadata->method('getFieldNames')
@@ -85,7 +81,7 @@ final class EntityListQueryServiceSearchableFieldsTest extends TestCase
         $this->assertSame([], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsAllStringFields(): void
     {
         $this->classMetadata->method('getFieldNames')
@@ -98,7 +94,7 @@ final class EntityListQueryServiceSearchableFieldsTest extends TestCase
         $this->assertSame(['firstName', 'lastName', 'email'], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsEmptyArrayForEntityWithNoFields(): void
     {
         $this->classMetadata->method('getFieldNames')->willReturn([]);

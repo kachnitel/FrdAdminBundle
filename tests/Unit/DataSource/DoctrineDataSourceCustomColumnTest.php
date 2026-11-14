@@ -17,13 +17,12 @@ use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[Group('custom-columns')]
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('custom-columns')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceCustomColumnTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -81,7 +80,7 @@ final class DoctrineDataSourceCustomColumnTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnsAppendsCustomColumnsAfterDoctrineColumns(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -107,7 +106,7 @@ final class DoctrineDataSourceCustomColumnTest extends TestCase
         $this->assertSame(['id', 'name', 'fullName'], $keys);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnsUsesCustomColumnMetadataDirectly(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -127,7 +126,7 @@ final class DoctrineDataSourceCustomColumnTest extends TestCase
         $this->assertSame($customMeta, $columns['badge']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getItemValueReturnsNullForCustomColumn(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -145,7 +144,7 @@ final class DoctrineDataSourceCustomColumnTest extends TestCase
         $this->assertNull($value);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getItemValueReturnsNormalValueForDoctrineColumn(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);

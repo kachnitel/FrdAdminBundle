@@ -3,7 +3,7 @@
 <!-- BADGES -->
 ![Tests](<https://img.shields.io/badge/tests-1875%20passed-brightgreen>)
 ![Coverage](<https://img.shields.io/badge/coverage-95%25-brightgreen>)
-![Assertions](<https://img.shields.io/badge/assertions-4395-blue>)
+![Assertions](<https://img.shields.io/badge/assertions-4394-blue>)
 ![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-8%20issues-red>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)

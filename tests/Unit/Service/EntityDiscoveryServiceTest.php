@@ -12,13 +12,12 @@ use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\ConfiguredEntity;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[Group('entity-list')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('entity-list')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityDiscoveryServiceTest extends TestCase
 {
     private EntityDiscoveryService $service;

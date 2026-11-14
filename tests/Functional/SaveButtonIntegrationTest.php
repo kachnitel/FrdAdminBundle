@@ -9,7 +9,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\OverridingSaveAdminEntityForm;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -37,7 +37,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * flagging it here as a known gap rather than silently pretending this is
  * full E2E coverage.
  */
-#[Group('save-button')]
+#[PHPUnit\Group('save-button')]
 final class SaveButtonIntegrationTest extends ComponentTestCase
 {
     private const FORM_NAME = 'test_entity_form';

@@ -9,10 +9,7 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Kachnitel\AdminBundle\Utils\PropertyReflection;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -28,12 +25,12 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * - Support role hierarchy through AuthorizationChecker
  *
  */
-#[CoversClass(ColumnPermissionService::class)]
-#[UsesClass(ColumnPermission::class)]
-#[UsesClass(ObjectHelper::class)]
-#[UsesClass(PropertyReflection::class)]
-#[Group('column-permissions')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(ColumnPermissionService::class)]
+#[PHPUnit\UsesClass(ColumnPermission::class)]
+#[PHPUnit\UsesClass(ObjectHelper::class)]
+#[PHPUnit\UsesClass(PropertyReflection::class)]
+#[PHPUnit\Group('column-permissions')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class ColumnPermissionServiceTest extends TestCase
 {
     /** @var AuthorizationCheckerInterface&MockObject */

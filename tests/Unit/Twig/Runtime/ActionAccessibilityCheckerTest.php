@@ -7,17 +7,14 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Runtime;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-#[CoversClass(ActionAccessibilityChecker::class)]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(ActionAccessibilityChecker::class)]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class ActionAccessibilityCheckerTest extends TestCase
 {
     /** @var AuthorizationCheckerInterface&MockObject */
@@ -49,7 +46,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
 
     // ── isActionAccessible: route check ───────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsFalseWhenRouteDoesNotExist(): void
     {
         $this->assertFalse(
@@ -59,7 +56,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
 
     // ── isActionAccessible: voter check ──────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsFalseWhenVoterDeniesAccess(): void
     {
         $this->authChecker->expects($this->once())->method('isGranted')
@@ -71,8 +68,8 @@ final class ActionAccessibilityCheckerTest extends TestCase
         );
     }
 
-    #[Test]
-    #[Group('action-disabling')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('action-disabling')]
     public function returnsFalseForNewActionWhenVoterDeniesDisabledAction(): void
     {
         $this->authChecker->expects($this->once())->method('isGranted')
@@ -84,7 +81,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsTrueWhenVoterGrantsAndNoFormRequired(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
@@ -94,7 +91,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsTrueWithNullAuthCheckerGrantsEveryone(): void
     {
         $checker = new ActionAccessibilityChecker(
@@ -113,7 +110,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
 
     // ── isActionAccessible: form check for new/edit ───────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsFalseForNewActionWhenFormTypeMissing(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
@@ -125,7 +122,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsFalseForEditActionWhenFormTypeMissing(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
@@ -137,7 +134,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsTrueForNewActionWhenFormTypeExists(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
@@ -149,7 +146,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showActionDoesNotRequireFormType(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
@@ -161,7 +158,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deleteActionDoesNotRequireFormType(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
@@ -174,7 +171,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
 
     // ── voter attribute mapping ───────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function indexActionUsesAdminIndexVoterAttribute(): void
     {
         $this->authChecker->expects($this->once())
@@ -185,7 +182,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
         $this->checker->isActionAccessible('Product', 'index', routeExists: true);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editActionUsesAdminEditVoterAttribute(): void
     {
         $this->authChecker->expects($this->once())
@@ -198,7 +195,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
         $this->checker->isActionAccessible('Product', 'edit', routeExists: true);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveActionUsesAdminArchiveVoterAttribute(): void
     {
         $this->authChecker->expects($this->once())
@@ -209,7 +206,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
         $this->checker->isActionAccessible('Product', 'archive', routeExists: true);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unarchiveActionUsesAdminArchiveVoterAttribute(): void
     {
         $this->authChecker->expects($this->once())
@@ -222,7 +219,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
 
     // ── custom formType from Admin attribute ──────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function usesCustomFormTypeFromAdminAttributeWhenAvailable(): void
     {
         $this->authChecker->method('isGranted')->willReturn(true);
@@ -245,7 +242,7 @@ final class ActionAccessibilityCheckerTest extends TestCase
 
     // ── null formRegistry ─────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsTrueForNewActionWhenFormRegistryIsNull(): void
     {
         $checker = new ActionAccessibilityChecker(

@@ -7,14 +7,12 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestStatus;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(DoctrineItemValueResolver::class)]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(DoctrineItemValueResolver::class)]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineItemValueResolverTest extends TestCase
 {
     private DoctrineItemValueResolver $resolver;
@@ -30,7 +28,7 @@ final class DoctrineItemValueResolverTest extends TestCase
 
     // ── Doctrine field path ────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolvesRegularDoctrineField(): void
     {
         $entity = new \stdClass();
@@ -42,7 +40,7 @@ final class DoctrineItemValueResolverTest extends TestCase
         $this->assertSame('Test Name', $this->resolver->resolve($entity, 'name', $this->metadata));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolvesIntegerDoctrineField(): void
     {
         $entity = new \stdClass();
@@ -54,7 +52,7 @@ final class DoctrineItemValueResolverTest extends TestCase
         $this->assertSame(42, $this->resolver->resolve($entity, 'quantity', $this->metadata));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolvesNullableDoctrineField(): void
     {
         $entity = new \stdClass();
@@ -68,7 +66,7 @@ final class DoctrineItemValueResolverTest extends TestCase
 
     // ── BackedEnum normalisation ───────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function normalisesStringBackedEnumToScalarValue(): void
     {
         $entity = new \stdClass();
@@ -82,7 +80,7 @@ final class DoctrineItemValueResolverTest extends TestCase
         $this->assertSame('active', $result, 'String-backed enum must be unwrapped to its value.');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function normalisesInactiveEnumCaseCorrectly(): void
     {
         $entity = new \stdClass();
@@ -98,7 +96,7 @@ final class DoctrineItemValueResolverTest extends TestCase
 
     // ── Doctrine association path ──────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolvesDoctrineAssociation(): void
     {
         $entity = new \stdClass();
@@ -111,7 +109,7 @@ final class DoctrineItemValueResolverTest extends TestCase
         $this->assertSame($related, $this->resolver->resolve($entity, 'category', $this->metadata));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolvesNullAssociation(): void
     {
         $entity = new \stdClass();
@@ -125,7 +123,7 @@ final class DoctrineItemValueResolverTest extends TestCase
 
     // ── get{Field}() getter fallback ───────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToGetterWhenNoDoctrineMapping(): void
     {
         $entity = new class {
@@ -138,7 +136,7 @@ final class DoctrineItemValueResolverTest extends TestCase
         $this->assertSame('virtual value', $this->resolver->resolve($entity, 'virtualField', $this->metadata));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getterReceivesPriorityOverIsGetter(): void
     {
         $entity = new class {
@@ -158,7 +156,7 @@ final class DoctrineItemValueResolverTest extends TestCase
 
     // ── is{Field}() getter fallback ────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToIsBooleanGetter(): void
     {
         $entity = new class {
@@ -171,7 +169,7 @@ final class DoctrineItemValueResolverTest extends TestCase
         $this->assertTrue($this->resolver->resolve($entity, 'enabled', $this->metadata));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isBooleanGetterReturningFalseIsPreserved(): void
     {
         $entity = new class {
@@ -186,7 +184,7 @@ final class DoctrineItemValueResolverTest extends TestCase
 
     // ── null fallback ──────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsNullWhenNoResolutionPathExists(): void
     {
         $entity = new \stdClass();
@@ -197,7 +195,7 @@ final class DoctrineItemValueResolverTest extends TestCase
         $this->assertNull($this->resolver->resolve($entity, 'nonExistentProperty', $this->metadata));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasFieldTakesPriorityOverGetterWithSameName(): void
     {
         $entity = new class {

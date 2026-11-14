@@ -13,11 +13,7 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\ListQueryColumnGuard;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -26,11 +22,11 @@ use PHPUnit\Framework\TestCase;
  * `search`, `sortBy` and `columnFilters` are client-writable, so the query layer is
  * where the decision is enforced.
  */
-#[CoversClass(EntityListQueryService::class)]
-#[UsesClass(ListQueryColumnGuard::class)]
-#[Group('column-permission-query')]
-#[Group('entity-list')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(EntityListQueryService::class)]
+#[PHPUnit\UsesClass(ListQueryColumnGuard::class)]
+#[PHPUnit\Group('column-permission-query')]
+#[PHPUnit\Group('entity-list')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListQueryServiceColumnPermissionTest extends TestCase
 {
     private const ENTITY = 'App\\Entity\\Employee';
@@ -112,7 +108,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function searchableFieldsExcludeDeniedColumns(): void
     {
         $this->denyOnShow(['salary', 'internalNotes']);
@@ -120,7 +116,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         $this->assertSame(['name'], $this->service->getSearchableFieldNames(self::ENTITY));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function searchableFieldsIncludeEverythingWhenNothingIsDenied(): void
     {
         $this->denyOnShow([]);
@@ -132,7 +128,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function globalSearchDoesNotMatchDeniedColumns(): void
     {
         $this->denyOnShow(['salary']);
@@ -145,7 +141,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         $this->assertStringNotContainsString('e.salary', $this->andWhere[0]);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function globalSearchIsSkippedWhenEverySearchableColumnIsDenied(): void
     {
         $this->denyOnShow(['name', 'salary', 'internalNotes']);
@@ -155,7 +151,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         $this->assertSame([], $this->andWhere);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnFilterOnDeniedColumnIsDropped(): void
     {
         $this->denyOnShow(['salary']);
@@ -165,7 +161,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         $this->assertSame([], $this->andWhere);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnFilterOnPermittedColumnStillApplies(): void
     {
         $this->denyOnShow(['salary']);
@@ -176,7 +172,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         $this->assertStringContainsString('e.name', $this->andWhere[0]);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sortByDeniedColumnFallsBackToIdentifier(): void
     {
         $this->denyOnShow(['salary']);
@@ -186,7 +182,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         $this->assertSame(['e.id'], $this->orderBy);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sortByDottedPathOnDeniedColumnFallsBackToIdentifier(): void
     {
         $this->denyOnShow(['salary']);
@@ -196,7 +192,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         $this->assertSame(['e.id'], $this->orderBy);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sortByPermittedColumnIsUnchanged(): void
     {
         $this->denyOnShow(['salary']);
@@ -206,7 +202,7 @@ final class EntityListQueryServiceColumnPermissionTest extends TestCase
         $this->assertSame(['e.name'], $this->orderBy);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function permissionsAreOnlyAskedAboutShow(): void
     {
         $this->permissions->expects($this->atLeastOnce())

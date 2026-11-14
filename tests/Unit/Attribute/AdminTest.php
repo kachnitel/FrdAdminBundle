@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Kachnitel\AdminBundle\Attribute\Admin;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
 final class AdminTest extends TestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultValuesAreSetCorrectly(): void
     {
         $admin = new Admin();
@@ -31,7 +30,7 @@ final class AdminTest extends TestCase
         $this->assertNull($admin->getSortDirection());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function labelCanBeSet(): void
     {
         $admin = new Admin(label: 'Products');
@@ -39,7 +38,7 @@ final class AdminTest extends TestCase
         $this->assertSame('Products', $admin->getLabel());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function iconCanBeSet(): void
     {
         $admin = new Admin(icon: 'inventory');
@@ -47,7 +46,7 @@ final class AdminTest extends TestCase
         $this->assertSame('inventory', $admin->getIcon());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function formTypeCanBeSet(): void
     {
         $admin = new Admin(formType: 'App\\Form\\ProductType');
@@ -55,7 +54,7 @@ final class AdminTest extends TestCase
         $this->assertSame('App\\Form\\ProductType', $admin->getFormType());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function filtersCanBeDisabled(): void
     {
         $admin = new Admin(enableFilters: false);
@@ -63,7 +62,7 @@ final class AdminTest extends TestCase
         $this->assertFalse($admin->isEnableFilters());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchActionsCanBeEnabled(): void
     {
         $admin = new Admin(enableBatchActions: true);
@@ -71,7 +70,7 @@ final class AdminTest extends TestCase
         $this->assertTrue($admin->isEnableBatchActions());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnVisibilityCanBeEnabled(): void
     {
         $admin = new Admin(enableColumnVisibility: true);
@@ -79,7 +78,7 @@ final class AdminTest extends TestCase
         $this->assertTrue($admin->isEnableColumnVisibility());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnsCanBeSet(): void
     {
         $columns = ['id', 'name', 'price'];
@@ -88,7 +87,7 @@ final class AdminTest extends TestCase
         $this->assertSame($columns, $admin->getColumns());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function excludeColumnsCanBeSet(): void
     {
         $excludeColumns = ['password', 'salt'];
@@ -97,7 +96,7 @@ final class AdminTest extends TestCase
         $this->assertSame($excludeColumns, $admin->getExcludeColumns());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function filterableColumnsCanBeSet(): void
     {
         $filterableColumns = ['name', 'status'];
@@ -106,7 +105,7 @@ final class AdminTest extends TestCase
         $this->assertSame($filterableColumns, $admin->getFilterableColumns());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function permissionsCanBeSet(): void
     {
         $permissions = [
@@ -119,7 +118,7 @@ final class AdminTest extends TestCase
         $this->assertSame($permissions, $admin->getPermissions());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermissionForActionReturnsCorrectPermission(): void
     {
         $permissions = [
@@ -134,7 +133,7 @@ final class AdminTest extends TestCase
         $this->assertSame('ROLE_ADMIN', $admin->getPermissionForAction('delete'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermissionForActionReturnsNullForUndefinedAction(): void
     {
         $permissions = ['index' => 'ROLE_USER'];
@@ -144,8 +143,8 @@ final class AdminTest extends TestCase
         $this->assertNull($admin->getPermissionForAction('nonexistent'));
     }
 
-    #[Test]
-    #[Group('action-disabling')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('action-disabling')]
     public function getPermissionForActionReturnsNullWhenActionIsDisabled(): void
     {
         $admin = new Admin(permissions: ['new' => false]);
@@ -153,8 +152,8 @@ final class AdminTest extends TestCase
         $this->assertNull($admin->getPermissionForAction('new'));
     }
 
-    #[Test]
-    #[Group('action-disabling')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('action-disabling')]
     public function isActionDisabledIsTrueOnlyForLiteralFalse(): void
     {
         $admin = new Admin(permissions: ['new' => false, 'edit' => 'ROLE_EDITOR']);
@@ -165,7 +164,7 @@ final class AdminTest extends TestCase
         $this->assertFalse((new Admin())->isActionDisabled('new'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermissionForActionReturnsNullWhenNoPermissionsSet(): void
     {
         $admin = new Admin();
@@ -173,7 +172,7 @@ final class AdminTest extends TestCase
         $this->assertNull($admin->getPermissionForAction('index'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itemsPerPageCanBeSet(): void
     {
         $admin = new Admin(itemsPerPage: 50);
@@ -181,7 +180,7 @@ final class AdminTest extends TestCase
         $this->assertSame(50, $admin->getItemsPerPage());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sortByCanBeSet(): void
     {
         $admin = new Admin(sortBy: 'createdAt');
@@ -189,7 +188,7 @@ final class AdminTest extends TestCase
         $this->assertSame('createdAt', $admin->getSortBy());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sortDirectionCanBeSet(): void
     {
         $admin = new Admin(sortDirection: 'ASC');
@@ -197,7 +196,7 @@ final class AdminTest extends TestCase
         $this->assertSame('ASC', $admin->getSortDirection());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function allParametersCanBeSetTogether(): void
     {
         $admin = new Admin(
@@ -231,7 +230,7 @@ final class AdminTest extends TestCase
         $this->assertSame('DESC', $admin->getSortDirection());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function attributeCanBeAppliedToClass(): void
     {
         $reflection = new \ReflectionClass(Admin::class);

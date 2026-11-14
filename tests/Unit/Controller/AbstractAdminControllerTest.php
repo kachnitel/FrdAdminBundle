@@ -7,7 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\AdminBundle\Controller\AbstractAdminController;
 use Kachnitel\AdminBundle\Tests\Fixtures\PermissiveObjectAuthorizationChecker;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,70 +32,70 @@ final class AbstractAdminControllerTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getRoutePrefix(): void
     {
         $prefix = $this->controller->getRoutePrefix();
         $this->assertSame('app_entity', $prefix);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityNamespace(): void
     {
         $namespace = $this->controller->getEntityNamespace();
         $this->assertSame('App\\Entity\\', $namespace);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFormNamespace(): void
     {
         $namespace = $this->controller->getFormNamespace();
         $this->assertSame('App\\Form\\', $namespace);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFormSuffix(): void
     {
         $suffix = $this->controller->getFormSuffix();
         $this->assertSame('FormType', $suffix);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getFormTypeBuildsCorrectClassName(): void
     {
         $formType = $this->controller->getFormType('Product');
         $this->assertSame('App\\Form\\ProductFormType', $formType);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getIndexTemplate(): void
     {
         $template = $this->controller->getIndexTemplate('Product');
         $this->assertSame('@KachnitelAdmin/admin/index.html.twig', $template);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getShowTemplate(): void
     {
         $template = $this->controller->getShowTemplate('Product');
         $this->assertSame('@KachnitelAdmin/admin/show.html.twig', $template);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEditTemplate(): void
     {
         $template = $this->controller->getEditTemplate('Product');
         $this->assertSame('@KachnitelAdmin/admin/edit.html.twig', $template);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getNewTemplate(): void
     {
         $template = $this->controller->getNewTemplate('Product');
         $this->assertSame('@KachnitelAdmin/admin/new.html.twig', $template);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function classNameToSlugConversion(): void
     {
         // Test slug conversion logic used in controller

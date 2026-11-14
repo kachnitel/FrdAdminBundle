@@ -9,7 +9,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithoutBatchActions;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 
 /**
@@ -20,7 +20,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * These tests cover: UI rendering, checkbox behaviour, selection state, selectAll/deselectAll,
  * and the onActionCompleted listener on EntityList.
  */
-#[Group('batch-actions')]
+#[PHPUnit\Group('batch-actions')]
 final class EntityListBatchActionsTest extends ComponentTestCase
 {
     // ── UI rendering ──────────────────────────────────────────────────────────

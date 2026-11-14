@@ -10,12 +10,12 @@ use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionFormEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityDataRuntime;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 
-#[Group('column-permission-show')]
+#[PHPUnit\Group('column-permission-show')]
 final class ColumnPermissionShowPageTest extends WebTestCase
 {
     private KernelBrowser $client;

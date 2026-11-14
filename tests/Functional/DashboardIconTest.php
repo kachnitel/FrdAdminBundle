@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Tests\Functional;
 
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
  * The dashboard renders #[Admin(icon: ...)] through the shared icon partial.
  * EntityWithRowActions declares icon '📋'.
  */
-#[Group('icons')]
+#[PHPUnit\Group('icons')]
 final class DashboardIconTest extends WebTestCase
 {
     protected static function getKernelClass(): string

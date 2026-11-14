@@ -9,9 +9,9 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\AdminAction\DeleteButton;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
-#[Group('batch-actions')]
+#[PHPUnit\Group('batch-actions')]
 final class DeleteButtonTest extends ComponentTestCase
 {
     public function testRendersDisabledButtonWhenNothingSelected(): void

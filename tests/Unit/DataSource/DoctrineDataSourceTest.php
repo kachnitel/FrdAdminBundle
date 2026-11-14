@@ -19,15 +19,13 @@ use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\DataSourceContracts\FilterMetadata;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[Group('data-source')]
-#[Group('doctrine')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('data-source')]
+#[PHPUnit\Group('doctrine')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -84,7 +82,7 @@ final class DoctrineDataSourceTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetIdentifierReturnsShortClassName(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -94,7 +92,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('TestEntity', $dataSource->getIdentifier());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetLabelReturnsAdminAttributeLabel(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -105,7 +103,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('Test Entities', $dataSource->getLabel());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetLabelFallsBackToShortClassName(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -115,7 +113,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('TestEntity', $dataSource->getLabel());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetIconReturnsAdminAttributeIcon(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -126,7 +124,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('fa-test', $dataSource->getIcon());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetIconReturnsNullByDefault(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -136,7 +134,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertNull($dataSource->getIcon());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetColumnsReturnsColumnMetadata(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -161,7 +159,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertInstanceOf(ColumnMetadata::class, $columns['name']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetColumnsUsesAdminAttributeColumns(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -182,7 +180,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertArrayNotHasKey('createdAt', $columns);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetFiltersReturnsFilterMetadata(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -200,7 +198,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertInstanceOf(FilterMetadata::class, $filters['name']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetFiltersWithAllowedColumnsFiltersResult(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -222,7 +220,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertArrayNotHasKey('price', $filters);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetFiltersWithEmptyFilterableColumnsReturnsNoFilters(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -240,7 +238,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertCount(0, $filters);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetFiltersPassesMultipleOptionToEnumOptions(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -266,7 +264,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertTrue($array['multiple']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetDefaultSortByReturnsAdminAttributeValue(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -277,7 +275,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('name', $dataSource->getDefaultSortBy());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetDefaultSortByFallsBackToId(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -287,7 +285,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('id', $dataSource->getDefaultSortBy());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetDefaultSortDirectionReturnsAdminAttributeValue(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -298,7 +296,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('ASC', $dataSource->getDefaultSortDirection());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetDefaultSortDirectionFallsBackToDESC(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -308,7 +306,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('DESC', $dataSource->getDefaultSortDirection());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetDefaultItemsPerPageReturnsAdminAttributeValue(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -319,7 +317,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame(50, $dataSource->getDefaultItemsPerPage());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetDefaultItemsPerPageReturnsNullByDefault(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -330,7 +328,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame(20, $dataSource->getDefaultItemsPerPage());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testFindReturnsEntity(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -349,7 +347,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame($entity, $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testFindReturnsNullWhenNotFound(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -367,7 +365,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertNull($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testSupportsActionForBasicActions(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -381,7 +379,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertTrue($dataSource->supportsAction('delete'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testSupportsActionBatchDeleteWhenEnabled(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -392,7 +390,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertTrue($dataSource->supportsAction('batch_delete'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testSupportsActionBatchDeleteWhenDisabled(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -403,7 +401,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertFalse($dataSource->supportsAction('batch_delete'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testSupportsActionColumnVisibilityWhenEnabled(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -414,7 +412,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertTrue($dataSource->supportsAction('column_visibility'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testSupportsActionUnknownReturnsFalse(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -424,7 +422,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertFalse($dataSource->supportsAction('unknown_action'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetIdFieldReturnsIdentifierFieldName(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -436,7 +434,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('id', $dataSource->getIdField());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetItemIdReturnsEntityId(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -453,7 +451,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame(42, $dataSource->getItemId($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetItemValueForField(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -470,7 +468,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('Test Name', $dataSource->getItemValue($entity, 'name'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetItemValueForAssociation(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -489,7 +487,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame($related, $dataSource->getItemValue($entity, 'category'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetItemValueFallsBackToGetter(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -510,7 +508,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame('custom value', $dataSource->getItemValue($entity, 'customProperty'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetItemValueReturnsNullWhenNotFound(): void
     {
         $this->em->expects($this->once())->method('getClassMetadata')->with(TestEntity::class);
@@ -525,7 +523,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertNull($dataSource->getItemValue($entity, 'nonExistentProperty'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetEntityClassReturnsCorrectClass(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -535,7 +533,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame(TestEntity::class, $dataSource->getEntityClass());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetAdminAttributeReturnsAttribute(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');
@@ -546,7 +544,7 @@ final class DoctrineDataSourceTest extends TestCase
         $this->assertSame($admin, $dataSource->getAdminAttribute());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function testGetShortNameReturnsClassName(): void
     {
         $this->em->expects($this->never())->method('getClassMetadata');

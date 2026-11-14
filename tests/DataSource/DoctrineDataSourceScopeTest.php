@@ -14,25 +14,22 @@ use Kachnitel\AdminBundle\DataSource\DoctrineFilterConverter;
 use Kachnitel\AdminBundle\DataSource\DoctrineItemValueResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
 /**
  * DataSource instances are shared through DataSourceRegistry, so a scope set for one
  * query must be consumed by it and never leak into the next.
  */
-#[CoversClass(DoctrineDataSource::class)]
-#[UsesClass(Admin::class)]
-#[Group('collection-dialog')]
+#[PHPUnit\CoversClass(DoctrineDataSource::class)]
+#[PHPUnit\UsesClass(Admin::class)]
+#[PHPUnit\Group('collection-dialog')]
 final class DoctrineDataSourceScopeTest extends TestCase
 {
     /** @var list<array{0: ?string, 1: array<array-key, mixed>}> */
     private array $seenScopes = [];
 
-    #[Test]
+    #[PHPUnit\Test]
     public function queryForwardsTheScopeToTheQueryService(): void
     {
         $dataSource = $this->makeDataSource();
@@ -43,7 +40,7 @@ final class DoctrineDataSourceScopeTest extends TestCase
         $this->assertSame([['e.id IN (…)', ['scope_owner_id' => 5]]], $this->seenScopes);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function queryConsumesTheScopeSoItCannotLeakIntoTheNextQuery(): void
     {
         $dataSource = $this->makeDataSource();
@@ -58,7 +55,7 @@ final class DoctrineDataSourceScopeTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unscopedQueryPassesNoScope(): void
     {
         $dataSource = $this->makeDataSource();
@@ -68,7 +65,7 @@ final class DoctrineDataSourceScopeTest extends TestCase
         $this->assertSame([[null, []]], $this->seenScopes);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function settingNullClearsAPreviouslySetScope(): void
     {
         $dataSource = $this->makeDataSource();

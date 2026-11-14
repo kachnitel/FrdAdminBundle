@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\ObjectAuthEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\ObjectAuthEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -32,8 +31,8 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  *
  * @see \Kachnitel\AdminBundle\Twig\Components\InlineEntityForm::save()
  */
-#[Group('object-authorization')]
-#[Group('inline-add')]
+#[PHPUnit\Group('object-authorization')]
+#[PHPUnit\Group('inline-add')]
 final class InlineEntityFormObjectAuthorizationTest extends ComponentTestCase
 {
     private const FORM_NAME = 'inline_kachnitel_adminbundle_tests_fixtures_objectauthentity';
@@ -54,7 +53,7 @@ final class InlineEntityFormObjectAuthorizationTest extends ComponentTestCase
         self::getContainer()->get('request_stack')->push($request);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingAllowedEntityCreatesIt(): void
     {
         $component = $this->mountForm();
@@ -66,7 +65,7 @@ final class InlineEntityFormObjectAuthorizationTest extends ComponentTestCase
         $this->assertCount(1, $entities);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingForbiddenEntityIsDeniedAndNotPersisted(): void
     {
         $component = $this->mountForm();

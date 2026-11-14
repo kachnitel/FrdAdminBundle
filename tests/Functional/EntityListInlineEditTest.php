@@ -6,7 +6,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 
 /**
@@ -20,12 +20,12 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  *   5. ✕ → editingRowId = null
  *
  * Test groups:
- *   @group inline-edit           – all tests here
- *   @group inline-edit-state     – editingRowId lifecycle / PHP logic
- *   @group inline-edit-template  – HTML output assertions
- *   @group inline-edit-isolation – feature doesn't break existing EntityList behaviour
  */
-#[Group('inline-edit')]
+#[PHPUnit\Group('inline-edit')]
+#[PHPUnit\Group('inline-edit           – all tests here')]
+#[PHPUnit\Group('inline-edit-state     – editingRowId lifecycle / PHP logic')]
+#[PHPUnit\Group('inline-edit-template  – HTML output assertions')]
+#[PHPUnit\Group("inline-edit-isolation – feature doesn't break existing EntityList behaviour")]
 final class EntityListInlineEditTest extends ComponentTestCase
 {
     // ─────────────────────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     // editingRowId – default
     // ─────────────────────────────────────────────────────────────────────────
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testEditingRowIdDefaultsToNull(): void
     {
         $list = $this->makeList();
@@ -70,7 +70,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     // editRow()
     // ─────────────────────────────────────────────────────────────────────────
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testEditRowSetsEditingRowId(): void
     {
         $entity = $this->createEntity();
@@ -81,7 +81,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertSame($entity->getId(), $list->component()->editingRowId);
     }
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testEditRowReplacesCurrentlyEditingRow(): void
     {
         $first  = $this->createEntity('First');
@@ -98,7 +98,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     // isRowEditing()
     // ─────────────────────────────────────────────────────────────────────────
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testIsRowEditingReturnsTrueForEditingEntity(): void
     {
         $entity = $this->createEntity();
@@ -107,7 +107,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertTrue($list->component()->isRowEditing($entity));
     }
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testIsRowEditingReturnsFalseForDifferentEntity(): void
     {
         $editing = $this->createEntity('Editing');
@@ -117,7 +117,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertFalse($list->component()->isRowEditing($other));
     }
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testIsRowEditingReturnsFalseWhenNullId(): void
     {
         $entity = $this->createEntity();
@@ -126,7 +126,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertFalse($list->component()->isRowEditing($entity));
     }
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testIsRowEditingReturnsFalseForObjectWithoutGetId(): void
     {
         $list = $this->makeList(['editingRowId' => 1]);
@@ -134,7 +134,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertFalse($list->component()->isRowEditing(new \stdClass()));
     }
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testIsRowEditingReturnsFalseAfterExit(): void
     {
         $entity = $this->createEntity();
@@ -146,7 +146,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertFalse($list->component()->isRowEditing($entity));
     }
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testIsRowEditingOnlyMatchesCurrentEditingRow(): void
     {
         $editing = $this->createEntity('Editing');
@@ -169,7 +169,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     /**
      * ComponentTestKernel uses TestAdminEntityVoter which grants everything.
      */
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testCanEditRowReturnsTrueForDoctrineEntityWhenGranted(): void
     {
         $list = $this->makeList();
@@ -177,7 +177,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertTrue($list->component()->canEditRow());
     }
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testCanEditRowReturnsFalseForCustomDataSource(): void
     {
         $list = $this->createLiveComponent(
@@ -192,7 +192,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     // Template – default state (no row open)
     // ─────────────────────────────────────────────────────────────────────────
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testDefaultStateRendersEditPencilButton(): void
     {
         $this->createEntity('Row');
@@ -203,7 +203,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertStringContainsString('editRow', $html);
     }
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testDefaultStateHasNoExitButton(): void
     {
         $this->createEntity('Row');
@@ -218,7 +218,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     // Template – row in edit mode
     // ─────────────────────────────────────────────────────────────────────────
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testEditingRowRendersExitButton(): void
     {
         $entity = $this->createEntity('Editable');
@@ -230,7 +230,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertStringContainsString('✕', $html);
     }
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testExitButtonAppearsExactlyOnce(): void
     {
         $this->createEntity('Non-editing 1');
@@ -244,7 +244,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
             'Exit edit mode must appear exactly once – only for the editing row');
     }
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testEditingRowRendersHoverOverlayTriggers(): void
     {
         $entity = $this->createEntity('Editable');
@@ -255,7 +255,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertStringContainsString('field-edit-trigger', $html);
     }
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testHoverTriggerCallsActivateEditing(): void
     {
         $entity = $this->createEntity('Editable');
@@ -266,7 +266,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertStringContainsString('activateEditing', $html);
     }
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testEditingRowStillShowsEntityData(): void
     {
         $entity = $this->createEntity('My Entity Name');
@@ -280,7 +280,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     /**
      * Non-editing rows still show their ✏️ buttons and entity data.
      */
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testNonEditingRowsRetainEditPencilButtonAndData(): void
     {
         $editing    = $this->createEntity('Editing');
@@ -293,7 +293,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertStringContainsString($notEditing->getName(), $html);
     }
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testHoverTriggersRenderedForEditingRow(): void
     {
         $entity = $this->createEntity('Editable');
@@ -310,7 +310,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     // Template – after exitRowEdit
     // ─────────────────────────────────────────────────────────────────────────
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testExitRowEditRemovesOverlaysFromTemplate(): void
     {
         $entity = $this->createEntity();
@@ -324,7 +324,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertStringNotContainsString('Exit edit mode', $html);
     }
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testExitRowEditRestoresEditPencilButton(): void
     {
         $entity = $this->createEntity();
@@ -341,7 +341,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     // Row switching
     // ─────────────────────────────────────────────────────────────────────────
 
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testSwitchingEditRowUpdatesIsRowEditing(): void
     {
         $e1   = $this->createEntity('First');
@@ -357,7 +357,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertTrue($component->isRowEditing($e2));
     }
 
-    #[Group('inline-edit-template')]
+    #[PHPUnit\Group('inline-edit-template')]
     public function testSwitchingEditRowMovesTriggerToNewRow(): void
     {
         $e1   = $this->createEntity('First');
@@ -379,7 +379,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     /**
      * saveRow was removed in favour of per-field immediate flush.
      */
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testEntityListHasNoSaveRowMethod(): void
     {
         $list = $this->makeList();
@@ -393,7 +393,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     /**
      * cancelRowEdit was removed in favour of per-field cancel.
      */
-    #[Group('inline-edit-state')]
+    #[PHPUnit\Group('inline-edit-state')]
     public function testEntityListHasNoCancelRowEditMethod(): void
     {
         $list = $this->makeList();
@@ -408,7 +408,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
     // Isolation – editing must not break other EntityList features
     // ─────────────────────────────────────────────────────────────────────────
 
-    #[Group('inline-edit-isolation')]
+    #[PHPUnit\Group('inline-edit-isolation')]
     public function testEditingRowIdDoesNotAffectPagination(): void
     {
         for ($i = 1; $i <= 5; $i++) {
@@ -421,7 +421,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertGreaterThanOrEqual(5, $info->totalItems);
     }
 
-    #[Group('inline-edit-isolation')]
+    #[PHPUnit\Group('inline-edit-isolation')]
     public function testEditingRowIdDoesNotAffectSorting(): void
     {
         $list = $this->makeList(['editingRowId' => 1]);
@@ -431,7 +431,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertSame('name', $list->component()->sortBy);
     }
 
-    #[Group('inline-edit-isolation')]
+    #[PHPUnit\Group('inline-edit-isolation')]
     public function testEditingRowIdDoesNotAffectSearch(): void
     {
         $this->createEntity('Searchable');
@@ -445,7 +445,7 @@ final class EntityListInlineEditTest extends ComponentTestCase
         $this->assertCount(1, $results);
     }
 
-    #[Group('inline-edit-isolation')]
+    #[PHPUnit\Group('inline-edit-isolation')]
     public function testBatchSelectAndInlineEditCoexist(): void
     {
         $e1 = $this->createEntity('Selected');

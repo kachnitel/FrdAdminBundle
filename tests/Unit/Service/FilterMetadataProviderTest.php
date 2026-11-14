@@ -12,11 +12,11 @@ use Kachnitel\AdminBundle\Tests\Fixtures\LabelEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\RelatedEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TitleEntity;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class FilterMetadataProviderTest extends TestCase
 {
     private FilterMetadataProvider $provider;

@@ -6,11 +6,10 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DataSource;
 
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('composite-columns')]
+#[PHPUnit\Group('composite-columns')]
 final class DoctrineColumnAttributeProviderTest extends TestCase
 {
     private DoctrineColumnAttributeProvider $provider;
@@ -20,7 +19,7 @@ final class DoctrineColumnAttributeProviderTest extends TestCase
         $this->provider = new DoctrineColumnAttributeProvider();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsEmptyArrayForEntityWithNoAdminColumnAttributes(): void
     {
         $entity = new class {
@@ -33,7 +32,7 @@ final class DoctrineColumnAttributeProviderTest extends TestCase
         $this->assertSame([], $attrs);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsAttributeKeyedByPropertyName(): void
     {
         $entity = new class {
@@ -52,7 +51,7 @@ final class DoctrineColumnAttributeProviderTest extends TestCase
         $this->assertSame('name_block', $attrs['firstName']->group);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsAllPropertiesWithAdminColumnAttribute(): void
     {
         $entity = new class {
@@ -77,7 +76,7 @@ final class DoctrineColumnAttributeProviderTest extends TestCase
         $this->assertArrayNotHasKey('noAttr', $attrs);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function groupIsNullWhenAttributeHasNoGroup(): void
     {
         $entity = new class {
@@ -90,7 +89,7 @@ final class DoctrineColumnAttributeProviderTest extends TestCase
         $this->assertNull($attrs['slug']->group);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function inheritedPropertiesAreAlsoScanned(): void
     {
         $base = new class {

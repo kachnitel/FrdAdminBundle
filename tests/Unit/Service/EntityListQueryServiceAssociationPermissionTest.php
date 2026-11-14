@@ -13,11 +13,7 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Service\ListQueryColumnGuard;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -26,11 +22,11 @@ use PHPUnit\Framework\TestCase;
  * the target class's own #[ColumnPermission] ADMIN_SHOW: filtering Order.customer by an
  * email would otherwise reveal whether that email exists.
  */
-#[CoversClass(EntityListQueryService::class)]
-#[UsesClass(ListQueryColumnGuard::class)]
-#[Group('column-permission-query')]
-#[Group('entity-list')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(EntityListQueryService::class)]
+#[PHPUnit\UsesClass(ListQueryColumnGuard::class)]
+#[PHPUnit\Group('column-permission-query')]
+#[PHPUnit\Group('entity-list')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListQueryServiceAssociationPermissionTest extends TestCase
 {
     private const ORDER = 'App\\Entity\\Order';
@@ -120,7 +116,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         return $this->qb->getDQL();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function relationFilterSearchesPermittedTargetFields(): void
     {
         $dql = $this->relationFilter(['name', 'email']);
@@ -129,7 +125,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         $this->assertStringContainsString('rel_customer.email', $dql, 'control: nothing denied');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function relationFilterDropsDeniedTargetFieldButKeepsPermittedOnes(): void
     {
         $this->denied = [self::CUSTOMER . '::email'];
@@ -140,7 +136,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         $this->assertStringNotContainsString('email', $dql);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function relationFilterIsDroppedWhenEveryFieldIsDenied(): void
     {
         $this->denied = [self::CUSTOMER . '::email'];
@@ -151,7 +147,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         $this->assertStringNotContainsString('rel_customer', $dql);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function numericValueDoesNotFallBackToAnIdMatchWhenEveryFieldIsDenied(): void
     {
         $this->denied = [self::CUSTOMER . '::email'];
@@ -161,7 +157,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         $this->assertStringNotContainsString('WHERE', $dql);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dottedPathThroughADeniedAssociationIsDropped(): void
     {
         $this->denied = [self::CUSTOMER . '::company'];
@@ -171,7 +167,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         $this->assertStringNotContainsString('company', $dql);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dottedPathWithDeniedLeafOnTheNestedClassIsDropped(): void
     {
         $this->denied = [self::COMPANY . '::name'];
@@ -182,7 +178,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         $this->assertStringNotContainsString('.name', $dql);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function collectionFilterDropsDeniedTargetField(): void
     {
         $this->denied = [self::CUSTOMER . '::email'];
@@ -193,7 +189,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         $this->assertStringNotContainsString('email', $dql);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function collectionFilterIsDroppedWhenEveryFieldIsDenied(): void
     {
         $this->denied = [self::CUSTOMER . '::email'];
@@ -201,7 +197,7 @@ final class EntityListQueryServiceAssociationPermissionTest extends TestCase
         $this->assertStringNotContainsString('EXISTS', $this->collectionFilter(['email']));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function collectionFilterKeepsPermittedFields(): void
     {
         $this->assertStringContainsString('EXISTS', $this->collectionFilter(['name', 'email']));

@@ -10,8 +10,7 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Tests\Fixtures\InheritedPrivateChild;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -19,8 +18,8 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * Attributes on a PRIVATE property of a parent/mapped-superclass must be honoured:
  * a #[ColumnPermission] that is not seen silently makes the column unrestricted.
  */
-#[Group('inherited-properties')]
-#[Group('column-permissions')]
+#[PHPUnit\Group('inherited-properties')]
+#[PHPUnit\Group('column-permissions')]
 final class InheritedPrivatePropertyAttributesTest extends TestCase
 {
     private function permissions(): ColumnPermissionService
@@ -28,7 +27,7 @@ final class InheritedPrivatePropertyAttributesTest extends TestCase
         return new ColumnPermissionService($this->createStub(AuthorizationCheckerInterface::class));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnPermissionOnAParentsPrivatePropertyIsSeen(): void
     {
         $map = $this->permissions()->getColumnPermissionMap(InheritedPrivateChild::class);
@@ -36,7 +35,7 @@ final class InheritedPrivatePropertyAttributesTest extends TestCase
         self::assertArrayHasKey('secret', $map);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function inheritedRestrictionIsEnforced(): void
     {
         // no role granted by the stub
@@ -49,13 +48,13 @@ final class InheritedPrivatePropertyAttributesTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function redeclaringThePropertyDropsTheParentsRestriction(): void
     {
         self::assertArrayNotHasKey('shadowed', $this->permissions()->getColumnPermissionMap(InheritedPrivateChild::class));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function propertyAttributeOnAParentsPrivatePropertyIsFound(): void
     {
         $attr = (new AttributeHelper())->getPropertyAttribute(InheritedPrivateChild::class, 'locked', AdminColumn::class);
@@ -64,7 +63,7 @@ final class InheritedPrivatePropertyAttributesTest extends TestCase
         self::assertFalse($attr->editable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function propertyAttributeStillThrowsForAnUnknownProperty(): void
     {
         $this->expectException(\ReflectionException::class);
@@ -72,7 +71,7 @@ final class InheritedPrivatePropertyAttributesTest extends TestCase
         (new AttributeHelper())->getPropertyAttribute(InheritedPrivateChild::class, 'nope', AdminColumn::class);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function columnAttributeProviderSeesInheritedPrivateProperties(): void
     {
         $attributes = (new DoctrineColumnAttributeProvider())->getColumnAttributes(InheritedPrivateChild::class);

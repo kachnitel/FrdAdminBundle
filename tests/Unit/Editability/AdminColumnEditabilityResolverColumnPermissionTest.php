@@ -13,10 +13,7 @@ use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionResolverEntity;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Kachnitel\AdminBundle\Utils\PropertyReflection;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -27,15 +24,15 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *   ADMIN_SHOW denied                 -> canShow() false (field not on the form)
  *   ADMIN_SHOW ok, ADMIN_EDIT denied  -> canShow() true + isReadOnly() true (disabled)
  */
-#[CoversClass(AdminColumnEditabilityResolver::class)]
-#[UsesClass(AdminColumn::class)]
-#[UsesClass(ColumnPermission::class)]
-#[UsesClass(ColumnPermissionService::class)]
-#[UsesClass(AttributeHelper::class)]
-#[UsesClass(ObjectHelper::class)]
-#[UsesClass(PropertyReflection::class)]
-#[Group('column-permission-form')]
-#[Group('dynamic-form')]
+#[PHPUnit\CoversClass(AdminColumnEditabilityResolver::class)]
+#[PHPUnit\UsesClass(AdminColumn::class)]
+#[PHPUnit\UsesClass(ColumnPermission::class)]
+#[PHPUnit\UsesClass(ColumnPermissionService::class)]
+#[PHPUnit\UsesClass(AttributeHelper::class)]
+#[PHPUnit\UsesClass(ObjectHelper::class)]
+#[PHPUnit\UsesClass(PropertyReflection::class)]
+#[PHPUnit\Group('column-permission-form')]
+#[PHPUnit\Group('dynamic-form')]
 final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
 {
     private const E = ColumnPermissionResolverEntity::class;
@@ -59,7 +56,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unrestrictedPropertyIsEditableAndNotReadOnly(): void
     {
         $resolver = $this->resolverGranting([]);
@@ -68,7 +65,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertFalse($resolver->isReadOnly(self::E, 'plain'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showDeniedExcludesTheField(): void
     {
         $resolver = $this->resolverGranting([]);
@@ -77,7 +74,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertFalse($resolver->canShow(self::E, 'ssn'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showAllowedButEditDeniedKeepsTheFieldAsReadOnly(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR']);
@@ -86,7 +83,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertTrue($resolver->isReadOnly(self::E, 'salary'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function bothAllowedIsEditableAndNotReadOnly(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR', 'ROLE_HR_EDIT']);
@@ -95,7 +92,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertFalse($resolver->isReadOnly(self::E, 'salary'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showOnlyRestrictionDoesNotMakeTheFieldReadOnly(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR']);
@@ -104,7 +101,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertFalse($resolver->isReadOnly(self::E, 'ssn'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showDeniedPropertyIsNotAnExplicitOverrideEvenWithEditableTrue(): void
     {
         $resolver = $this->resolverGranting([]);
@@ -113,7 +110,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertFalse($resolver->isExplicitOverride(self::E, 'forced'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showAllowedEditableTruePropertyStaysAnExplicitOverride(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR']);
@@ -122,7 +119,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertTrue($resolver->isExplicitOverride(self::E, 'forced'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editableFalseIsReadOnlyEvenWithEditPermission(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT']);
@@ -131,7 +128,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertTrue($resolver->isReadOnly(self::E, 'blocked'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editableFalseDoesNotOverrideAShowDenial(): void
     {
         $resolver = $this->resolverGranting([]);
@@ -140,7 +137,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertFalse($resolver->canShow(self::E, 'salary'), 'SHOW denial is what hides a field');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function expressionAllowingEditStillLetsEditPermissionMakeTheFieldReadOnly(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR'], expressionResult: true);
@@ -150,7 +147,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertTrue($resolver->isReadOnly(self::E, 'conditional', $entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function expressionAllowingEditAndEditPermissionGrantedIsEditable(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT'], expressionResult: true);
@@ -160,7 +157,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertFalse($resolver->isReadOnly(self::E, 'conditional', $entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function expressionDenyingEditMakesTheFieldReadOnlyEvenWithEditPermission(): void
     {
         $resolver = $this->resolverGranting(['ROLE_HR_EDIT'], expressionResult: false);
@@ -170,7 +167,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertTrue($resolver->isReadOnly(self::E, 'conditional', $entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showDeniedStillRemovesTheFieldWhateverTheExpressionSays(): void
     {
         $resolver = $this->resolverGranting([], expressionResult: true);
@@ -178,7 +175,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         self::assertFalse($resolver->canShow(self::E, 'hiddenConditional', new ColumnPermissionResolverEntity()));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unknownEntityClassFailsClosedInsteadOfBeingTreatedAsUnrestricted(): void
     {
         $resolver = $this->resolverGranting([]);
@@ -188,7 +185,7 @@ final class AdminColumnEditabilityResolverColumnPermissionTest extends TestCase
         $resolver->canShow('App\\Entity\\ThisClassDoesNotExist', 'whatever');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function readOnlyIsFalseForAPropertyThatDoesNotExist(): void
     {
         $resolver = $this->resolverGranting([]);

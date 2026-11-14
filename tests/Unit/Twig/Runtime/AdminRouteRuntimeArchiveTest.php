@@ -9,11 +9,7 @@ use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Twig\Runtime\ActionAccessibilityChecker;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversMethod;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Route;
@@ -30,13 +26,13 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  *   - The voter attribute constant ADMIN_ARCHIVE must be used (not 'admin_archive')
  *
  */
-#[CoversMethod(AdminRouteRuntime::class, 'isActionAccessible')]
-#[CoversMethod(AdminRouteRuntime::class, 'getGenericAdminRoute')]
-#[UsesClass(AdminRouteRuntime::class)]
-#[UsesClass(ActionAccessibilityChecker::class)]
-#[UsesClass(AdminRoutes::class)]
-#[Group('archive')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversMethod(AdminRouteRuntime::class, 'isActionAccessible')]
+#[PHPUnit\CoversMethod(AdminRouteRuntime::class, 'getGenericAdminRoute')]
+#[PHPUnit\UsesClass(AdminRouteRuntime::class)]
+#[PHPUnit\UsesClass(ActionAccessibilityChecker::class)]
+#[PHPUnit\UsesClass(AdminRoutes::class)]
+#[PHPUnit\Group('archive')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class AdminRouteRuntimeArchiveTest extends TestCase
 {
     /** @var RouterInterface&MockObject */
@@ -89,31 +85,31 @@ final class AdminRouteRuntimeArchiveTest extends TestCase
 
     // ── hasRoute ─────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasRouteReturnsTrueForArchiveAction(): void
     {
         $this->assertTrue($this->makeRuntime()->hasRoute('Product', 'archive'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function hasRouteReturnsTrueForUnarchiveAction(): void
     {
         $this->assertTrue($this->makeRuntime()->hasRoute('Product', 'unarchive'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getRouteReturnsGenericArchiveRoute(): void
     {
         $this->assertSame('app_admin_entity_archive', $this->makeRuntime()->getRoute('Product', 'archive'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getRouteReturnsGenericUnarchiveRoute(): void
     {
         $this->assertSame('app_admin_entity_unarchive', $this->makeRuntime()->getRoute('Product', 'unarchive'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getRouteReturnsCustomArchiveRouteWhenConfigured(): void
     {
         $routes = new AdminRoutes(['archive' => 'app_product_archive']);
@@ -125,7 +121,7 @@ final class AdminRouteRuntimeArchiveTest extends TestCase
 
     // ── isActionAccessible for archive ────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isActionAccessibleReturnsTrueForArchiveWhenRouteExistsAndGranted(): void
     {
         $this->stubRouteCollection('app_admin_entity_archive');
@@ -138,7 +134,7 @@ final class AdminRouteRuntimeArchiveTest extends TestCase
         $this->assertTrue($this->makeRuntime()->isActionAccessible('Product', 'archive'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isActionAccessibleReturnsFalseForArchiveWhenDenied(): void
     {
         $this->stubRouteCollection('app_admin_entity_archive');
@@ -151,7 +147,7 @@ final class AdminRouteRuntimeArchiveTest extends TestCase
         $this->assertFalse($this->makeRuntime()->isActionAccessible('Product', 'archive'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isActionAccessibleReturnsTrueForUnarchiveWhenRouteExistsAndGranted(): void
     {
         $this->stubRouteCollection('app_admin_entity_unarchive');
@@ -164,7 +160,7 @@ final class AdminRouteRuntimeArchiveTest extends TestCase
         $this->assertTrue($this->makeRuntime()->isActionAccessible('Product', 'unarchive'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isActionAccessibleReturnsFalseForUnarchiveWhenVoterDenies(): void
     {
         $this->stubRouteCollection('app_admin_entity_unarchive');
@@ -177,7 +173,7 @@ final class AdminRouteRuntimeArchiveTest extends TestCase
         $this->assertFalse($this->makeRuntime()->isActionAccessible('Product', 'unarchive'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function voterIsCalledWithAdminArchiveNotLowercasedString(): void
     {
         $this->stubRouteCollection('app_admin_entity_archive');
@@ -194,7 +190,7 @@ final class AdminRouteRuntimeArchiveTest extends TestCase
         $this->makeRuntime()->isActionAccessible('Product', 'archive');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isActionAccessibleReturnsTrueForArchiveWithNoAuthChecker(): void
     {
         $this->stubRouteCollection('app_admin_entity_archive');
@@ -202,7 +198,7 @@ final class AdminRouteRuntimeArchiveTest extends TestCase
         $this->assertTrue($this->makeRuntime(null)->isActionAccessible('Product', 'archive'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isActionAccessibleReturnsFalseWhenArchiveRouteDoesNotExist(): void
     {
         $this->router->method('getRouteCollection')->willReturn(new RouteCollection());

@@ -6,14 +6,13 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminCustomColumn;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('custom-columns')]
+#[PHPUnit\Group('custom-columns')]
 final class AdminCustomColumnTest extends TestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function itCreatesAttributeWithRequiredFieldsOnly(): void
     {
         $column = new AdminCustomColumn(
@@ -27,7 +26,7 @@ final class AdminCustomColumnTest extends TestCase
         $this->assertFalse($column->sortable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itCreatesAttributeWithAllFields(): void
     {
         $column = new AdminCustomColumn(
@@ -43,7 +42,7 @@ final class AdminCustomColumnTest extends TestCase
         $this->assertTrue($column->sortable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itIsRepeatableAttribute(): void
     {
         $reflection = new \ReflectionClass(AdminCustomColumn::class);
@@ -52,7 +51,7 @@ final class AdminCustomColumnTest extends TestCase
         $this->assertNotSame(0, $attrInstance->flags & Attribute::IS_REPEATABLE);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itTargetsClasses(): void
     {
         $reflection = new \ReflectionClass(AdminCustomColumn::class);
@@ -61,7 +60,7 @@ final class AdminCustomColumnTest extends TestCase
         $this->assertNotSame(0, $attrInstance->flags & Attribute::TARGET_CLASS);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function sortableDefaultsToFalse(): void
     {
         $column = new AdminCustomColumn(name: 'computed', template: 'some/template.html.twig');
@@ -69,7 +68,7 @@ final class AdminCustomColumnTest extends TestCase
         $this->assertFalse($column->sortable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function labelDefaultsToNull(): void
     {
         $column = new AdminCustomColumn(name: 'computed', template: 'some/template.html.twig');

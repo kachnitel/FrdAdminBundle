@@ -12,14 +12,12 @@ use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminEntityUrlRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Utils\CollectionScopeParameter;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\RouterInterface;
 
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 class AdminEntityUrlRuntimeTest extends TestCase
 {
     private RouterInterface&MockObject $router;
@@ -48,7 +46,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
     }
 
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityAdminUrlReturnsNullWithoutDependencies(): void
     {
         $runtime = $this->createRuntime();
@@ -57,7 +55,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertNull($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityAdminUrlReturnsNullWhenEntityHasNoAdmin(): void
     {
         $this->entityDiscovery->method('isAdminEntity')->willReturn(false);
@@ -68,7 +66,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertNull($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityAdminUrlReturnsShowUrlForAdminEntity(): void
     {
         $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
@@ -95,7 +93,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertStringContainsString('42', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityAdminUrlFallsBackToIndexWhenNoId(): void
     {
         $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
@@ -121,7 +119,7 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertNotNull($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityAdminUrlFallsBackToIndexWithIdFilter(): void
     {
         $this->entityDiscovery->method('isAdminEntity')->willReturn(true);
@@ -147,8 +145,8 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertStringContainsString('columnFilters', $result);
     }
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWithoutDependencies(): void
     {
         $runtime = $this->createRuntime($this->entityDiscovery);
@@ -157,8 +155,8 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertNull($result);
     }
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullForNonCollectionProperty(): void
     {
         /** @var ClassMetadata<TestEntity>&MockObject $metadata */
@@ -173,8 +171,8 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertNull($result);
     }
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWhenTargetHasNoAdmin(): void
     {
         $this->stubCollectionMetadata(TagEntity::class);
@@ -186,8 +184,8 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertNull($result);
     }
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWhenOwnerHasNoAdmin(): void
     {
         // The scope resolver 404s a non-admin owner, so a link to it would be dead.
@@ -202,8 +200,8 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertNull($runtime->getCollectionAdminUrl($this->ownerWithId(1), 'tagEntities'));
     }
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWhenOwnerHasNoId(): void
     {
         $this->stubCollectionMetadata(TagEntity::class);
@@ -217,8 +215,8 @@ class AdminEntityUrlRuntimeTest extends TestCase
         $this->assertNull($runtime->getCollectionAdminUrl(new TestEntity(), 'tagEntities'));
     }
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function getCollectionAdminUrlReturnsNullWhenIndexNotAccessible(): void
     {
         $this->stubCollectionMetadata(TagEntity::class);
@@ -236,8 +234,8 @@ class AdminEntityUrlRuntimeTest extends TestCase
      * The association mapping (mappedBy/inversedBy) is deliberately not consulted — that
      * dependency is what used to break unidirectional ManyToMany.
      */
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function getCollectionAdminUrlCarriesScopeInsteadOfColumnFilter(): void
     {
         $this->stubCollectionMetadata(TagEntity::class);

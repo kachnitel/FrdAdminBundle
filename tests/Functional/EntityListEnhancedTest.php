@@ -6,11 +6,11 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
 final class EntityListEnhancedTest extends ComponentTestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function componentInitializesWithDefaults(): void
     {
         $component = $this->createLiveComponent(
@@ -31,7 +31,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertSame([], $inner->selectedIds);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentRendersWithEntityClass(): void
     {
         $component = $this->createLiveComponent(
@@ -50,7 +50,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertTrue($inner->isDoctrineEntity());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentAcceptsSearchParameter(): void
     {
         $component = $this->createLiveComponent(
@@ -68,7 +68,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertSame('test search term', $inner->search);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentAcceptsSortingParameters(): void
     {
         $component = $this->createLiveComponent(
@@ -88,7 +88,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertSame('ASC', $inner->sortDirection);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentAcceptsPaginationParameters(): void
     {
         $component = $this->createLiveComponent(
@@ -108,7 +108,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertSame(50, $inner->itemsPerPage);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentAcceptsColumnFilters(): void
     {
         $component = $this->createLiveComponent(
@@ -126,7 +126,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertSame(['name' => 'test', 'status' => 'active'], $inner->columnFilters);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentAcceptsSelectedIds(): void
     {
         $component = $this->createLiveComponent(
@@ -144,7 +144,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertSame(["1", "2", "3"], $inner->selectedIds);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentWithAllParameters(): void
     {
         $component = $this->createLiveComponent(
@@ -177,7 +177,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertStringContainsString('<table', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentHandlesEmptySearch(): void
     {
         $component = $this->createLiveComponent(
@@ -195,7 +195,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertSame('', $inner->search);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentHandlesEmptyColumnFilters(): void
     {
         $component = $this->createLiveComponent(
@@ -213,7 +213,7 @@ final class EntityListEnhancedTest extends ComponentTestCase
         $this->assertSame([], $inner->columnFilters);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function componentHandlesEmptySelectedIds(): void
     {
         $component = $this->createLiveComponent(

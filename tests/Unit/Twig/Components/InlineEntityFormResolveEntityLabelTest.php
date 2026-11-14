@@ -7,10 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Twig\Components;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kachnitel\AdminBundle\Twig\Components\InlineEntityForm;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -27,9 +24,9 @@ use Symfony\Component\Form\FormFactoryInterface;
  * on private methods without setAccessible(true), so no visibility change or
  * testable-subclass wrapper is needed.
  */
-#[CoversClass(InlineEntityForm::class)]
-#[Group('inline-add')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(InlineEntityForm::class)]
+#[PHPUnit\Group('inline-add')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class InlineEntityFormResolveEntityLabelTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -42,7 +39,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
 
     // ── getLabel() / getName() / getTitle() priority ──────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function prefersGetLabelOverEverythingElse(): void
     {
         $entity = new class {
@@ -55,7 +52,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
         $this->assertSame('From label', $this->resolveLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToGetNameWhenNoGetLabel(): void
     {
         $entity = new class {
@@ -66,7 +63,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
         $this->assertSame('From name', $this->resolveLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToGetTitleWhenNoGetLabelOrGetName(): void
     {
         $entity = new class {
@@ -76,7 +73,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
         $this->assertSame('From title', $this->resolveLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function skipsGetterThatReturnsEmptyString(): void
     {
         $entity = new class {
@@ -87,7 +84,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
         $this->assertSame('From name', $this->resolveLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function skipsGetterThatReturnsNonString(): void
     {
         $entity = new class {
@@ -98,7 +95,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
         $this->assertSame('From name', $this->resolveLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function skipsGetterThatThrows(): void
     {
         $entity = new class {
@@ -111,7 +108,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
 
     // ── __toString() fallback ──────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToToStringWhenNoLabelGetters(): void
     {
         $entity = new class {
@@ -121,7 +118,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
         $this->assertSame('From toString', $this->resolveLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function skipsToStringWhenItReturnsEmptyString(): void
     {
         $entity = new class {
@@ -134,7 +131,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
         $this->assertSame('#9', $this->resolveLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function skipsToStringWhenItThrows(): void
     {
         $entity = new class {
@@ -149,7 +146,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
 
     // ── #id fallback ────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToIdWhenNoLabelGettersOrToString(): void
     {
         $entity = new class {
@@ -161,7 +158,7 @@ final class InlineEntityFormResolveEntityLabelTest extends TestCase
         $this->assertSame('#42', $this->resolveLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToQuestionMarkWhenIdentifierValuesAreEmpty(): void
     {
         $entity = new class {};

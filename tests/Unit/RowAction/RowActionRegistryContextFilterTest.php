@@ -8,11 +8,7 @@ use Kachnitel\AdminBundle\RowAction\AttributeRowActionProvider;
 use Kachnitel\AdminBundle\RowAction\RowActionProviderInterface;
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -27,10 +23,10 @@ use PHPUnit\Framework\TestCase;
  * the parent EntityList — which does not exist on show/edit pages. If it appeared there
  * it would both be non-functional and could mask the navigable Edit link.
  */
-#[Group('row-action')]
-#[CoversClass(RowActionRegistry::class)]
-#[UsesClass(RowAction::class)]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('row-action')]
+#[PHPUnit\CoversClass(RowActionRegistry::class)]
+#[PHPUnit\UsesClass(RowAction::class)]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class RowActionRegistryContextFilterTest extends TestCase
 {
     /** @var AttributeRowActionProvider&MockObject */
@@ -56,7 +52,7 @@ final class RowActionRegistryContextFilterTest extends TestCase
 
     // ── Context filtering before merge ────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function indexOnlyActionIsAbsentFromShowContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */
@@ -79,7 +75,7 @@ final class RowActionRegistryContextFilterTest extends TestCase
         $this->assertNotContains('edit', $names, 'CONTEXT_INDEX-only action must not appear in show context.');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function indexOnlyActionIsAbsentFromEditContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */
@@ -102,7 +98,7 @@ final class RowActionRegistryContextFilterTest extends TestCase
         $this->assertNotContains('edit', $names, 'CONTEXT_INDEX-only action must not appear in edit context.');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function indexOnlyActionDoesNotOverwriteUniversalActionInShowContext(): void
     {
         // Low-priority provider: universal plain-link edit (all contexts)
@@ -154,7 +150,7 @@ final class RowActionRegistryContextFilterTest extends TestCase
         $this->assertSame('🖊', $editAction->icon, 'Plain-link edit icon must be preserved.');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function indexOnlyActionDoesNotOverwriteUniversalActionInEditContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $lowPriority */
@@ -193,7 +189,7 @@ final class RowActionRegistryContextFilterTest extends TestCase
         $this->assertNull($editAction->liveComponent);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function indexOnlyActionIsVisibleInIndexContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */
@@ -216,7 +212,7 @@ final class RowActionRegistryContextFilterTest extends TestCase
         $this->assertContains('edit', $names, 'CONTEXT_INDEX action must appear in index context.');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function inIndexContextBothUniversalAndIndexOnlyActionsAreReturnedAndMerged(): void
     {
         /** @var RowActionProviderInterface&MockObject $lowPriority */
@@ -257,7 +253,7 @@ final class RowActionRegistryContextFilterTest extends TestCase
         $this->assertSame('K:Admin:Action:InlineEdit', $editAction->liveComponent);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function noContextFilterReturnsAllActionsRegardlessOfContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */
@@ -279,7 +275,7 @@ final class RowActionRegistryContextFilterTest extends TestCase
         $this->assertContains('inline', $names);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function cacheKeyIncludesContext(): void
     {
         /** @var RowActionProviderInterface&MockObject $provider */

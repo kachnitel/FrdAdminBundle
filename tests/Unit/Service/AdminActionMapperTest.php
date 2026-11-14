@@ -6,11 +6,10 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Service;
 
 use Kachnitel\AdminBundle\Attribute\AdminAction;
 use Kachnitel\AdminBundle\Service\AdminActionMapper;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('icons')]
+#[PHPUnit\Group('icons')]
 final class AdminActionMapperTest extends TestCase
 {
     private AdminActionMapper $mapper;
@@ -20,7 +19,7 @@ final class AdminActionMapperTest extends TestCase
         $this->mapper = new AdminActionMapper();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function toRowActionCopiesEveryRowField(): void
     {
         $attribute = new AdminAction(
@@ -64,7 +63,7 @@ final class AdminActionMapperTest extends TestCase
         $this->assertSame(['index'], $row->contexts);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function toBatchActionCopiesEveryBatchField(): void
     {
         $attribute = new AdminAction(
@@ -97,7 +96,7 @@ final class AdminActionMapperTest extends TestCase
         $this->assertSame(20, $batch->priority);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function iconIsPassedThroughVerbatimAndNullIsPreserved(): void
     {
         $withIcon = new AdminAction(name: 'a', label: 'A', icon: '🗑️');

@@ -11,10 +11,7 @@ use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,10 +35,10 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * the whole method body instead of delegating to parent::, so that internal
  * change doesn't affect it either way.
  */
-#[CoversClass(DataSourceController::class)]
-#[UsesClass(Admin::class)]
-#[Group('controller')]
-#[Group('datasource-controller')]
+#[PHPUnit\CoversClass(DataSourceController::class)]
+#[PHPUnit\UsesClass(Admin::class)]
+#[PHPUnit\Group('controller')]
+#[PHPUnit\Group('datasource-controller')]
 final class DataSourceControllerTest extends TestCase
 {
     /** @var Stub&EntityDiscoveryService */
@@ -75,7 +72,7 @@ final class DataSourceControllerTest extends TestCase
 
     // ── dashboard() ──────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dashboardRendersEntitiesSortedByLabelWhenNoRoleRequired(): void
     {
         $this->entityDiscovery->method('getAdminEntityShortNames')
@@ -129,7 +126,7 @@ final class DataSourceControllerTest extends TestCase
         $this->assertSame('datasource', $dataSources[0]['type']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dashboardThrowsWhenGlobalPermissionDeniedAndRoleRequired(): void
     {
         $this->entityDiscovery->method('getAdminEntityShortNames')->willReturn([]);
@@ -143,7 +140,7 @@ final class DataSourceControllerTest extends TestCase
         $controller->dashboard();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dashboardFiltersOutEntitiesTheUserCannotAccessWhenRoleRequired(): void
     {
         $this->entityDiscovery->method('getAdminEntityShortNames')
@@ -169,7 +166,7 @@ final class DataSourceControllerTest extends TestCase
 
     // ── dataSourceIndex() ────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceIndexRendersWhenDataSourceFound(): void
     {
         $dataSource = $this->createStub(DataSourceInterface::class);
@@ -188,7 +185,7 @@ final class DataSourceControllerTest extends TestCase
         $this->assertSame($dataSource, $controller->lastRender['parameters']['dataSource']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceIndexThrowsNotFoundWhenDataSourceMissing(): void
     {
         $this->dataSourceRegistry->method('get')->willReturn(null);
@@ -201,7 +198,7 @@ final class DataSourceControllerTest extends TestCase
         $controller->dataSourceIndex('missing');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceIndexThrowsAccessDeniedBeforeLookingUpDataSourceWhenRoleRequired(): void
     {
         // Tripwire: if get() is ever called, this is misconfigured to fail loudly.
@@ -218,7 +215,7 @@ final class DataSourceControllerTest extends TestCase
 
     // ── dataSourceShow() ─────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceShowRendersItemWhenFoundAndSupported(): void
     {
         $item = new \stdClass();
@@ -243,7 +240,7 @@ final class DataSourceControllerTest extends TestCase
         $this->assertSame($item, $controller->lastRender['parameters']['item']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceShowThrowsNotFoundWhenDataSourceMissing(): void
     {
         $this->dataSourceRegistry->method('get')->willReturn(null);
@@ -256,7 +253,7 @@ final class DataSourceControllerTest extends TestCase
         $controller->dataSourceShow('missing', '1');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceShowThrowsNotFoundWhenActionNotSupported(): void
     {
         $dataSource = $this->createMock(DataSourceInterface::class);
@@ -276,7 +273,7 @@ final class DataSourceControllerTest extends TestCase
         $controller->dataSourceShow('audit-log', '1');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceShowThrowsNotFoundWhenItemMissing(): void
     {
         $dataSource = $this->createMock(DataSourceInterface::class);
@@ -293,7 +290,7 @@ final class DataSourceControllerTest extends TestCase
         $controller->dataSourceShow('audit-log', '99');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceShowThrowsAccessDeniedBeforeLookingUpDataSourceWhenRoleRequired(): void
     {
         $this->dataSourceRegistry->method('get')

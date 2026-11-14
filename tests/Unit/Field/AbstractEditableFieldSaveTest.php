@@ -7,9 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Field;
 use Doctrine\ORM\EntityManagerInterface;
 use Kachnitel\EntityComponentsBundle\Components\Field\AbstractEditableField;
 use Kachnitel\EntityComponentsBundle\Components\Field\EditabilityResolverInterface;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
@@ -24,9 +22,9 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *  - saveSuccess set to true after a successful flush
  *  - errorMessage cleared on the next activateEditing() call
  */
-#[AllowMockObjectsWithoutExpectations]
-#[Group('inline-edit')]
-#[Group('inline-edit-save')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('inline-edit')]
+#[PHPUnit\Group('inline-edit-save')]
 final class AbstractEditableFieldSaveTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -51,7 +49,7 @@ final class AbstractEditableFieldSaveTest extends TestCase
 
     // ── canEdit() guard ────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveThrowsAccessDeniedWhenCanEditReturnsFalse(): void
     {
         $entity = new \stdClass();
@@ -65,7 +63,7 @@ final class AbstractEditableFieldSaveTest extends TestCase
         $field->save();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function persistEditIsNeverCalledWhenCanEditReturnsFalse(): void
     {
         $entity        = new \stdClass();
@@ -88,7 +86,7 @@ final class AbstractEditableFieldSaveTest extends TestCase
 
     // ── Validation ─────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savePopulatesErrorMessageWhenValidationFails(): void
     {
         $entity = new \stdClass();
@@ -105,7 +103,7 @@ final class AbstractEditableFieldSaveTest extends TestCase
         $this->assertSame('Name is too short.', $field->errorMessage);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveDoesNotFlushWhenValidationFails(): void
     {
         $entity = new \stdClass();
@@ -122,7 +120,7 @@ final class AbstractEditableFieldSaveTest extends TestCase
         $field->save();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveKeepsEditModeOnValidationFailure(): void
     {
         $entity          = new \stdClass();
@@ -140,7 +138,7 @@ final class AbstractEditableFieldSaveTest extends TestCase
         $this->assertTrue($field->editMode, 'editMode must stay true when validation fails');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveRefreshesEntityWhenValidationFails(): void
     {
         $entity = new \stdClass();
@@ -159,7 +157,7 @@ final class AbstractEditableFieldSaveTest extends TestCase
 
     // ── Successful save ────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveFlushesAndSetsSuccessOnValidSave(): void
     {
         $entity = new \stdClass();
@@ -178,7 +176,7 @@ final class AbstractEditableFieldSaveTest extends TestCase
         $this->assertSame('', $field->errorMessage);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function activateEditingClearsErrorAndSaveSuccess(): void
     {
         $entity              = new \stdClass();

@@ -10,10 +10,10 @@ use Kachnitel\AdminBundle\Tests\Fixtures\ArchivableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\SoftDeleteEntity;
 use Kachnitel\AdminBundle\Tests\Functional\ComponentTestCase;
 use Kachnitel\AdminBundle\Twig\Components\AdminAction\ArchiveButton;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
-#[Group('batch-actions')]
-#[Group('archive')]
+#[PHPUnit\Group('batch-actions')]
+#[PHPUnit\Group('archive')]
 final class ArchiveButtonTest extends ComponentTestCase
 {
     public function testRendersDisabledButtonWhenNothingSelected(): void

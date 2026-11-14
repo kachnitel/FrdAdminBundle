@@ -13,10 +13,7 @@ use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeletableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\GenericAdminControllerTestDouble;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormRegistryInterface;
@@ -29,10 +26,10 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * GenericAdminControllerFormComponentTest for getFormType()/getFormComponentName()
  * and GenericAdminControllerRoutesTest for index()/new()/delete().
  */
-#[CoversClass(GenericAdminController::class)]
-#[UsesClass(ArchiveConfig::class)]
-#[Group('controller')]
-#[Group('archive')]
+#[PHPUnit\CoversClass(GenericAdminController::class)]
+#[PHPUnit\UsesClass(ArchiveConfig::class)]
+#[PHPUnit\Group('controller')]
+#[PHPUnit\Group('archive')]
 final class GenericAdminControllerArchiveTest extends TestCase
 {
     private const ENTITY_NAMESPACE = 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\';
@@ -90,7 +87,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
 
     // ── archive() ────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveThrowsNotFoundWhenEntityMissing(): void
     {
         $this->repository->method('find')->willReturn(null);
@@ -107,7 +104,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveThrowsOnInvalidCsrfToken(): void
     {
         $this->repository->method('find')->willReturn(new DeletableEntity(5));
@@ -126,7 +123,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveThrowsNotFoundWhenArchiveNotConfigured(): void
     {
         $this->repository->method('find')->willReturn(new DeletableEntity(5));
@@ -144,7 +141,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveSuccessCallsServiceFlashesAndRedirectsToReferer(): void
     {
         $entity = new DeletableEntity(5);
@@ -170,7 +167,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
         $this->assertSame(302, $result->getStatusCode());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveSuccessRedirectsToIndexRouteWhenNoReferer(): void
     {
         $this->repository->method('find')->willReturn(new DeletableEntity(5));
@@ -190,7 +187,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
         $this->assertSame(['entitySlug' => 'deletable-entity'], $controller->redirectedRouteParams);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveDeniesAccessBeforeLookingUpEntityWhenNotGranted(): void
     {
         // Tripwire: if find() is ever called, this throws instead of the
@@ -213,7 +210,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
 
     // ── unarchive() ──────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unarchiveThrowsNotFoundWhenEntityMissing(): void
     {
         $this->repository->method('find')->willReturn(null);
@@ -230,7 +227,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unarchiveThrowsOnInvalidCsrfToken(): void
     {
         $this->repository->method('find')->willReturn(new DeletableEntity(5));
@@ -248,7 +245,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unarchiveSuccessCallsUnarchiveOnServiceAndFlashesUnarchivedMessage(): void
     {
         $entity = new DeletableEntity(6);
@@ -274,7 +271,7 @@ final class GenericAdminControllerArchiveTest extends TestCase
 
     // ── checkEntityPermission() ──────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function permissionCheckIsSkippedEntirelyWhenRequiredRoleIsNull(): void
     {
         $this->repository->method('find')->willReturn(new DeletableEntity(5));

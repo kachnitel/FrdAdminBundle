@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\RowAction;
 
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
-#[CoversClass(RowActionExpressionLanguage::class)]
-#[Group('row-actions')]
-#[Group('expression-language')]
+#[PHPUnit\CoversClass(RowActionExpressionLanguage::class)]
+#[PHPUnit\Group('row-actions')]
+#[PHPUnit\Group('expression-language')]
 final class RowActionExpressionLanguageErrorHandlingTest extends TestCase
 {
     private function entity(): object
@@ -28,7 +26,7 @@ final class RowActionExpressionLanguageErrorHandlingTest extends TestCase
         };
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function evaluatesValidExpression(): void
     {
         $language = new RowActionExpressionLanguage(new ExpressionLanguage(), debug: true);
@@ -37,7 +35,7 @@ final class RowActionExpressionLanguageErrorHandlingTest extends TestCase
         $this->assertFalse($language->evaluate('item.getStatus() == "done"', $this->entity()));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function debugModeThrowsOnRuntimeFailureWithContext(): void
     {
         $language = new RowActionExpressionLanguage(new ExpressionLanguage(), debug: true);
@@ -54,7 +52,7 @@ final class RowActionExpressionLanguageErrorHandlingTest extends TestCase
         }
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function debugModeThrowsOnSyntaxError(): void
     {
         $language = new RowActionExpressionLanguage(new ExpressionLanguage(), debug: true);
@@ -64,7 +62,7 @@ final class RowActionExpressionLanguageErrorHandlingTest extends TestCase
         $language->evaluate('entity.getStatus() ==', $this->entity());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function nonDebugModeLogsWarningAndReturnsFalse(): void
     {
         /** @var LoggerInterface&MockObject $logger */
@@ -78,7 +76,7 @@ final class RowActionExpressionLanguageErrorHandlingTest extends TestCase
         $this->assertFalse($language->evaluate('entity.status == "pending"', $this->entity()));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function nonDebugModeWithoutLoggerReturnsFalse(): void
     {
         $language = new RowActionExpressionLanguage(new ExpressionLanguage());

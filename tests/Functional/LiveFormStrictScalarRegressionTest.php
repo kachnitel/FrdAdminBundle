@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Tests\Fixtures\RequiredFieldsStrictEntity;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -48,10 +47,10 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * here — deliberately held back pending review of the transformer itself.
  *
  */
-#[Group('auto-form')]
-#[Group('admin-entity-form')]
-#[Group('live-form-defaults')]
-#[Group('strict-nullability')]
+#[PHPUnit\Group('auto-form')]
+#[PHPUnit\Group('admin-entity-form')]
+#[PHPUnit\Group('live-form-defaults')]
+#[PHPUnit\Group('strict-nullability')]
 final class LiveFormStrictScalarRegressionTest extends ComponentTestCase
 {
     private const FORM_NAME = 'dynamic_entity_form';
@@ -102,7 +101,7 @@ final class LiveFormStrictScalarRegressionTest extends ComponentTestCase
      * freshly-constructed entity crash on its own, independently of
      * empty_data and independently of submitFormOnRender()?
      */
-    #[Test]
+    #[PHPUnit\Test]
     public function newFormMountAndFirstRenderDoesNotCrash(): void
     {
         $component = $this->mountNewForm();
@@ -125,7 +124,7 @@ final class LiveFormStrictScalarRegressionTest extends ComponentTestCase
      * still-blank "qty" field's empty_data currently resolves to null against
      * a property typed `int`, not `?int`.
      */
-    #[Test]
+    #[PHPUnit\Test]
     public function editingAnotherFieldWhileRequiredScalarIsBlankDoesNotCrash(): void
     {
         $component = $this->mountNewForm();
@@ -150,7 +149,7 @@ final class LiveFormStrictScalarRegressionTest extends ComponentTestCase
      * "solves" the crash by also breaking normal submission of a value the
      * user actually provided.
     */
-    #[Test]
+    #[PHPUnit\Test]
     public function savingWithAnExplicitValuePersistsCorrectly(): void
     {
         $component = $this->mountNewForm();

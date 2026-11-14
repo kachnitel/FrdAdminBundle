@@ -8,15 +8,13 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
 
-#[Group('entity-list')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('entity-list')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListPermissionServiceTest extends TestCase
 {
     /** @var EntityDiscoveryService&MockObject */
@@ -38,7 +36,7 @@ final class EntityListPermissionServiceTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isBatchActionsEnabledReturnsTrueWhenEnabled(): void
     {
         $admin = new Admin(enableBatchActions: true);
@@ -52,7 +50,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isBatchActionsEnabledReturnsFalseWhenDisabled(): void
     {
         $admin = new Admin(enableBatchActions: false);
@@ -66,7 +64,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isBatchActionsEnabledReturnsFalseWhenNoAttribute(): void
     {
         $this->entityDiscovery->expects($this->once())->method('getAdminAttribute')
@@ -78,7 +76,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isBatchActionsEnabledReturnsFalseByDefault(): void
     {
         // Admin attribute with default values
@@ -92,7 +90,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeleteReturnsTrueWhenEnabledAndGranted(): void
     {
         $admin = new Admin(enableBatchActions: true);
@@ -110,7 +108,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeleteReturnsFalseWhenNotEnabled(): void
     {
         $admin = new Admin(enableBatchActions: false);
@@ -126,7 +124,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeleteReturnsFalseWhenNotGranted(): void
     {
         $admin = new Admin(enableBatchActions: true);
@@ -143,7 +141,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeleteReturnsFalseWhenNoAttribute(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -156,7 +154,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeleteUsesCorrectVoterAttribute(): void
     {
         $admin = new Admin(enableBatchActions: true);
@@ -174,7 +172,7 @@ final class EntityListPermissionServiceTest extends TestCase
 
     // --- Non-Doctrine data source tests ---
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeleteReturnsTrueForNonDoctrineWhenGranted(): void
     {
         $this->security->expects($this->once())->method('isGranted')
@@ -186,7 +184,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeleteReturnsFalseForNonDoctrineWhenNotGranted(): void
     {
         $this->security->expects($this->once())->method('isGranted')
@@ -198,7 +196,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeleteUsesEntityShortClassWhenNoDataSourceId(): void
     {
         $this->security->expects($this->once())
@@ -209,7 +207,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->service->canBatchDelete('', 'MyShortClass');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeletePrefersDataSourceIdOverEntityShortClass(): void
     {
         $this->security->expects($this->once())
@@ -220,7 +218,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->service->canBatchDelete('', 'MyShortClass', 'custom-source');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBatchDeleteSkipsAttributeCheckForNonDoctrine(): void
     {
         $this->entityDiscovery->expects($this->never())->method('getAdminAttribute');
@@ -232,7 +230,7 @@ final class EntityListPermissionServiceTest extends TestCase
 
     // --- canInlineEdit tests ---
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canInlineEditReturnsTrueWhenEnabledAndGranted(): void
     {
         $admin = new Admin(enableInlineEdit: true);
@@ -248,7 +246,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertTrue($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canInlineEditReturnsFalseWhenFlagDisabled(): void
     {
         $admin = new Admin(enableInlineEdit: false);
@@ -261,7 +259,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canInlineEditReturnsFalseWhenNoAttribute(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
@@ -271,7 +269,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canInlineEditReturnsFalseWhenVoterDenies(): void
     {
         $admin = new Admin(enableInlineEdit: true);
@@ -285,7 +283,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($this->service->canInlineEdit('App\\Entity\\Product', 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canInlineEditReturnsFalseForEmptyEntityClass(): void
     {
         // Non-Doctrine data sources have no entityClass
@@ -295,7 +293,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($this->service->canInlineEdit('', 'SomeDataSource'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canInlineEditChecksAdminEditVoterAttribute(): void
     {
         $admin = new Admin(enableInlineEdit: true);
@@ -312,7 +310,7 @@ final class EntityListPermissionServiceTest extends TestCase
 
     // --- canViewList tests ---
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canViewListReturnsTrueWhenGranted(): void
     {
         $this->security->expects($this->once())->method('isGranted')
@@ -322,7 +320,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertTrue($this->service->canViewList('Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canViewListReturnsFalseWhenDenied(): void
     {
         $this->security->expects($this->once())->method('isGranted')
@@ -332,7 +330,7 @@ final class EntityListPermissionServiceTest extends TestCase
         $this->assertFalse($this->service->canViewList('Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canViewListUsesAdminIndexVoterAttribute(): void
     {
         $this->security->expects($this->once())

@@ -6,14 +6,13 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('inline-edit')]
+#[PHPUnit\Group('inline-edit')]
 final class AdminColumnTest extends TestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultEditableIsNull(): void
     {
         $attr = new AdminColumn();
@@ -21,7 +20,7 @@ final class AdminColumnTest extends TestCase
         $this->assertNull($attr->editable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editableCanBeSetToFalse(): void
     {
         $attr = new AdminColumn(editable: false);
@@ -29,7 +28,7 @@ final class AdminColumnTest extends TestCase
         $this->assertFalse($attr->editable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editableCanBeSetToTrue(): void
     {
         $attr = new AdminColumn(editable: true);
@@ -37,7 +36,7 @@ final class AdminColumnTest extends TestCase
         $this->assertTrue($attr->editable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editableCanBeSetToExpressionString(): void
     {
         $attr = new AdminColumn(editable: 'entity.getStatus() != "locked"');
@@ -45,7 +44,7 @@ final class AdminColumnTest extends TestCase
         $this->assertSame('entity.getStatus() != "locked"', $attr->editable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editableCanCombinePropertyAndSecurityChecks(): void
     {
         $attr = new AdminColumn(editable: 'entity.active && is_granted("ROLE_EDITOR")');
@@ -53,7 +52,7 @@ final class AdminColumnTest extends TestCase
         $this->assertSame('entity.active && is_granted("ROLE_EDITOR")', $attr->editable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isPropertyLevelAttribute(): void
     {
         $reflection = new \ReflectionClass(AdminColumn::class);
@@ -62,7 +61,7 @@ final class AdminColumnTest extends TestCase
         $this->assertNotSame(0, $attrInstance->flags & Attribute::TARGET_PROPERTY);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBeReadFromPropertyWithNull(): void
     {
         $entity = new class {
@@ -78,7 +77,7 @@ final class AdminColumnTest extends TestCase
         $this->assertNull($attr->editable, 'Default should be null (inherit entity setting)');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBeReadFromPropertyWithFalse(): void
     {
         $entity = new class {
@@ -94,7 +93,7 @@ final class AdminColumnTest extends TestCase
         $this->assertFalse($attr->editable);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canBeReadFromPropertyWithExpression(): void
     {
         $entity = new class {

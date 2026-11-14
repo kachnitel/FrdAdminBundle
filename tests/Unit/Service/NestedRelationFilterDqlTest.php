@@ -10,7 +10,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithNestedFilter;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\ItemEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\MiddleEntity;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
@@ -21,7 +21,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  * Collection filters: nested JOINs are embedded inside the EXISTS subquery string,
  *                     keeping them scoped to the subquery and avoiding row multiplication.
  */
-#[Group('nested-filter')]
+#[PHPUnit\Group('nested-filter')]
 final class NestedRelationFilterDqlTest extends KernelTestCase
 {
     protected static function getKernelClass(): string

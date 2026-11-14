@@ -13,10 +13,7 @@ use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeletableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\GenericAdminControllerTestDouble;
 use Kachnitel\AdminBundle\Utils\CollectionScopeParameter;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormRegistryInterface;
@@ -29,11 +26,11 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * GenericAdminControllerArchiveTest for archive()/unarchive() and
  * GenericAdminControllerFormComponentTest for getFormType()/getFormComponentName().
  */
-#[CoversClass(GenericAdminController::class)]
-#[UsesClass(CollectionScopeParameter::class)]
-#[UsesClass(Admin::class)]
-#[UsesClass(AdminEntityVoter::class)]
-#[Group('controller')]
+#[PHPUnit\CoversClass(GenericAdminController::class)]
+#[PHPUnit\UsesClass(CollectionScopeParameter::class)]
+#[PHPUnit\UsesClass(Admin::class)]
+#[PHPUnit\UsesClass(AdminEntityVoter::class)]
+#[PHPUnit\Group('controller')]
 final class GenericAdminControllerRoutesTest extends TestCase
 {
     private const ENTITY_NAMESPACE = 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\';
@@ -73,7 +70,7 @@ final class GenericAdminControllerRoutesTest extends TestCase
 
     // ── index() ──────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function indexRendersEntityListView(): void
     {
         $controller = $this->makeController();
@@ -85,7 +82,7 @@ final class GenericAdminControllerRoutesTest extends TestCase
         $this->assertSame('DeletableEntity', $controller->lastRender['parameters']['entityShortClass']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function indexThrowsNotFoundForUnsupportedEntitySlug(): void
     {
         $this->expectException(NotFoundHttpException::class);
@@ -94,8 +91,8 @@ final class GenericAdminControllerRoutesTest extends TestCase
         $this->makeController()->index(new Request(), 'nonexistent-entity');
     }
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function indexPassesNoScopeByDefault(): void
     {
         $controller = $this->makeController();
@@ -105,8 +102,8 @@ final class GenericAdminControllerRoutesTest extends TestCase
         $this->assertSame([], $controller->lastRender['parameters']['scope']);
     }
 
-    #[Test]
-    #[Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function indexTranslatesCollectionQueryParameterToScope(): void
     {
         $this->entityDiscovery = $this->createStub(EntityDiscoveryService::class);
@@ -132,9 +129,9 @@ final class GenericAdminControllerRoutesTest extends TestCase
         yield 'array value' => [['x']];
     }
 
-    #[Test]
-    #[Group('collection-scope')]
-    #[\PHPUnit\Framework\Attributes\DataProvider('invalidCollectionParameterProvider')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
+    #[PHPUnit\DataProvider('invalidCollectionParameterProvider')]
     public function indexThrowsNotFoundForInvalidCollectionParameter(mixed $value): void
     {
         $this->expectException(NotFoundHttpException::class);
@@ -144,7 +141,7 @@ final class GenericAdminControllerRoutesTest extends TestCase
 
     // ── new() ────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function newRendersNewEntityFormWithBreadcrumbs(): void
     {
         $controller = $this->makeController();
@@ -159,8 +156,8 @@ final class GenericAdminControllerRoutesTest extends TestCase
         $this->assertSame('DeletableEntity', $lastRender['parameters']['breadcrumbs'][0]['label']);
     }
 
-    #[Test]
-    #[Group('action-disabling')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('action-disabling')]
     public function newThrowsAccessDeniedWhenDisabledAndRequiredRoleIsNull(): void
     {
         $this->entityDiscovery = $this->createStub(EntityDiscoveryService::class);
@@ -175,7 +172,7 @@ final class GenericAdminControllerRoutesTest extends TestCase
 
     // ── delete() ─────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deleteRemovesEntityAndRedirectsOnSuccess(): void
     {
         $entity = new DeletableEntity(7);
@@ -194,7 +191,7 @@ final class GenericAdminControllerRoutesTest extends TestCase
         $this->assertSame(303, $result->getStatusCode()); // Response::HTTP_SEE_OTHER
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deleteThrowsNotFoundWhenEntityMissing(): void
     {
         $this->repository->method('find')->willReturn(null);

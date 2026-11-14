@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionParent;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionRow;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -26,8 +25,8 @@ use Symfony\Component\Security\Core\User\InMemoryUser;
  *
  * Structure-only: submissions use clearMissing=false so no choice query (and no schema) is needed.
  */
-#[Group('column-permission-form')]
-#[Group('collections')]
+#[PHPUnit\Group('column-permission-form')]
+#[PHPUnit\Group('collections')]
 final class ColumnPermissionNestedFormTest extends KernelTestCase
 {
     protected static function getKernelClass(): string
@@ -35,7 +34,7 @@ final class ColumnPermissionNestedFormTest extends KernelTestCase
         return TestKernel::class;
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showDeniedAssociationsAreRemoved(): void
     {
         self::bootKernel();
@@ -51,7 +50,7 @@ final class ColumnPermissionNestedFormTest extends KernelTestCase
         self::assertFalse($form->has('lockedTags'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editDeniedAssociationsAreDisabledWhenShowIsAllowed(): void
     {
         self::bootKernel();
@@ -70,7 +69,7 @@ final class ColumnPermissionNestedFormTest extends KernelTestCase
         self::assertTrue($form->get('lockedTags')->isDisabled());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fullyPermittedUserGetsEditableAssociations(): void
     {
         self::bootKernel();
@@ -84,7 +83,7 @@ final class ColumnPermissionNestedFormTest extends KernelTestCase
         }
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function tamperedValueForDisabledAssociationIsIgnored(): void
     {
         self::bootKernel();
@@ -99,7 +98,7 @@ final class ColumnPermissionNestedFormTest extends KernelTestCase
         self::assertNull($parent->getReviewer());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function collectionRowsApplyTheChildClassPermissions(): void
     {
         self::bootKernel();
@@ -120,7 +119,7 @@ final class ColumnPermissionNestedFormTest extends KernelTestCase
         self::assertFalse($row->get('budget')->isDisabled());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function tamperedValueForDisabledRowFieldIsIgnoredWhileOthersStillSave(): void
     {
         self::bootKernel();
@@ -136,7 +135,7 @@ final class ColumnPermissionNestedFormTest extends KernelTestCase
         self::assertSame('1000', $row->getBudget());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function submittedValueForRemovedRowFieldInvalidatesTheForm(): void
     {
         self::bootKernel();

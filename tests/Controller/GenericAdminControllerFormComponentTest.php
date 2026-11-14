@@ -11,19 +11,16 @@ use Kachnitel\AdminBundle\Controller\GenericAdminController;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\PermissiveObjectAuthorizationChecker;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormRegistryInterface;
 
-#[CoversClass(GenericAdminController::class)]
-#[UsesClass(Admin::class)]
-#[UsesClass(AdminColumn::class)]
-#[Group('auto-form')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(GenericAdminController::class)]
+#[PHPUnit\UsesClass(Admin::class)]
+#[PHPUnit\UsesClass(AdminColumn::class)]
+#[PHPUnit\Group('auto-form')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class GenericAdminControllerFormComponentTest extends TestCase
 {
     /** @var EntityDiscoveryService&MockObject */

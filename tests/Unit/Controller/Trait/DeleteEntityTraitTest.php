@@ -9,18 +9,16 @@ use Kachnitel\AdminBundle\Controller\Trait\DeleteEntityTrait;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeletableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeleteEntityTraitHost;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestForeignKeyConstraintViolationException;
-use PHPUnit\Framework\Attributes\CoversTrait;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-#[CoversTrait(DeleteEntityTrait::class)]
-#[Group('controller')]
-#[Group('delete')]
+#[PHPUnit\CoversTrait(DeleteEntityTrait::class)]
+#[PHPUnit\Group('controller')]
+#[PHPUnit\Group('delete')]
 final class DeleteEntityTraitTest extends TestCase
 {
     private DeleteEntityTraitHost $host;
@@ -48,7 +46,7 @@ final class DeleteEntityTraitTest extends TestCase
 
     // ── validateCsrfEntityRequest ───────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function validateCsrfEntityRequestPassesWithValidToken(): void
     {
         $this->host->csrfValid = true;
@@ -61,7 +59,7 @@ final class DeleteEntityTraitTest extends TestCase
         $this->addToAssertionCount(1); // No exception thrown = success.
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function validateCsrfEntityRequestThrowsOnInvalidToken(): void
     {
         $this->host->csrfValid = false;
@@ -75,7 +73,7 @@ final class DeleteEntityTraitTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function validateCsrfEntityRequestBuildsKeyFromRouteAndEntityId(): void
     {
         $this->host->csrfValid = false;
@@ -88,7 +86,7 @@ final class DeleteEntityTraitTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function validateCsrfEntityRequestHandlesEntityWithoutGetId(): void
     {
         $this->host->csrfValid = false;
@@ -104,7 +102,7 @@ final class DeleteEntityTraitTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function validateCsrfEntityRequestTreatsNonStringTokenAsMissing(): void
     {
         $this->host->csrfValid = false;
@@ -122,7 +120,7 @@ final class DeleteEntityTraitTest extends TestCase
 
     // ── doDelete ─────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function doDeleteRemovesFlushesAndReturnsSuccessResponseOnSuccess(): void
     {
         $entity = new DeletableEntity(42);
@@ -140,7 +138,7 @@ final class DeleteEntityTraitTest extends TestCase
         $this->assertNull($this->host->redirectedTo);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function doDeleteThrowsBeforeTouchingEntityManagerWhenCsrfInvalid(): void
     {
         $this->host->csrfValid = false;
@@ -158,7 +156,7 @@ final class DeleteEntityTraitTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function doDeleteAddsErrorFlashAndRedirectsToRefererOnForeignKeyViolation(): void
     {
         $this->em->method('remove');
@@ -176,7 +174,7 @@ final class DeleteEntityTraitTest extends TestCase
         $this->assertInstanceOf(RedirectResponse::class, $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function doDeleteReturnsSuccessResponseOnForeignKeyViolationWithoutReferer(): void
     {
         $this->em->method('remove');

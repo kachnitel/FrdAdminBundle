@@ -16,16 +16,13 @@ use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\AdminBundle\Service\Preferences\AdminPreferencesStorageInterface;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(EntityList::class)]
-#[UsesClass(EntityListConfig::class)]
-#[Group('entity-list')]
-#[Group('datasource-id')]
+#[PHPUnit\CoversClass(EntityList::class)]
+#[PHPUnit\UsesClass(EntityListConfig::class)]
+#[PHPUnit\Group('entity-list')]
+#[PHPUnit\Group('datasource-id')]
 final class EntityListDoctrineDataSourceIdTest extends TestCase
 {
     private function makeComponent(DataSourceInterface $dataSource): EntityList
@@ -58,7 +55,7 @@ final class EntityListDoctrineDataSourceIdTest extends TestCase
         return $ds;
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function adoptsEntityClassAndShortNameFromDoctrineDataSource(): void
     {
         $component = $this->makeComponent($this->doctrineSource());
@@ -69,13 +66,13 @@ final class EntityListDoctrineDataSourceIdTest extends TestCase
         $this->assertSame('Product', $component->entityShortClass);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isDoctrineEntityIsTrueForDoctrineDataSourceId(): void
     {
         $this->assertTrue($this->makeComponent($this->doctrineSource())->isDoctrineEntity());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function customDataSourceKeepsEntityClassEmptyAndIsNotDoctrine(): void
     {
         $component = $this->makeComponent($this->createStub(DataSourceInterface::class));
@@ -87,7 +84,7 @@ final class EntityListDoctrineDataSourceIdTest extends TestCase
         $this->assertFalse($component->isDoctrineEntity());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function explicitShortClassIsNotOverwritten(): void
     {
         $component = $this->makeComponent($this->doctrineSource());

@@ -5,28 +5,26 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Attribute;
 
 use Kachnitel\AdminBundle\Attribute\AdminColumn;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(AdminColumn::class)]
-#[Group('collection-dialog')]
+#[PHPUnit\CoversClass(AdminColumn::class)]
+#[PHPUnit\Group('collection-dialog')]
 final class AdminColumnCollectionDialogTest extends TestCase
 {
-    #[Test]
+    #[PHPUnit\Test]
     public function collectionDialogDefaultsToFalse(): void
     {
         $this->assertFalse((new AdminColumn())->collectionDialog);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function collectionDialogCanBeEnabled(): void
     {
         $this->assertTrue((new AdminColumn(collectionDialog: true))->collectionDialog);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function collectionDialogDoesNotDisturbOtherDefaults(): void
     {
         $column = new AdminColumn(collectionDialog: true);

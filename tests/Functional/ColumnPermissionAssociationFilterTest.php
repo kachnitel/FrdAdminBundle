@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\PermissionFilterOwner;
 use Kachnitel\AdminBundle\Tests\Fixtures\PermissionFilterTicket;
 use Kachnitel\AdminBundle\Twig\Components\EntityList;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -19,8 +18,8 @@ use Symfony\Component\Security\Core\User\InMemoryUser;
  * #[ColumnPermission] must apply: filtering tickets by an owner's restricted email must not
  * reveal whether that email exists.
  */
-#[Group('column-permission-query')]
-#[Group('entity-list')]
+#[PHPUnit\Group('column-permission-query')]
+#[PHPUnit\Group('entity-list')]
 final class ColumnPermissionAssociationFilterTest extends ComponentTestCase
 {
     protected function setUp(): void
@@ -40,7 +39,7 @@ final class ColumnPermissionAssociationFilterTest extends ComponentTestCase
         $this->em->flush();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function restrictedTargetFieldIsNotSearchedWithoutTheRole(): void
     {
         $titles = $this->titles('alice@example.test', new InMemoryUser('user', 'test', ['ROLE_USER']));
@@ -49,7 +48,7 @@ final class ColumnPermissionAssociationFilterTest extends ComponentTestCase
         $this->assertSame([], $titles);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function restrictedTargetFieldIsSearchedWithTheRole(): void
     {
         $titles = $this->titles('alice@example.test', new InMemoryUser('hr', 'test', ['ROLE_HR']));
@@ -57,7 +56,7 @@ final class ColumnPermissionAssociationFilterTest extends ComponentTestCase
         $this->assertSame(['T1'], $titles);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function permittedTargetFieldStillFiltersWithoutTheRole(): void
     {
         $titles = $this->titles('Bob', new InMemoryUser('user', 'test', ['ROLE_USER']));

@@ -18,17 +18,15 @@ use Kachnitel\AdminBundle\Twig\Components\EntityList;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\DataSourceContracts\PaginatedResult;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
-#[CoversClass(EntityList::class)]
-#[UsesClass(EntityListConfig::class)]
-#[UsesClass(ArchiveConfig::class)]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(EntityList::class)]
+#[PHPUnit\UsesClass(EntityListConfig::class)]
+#[PHPUnit\UsesClass(ArchiveConfig::class)]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListEdgeCasesTest extends TestCase
 {
     /** @var DataSourceInterface&MockObject */

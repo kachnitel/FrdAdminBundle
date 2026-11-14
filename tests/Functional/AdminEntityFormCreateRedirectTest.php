@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -36,7 +35,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * @see \Kachnitel\AdminBundle\Twig\Components\AdminFormSaveTrait::buildCreateRedirect()
  * @see \Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime::getPath()
  */
-#[Group('create-redirect')]
+#[PHPUnit\Group('create-redirect')]
 final class AdminEntityFormCreateRedirectTest extends ComponentTestCase
 {
     private const FORM_NAME = 'test_entity_form';
@@ -52,7 +51,7 @@ final class AdminEntityFormCreateRedirectTest extends ComponentTestCase
         self::getContainer()->get('request_stack')->push($request);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingNewEntityRedirects(): void
     {
         $component = $this->mountNewForm();
@@ -63,7 +62,7 @@ final class AdminEntityFormCreateRedirectTest extends ComponentTestCase
         $this->assertTrue($component->response()->isRedirect());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingNewEntityRedirectsToItsOwnEditPage(): void
     {
         $component = $this->mountNewForm();
@@ -82,7 +81,7 @@ final class AdminEntityFormCreateRedirectTest extends ComponentTestCase
         $this->assertSame($expectedPath, $component->response()->headers->get('Location'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingExistingEntityDoesNotRedirect(): void
     {
         $entity = new TestEntity();
@@ -98,7 +97,7 @@ final class AdminEntityFormCreateRedirectTest extends ComponentTestCase
         $this->assertFalse($component->response()->isRedirect());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingNewEntityWithInvalidDataDoesNotRedirect(): void
     {
         $component = $this->mountNewForm();
@@ -109,7 +108,7 @@ final class AdminEntityFormCreateRedirectTest extends ComponentTestCase
         $this->assertFalse($component->response()->isRedirect());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function savingNewEntityWithInvalidDataDoesNotPersist(): void
     {
         $component = $this->mountNewForm();

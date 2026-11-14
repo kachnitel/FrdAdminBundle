@@ -12,9 +12,7 @@ use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -23,9 +21,9 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 /**
  * \stdClass stands in for the owner entity, \ArrayObject for the collection target.
  */
-#[CoversClass(CollectionScopeResolver::class)]
-#[Group('collection-dialog')]
-#[Group('collection-scope')]
+#[PHPUnit\CoversClass(CollectionScopeResolver::class)]
+#[PHPUnit\Group('collection-dialog')]
+#[PHPUnit\Group('collection-scope')]
 final class CollectionScopeResolverTest extends TestCase
 {
     private const SCOPE = ['ownerClass' => \stdClass::class, 'ownerId' => '7', 'property' => 'items'];
@@ -33,7 +31,7 @@ final class CollectionScopeResolverTest extends TestCase
     /** The entity class of the list being scoped: must be the collection's target. */
     private const LIST = \ArrayObject::class;
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildsExactSubqueryWithBoundOwnerId(): void
     {
         [$dql, $params] = $this->makeResolver()->resolve(self::SCOPE, self::LIST);
@@ -45,7 +43,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->assertSame(['scope_owner_id' => '7'], $params);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function castsNumericOwnerIdForIntegerKeys(): void
     {
         [, $params] = $this->makeResolver(idType: 'integer')->resolve(self::SCOPE, self::LIST);
@@ -53,7 +51,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->assertSame(['scope_owner_id' => 7], $params);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function keepsStringOwnerIdForNonIntegerKeys(): void
     {
         [, $params] = $this->makeResolver(idType: 'guid')->resolve(
@@ -64,7 +62,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->assertSame(['scope_owner_id' => 'abc-123'], $params);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function checksShowOnTheOwnerInstance(): void
     {
         $owner = new \stdClass();
@@ -76,7 +74,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver(owner: $owner, objectAuth: $objectAuth)->resolve(self::SCOPE, self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsMalformedScope(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -84,7 +82,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver()->resolve(['ownerClass' => 1, 'ownerId' => '7', 'property' => 'items'], self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsEmptyScope(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -92,7 +90,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver()->resolve([], self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsOwnerNotManagedByAdmin(): void
     {
         $this->expectException(NotFoundHttpException::class);
@@ -100,7 +98,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver(ownerAdmin: false)->resolve(self::SCOPE, self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsTargetNotManagedByAdmin(): void
     {
         $this->expectException(NotFoundHttpException::class);
@@ -108,7 +106,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver(targetAdmin: false)->resolve(self::SCOPE, self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsClassLevelShowDenial(): void
     {
         $this->expectException(AccessDeniedException::class);
@@ -116,7 +114,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver(show: false)->resolve(self::SCOPE, self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsColumnPermissionDenial(): void
     {
         $this->expectException(AccessDeniedException::class);
@@ -124,7 +122,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver(column: false)->resolve(self::SCOPE, self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsObjectLevelDenial(): void
     {
         $objectAuth = $this->createStub(ObjectAuthorizationChecker::class);
@@ -135,7 +133,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver(objectAuth: $objectAuth)->resolve(self::SCOPE, self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsNonCollectionProperty(): void
     {
         $this->expectException(NotFoundHttpException::class);
@@ -143,7 +141,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver(isCollection: false)->resolve(self::SCOPE, self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsScopeWhoseTargetIsNotTheListedEntity(): void
     {
         // e.g. /admin/product?collection=Order:12:items — the subquery would select Order
@@ -154,7 +152,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver()->resolve(self::SCOPE, \stdClass::class);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function acceptsListedEntityThatIsASuperclassOfTheTarget(): void
     {
         [$dql] = $this->makeResolver()->resolve(self::SCOPE, \Countable::class);
@@ -162,7 +160,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->assertStringContainsString('IN (SELECT', $dql);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsNonNumericOwnerIdForIntegerKeyBeforeQueryingTheDatabase(): void
     {
         // A string bound to an integer PK is a driver error on PostgreSQL (500, not 404).
@@ -172,7 +170,7 @@ final class CollectionScopeResolverTest extends TestCase
             ->resolve(['ownerClass' => \stdClass::class, 'ownerId' => 'abc', 'property' => 'items'], self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsOwnerWithCompositeIdentifier(): void
     {
         $this->expectException(NotFoundHttpException::class);
@@ -180,7 +178,7 @@ final class CollectionScopeResolverTest extends TestCase
         $this->makeResolver(compositeId: true, findExpected: false)->resolve(self::SCOPE, self::LIST);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function rejectsMissingOwner(): void
     {
         $this->expectException(NotFoundHttpException::class);

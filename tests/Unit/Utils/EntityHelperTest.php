@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Utils;
 
 use Kachnitel\AdminBundle\Utils\EntityHelper;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -16,13 +14,13 @@ use PHPUnit\Framework\TestCase;
  * Priority under test:
  *   label (getter, then public prop) -> name -> title -> __toString() -> #getId() -> #id prop -> short class name
  */
-#[CoversClass(EntityHelper::class)]
-#[Group('entity-helper')]
+#[PHPUnit\CoversClass(EntityHelper::class)]
+#[PHPUnit\Group('entity-helper')]
 final class EntityHelperTest extends TestCase
 {
     // ── getLabel() / getName() / getTitle() getters ───────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function prefersGetLabelOverEverythingElse(): void
     {
         $entity = new class {
@@ -36,7 +34,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('From label', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToGetNameWhenNoGetLabel(): void
     {
         $entity = new class {
@@ -47,7 +45,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('From name', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToGetTitleWhenNoGetLabelOrGetName(): void
     {
         $entity = new class {
@@ -59,7 +57,7 @@ final class EntityHelperTest extends TestCase
 
     // ── Public property variants ──────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function usesPublicLabelPropertyWhenNoGetter(): void
     {
         $entity = new class {
@@ -69,7 +67,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('Prop label', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function usesPublicNameAndTitlePropertiesInOrder(): void
     {
         $nameAndTitle = new class {
@@ -84,7 +82,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('Prop title', EntityHelper::getEntityLabel($titleOnly));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getterForEarlierPropertyBeatsPublicPropertyOfLaterOne(): void
     {
         $entity = new class {
@@ -95,7 +93,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('Getter label', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function publicLabelPropertyBeatsGetNameGetter(): void
     {
         $entity = new class {
@@ -106,7 +104,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('Prop label', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function nullPublicPropertyIsSkipped(): void
     {
         $entity = new class {
@@ -119,7 +117,7 @@ final class EntityHelperTest extends TestCase
 
     // ── stringifyEntityValue() behaviour via getters ──────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function scalarGetterValuesAreCastToString(): void
     {
         $int = new class {
@@ -133,7 +131,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('1', EntityHelper::getEntityLabel($bool));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function stringableGetterValueIsCastToString(): void
     {
         $entity = new class {
@@ -148,7 +146,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('Stringable name', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function existingGetterReturningNullYieldsEmptyStringWithoutFallingThrough(): void
     {
         // Characterization: an existing getter short-circuits even when its value is unusable.
@@ -160,7 +158,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function nonStringableObjectGetterValueYieldsEmptyString(): void
     {
         $entity = new class {
@@ -172,7 +170,7 @@ final class EntityHelperTest extends TestCase
 
     // ── __toString() fallback ─────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToToStringWhenNoLabelGettersOrProperties(): void
     {
         $entity = new class {
@@ -185,7 +183,7 @@ final class EntityHelperTest extends TestCase
 
     // ── Id fallbacks ──────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToHashGetIdWhenNothingElseMatches(): void
     {
         $entity = new class {
@@ -195,7 +193,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('#42', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getIdWithNonScalarValueYieldsBareHash(): void
     {
         $entity = new class {
@@ -205,7 +203,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('#', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToHashPublicIdPropertyWhenNoGetId(): void
     {
         $entity = new class {
@@ -215,7 +213,7 @@ final class EntityHelperTest extends TestCase
         $this->assertSame('#7', EntityHelper::getEntityLabel($entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getIdBeatsPublicIdProperty(): void
     {
         $entity = new class {
@@ -228,7 +226,7 @@ final class EntityHelperTest extends TestCase
 
     // ── Last resort ───────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function fallsBackToShortClassNameWhenNothingIsAvailable(): void
     {
         $this->assertSame('EntityHelperBareFixture', EntityHelper::getEntityLabel(new EntityHelperBareFixture()));

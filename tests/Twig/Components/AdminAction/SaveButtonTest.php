@@ -6,9 +6,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Twig\Components\AdminAction;
 
 use Kachnitel\AdminBundle\Twig\Components\AdminAction\SaveButton;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\UX\LiveComponent\LiveResponder;
 
@@ -16,8 +14,8 @@ use Symfony\UX\LiveComponent\LiveResponder;
  * Unit-level coverage for SaveButton's own state transitions.
  *
  */
-#[CoversClass(SaveButton::class)]
-#[Group('save-button')]
+#[PHPUnit\CoversClass(SaveButton::class)]
+#[PHPUnit\Group('save-button')]
 final class SaveButtonTest extends TestCase
 {
     public function testDefaultStateIsEnabledAndNotSaving(): void
@@ -40,7 +38,7 @@ final class SaveButtonTest extends TestCase
     /**
      * @param int<0, 1> $broadcastValid
      */
-    #[DataProvider('formStateProvider')]
+    #[PHPUnit\DataProvider('formStateProvider')]
     public function testOnFormStateChangedTracksValidity(int $broadcastValid, bool $expectedValid): void
     {
         $button = $this->createSaveButton();

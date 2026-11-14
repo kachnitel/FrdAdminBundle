@@ -11,14 +11,13 @@ use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\RowAction\RowActionExpressionLanguage;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
 
-#[Group('archive')]
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('archive')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class ArchiveServiceTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -57,7 +56,7 @@ final class ArchiveServiceTest extends TestCase
 
     // ── resolveConfig() ───────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolveConfigReturnsNullWhenNoExpressionConfigured(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(null);
@@ -67,7 +66,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolveConfigUsesGlobalExpressionWhenNoEntityOverride(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -85,7 +84,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertNull($config->role);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolveConfigUsesEntityExpressionOverGlobal(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -101,7 +100,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertSame('deletedAt', $config->field);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolveConfigReturnsNullWhenEntityDisablesArchive(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -112,7 +111,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertNotInstanceOf(\Kachnitel\AdminBundle\Archive\ArchiveConfig::class, $config);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolveConfigUsesGlobalRole(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
@@ -128,7 +127,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertSame('ROLE_ADMIN', $config->role);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolveConfigUsesEntityRoleOverGlobal(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')
@@ -146,7 +145,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertSame('ROLE_SUPER_ADMIN', $config->role);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolveConfigReturnsNullWhenFieldNotInDoctrine(): void
     {
         $this->entityDiscovery->method('getAdminAttribute')->willReturn(new Admin());
@@ -159,7 +158,7 @@ final class ArchiveServiceTest extends TestCase
 
     // ── extractField() ────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function extractFieldParsesSimpleExpression(): void
     {
         $service = $this->makeService();
@@ -169,7 +168,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertSame('deleted', $service->extractField('entity.isDeleted()'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function extractFieldReturnsNullForComplexExpressions(): void
     {
         $service = $this->makeService();
@@ -182,7 +181,7 @@ final class ArchiveServiceTest extends TestCase
 
     // ── buildDqlCondition() ───────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionForBooleanFieldHideMode(): void
     {
         $service = $this->makeService();
@@ -194,7 +193,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertSame('(e.archived IS NULL OR e.archived = false)', $condition);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionForBooleanFieldIncludesNullRows(): void
     {
         // Regression test: the previous `e.archived = false` excluded rows where archived
@@ -214,7 +213,7 @@ final class ArchiveServiceTest extends TestCase
             'Must not be expressed as NOT (= true): NOT NULL is also NULL in SQL');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionForBooleanFieldShowAllMode(): void
     {
         $service = $this->makeService();
@@ -224,7 +223,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertNull($condition);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionForNullableDatetimeHideMode(): void
     {
         $service = $this->makeService();
@@ -235,7 +234,7 @@ final class ArchiveServiceTest extends TestCase
         }
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionForNullableDatetimeShowAllMode(): void
     {
         $service = $this->makeService();
@@ -245,7 +244,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertNull($condition);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionReturnsNullForUnsupportedType(): void
     {
         $service = $this->makeService();
@@ -257,7 +256,7 @@ final class ArchiveServiceTest extends TestCase
 
     // ── isArchived() ──────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isArchivedReturnsTrueForArchivedEntity(): void
     {
         $entity = new class {
@@ -268,7 +267,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertTrue($service->isArchived($entity, 'item.isArchived()'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isArchivedReturnsFalseForNonArchivedEntity(): void
     {
         $entity = new class {
@@ -279,7 +278,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertFalse($service->isArchived($entity, 'item.isArchived()'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isArchivedReturnsTrueForNonNullDeletedAt(): void
     {
         $entity = new class {
@@ -290,7 +289,7 @@ final class ArchiveServiceTest extends TestCase
         $this->assertTrue($service->isArchived($entity, 'item.getDeletedAt() != null'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isArchivedReturnsFalseOnExpressionError(): void
     {
         $entity = new class {};

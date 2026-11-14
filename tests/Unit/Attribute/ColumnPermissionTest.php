@@ -6,11 +6,10 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Attribute;
 
 use Kachnitel\AdminBundle\Attribute\ColumnPermission;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ColumnPermission::class)]
+#[PHPUnit\CoversClass(ColumnPermission::class)]
 final class ColumnPermissionTest extends TestCase
 {
     public function testEmptyPermissionsIsDefault(): void
@@ -20,7 +19,7 @@ final class ColumnPermissionTest extends TestCase
         $this->assertSame([], $permission->getPermissions());
     }
 
-    #[IgnoreDeprecations('ColumnPermission.*deprecated since 0\.6\.0')]
+    #[PHPUnit\IgnoreDeprecations('ColumnPermission.*deprecated since 0\.6\.0')]
     public function testLegacyStringPermissionIsNormalizedAndDeprecated(): void
     {
         $this->expectUserDeprecationMessage(

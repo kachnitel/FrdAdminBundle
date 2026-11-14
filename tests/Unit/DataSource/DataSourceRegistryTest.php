@@ -9,15 +9,13 @@ use Kachnitel\DataSourceContracts\DataSourceProviderInterface;
 use Kachnitel\AdminBundle\DataSource\DataSourceRegistry;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(DataSourceRegistry::class)]
-#[Group('data-source')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(DataSourceRegistry::class)]
+#[PHPUnit\Group('data-source')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DataSourceRegistryTest extends TestCase
 {
     /** @var DoctrineDataSourceFactory&MockObject */

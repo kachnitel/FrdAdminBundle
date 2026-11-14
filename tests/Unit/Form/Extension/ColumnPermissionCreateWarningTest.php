@@ -8,8 +8,7 @@ use Kachnitel\AdminBundle\Form\Extension\ColumnPermissionFormExtension;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionFormEntity;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
@@ -31,7 +30,7 @@ use Symfony\Component\Validator\ConstraintViolation;
  * Validation is simulated by a POST_SUBMIT listener (priority 0, where Symfony's
  * ValidationListener runs); the extension's own listener runs after it.
  */
-#[Group('column-permission-form')]
+#[PHPUnit\Group('column-permission-form')]
 final class ColumnPermissionCreateWarningTest extends TestCase
 {
     /** @var ColumnPermissionService&Stub */
@@ -47,7 +46,7 @@ final class ColumnPermissionCreateWarningTest extends TestCase
         $this->logger = $this->createMock(LoggerInterface::class);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function warnsWhenDisabledFieldFailsValidationOnCreate(): void
     {
         $this->grant([AdminEntityVoter::ADMIN_SHOW]); // visible, not editable -> disabled
@@ -58,7 +57,7 @@ final class ColumnPermissionCreateWarningTest extends TestCase
         $form->submit(['name' => 'x']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function warnsWhenRemovedFieldFailsValidationOnCreate(): void
     {
         $this->grant([]); // show denied -> removed
@@ -69,7 +68,7 @@ final class ColumnPermissionCreateWarningTest extends TestCase
         $form->submit(['name' => 'x']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function staysSilentOutsideDebug(): void
     {
         $this->grant([AdminEntityVoter::ADMIN_SHOW]);
@@ -79,7 +78,7 @@ final class ColumnPermissionCreateWarningTest extends TestCase
         $form->submit(['name' => 'x']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function staysSilentWhenEditingAnExistingEntity(): void
     {
         $this->grant([AdminEntityVoter::ADMIN_SHOW]);
@@ -89,7 +88,7 @@ final class ColumnPermissionCreateWarningTest extends TestCase
         $form->submit(['name' => 'x']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function staysSilentWhenRestrictedFieldHasNoValidationError(): void
     {
         $this->grant([AdminEntityVoter::ADMIN_SHOW]);
@@ -99,7 +98,7 @@ final class ColumnPermissionCreateWarningTest extends TestCase
         $form->submit(['name' => 'x']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function ignoresViolationsOnUnrestrictedFields(): void
     {
         $this->grant([]);

@@ -11,11 +11,7 @@ use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Utils\ObjectHelper;
 use Kachnitel\AdminBundle\Utils\PropertyReflection;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -29,14 +25,14 @@ use PHPUnit\Framework\TestCase;
  * instead of inline inside DynamicEntityFormType, it's tested directly against
  * this class — no form builder, no metadata mocking required.
  */
-#[CoversClass(AdminColumnEditabilityResolver::class)]
-#[UsesClass(AdminColumn::class)]
-#[UsesClass(AttributeHelper::class)]
-#[UsesClass(ObjectHelper::class)]
-#[UsesClass(PropertyReflection::class)]
-#[Group('dynamic-form')]
-#[Group('expressions')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\CoversClass(AdminColumnEditabilityResolver::class)]
+#[PHPUnit\UsesClass(AdminColumn::class)]
+#[PHPUnit\UsesClass(AttributeHelper::class)]
+#[PHPUnit\UsesClass(ObjectHelper::class)]
+#[PHPUnit\UsesClass(PropertyReflection::class)]
+#[PHPUnit\Group('dynamic-form')]
+#[PHPUnit\Group('expressions')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class AdminColumnEditabilityResolverTest extends TestCase
 {
     /** @var RowActionExpressionLanguage&MockObject */
@@ -74,7 +70,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
      * enableInlineEdit: true would vanish from the auto-generated form. See the
      * class docblock.
      */
-    #[Test]
+    #[PHPUnit\Test]
     public function canShowNeverConsultsEnableInlineEdit(): void
     {
         $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'plain'));
@@ -82,14 +78,14 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
     // ── canShow(): explicit false ──────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editableFalseKeepsTheFieldButMakesItReadOnly(): void
     {
         $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'blocked'));
         $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'blocked'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editableFalseIsReadOnlyWithAnEntityProvidedAndNeverEvaluatesAnExpression(): void
     {
         $this->expressionLanguage->expects($this->never())->method('evaluate');
@@ -101,7 +97,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
     // ── canShow(): explicit true ───────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canShowIncludesAFieldMarkedEditableTrue(): void
     {
         $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'forced'));
@@ -109,7 +105,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
     // ── expression: the field stays; isReadOnly() carries the answer ───────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canShowKeepsAnExpressionFieldWithoutEvaluatingIt(): void
     {
         $this->expressionLanguage->expects($this->never())->method('evaluate');
@@ -118,7 +114,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'status'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isReadOnlyEvaluatesTheExpressionWhenAnEntityIsAvailable(): void
     {
         $entity          = new ResolverTestEntity();
@@ -131,7 +127,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'status', $entity));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isReadOnlyIsTrueWhenTheExpressionEvaluatesFalse(): void
     {
         $this->expressionLanguage->method('evaluate')->willReturn(false);
@@ -139,7 +135,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         $this->assertTrue($this->resolver->isReadOnly(ResolverTestEntity::class, 'status', new ResolverTestEntity()));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isReadOnlyDoesNotEvaluateTheExpressionWithoutAnEntity(): void
     {
         $this->expressionLanguage->expects($this->never())->method('evaluate');
@@ -147,7 +143,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
         $this->assertFalse($this->resolver->isReadOnly(ResolverTestEntity::class, 'status'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isReadOnlyIsFalseForFieldsWithoutAnExpression(): void
     {
         $this->expressionLanguage->expects($this->never())->method('evaluate');
@@ -158,13 +154,13 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
     // ── canShow(): reflection failures fall back to permissive ────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canShowIncludesAPropertyThatDoesNotExistOnTheClass(): void
     {
         $this->assertTrue($this->resolver->canShow(ResolverTestEntity::class, 'thisPropertyDoesNotExist'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canShowIncludesWhenTheEntityClassDoesNotExist(): void
     {
         $this->assertTrue($this->resolver->canShow('App\\Entity\\ThisClassDoesNotExist', 'whatever'));
@@ -172,7 +168,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
     // ── isExplicitOverride(): no attribute → not overridden ────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isExplicitOverrideIsFalseWithNoAdminColumnAttribute(): void
     {
         $this->assertFalse($this->resolver->isExplicitOverride(ResolverTestEntity::class, 'plain'));
@@ -180,7 +176,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
     // ── isExplicitOverride(): explicit false → not overridden ──────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isExplicitOverrideIsFalseWhenEditableIsExplicitlyFalse(): void
     {
         $this->assertFalse($this->resolver->isExplicitOverride(ResolverTestEntity::class, 'blocked'));
@@ -188,13 +184,13 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
     // ── isExplicitOverride(): explicit true → overridden ────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isExplicitOverrideIsTrueWhenEditableIsExplicitlyTrue(): void
     {
         $this->assertTrue($this->resolver->isExplicitOverride(ResolverTestEntity::class, 'forced'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isExplicitOverrideEditableTrueDoesNotNeedAnEntity(): void
     {
         $this->expressionLanguage->expects($this->never())->method('evaluate');
@@ -204,7 +200,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
 
     // ── isExplicitOverride(): expression ────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isExplicitOverrideEvaluatesTheExpressionWhenAnEntityIsAvailable(): void
     {
         $entity          = new ResolverTestEntity();
@@ -224,7 +220,7 @@ final class AdminColumnEditabilityResolverTest extends TestCase
      * into a brand-new entity's form before there's ever a real instance to
      * evaluate the expression against.
      */
-    #[Test]
+    #[PHPUnit\Test]
     public function isExplicitOverrideIsFalseForAnExpressionFieldWithNoEntityYet(): void
     {
         $this->expressionLanguage->expects($this->never())->method('evaluate');

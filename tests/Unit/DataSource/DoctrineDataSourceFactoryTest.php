@@ -20,8 +20,9 @@ use Kachnitel\AdminBundle\Tests\Fixtures\ConfiguredEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DoctrineDataSourceFactoryTest extends TestCase
 {
     /** @var EntityDiscoveryService&MockObject */

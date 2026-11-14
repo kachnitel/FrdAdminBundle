@@ -8,15 +8,13 @@ use Kachnitel\AdminBundle\Archive\ArchiveConfig;
 use Kachnitel\AdminBundle\Archive\ArchiveService;
 use Kachnitel\AdminBundle\Service\EntityListArchiveService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[Group('entity-list')]
-#[Group('archive')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('entity-list')]
+#[PHPUnit\Group('archive')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListArchiveServiceTest extends TestCase
 {
     /** @var ArchiveService&MockObject */
@@ -45,7 +43,7 @@ final class EntityListArchiveServiceTest extends TestCase
 
     // ── resolveConfig() ───────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolveConfigDelegatesToArchiveService(): void
     {
         $config = $this->makeConfig();
@@ -60,7 +58,7 @@ final class EntityListArchiveServiceTest extends TestCase
         $this->assertSame($config, $this->service->resolveConfig('App\\Entity\\Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function resolveConfigReturnsNullWhenNotConfigured(): void
     {
         $this->archiveService->method('resolveConfig')->willReturn(null);
@@ -71,7 +69,7 @@ final class EntityListArchiveServiceTest extends TestCase
 
     // ── canToggle() ───────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canToggleDelegatesToPermissionService(): void
     {
         $config = $this->makeConfig();
@@ -85,7 +83,7 @@ final class EntityListArchiveServiceTest extends TestCase
         $this->assertTrue($this->service->canToggle($config));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function canTogglePassesNullWhenNoConfig(): void
     {
         $this->permissionService
@@ -99,7 +97,7 @@ final class EntityListArchiveServiceTest extends TestCase
 
     // ── isArchivedRow() ───────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isArchivedRowPassesEntityAndExpressionToArchiveService(): void
     {
         $entity = new \stdClass();
@@ -114,7 +112,7 @@ final class EntityListArchiveServiceTest extends TestCase
         $this->assertTrue($this->service->isArchivedRow($entity, $config));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isArchivedRowReturnsFalseForNonArchivedEntity(): void
     {
         $entity = new \stdClass();
@@ -126,7 +124,7 @@ final class EntityListArchiveServiceTest extends TestCase
 
     // ── buildDqlCondition() ───────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionPassesEntityAliasAndFieldInHideMode(): void
     {
         $config = $this->makeConfig();
@@ -140,7 +138,7 @@ final class EntityListArchiveServiceTest extends TestCase
         $this->assertSame('e.archived = false', $this->service->buildDqlCondition($config, showArchived: false));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionReturnsNullInShowAllMode(): void
     {
         $config = $this->makeConfig();
@@ -149,7 +147,7 @@ final class EntityListArchiveServiceTest extends TestCase
         $this->assertNull($this->service->buildDqlCondition($config, showArchived: true));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionWorksForDatetimeField(): void
     {
         $config = $this->makeConfig('deletedAt', 'datetime_immutable');
@@ -163,7 +161,7 @@ final class EntityListArchiveServiceTest extends TestCase
         $this->assertSame('e.deletedAt IS NULL', $this->service->buildDqlCondition($config, showArchived: false));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDqlConditionAlwaysUsesEntityAliasE(): void
     {
         $config = $this->makeConfig();

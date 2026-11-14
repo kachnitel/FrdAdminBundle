@@ -9,8 +9,7 @@ use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionParent;
 use Kachnitel\AdminBundle\Tests\Fixtures\ColumnPermissionRow;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
 use Kachnitel\DynamicFormBundle\Form\DynamicEntityFormType;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -27,9 +26,9 @@ use Symfony\Component\Security\Core\User\InMemoryUser;
  * Each negative assertion has a positive control (an unrestricted or fully permitted field
  * of the same kind that MUST render the marker), so a changed marker cannot pass vacuously.
  */
-#[Group('column-permission-form')]
-#[Group('collections')]
-#[Group('inline-add')]
+#[PHPUnit\Group('column-permission-form')]
+#[PHPUnit\Group('collections')]
+#[PHPUnit\Group('inline-add')]
 final class ColumnPermissionRenderedFormTest extends ComponentTestCase
 {
     protected function setUp(): void
@@ -43,7 +42,7 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
         self::getContainer()->get('request_stack')->push($request);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function addButtonIsRenderedForEditableAssociationsOnly(): void
     {
         $html = $this->renderEditForm(['ROLE_HR']);
@@ -55,7 +54,7 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
         self::assertFalse($this->hasField($fields, 'lockedTags'), 'disabled ManyToMany must have no + Add button');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function addButtonIsRenderedForEveryAssociationWhenFullyPermitted(): void
     {
         $fields = $this->addButtonFields($this->renderEditForm(['ROLE_HR', 'ROLE_HR_EDIT']));
@@ -65,7 +64,7 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
         }
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function disabledCollectionRendersNoAddOrRemoveButtons(): void
     {
         $names = $this->collectionButtonNames($this->renderEditForm(['ROLE_HR']));
@@ -74,7 +73,7 @@ final class ColumnPermissionRenderedFormTest extends ComponentTestCase
         self::assertSame([], $this->matching($names, 'lockedRows'), 'disabled collection must render no Add/Remove buttons');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function permittedRestrictedCollectionRendersItsButtons(): void
     {
         $names = $this->collectionButtonNames($this->renderEditForm(['ROLE_HR', 'ROLE_HR_EDIT']));

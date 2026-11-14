@@ -8,12 +8,11 @@ use Kachnitel\AdminBundle\Service\CollectionScopeResolver;
 use Kachnitel\AdminBundle\Service\EntityListQueryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
-#[Group('functional')]
-#[Group('collection-dialog')]
-#[Group('collection-scope')]
+#[PHPUnit\Group('functional')]
+#[PHPUnit\Group('collection-dialog')]
+#[PHPUnit\Group('collection-scope')]
 final class CollectionScopeQueryTest extends ComponentTestCase
 {
     /** @return iterable<string, array{string}> */
@@ -24,7 +23,7 @@ final class CollectionScopeQueryTest extends ComponentTestCase
         yield 'inverse-side many-to-many' => ['sharedItems'];
     }
 
-    #[DataProvider('collectionProperties')]
+    #[PHPUnit\DataProvider('collectionProperties')]
     public function testScopeQueryReturnsOnlyItemsAssociatedWithTheOwner(string $property): void
     {
         $owner = new TestEntity();

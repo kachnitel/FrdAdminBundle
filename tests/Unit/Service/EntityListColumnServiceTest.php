@@ -10,14 +10,12 @@ use Kachnitel\DataSourceContracts\FilterMetadata;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\AdminBundle\Service\EntityListColumnService;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-#[Group('entity-list')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('entity-list')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListColumnServiceTest extends TestCase
 {
     /** @var ColumnPermissionService&MockObject */
@@ -38,7 +36,7 @@ final class EntityListColumnServiceTest extends TestCase
 
     // --- getPermittedColumns ---
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermittedColumnsReturnsAllColumnsWhenNoEntityClass(): void
     {
         $this->dataSource->method('getColumns')->willReturn([
@@ -54,7 +52,7 @@ final class EntityListColumnServiceTest extends TestCase
         $this->assertSame(['id', 'name', 'email'], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermittedColumnsFiltersDeniedColumnsForEntity(): void
     {
         $this->dataSource->method('getColumns')->willReturn([
@@ -73,7 +71,7 @@ final class EntityListColumnServiceTest extends TestCase
         $this->assertSame(['id', 'name', 'email'], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermittedColumnsReturnsAllColumnsWhenNoneDenied(): void
     {
         $this->dataSource->method('getColumns')->willReturn([
@@ -90,7 +88,7 @@ final class EntityListColumnServiceTest extends TestCase
         $this->assertSame(['id', 'name'], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermittedColumnsFiltersMultipleDeniedColumns(): void
     {
         $this->dataSource->method('getColumns')->willReturn([
@@ -110,7 +108,7 @@ final class EntityListColumnServiceTest extends TestCase
 
     // --- getPermittedFilters ---
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermittedFiltersReturnsAllFiltersWhenNoEntityClass(): void
     {
         $nameFilter = FilterMetadata::text('name');
@@ -136,7 +134,7 @@ final class EntityListColumnServiceTest extends TestCase
         $this->assertSame($nameFilter->toArray(), $result['name']);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermittedFiltersExcludesDeniedColumnFilters(): void
     {
         $nameFilter = FilterMetadata::text('name');
@@ -163,7 +161,7 @@ final class EntityListColumnServiceTest extends TestCase
         $this->assertArrayNotHasKey('secret', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermittedFiltersReturnsEmptyWhenAllFiltersDenied(): void
     {
         $secretFilter = FilterMetadata::text('secret');
@@ -183,7 +181,7 @@ final class EntityListColumnServiceTest extends TestCase
         $this->assertSame([], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getPermittedFiltersConvertsFilterMetadataToArray(): void
     {
         $filter = FilterMetadata::number('price', operator: '>');

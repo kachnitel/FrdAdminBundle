@@ -8,20 +8,19 @@ use Kachnitel\AdminBundle\DataSource\DoctrineCustomColumnProvider;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\AdminBundle\DataSource\DoctrineDataSourceFactory;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithCustomColumns;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
 /**
  * Functional tests for #[AdminCustomColumn] rendered in EntityList.
  */
-#[Group('custom-columns')]
+#[PHPUnit\Group('custom-columns')]
 final class EntityListCustomColumnTest extends ComponentTestCase
 {
     // -------------------------------------------------------------------------
     // DoctrineCustomColumnProvider reads attribute from real entity
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function providerReadsCustomColumnsFromFixtureEntity(): void
     {
         $provider = new DoctrineCustomColumnProvider();
@@ -42,7 +41,7 @@ final class EntityListCustomColumnTest extends ComponentTestCase
     // DoctrineDataSource exposes custom columns in getColumns()
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceExposesCustomColumnsViaGetColumns(): void
     {
         $factory = static::getContainer()->get(DoctrineDataSourceFactory::class);
@@ -60,7 +59,7 @@ final class EntityListCustomColumnTest extends ComponentTestCase
         $this->assertSame('test/custom_column_full_name.html.twig', $columns['fullName']->template);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function dataSourceReturnsNullValueForCustomColumn(): void
     {
         $factory = static::getContainer()->get(DoctrineDataSourceFactory::class);
@@ -80,7 +79,7 @@ final class EntityListCustomColumnTest extends ComponentTestCase
     // EntityList renders custom column templates
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function entityListRendersCustomColumnTemplate(): void
     {
         $entity = new EntityWithCustomColumns();
@@ -107,7 +106,7 @@ final class EntityListCustomColumnTest extends ComponentTestCase
         $this->assertStringContainsString('Jane Doe', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function customColumnNotInExplicitListIsNotRendered(): void
     {
         // statusBadge is NOT in Admin::columns on EntityWithCustomColumns, so it must
@@ -122,7 +121,7 @@ final class EntityListCustomColumnTest extends ComponentTestCase
         $this->assertArrayNotHasKey('statusBadge', $columns);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function entityListRendersColumnHeaderForCustomColumn(): void
     {
         $component = $this->createLiveComponent(
@@ -139,7 +138,7 @@ final class EntityListCustomColumnTest extends ComponentTestCase
         $this->assertStringContainsString('Full Name', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function entityListRendersMultipleRowsWithCustomColumn(): void
     {
         foreach ([['Alice', 'Smith', 'active'], ['Bob', 'Jones', 'inactive']] as [$first, $last, $status]) {
@@ -169,7 +168,7 @@ final class EntityListCustomColumnTest extends ComponentTestCase
     // Append behaviour (no explicit columns: list)
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function customColumnsAreAppendedWhenNoExplicitColumnsList(): void
     {
         // We test this via the provider + factory at unit level since we need a

@@ -7,9 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Unit\DependencyInjection\Compiler;
 use Kachnitel\AdminBundle\DependencyInjection\Compiler\OverrideTypeGuesserPass;
 use Kachnitel\DynamicFormBundle\Form\DoctrineFormTypeMapper;
 use Kachnitel\DynamicFormBundle\Form\TypeGuessing\ConventionalFieldTypeGuesser;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
@@ -25,14 +23,14 @@ use Symfony\Component\Form\FormTypeGuesserChain;
  * Uses a real ContainerBuilder (not a mock) — the standard Symfony approach for
  * testing compiler passes.
  */
-#[CoversClass(OverrideTypeGuesserPass::class)]
-#[Group('type-guessing')]
-#[Group('auto-form')]
+#[PHPUnit\CoversClass(OverrideTypeGuesserPass::class)]
+#[PHPUnit\Group('type-guessing')]
+#[PHPUnit\Group('auto-form')]
 final class OverrideTypeGuesserPassTest extends TestCase
 {
     // ── No-op guard ───────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function processIsANoOpWhenDoctrineFormTypeMapperIsNotRegistered(): void
     {
         $container = new ContainerBuilder();
@@ -48,7 +46,7 @@ final class OverrideTypeGuesserPassTest extends TestCase
 
     // ── Chain service registration ────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function processCreatesGuesserChainService(): void
     {
         $container = $this->containerWithMapper();
@@ -61,7 +59,7 @@ final class OverrideTypeGuesserPassTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function guesserChainServiceHasCorrectClass(): void
     {
         $container = $this->containerWithMapper();
@@ -74,7 +72,7 @@ final class OverrideTypeGuesserPassTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function guesserChainIncludesValidatorGuesserReference(): void
     {
         $container = $this->containerWithMapper();
@@ -89,7 +87,7 @@ final class OverrideTypeGuesserPassTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function guesserChainIncludesConventionalFieldTypeGuesserReference(): void
     {
         $container = $this->containerWithMapper();
@@ -106,7 +104,7 @@ final class OverrideTypeGuesserPassTest extends TestCase
 
     // ── Argument override on DoctrineFormTypeMapper ───────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function typeGuesserArgumentIsSetOnDoctrineFormTypeMapper(): void
     {
         $container = $this->containerWithMapper();
@@ -122,7 +120,7 @@ final class OverrideTypeGuesserPassTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function processOverridesAPreExistingTypeGuesserArgument(): void
     {
         // Simulates the state after dynamic-form-bundle's own services.yaml runs:

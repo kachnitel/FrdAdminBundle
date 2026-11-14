@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit\Service\Preferences;
 
 use Kachnitel\AdminBundle\Service\Preferences\SessionAdminPreferencesStorage;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -19,16 +19,15 @@ final class SessionAdminPreferencesStorageTest extends TestCase
     protected function setUp(): void
     {
         $session = new Session(new MockArraySessionStorage());
-        $requestStack = new RequestStack();
 
         $request = new Request();
         $request->setSession($session);
-        $requestStack->push($request);
+        $requestStack = new RequestStack([$request]);
 
         $this->storage = new SessionAdminPreferencesStorage($requestStack);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getReturnsDefaultValueWhenKeyNotSet(): void
     {
         $result = $this->storage->get('nonexistent.key', 'default');
@@ -36,7 +35,7 @@ final class SessionAdminPreferencesStorageTest extends TestCase
         $this->assertSame('default', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getReturnsNullByDefaultWhenKeyNotSet(): void
     {
         $result = $this->storage->get('nonexistent.key');
@@ -44,7 +43,7 @@ final class SessionAdminPreferencesStorageTest extends TestCase
         $this->assertNull($result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function setAndGetPersistsValue(): void
     {
         $this->storage->set('test.key', ['value1', 'value2']);
@@ -54,7 +53,7 @@ final class SessionAdminPreferencesStorageTest extends TestCase
         $this->assertSame(['value1', 'value2'], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function setOverwritesExistingValue(): void
     {
         $this->storage->set('test.key', 'first');
@@ -65,7 +64,7 @@ final class SessionAdminPreferencesStorageTest extends TestCase
         $this->assertSame('second', $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function differentKeysAreIndependent(): void
     {
         $this->storage->set('column_visibility.Product', ['id', 'name']);
@@ -75,7 +74,7 @@ final class SessionAdminPreferencesStorageTest extends TestCase
         $this->assertSame(['status'], $this->storage->get('column_visibility.Order'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function supportsVariousDataTypes(): void
     {
         $this->storage->set('string', 'value');

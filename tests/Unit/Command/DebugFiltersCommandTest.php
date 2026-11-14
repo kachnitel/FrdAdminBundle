@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
 use Kachnitel\AdminBundle\Command\DebugFiltersCommand;
 use Kachnitel\AdminBundle\Service\FilterMetadataProvider;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -21,7 +21,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  *
  * @see \Kachnitel\AdminBundle\Tests\Functional\DebugFiltersCommandTest
  */
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class DebugFiltersCommandTest extends TestCase
 {
     /** @var ClassMetadataFactory&MockObject */
@@ -42,19 +42,19 @@ final class DebugFiltersCommandTest extends TestCase
         $this->commandTester = new CommandTester($this->command);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function commandHasCorrectName(): void
     {
         $this->assertSame('admin:debug:filters', $this->command->getName());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function commandHasDescription(): void
     {
         $this->assertNotEmpty($this->command->getDescription());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function listEntitiesWithNoEntitiesFound(): void
     {
         $this->metadataFactory->method('getAllMetadata')->willReturn([]);
@@ -66,7 +66,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('No entities found', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showErrorForNonExistentEntity(): void
     {
         $this->metadataFactory->method('getAllMetadata')->willReturn([]);
@@ -77,7 +77,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertStringContainsString('not found', $output);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function commandConfiguredWithEntityClassArgument(): void
     {
         $definition = $this->command->getDefinition();
@@ -86,7 +86,7 @@ final class DebugFiltersCommandTest extends TestCase
         $this->assertFalse($definition->getArgument('entityClass')->isRequired());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function commandConfiguredWithAllOption(): void
     {
         $definition = $this->command->getDefinition();

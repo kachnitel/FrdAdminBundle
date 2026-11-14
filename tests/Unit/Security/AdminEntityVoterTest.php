@@ -7,17 +7,15 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Security;
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
-#[Group('voter')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('voter')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class AdminEntityVoterTest extends TestCase
 {
     /** @var EntityDiscoveryService&MockObject */
@@ -85,7 +83,7 @@ final class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_ABSTAIN, $result);
     }
 
-    #[DataProvider('actionNamesProvider')]
+    #[PHPUnit\DataProvider('actionNamesProvider')]
     public function testActionForMapsEveryAdminAttribute(string $attribute, string $expectedAction): void
     {
         $this->assertSame($expectedAction, AdminEntityVoter::actionFor($attribute));
@@ -113,7 +111,7 @@ final class AdminEntityVoterTest extends TestCase
     // All five ADMIN_* attributes are evaluated (not just INDEX)
     // -------------------------------------------------------------------------
 
-    #[DataProvider( 'allAdminAttributesProvider')]
+    #[PHPUnit\DataProvider( 'allAdminAttributesProvider')]
     public function testAllAdminAttributesGrantAccessWhenRoleMatches(string $attribute): void
     {
         $this->stubDiscovery();
@@ -123,7 +121,7 @@ final class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
-    #[DataProvider('allAdminAttributesProvider')]
+    #[PHPUnit\DataProvider('allAdminAttributesProvider')]
     public function testAllAdminAttributesDenyAccessWhenRoleMissing(string $attribute): void
     {
         $this->stubDiscovery();
@@ -299,7 +297,7 @@ final class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
-    #[Group('action-disabling')]
+    #[PHPUnit\Group('action-disabling')]
     public function testDeniesDisabledActionEvenWhenUserHasRequiredRole(): void
     {
         $this->stubDiscovery(new Admin(permissions: ['new' => false]));
@@ -310,7 +308,7 @@ final class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
 
-    #[Group('action-disabling')]
+    #[PHPUnit\Group('action-disabling')]
     public function testDeniesDisabledActionWhenDefaultRequiredRoleIsNull(): void
     {
         $this->stubDiscovery(new Admin(permissions: ['new' => false]));
@@ -321,7 +319,7 @@ final class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
 
-    #[Group('action-disabling')]
+    #[PHPUnit\Group('action-disabling')]
     public function testSiblingActionWithRolePermissionRemainsAccessible(): void
     {
         $this->stubDiscovery(new Admin(permissions: ['new' => false, 'edit' => 'ROLE_EDITOR']));
@@ -332,7 +330,7 @@ final class AdminEntityVoterTest extends TestCase
         $this->assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
-    #[Group('action-disabling')]
+    #[PHPUnit\Group('action-disabling')]
     public function testEntityWithoutPermissionsStillUsesDefaultRole(): void
     {
         $this->stubDiscovery(new Admin());

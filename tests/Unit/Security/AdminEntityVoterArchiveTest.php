@@ -6,14 +6,12 @@ namespace Kachnitel\AdminBundle\Tests\Unit\Security;
 
 use Kachnitel\AdminBundle\Attribute\Admin;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('archive')]
-#[CoversClass(AdminEntityVoter::class)]
-#[UsesClass(Admin::class)]
+#[PHPUnit\Group('archive')]
+#[PHPUnit\CoversClass(AdminEntityVoter::class)]
+#[PHPUnit\UsesClass(Admin::class)]
 final class AdminEntityVoterArchiveTest extends TestCase
 {
     public function testAllSixAttributesAreDistinct(): void

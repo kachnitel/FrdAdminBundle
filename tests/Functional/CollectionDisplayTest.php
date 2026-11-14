@@ -8,10 +8,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Kachnitel\AdminBundle\Tests\Fixtures\EntityWithCollectionDisplay;
 use Kachnitel\AdminBundle\Tests\Fixtures\TagEntity;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 
-#[Group('collection-display')]
+#[PHPUnit\Group('collection-display')]
 final class CollectionDisplayTest extends ComponentTestCase
 {
     // private EntityManagerInterface $em;
@@ -67,7 +66,7 @@ final class CollectionDisplayTest extends ComponentTestCase
 
     // ── accordion (collapsible) ───────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function accordionRendersDetailsAndSummary(): void
     {
         $this->persistEntityWithTags(2);
@@ -78,7 +77,7 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('<summary', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function accordionSummaryShowsCountLabel(): void
     {
         $this->persistEntityWithTags(5);
@@ -88,7 +87,7 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('5 items', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function accordionShowsItemsUpToLimit(): void
     {
         $this->persistEntityWithTags(5); // limit is 3
@@ -101,7 +100,7 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('Tag 3', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function accordionShowsOverflowLinkWhenCountExceedsLimit(): void
     {
         $this->persistEntityWithTags(5); // limit 3 → overflow 2
@@ -111,7 +110,7 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('+ 2 more', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function accordionHasNoOverflowWhenCountWithinLimit(): void
     {
         $this->persistEntityWithTags(2); // limit 3 → no overflow
@@ -121,7 +120,7 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringNotContainsString('more…', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function accordionSummaryContainsViewAllLinkWhenCollectionUrlAvailable(): void
     {
         // The ↗ link only renders when admin_collection_url() returns a URL. Links now
@@ -137,7 +136,7 @@ final class CollectionDisplayTest extends ComponentTestCase
 
     // ── always-visible list ───────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function alwaysVisibleListRendersWithoutDetailsElement(): void
     {
         $this->persistEntityWithTags(2);
@@ -150,7 +149,7 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('admin-collection-inline', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function alwaysVisibleListShowsOverflowLink(): void
     {
         $this->persistEntityWithTags(5); // limit 3 → overflow 2
@@ -163,7 +162,7 @@ final class CollectionDisplayTest extends ComponentTestCase
 
     // ── default (count+link) mode ─────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultModeRendersCountLabel(): void
     {
         $this->persistEntityWithTags(4);
@@ -173,7 +172,7 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('4 items', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function collectionDialogRendersButtonAndLazyEmbeddedList(): void
     {
         $entity = new EntityWithCollectionDisplay();
@@ -202,8 +201,8 @@ final class CollectionDisplayTest extends ComponentTestCase
      * list would leak its filter/batch events into the embedded list around it. Dialog
      * cells therefore fall back to the plain count + link there.
      */
-    #[Test]
-    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function collectionDialogFallsBackToPlainCellInsideAnEmbeddedList(): void
     {
         $entity = new EntityWithCollectionDisplay();
@@ -230,7 +229,7 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('1 item', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function collectionDialogUsesThemeDialogMacrosLikeInlineAdd(): void
     {
         $entity = new EntityWithCollectionDisplay();
@@ -303,8 +302,8 @@ final class CollectionDisplayTest extends ComponentTestCase
      * a DOM descendant of its parent even when it paints in the top layer — so the dialog
      * (and its button's controller wrapper) must sit outside <summary> and <details>.
      */
-    #[Test]
-    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function collectionDialogInCollapsibleModeRendersOutsideSummaryAndDetails(): void
     {
         $this->persistEntityWithDialogDisplayTags(5);
@@ -315,8 +314,8 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertSame([], $this->dialogIdsInside($rendered, 'summary', 'details'));
     }
 
-    #[Test]
-    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function collectionDialogWithCollectionDisplayTurnsTheOverflowIntoTheTrigger(): void
     {
         $this->persistEntityWithDialogDisplayTags(5); // limit 3 → "+ 2 more"
@@ -336,8 +335,8 @@ final class CollectionDisplayTest extends ComponentTestCase
      * The trigger sits inside <details> but the <dialog> does not; both must share one
      * admin-collection-dialog controller element or the trigger cannot find its dialog target.
      */
-    #[Test]
-    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function collectionDialogOverflowTriggerAndDialogShareOneControllerOutsideDetails(): void
     {
         $this->persistEntityWithDialogDisplayTags(5);
@@ -355,8 +354,8 @@ final class CollectionDisplayTest extends ComponentTestCase
         );
     }
 
-    #[Test]
-    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function collectionDialogWithCollectionDisplayKeepsTheNewTabLinkInTheSummary(): void
     {
         $this->persistEntityWithDialogDisplayTags(5);
@@ -366,8 +365,8 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('title="View all in list"', $rendered);
     }
 
-    #[Test]
-    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function collectionDialogWithCollectionDisplayStillRendersDialogWhenNothingOverflows(): void
     {
         $this->persistEntityWithDialogDisplayTags(2); // limit 3 → everything shown
@@ -380,8 +379,8 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertDoesNotMatchRegularExpression('/\+ \d+ more/', $rendered);
     }
 
-    #[Test]
-    #[\PHPUnit\Framework\Attributes\Group('collection-scope')]
+    #[PHPUnit\Test]
+    #[PHPUnit\Group('collection-scope')]
     public function collectionDialogInAlwaysVisibleModeRendersOutsideDetails(): void
     {
         $this->persistEntityWithDialogDisplayTags(5);
@@ -392,7 +391,7 @@ final class CollectionDisplayTest extends ComponentTestCase
         $this->assertStringContainsString('admin-collection-inline', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultModeDoesNotRenderCollectionListWhenEmpty(): void
     {
         // With zero tags the default column should show '-', not an inline item list.
@@ -406,7 +405,7 @@ final class CollectionDisplayTest extends ComponentTestCase
 
     // ── empty collection ──────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function emptyCollectionRendersDashRegardlessOfMode(): void
     {
         $this->persistEntityWithTags(0);
@@ -420,7 +419,7 @@ final class CollectionDisplayTest extends ComponentTestCase
 
     // ── singular / plural label ───────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function singleItemLabelIsSingular(): void
     {
         $this->persistEntityWithTags(1);

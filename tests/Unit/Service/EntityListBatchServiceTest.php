@@ -12,17 +12,15 @@ use Kachnitel\AdminBundle\Security\ObjectAuthorizationChecker;
 use Kachnitel\AdminBundle\Service\EntityListBatchService;
 use Kachnitel\AdminBundle\Service\EntityListPermissionService;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
-#[Group('entity-list')]
-#[Group('batch')]
-#[Group('object-authorization')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('entity-list')]
+#[PHPUnit\Group('batch')]
+#[PHPUnit\Group('object-authorization')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class EntityListBatchServiceTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
@@ -54,7 +52,7 @@ final class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchDeleteThrowsExceptionWhenDataSourceDoesNotSupportBatchDelete(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */
@@ -74,7 +72,7 @@ final class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchDeleteThrowsExceptionWhenPermissionDenied(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */
@@ -98,7 +96,7 @@ final class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchDeleteThrowsExceptionForNonDoctrineDataSource(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */
@@ -121,7 +119,7 @@ final class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchDeleteDoesNothingWithEmptyIds(): void
     {
         $doctrineDataSource = $this->createDoctrineDataSourceMock();
@@ -147,7 +145,7 @@ final class EntityListBatchServiceTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchDeleteRemovesEntities(): void
     {
         $entity1 = new \stdClass();
@@ -193,7 +191,7 @@ final class EntityListBatchServiceTest extends TestCase
         $this->assertSame([1, 2], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchDeleteSkipsNullEntities(): void
     {
         $entity1 = new \stdClass();
@@ -236,7 +234,7 @@ final class EntityListBatchServiceTest extends TestCase
         $this->assertSame([1], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function batchDeleteSkipsEntitiesDeniedByObjectAuthorizationButStillRemovesGrantedOnes(): void
     {
         $allowedEntity = new \stdClass();
@@ -282,7 +280,7 @@ final class EntityListBatchServiceTest extends TestCase
         $this->assertSame([1], $result);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityIdsReturnsArrayOfIds(): void
     {
         $entity1 = new \stdClass();
@@ -301,7 +299,7 @@ final class EntityListBatchServiceTest extends TestCase
         $this->assertSame([1, 2], $ids);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityIdsReturnsEmptyArrayForEmptyEntities(): void
     {
         /** @var DataSourceInterface&MockObject $dataSource */
@@ -312,7 +310,7 @@ final class EntityListBatchServiceTest extends TestCase
         $this->assertSame([], $ids);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getEntityIdsHandlesStringIds(): void
     {
         $entity1 = new \stdClass();

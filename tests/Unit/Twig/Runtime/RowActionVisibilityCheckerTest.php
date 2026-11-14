@@ -11,10 +11,7 @@ use Kachnitel\AdminBundle\Tests\Unit\ValueObject\ApprovalService;
 use Kachnitel\AdminBundle\Twig\Runtime\AdminRouteRuntime;
 use Kachnitel\AdminBundle\Twig\Runtime\RowActionVisibilityChecker;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -34,8 +31,8 @@ use Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
  * RowActionRuntimeTest, which mocks this class rather than duplicating its
  * decision-logic assertions.
  */
-#[AllowMockObjectsWithoutExpectations]
-#[Group('row-actions')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('row-actions')]
 final class RowActionVisibilityCheckerTest extends TestCase
 {
     /** @var AdminRouteRuntime&MockObject */
@@ -88,7 +85,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
     // String expression conditions
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function expressionEqualityHidesActionWhenFalse(): void
     {
         $entity = $this->makeEntity(status: 'archived');
@@ -102,7 +99,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function expressionEqualityShowsActionWhenTrue(): void
     {
         $entity = $this->makeEntity(status: 'pending');
@@ -116,7 +113,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function expressionNegationWorks(): void
     {
         $entity = $this->makeEntity(active: false);
@@ -127,7 +124,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function expressionBooleanCheck(): void
     {
         $entity = $this->makeEntity(active: true);
@@ -137,7 +134,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function expressionInequalityCheck(): void
     {
         $entity = $this->makeEntity(status: 'archived');
@@ -147,7 +144,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function expressionHidesActionOnEvaluationError(): void
     {
         $entity = $this->makeEntity();
@@ -162,7 +159,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
     // Combining conditions (&&, ||)
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function andCombinationRequiresBothConditionsTrue(): void
     {
         $entity = $this->makeEntity(status: 'pending', active: true);
@@ -176,7 +173,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'Order'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function andCombinationHidesActionWhenOneConditionFails(): void
     {
         $entity = $this->makeEntity(status: 'archived', active: true);
@@ -190,7 +187,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'Order'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function orCombinationShowsActionWhenEitherTrue(): void
     {
         $entity = $this->makeEntity(status: 'archived', active: true);
@@ -204,7 +201,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'Order'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function orCombinationHidesActionWhenBothFalse(): void
     {
         $entity = $this->makeEntity(status: 'archived', active: false);
@@ -222,7 +219,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
     // is_granted() in expressions
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedInExpressionShowsActionWhenRoleGranted(): void
     {
         $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
@@ -238,7 +235,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'User'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedInExpressionHidesActionWhenRoleNotGranted(): void
     {
         $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_SUPER_ADMIN', null)->willReturn(false);
@@ -254,7 +251,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'User'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedCombinedWithPropertyCondition(): void
     {
         $this->authChecker->expects($this->once())->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true);
@@ -270,7 +267,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'Order'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedCombinedFalseWhenPropertyConditionFails(): void
     {
         $this->authChecker->expects($this->never())->method('isGranted')->with('ROLE_EDITOR', null)->willReturn(true); // REVIEW:
@@ -286,7 +283,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'Order'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function isGrantedReturnsFalseWhenNoAuthCheckerProvided(): void
     {
         $entity = $this->makeEntity();
@@ -304,7 +301,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
     // DI tuple conditions
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleHidesActionWhenServiceReturnsFalse(): void
     {
         $entity = $this->makeEntity();
@@ -328,7 +325,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleShowsActionWhenServiceReturnsTrue(): void
     {
         $entity = $this->makeEntity();
@@ -353,7 +350,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleReceivesEntityObject(): void
     {
         $entity = $this->makeEntity(status: 'pending');
@@ -384,7 +381,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertSame($entity, $conditionService->received);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleFailsOpenWhenContainerNotAvailable(): void
     {
         $entity = $this->makeEntity();
@@ -402,7 +399,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleHidesActionWhenServiceThrows(): void
     {
         $entity = $this->makeEntity();
@@ -425,7 +422,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
     // Permission / voter checks
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function voterAttributeHidesActionWhenNotAccessible(): void
     {
         $entity = $this->makeEntity();
@@ -440,8 +437,8 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
-    #[DataProvider('adminVoterActionMappings')]
+    #[PHPUnit\Test]
+    #[PHPUnit\DataProvider('adminVoterActionMappings')]
     public function voterAttributeChecksRouteUsingMappedActionName(string $attribute, string $expectedAction): void
     {
         $this->routeRuntime->expects($this->once())
@@ -465,7 +462,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         yield 'delete' => [AdminEntityVoter::ADMIN_DELETE, 'delete'];
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function directPermissionHidesActionWhenNotGranted(): void
     {
         $entity = $this->makeEntity();
@@ -477,7 +474,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function actionVisibleWhenNoConstraints(): void
     {
         $entity = $this->makeEntity();
@@ -491,7 +488,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
     // Object-level authorization
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function objectAuthorizationHidesActionWhenDeniedForThisEntity(): void
     {
         $entity = $this->makeEntity();
@@ -509,7 +506,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function objectAuthorizationShowsActionWhenGrantedForThisEntity(): void
     {
         $entity = $this->makeEntity();
@@ -527,7 +524,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertTrue($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function objectAuthorizationIsSkippedWhenActionHasNoVoterAttribute(): void
     {
         $entity = $this->makeEntity();
@@ -548,7 +545,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
      * does via the bare createChecker() call — must keep behaving exactly
      * as it did before this dependency existed.
      */
-    #[Test]
+    #[PHPUnit\Test]
     public function objectAuthorizationIsSkippedWhenCheckerNotProvided(): void
     {
         $entity = $this->makeEntity();
@@ -565,7 +562,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
      * than a single merged decision: a class-level denial short-circuits
      * before object-level authorization is ever consulted.
      */
-    #[Test]
+    #[PHPUnit\Test]
     public function classLevelDenialShortCircuitsBeforeObjectLevelIsConsulted(): void
     {
         $entity = $this->makeEntity();
@@ -584,7 +581,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
     // Debug-mode DI-tuple failures
     // -------------------------------------------------------------------------
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleThrowsInDebugModeWhenServiceNotFound(): void
     {
         $entity = $this->makeEntity();
@@ -609,7 +606,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $checker->isVisible($action, $entity, 'Product');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleThrowsInDebugModeWhenServiceNotInLocator(): void
     {
         $entity = $this->makeEntity();
@@ -634,7 +631,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $checker->isVisible($action, $entity, 'Product');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleThrowsInDebugModeWhenMethodThrows(): void
     {
         $entity = $this->makeEntity();
@@ -666,7 +663,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $checker->isVisible($action, $entity, 'Product');
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleDebugExceptionWrapsOriginal(): void
     {
         $entity = $this->makeEntity();
@@ -694,7 +691,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         }
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function diTupleLogsWarningInProdModeAndHidesAction(): void
     {
         $entity = $this->makeEntity();
@@ -730,7 +727,7 @@ final class RowActionVisibilityCheckerTest extends TestCase
         $this->assertFalse($checker->isVisible($action, $entity, 'Product'));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function noLogAndNoThrowWhenDiConditionSucceeds(): void
     {
         $entity = $this->makeEntity();

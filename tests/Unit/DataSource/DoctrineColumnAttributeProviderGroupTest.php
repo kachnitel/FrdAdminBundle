@@ -9,11 +9,10 @@ use Kachnitel\AdminBundle\Attribute\AdminColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnGroup;
 use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\AdminBundle\DataSource\DoctrineColumnAttributeProvider;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('composite-columns')]
+#[PHPUnit\Group('composite-columns')]
 final class DoctrineColumnAttributeProviderGroupTest extends TestCase
 {
     private DoctrineColumnAttributeProvider $provider;
@@ -23,7 +22,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->provider = new DoctrineColumnAttributeProvider();
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsEmptyArrayWhenNoGroupAttributesDeclared(): void
     {
         $entity = new class {};
@@ -33,7 +32,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame([], $groups);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsSingleGroupAttributeWithDefaults(): void
     {
         $entity = new #[AdminColumnGroup(id: 'name_block')] class {};
@@ -46,7 +45,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_TEXT, $groups['name_block']->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsGroupAttributeWithCollapsibleHeader(): void
     {
         $entity = new #[AdminColumnGroup(
@@ -61,7 +60,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_COLLAPSIBLE, $groups['delivery']->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsGroupAttributeWithFullHeader(): void
     {
         $entity = new #[AdminColumnGroup(
@@ -74,7 +73,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_FULL, $groups['addr']->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function returnsMultipleGroupAttributesKeyedById(): void
     {
         $entity = new #[AdminColumnGroup(id: 'name_block')]
@@ -89,7 +88,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_COLLAPSIBLE, $groups['address_block']->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function lastDeclarationWinsForDuplicateGroupId(): void
     {
         $entity = new #[AdminColumnGroup(id: 'name', header: ColumnGroup::HEADER_TEXT)]
@@ -102,7 +101,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_FULL, $groups['name']->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function getColumnAttributesStillWorksAlongsideGroupAttributes(): void
     {
         $entity = new #[AdminColumnGroup(id: 'name_block')] class {
@@ -119,7 +118,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
 
     // ── build() — slot construction ───────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildReturnsPlainStringSlotForUngroupedColumn(): void
     {
         $columns = [
@@ -132,7 +131,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame(['id', 'name'], $slots);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildGroupsColumnsWithSameGroupId(): void
     {
         $columns = [
@@ -151,7 +150,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertArrayHasKey('lastName', $group->columns);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildHumanisesGroupLabelFromIdentifier(): void
     {
         $columns = ['firstName' => ColumnMetadata::create('firstName', group: 'name_block')];
@@ -163,7 +162,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame('Name block', $group->label);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildAppliesGroupAttributeSubLabelsAndHeader(): void
     {
         $columns = [
@@ -186,7 +185,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_COLLAPSIBLE, $group->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildDefaultsToShowSubLabelsAndTextHeader(): void
     {
         $columns = ['firstName' => ColumnMetadata::create('firstName', group: 'name')];
@@ -199,7 +198,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame(ColumnGroup::HEADER_TEXT, $group->header);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildGroupAppearsAtPositionOfFirstMember(): void
     {
         $columns = [
@@ -222,7 +221,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertArrayHasKey('lastName', $group->columns);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildPreservesColumnOrderWithinGroup(): void
     {
         $columns = [
@@ -237,7 +236,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame(['firstName', 'lastName'], array_keys($group->columns));
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildHandlesMultipleIndependentGroups(): void
     {
         $columns = [
@@ -260,7 +259,7 @@ final class DoctrineColumnAttributeProviderGroupTest extends TestCase
         $this->assertSame('address', $addrGroup->id);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function buildReturnsEmptySlotsForEmptyColumns(): void
     {
         $slots = $this->provider->build([], []);

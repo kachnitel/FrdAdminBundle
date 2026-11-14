@@ -10,13 +10,11 @@ use Kachnitel\AdminBundle\RowAction\DefaultRowActionProvider;
 use Kachnitel\AdminBundle\RowAction\RowActionProviderInterface;
 use Kachnitel\AdminBundle\RowAction\RowActionRegistry;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 
-#[Group('row-action')]
-#[AllowMockObjectsWithoutExpectations]
+#[PHPUnit\Group('row-action')]
+#[PHPUnit\AllowMockObjectsWithoutExpectations]
 final class RowActionRegistryTest extends TestCase
 {
     /** @var class-string */
@@ -25,7 +23,7 @@ final class RowActionRegistryTest extends TestCase
     /** @var class-string */
     private const AUDIT_LOG_CLASS = 'App\\Entity\\AuditLog'; // @phpstan-ignore classConstant.phpDocType
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itReturnsDefaultActionsForEntityWithoutCustomActions(): void
     {
         $attributeProvider = $this->createMock(AttributeRowActionProvider::class);
@@ -49,7 +47,7 @@ final class RowActionRegistryTest extends TestCase
         $this->assertSame('edit', $actions[1]->name);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itMergesCustomActionsWithDefaults(): void
     {
         $customAction = new RowAction(
@@ -82,7 +80,7 @@ final class RowActionRegistryTest extends TestCase
         $this->assertSame('duplicate', $actions[2]->name);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itMergesActionPropertiesWhenSameNameWithoutOverride(): void
     {
         // Custom action with same name as default, but without override flag
@@ -121,7 +119,7 @@ final class RowActionRegistryTest extends TestCase
         $this->assertSame('ADMIN_SHOW', $showAction->voterAttribute);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itReplacesActionWithOverrideFlag(): void
     {
         $customShowAction = new RowAction(
@@ -166,7 +164,7 @@ final class RowActionRegistryTest extends TestCase
         $this->assertNull($showAction->voterAttribute);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itAppliesExcludeConfig(): void
     {
         $config = new AdminActionsConfig(exclude: ['edit']);
@@ -190,7 +188,7 @@ final class RowActionRegistryTest extends TestCase
         $this->assertSame('show', $actions[0]->name);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itAppliesIncludeConfig(): void
     {
         $customAction = new RowAction(name: 'duplicate', label: 'Duplicate', priority: 30);
@@ -219,7 +217,7 @@ final class RowActionRegistryTest extends TestCase
         $this->assertNotContains('edit', $actionNames);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itAppliesDisableDefaultsConfig(): void
     {
         $customAction = new RowAction(name: 'details', label: 'View Details', icon: '🔍', priority: 10);
@@ -245,7 +243,7 @@ final class RowActionRegistryTest extends TestCase
         $this->assertSame('details', $actions[0]->name);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itCachesResultsForSameEntityClass(): void
     {
         $attributeProvider = $this->createMock(AttributeRowActionProvider::class);
@@ -274,7 +272,7 @@ final class RowActionRegistryTest extends TestCase
         $this->assertSame($actions1, $actions2);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function clearCacheRemovesCachedResults(): void
     {
         $callCount = 0;
@@ -306,7 +304,7 @@ final class RowActionRegistryTest extends TestCase
         $this->assertSame(2, $callCount); // @phpstan-ignore method.impossibleType
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function itSortsActionsByPriority(): void
     {
         $customActions = [

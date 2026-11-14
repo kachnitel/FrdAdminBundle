@@ -7,8 +7,7 @@ namespace Kachnitel\AdminBundle\Tests\Functional;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\TestEntityFormType;
 use Kachnitel\AdminBundle\Twig\Components\AdminEntityForm;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -34,7 +33,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
  * strip the `Type` suffix, convert to snake_case. `TestEntityFormType` → `test_entity_form`.
  *
  */
-#[Group('admin-entity-form')]
+#[PHPUnit\Group('admin-entity-form')]
 final class AdminEntityFormTest extends ComponentTestCase
 {
     /**
@@ -91,7 +90,7 @@ final class AdminEntityFormTest extends ComponentTestCase
 
     // ── Render ────────────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editFormRendersWithEntityValue(): void
     {
         $entity = $this->createEntity('My Product');
@@ -102,7 +101,7 @@ final class AdminEntityFormTest extends ComponentTestCase
         $this->assertStringContainsString('My Product', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function newFormRendersEmptyForm(): void
     {
         $rendered = (string) $this->mountNewForm()->render();
@@ -113,7 +112,7 @@ final class AdminEntityFormTest extends ComponentTestCase
 
     // ── Edit: save with valid data ────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveEditPersistsChangedValue(): void
     {
         $entity = $this->createEntity('Before');
@@ -128,7 +127,7 @@ final class AdminEntityFormTest extends ComponentTestCase
         $this->assertSame('After', $reloaded->getName());
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveEditEntityIdRemainsUnchanged(): void
     {
         $entity = $this->createEntity();
@@ -146,7 +145,7 @@ final class AdminEntityFormTest extends ComponentTestCase
 
     // ── Edit: save with invalid data ──────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveEditWithBlankNameShowsValidationError(): void
     {
         $entity = $this->createEntity('Keep Me');
@@ -159,7 +158,7 @@ final class AdminEntityFormTest extends ComponentTestCase
         $this->assertStringContainsString('Name is required.', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveEditWithBlankNameDoesNotPersist(): void
     {
         $entity = $this->createEntity('Keep Me');
@@ -176,7 +175,7 @@ final class AdminEntityFormTest extends ComponentTestCase
 
     // ── New: save with valid data ─────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveNewCreatesEntity(): void
     {
         $component = $this->mountNewForm();
@@ -203,7 +202,7 @@ final class AdminEntityFormTest extends ComponentTestCase
 
     // ── New: save with invalid data ───────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveNewWithBlankNameShowsValidationError(): void
     {
         $component = $this->mountNewForm();
@@ -215,7 +214,7 @@ final class AdminEntityFormTest extends ComponentTestCase
         $this->assertStringContainsString('Name is required.', $rendered);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function saveNewWithBlankNameDoesNotInsertRow(): void
     {
         $component = $this->mountNewForm();

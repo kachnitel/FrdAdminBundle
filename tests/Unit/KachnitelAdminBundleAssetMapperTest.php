@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Tests\Unit;
 
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
-use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\FileLocator;
@@ -24,8 +21,8 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
  * AssetMapperInterface declare a stub in a separate process to avoid
  * leaking it into the rest of the suite.
  */
-#[CoversClass(KachnitelAdminBundle::class)]
-#[Group('asset-mapper')]
+#[PHPUnit\CoversClass(KachnitelAdminBundle::class)]
+#[PHPUnit\Group('asset-mapper')]
 final class KachnitelAdminBundleAssetMapperTest extends TestCase
 {
     private string $tmpDir;
@@ -47,7 +44,7 @@ final class KachnitelAdminBundleAssetMapperTest extends TestCase
         rmdir($this->tmpDir);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function prependsNothingWhenAssetMapperIsNotInstalled(): void
     {
         /** @disregard P1009 AssetMapper skipped */
@@ -63,8 +60,8 @@ final class KachnitelAdminBundleAssetMapperTest extends TestCase
         self::assertSame([], $builder->getExtensionConfig('framework'));
     }
 
-    #[Test]
-    #[RunInSeparateProcess]
+    #[PHPUnit\Test]
+    #[PHPUnit\RunInSeparateProcess]
     public function prependsNothingWhenFrameworkBundleMetadataIsMissing(): void
     {
         $this->declareAssetMapperStub();
@@ -76,8 +73,8 @@ final class KachnitelAdminBundleAssetMapperTest extends TestCase
         self::assertSame([], $builder->getExtensionConfig('framework'));
     }
 
-    #[Test]
-    #[RunInSeparateProcess]
+    #[PHPUnit\Test]
+    #[PHPUnit\RunInSeparateProcess]
     public function prependsNothingWhenFrameworkBundleHasNoAssetMapperConfig(): void
     {
         $this->declareAssetMapperStub();
@@ -89,8 +86,8 @@ final class KachnitelAdminBundleAssetMapperTest extends TestCase
         self::assertSame([], $builder->getExtensionConfig('framework'));
     }
 
-    #[Test]
-    #[RunInSeparateProcess]
+    #[PHPUnit\Test]
+    #[PHPUnit\RunInSeparateProcess]
     public function prependsAssetMapperPathWhenAvailable(): void
     {
         $this->declareAssetMapperStub();

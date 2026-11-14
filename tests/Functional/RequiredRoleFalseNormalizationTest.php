@@ -8,9 +8,7 @@ use Kachnitel\AdminBundle\DependencyInjection\Compiler\OverrideEditabilityResolv
 use Kachnitel\AdminBundle\DependencyInjection\Compiler\OverrideTypeGuesserPass;
 use Kachnitel\AdminBundle\Form\Extension\ColumnPermissionFormExtension;
 use Kachnitel\AdminBundle\KachnitelAdminBundle;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -38,12 +36,12 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  * the entity-level default (no #[Admin(permissions:)] override) throws a TypeError instead
  * of the documented "authentication disabled" behaviour.
  */
-#[CoversClass(KachnitelAdminBundle::class)]
-#[UsesClass(OverrideEditabilityResolversPass::class)]
-#[UsesClass(OverrideTypeGuesserPass::class)]
-#[UsesClass(ColumnPermissionFormExtension::class)]
-#[Group('dependency-injection')]
-#[Group('bundle-config')]
+#[PHPUnit\CoversClass(KachnitelAdminBundle::class)]
+#[PHPUnit\UsesClass(OverrideEditabilityResolversPass::class)]
+#[PHPUnit\UsesClass(OverrideTypeGuesserPass::class)]
+#[PHPUnit\UsesClass(ColumnPermissionFormExtension::class)]
+#[PHPUnit\Group('dependency-injection')]
+#[PHPUnit\Group('bundle-config')]
 final class RequiredRoleFalseNormalizationTest extends TestCase
 {
     public function testRequiredRoleFalseNormalizesToNullThroughTheLiveConfigPath(): void

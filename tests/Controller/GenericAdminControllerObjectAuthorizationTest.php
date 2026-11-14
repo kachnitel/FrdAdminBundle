@@ -16,10 +16,7 @@ use Kachnitel\AdminBundle\Service\EntityDiscoveryService;
 use Kachnitel\AdminBundle\Tests\Fixtures\DeletableEntity;
 use Kachnitel\AdminBundle\Tests\Fixtures\GenericAdminControllerTestDouble;
 use Kachnitel\AdminBundle\Utils\EntityHelper;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes as PHPUnit;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
@@ -44,11 +41,11 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * run through the LiveComponent kernel rather than this controller-double style,
  * since the entity being authorized doesn't exist until the form binds it.
  */
-#[CoversClass(GenericAdminController::class)]
-#[UsesClass(ArchiveConfig::class)]
-#[UsesClass(EntityHelper::class)]
-#[Group('controller')]
-#[Group('object-authorization')]
+#[PHPUnit\CoversClass(GenericAdminController::class)]
+#[PHPUnit\UsesClass(ArchiveConfig::class)]
+#[PHPUnit\UsesClass(EntityHelper::class)]
+#[PHPUnit\Group('controller')]
+#[PHPUnit\Group('object-authorization')]
 final class GenericAdminControllerObjectAuthorizationTest extends TestCase
 {
     private const ENTITY_NAMESPACE = 'Kachnitel\\AdminBundle\\Tests\\Fixtures\\';
@@ -136,7 +133,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
 
     // ── show() ───────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showChecksObjectAuthorizationWithTheLoadedEntity(): void
     {
         $entity = new DeletableEntity(5);
@@ -147,7 +144,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $controller->show('deletable-entity', 5);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function showDeniesWhenObjectAuthorizationDenies(): void
     {
         $entity = new DeletableEntity(5);
@@ -162,7 +159,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
 
     // ── edit() ───────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editChecksObjectAuthorizationWithTheLoadedEntity(): void
     {
         $entity = new DeletableEntity(5);
@@ -173,7 +170,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $controller->edit('deletable-entity', 5);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function editDeniesWhenObjectAuthorizationDenies(): void
     {
         $entity = new DeletableEntity(5);
@@ -188,7 +185,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
 
     // ── delete() ─────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deleteChecksObjectAuthorizationWithTheLoadedEntity(): void
     {
         $entity = new DeletableEntity(5);
@@ -202,7 +199,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $controller->delete($request, 'deletable-entity', 5);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deleteDeniesAndNeverCallsRemoveWhenObjectAuthorizationDenies(): void
     {
         $entity = new DeletableEntity(5);
@@ -233,7 +230,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
 
     // ── archive() ────────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveChecksObjectAuthorizationWithTheLoadedEntity(): void
     {
         $entity = new DeletableEntity(5);
@@ -251,7 +248,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveValidatesCsrfBeforeCheckingObjectAuthorization(): void
     {
         $entity = new DeletableEntity(5);
@@ -281,7 +278,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function deleteValidatesCsrfBeforeCheckingObjectAuthorization(): void
     {
         $entity = new DeletableEntity(5);
@@ -301,7 +298,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         $controller->delete($request, 'deletable-entity', 5);
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function archiveDeniedNeverCallsArchiveEntityService(): void
     {
         $entity = new DeletableEntity(5);
@@ -325,7 +322,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
 
     // ── unarchive() ──────────────────────────────────────────────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unarchiveChecksObjectAuthorizationWithTheLoadedEntity(): void
     {
         $entity = new DeletableEntity(6);
@@ -343,7 +340,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
         );
     }
 
-    #[Test]
+    #[PHPUnit\Test]
     public function unarchiveDeniesWhenObjectAuthorizationDenies(): void
     {
         $entity = new DeletableEntity(6);
@@ -364,7 +361,7 @@ final class GenericAdminControllerObjectAuthorizationTest extends TestCase
 
     // ── Regression: entities without the flag are unaffected ─────────────
 
-    #[Test]
+    #[PHPUnit\Test]
     public function defaultPermissiveCheckerNeverDeniesWhenControllerConstructedDirectly(): void
     {
         // No setObjectAuthorizationChecker() call at all — proves the
