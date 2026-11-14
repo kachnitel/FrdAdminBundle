@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\Service;
 
+use Kachnitel\AdminBundle\DataSource\DoctrineDataSource;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\AdminBundle\Security\AdminEntityVoter;
 
@@ -31,6 +32,12 @@ class EntityListColumnService
     public function getPermittedColumns(DataSourceInterface $dataSource, string $entityClass): array
     {
         $allColumns = array_keys($dataSource->getColumns());
+
+        // The data source is what actually lists the rows: trust its class over the
+        // caller-supplied string so an empty entityClass can't bypass column permissions.
+        if ($dataSource instanceof DoctrineDataSource) {
+            $entityClass = $dataSource->getEntityClass();
+        }
 
         if ($entityClass === '') {
             return $allColumns;

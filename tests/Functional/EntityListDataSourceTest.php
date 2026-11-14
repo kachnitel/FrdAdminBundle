@@ -50,7 +50,7 @@ final class EntityListDataSourceTest extends ComponentTestCase
         $this->assertSame('TestEntity', $dataSource->getIdentifier());
     }
 
-    public function testIsDoctrineEntityReturnsFalseForDataSourceId(): void
+    public function testIsDoctrineEntityReturnsTrueForDoctrineDataSourceId(): void
     {
         $testComponent = $this->createLiveComponent(
             name: 'K:Admin:EntityList',
@@ -60,8 +60,8 @@ final class EntityListDataSourceTest extends ComponentTestCase
         /** @var EntityList $component */
         $component = $testComponent->component();
 
-        // When using dataSourceId without entityClass, isDoctrineEntity is false
-        $this->assertFalse($component->isDoctrineEntity());
+        // When using dataSourceId with a Doctrine entity without entityClass, isDoctrineEntity is true
+        $this->assertTrue($component->isDoctrineEntity());
         $this->assertNotNull($component->getDataSource()); // @phpstan-ignore method.alreadyNarrowedType
     }
 

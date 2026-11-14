@@ -32,6 +32,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
+use Symfony\UX\TwigComponent\Attribute\PostMount;
 
 /**
  * LiveComponent for reactive entity lists — list state is bound to the URL.
@@ -204,11 +205,37 @@ class EntityList
      * can trigger a resolveDataSource() call whose on-demand-creation fallback
      * needs entityClass already resolved.
      */
+    #[PostMount]
     #[PostHydrate]
     public function resolveEntityClass(): void
     {
+        if ($this->dataSourceId !== null && $this->dataSourceId !== '') {
+            $this->adoptDoctrineDataSource();
+
+            return;
+        }
+
         if ($this->entityClass === '' && $this->entityShortClass !== '') {
             $this->entityClass = $this->config->entityNamespace . $this->entityShortClass;
+        }
+    }
+
+    /**
+     * A dataSourceId that resolves to a DoctrineDataSource is just another way to
+     * name a Doctrine entity list. Take the class from the data source (the thing
+     * that actually queries) so archive, inline edit, batch gating and
+     * #[ColumnPermission] keep working. Custom sources are left untouched.
+     */
+    private function adoptDoctrineDataSource(): void
+    {
+        $dataSource = $this->resolveDataSource();
+        if (!$dataSource instanceof DoctrineDataSource) {
+            return;
+        }
+
+        $this->entityClass = $dataSource->getEntityClass();
+        if ($this->entityShortClass === '') {
+            $this->entityShortClass = $dataSource->getShortName();
         }
     }
 
@@ -285,12 +312,13 @@ class EntityList
 
     public function isDoctrineEntity(): bool
     {
-        if ($this->entityClass === '' && $this->entityShortClass !== '') {
-            $this->resolveEntityClass();
+        $this->resolveEntityClass();
+
+        if (empty($this->dataSourceId)) {
+            return $this->entityClass !== '' || $this->entityShortClass !== '';
         }
 
-        return empty($this->dataSourceId)
-            && ($this->entityClass !== '' || $this->entityShortClass !== '');
+        return $this->getDataSource() instanceof DoctrineDataSource;
     }
 
     public function canBatchDelete(): bool
