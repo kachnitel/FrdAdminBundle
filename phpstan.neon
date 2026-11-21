@@ -6,10 +6,6 @@ parameters:
     ignoreErrors:
         # --- Tests ---
 
-        # PHPMD @SuppressWarnings annotations — PHPStan cannot parse PHPMD syntax.
-        # These tags are intentional and correct for PHPMD; they are not PHPStan directives.
-        - identifier: phpDoc.parseError
-
         # Doctrine fixture entities: $id is typed int|null because Doctrine sets the
         # int value via reflection after persist(). PHPStan never sees that assignment.
         - identifier: property.unusedType

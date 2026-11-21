@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\ValueObject;
 
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\Design\ExcessiveParameterList;
+
 /**
  * Represents a single row action configuration.
  * Immutable value object with all properties needed to render an action button.
@@ -52,8 +55,6 @@ final class RowAction
     public const DEFAULT_PRIORITY = 100;
 
     /**
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-     *
      * @param string                                        $name           Unique action identifier
      * @param string                                        $label          Display label
      * @param string|null                                   $icon           Plain string (emoji by default), rendered via _Icon.html.twig
@@ -78,6 +79,7 @@ final class RowAction
      *                                                                      such as liveComponent buttons that fire events on the
      *                                                                      parent EntityList LiveComponent via Stimulus.
      */
+    #[SuppressWarnings(ExcessiveParameterList::class)]
     public function __construct(
         public readonly string $name,
         public readonly string $label,

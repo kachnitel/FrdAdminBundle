@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Kachnitel\AdminBundle\Attribute;
 
 use Attribute;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\Design\ExcessiveParameterList;
 
 /**
  * Marks an entity as manageable by the admin bundle.
@@ -54,9 +56,8 @@ class Admin
      *   per entity. Requires an application-registered Symfony voter whose supports()
      *   accepts the entity instance as subject; without one, every request for this
      *   entity is denied once this flag is true. See docs/OBJECT_AUTHORIZATION.md.
-     *
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
+    #[SuppressWarnings(ExcessiveParameterList::class)]
     public function __construct(
         private ?string $label = null,
         private ?string $icon = null,

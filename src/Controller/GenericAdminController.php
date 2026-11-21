@@ -17,6 +17,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\Design\CouplingBetweenObjects;
 
 /**
  * Generic Admin Controller with auto-discovery via #[Admin] attribute.
@@ -38,10 +40,8 @@ use Symfony\Component\Routing\Attribute\Route;
  * Permissions are checked using the AdminEntityVoter which respects:
  * 1. Entity-specific permissions from #[Admin(permissions: [...])]
  * 2. Global required_role configuration (fallback)
- *
- * @SuppressWarnings(PHPMD.ExcessiveParameterList)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
+#[SuppressWarnings(CouplingBetweenObjects::class)]
 class GenericAdminController extends AbstractAdminController
 {
     public function __construct(

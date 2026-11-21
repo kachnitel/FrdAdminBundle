@@ -10,6 +10,8 @@ use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Symfony\Component\Security\Core\User\UserInterface;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\UnusedFormalParameter;
 
 /**
  * Security voter for admin entity access control.
@@ -66,9 +68,7 @@ class AdminEntityVoter extends Voter
         return isset(self::ACTION_MAP[$attribute]) && is_string($subject);
     }
 
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter("vote"))
-     */
+    #[SuppressWarnings(UnusedFormalParameter::class)]
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
         $action = self::actionFor($attribute);

@@ -6,6 +6,8 @@ namespace Kachnitel\AdminBundle\Attribute;
 
 use Attribute;
 use Kachnitel\AdminBundle\ValueObject\RowAction;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\Design\ExcessiveParameterList;
 
 /**
  * Declares a custom entity action button.
@@ -34,10 +36,11 @@ use Kachnitel\AdminBundle\ValueObject\RowAction;
  *   #[AdminAction(name: 'export', liveComponent: App\Twig\Components\ExportButton::class, actionType: AdminAction::ACTION_TYPE_BATCH)]
  *   class Order { }
  *
- * @SuppressWarnings(PHPMD.ExcessiveParameterList) PHP attributes must declare all configuration
- *     in the constructor; value-object grouping is not possible because attribute arguments must
- *     be compile-time constant expressions. Each parameter is part of the public API surface.
+ * PHP attributes must declare all configuration in the constructor; value-object grouping is not
+ * possible because attribute arguments must be compile-time constant expressions. Each parameter
+ * is part of the public API surface.
  */
+#[SuppressWarnings(ExcessiveParameterList::class)]
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 class AdminAction
 {

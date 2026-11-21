@@ -49,7 +49,7 @@ final class AdminEditabilityResolverTest extends TestCase
     /** @var ObjectAuthorizationChecker&MockObject */
     private ObjectAuthorizationChecker $objectAuthChecker;
 
-    /** @var ColumnPermissionService|ColumnPermissionService&MockObject */
+    /** @var ColumnPermissionService|(ColumnPermissionService&MockObject) */
     private ColumnPermissionService $columnPermissions;
 
     private AdminEditabilityResolver $resolver;

@@ -11,6 +11,8 @@ use Kachnitel\AdminBundle\Service\AttributeHelper;
 use Kachnitel\AdminBundle\Service\ColumnPermissionService;
 use Kachnitel\DynamicFormBundle\Editability\FieldEditabilityResolverInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\UnusedFormalParameter;
 
 /**
  * Admin-bundle's implementation of kachnitel/dynamic-form-bundle's
@@ -87,9 +89,9 @@ final class AdminColumnEditabilityResolver implements FieldEditabilityResolverIn
     ) {}
 
     /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $entity is part of the interface contract
      * @param class-string $entityClass
      */
+    #[SuppressWarnings(UnusedFormalParameter::class)]
     public function canShow(string $entityClass, string $property, ?object $entity = null): bool
     {
         // Visibility is decided by #[ColumnPermission] ADMIN_SHOW alone. #[AdminColumn(editable)]

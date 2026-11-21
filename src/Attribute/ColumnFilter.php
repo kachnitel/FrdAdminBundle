@@ -10,7 +10,7 @@ use Kachnitel\DataSourceContracts\FilterMetadata;
 /**
  * Configure column filtering for entity properties.
  *
- * @SuppressWarnings(PHPMD.ExcessiveParameterList) Attribute classes require flat parameter lists
+ * Attribute classes require flat parameter lists.
  *
  * When applied to entity properties, configures how that column should be filtered
  * in admin list views.

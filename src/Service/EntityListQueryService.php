@@ -11,6 +11,8 @@ use Kachnitel\AdminBundle\Attribute\ColumnFilter;
 use Kachnitel\AdminBundle\Service\Traits\AssociationFilterTrait;
 use Kachnitel\AdminBundle\Service\Traits\DateFilterTrait;
 use Kachnitel\AdminBundle\Service\Traits\ScalarFilterTrait;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\Design\ExcessiveParameterList;
 
 /**
  * Service responsible for building database queries for entity lists.
@@ -42,8 +44,8 @@ class EntityListQueryService
      * @param array<string, mixed> $scopeParameters Bound parameters for $scopeDqlCondition
      * @return array{entities: array<object>, total: int, page: int}
      *
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
+    #[SuppressWarnings(ExcessiveParameterList::class)]
     public function getEntities(
         string $entityClass,
         ?string $repositoryMethod,
@@ -105,8 +107,6 @@ class EntityListQueryService
      * @param string|null $archiveDqlCondition Pre-built DQL WHERE fragment from ArchiveService
      * @param string|null $scopeDqlCondition   Pre-built DQL WHERE fragment from CollectionScopeResolver
      * @param array<string, mixed> $scopeParameters Bound parameters for $scopeDqlCondition
-     *
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function buildQuery(
         string $entityClass,

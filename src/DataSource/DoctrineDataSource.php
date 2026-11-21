@@ -13,13 +13,13 @@ use Kachnitel\DataSourceContracts\ColumnMetadata;
 use Kachnitel\DataSourceContracts\DataSourceInterface;
 use Kachnitel\DataSourceContracts\PaginatedResult;
 use Kachnitel\DataSourceContracts\SearchAwareDataSourceInterface;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\Design\CouplingBetweenObjects;
 
 /**
  * Data source for Doctrine entities.
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
+#[SuppressWarnings(CouplingBetweenObjects::class)]
 class DoctrineDataSource implements DataSourceInterface, SearchAwareDataSourceInterface
 {
     private ?string $shortName = null;

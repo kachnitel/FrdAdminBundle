@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Kachnitel\AdminBundle\ValueObject;
 
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\Design\ExcessiveParameterList;
+
 /**
  * Represents a custom batch action configuration.
  * Immutable value object with all properties needed to render and execute a batch action.
@@ -24,9 +27,8 @@ namespace Kachnitel\AdminBundle\ValueObject;
  *
  * @see RowAction For single-entity actions
  * @see BatchActionDto For the data passed to route/liveComponent handlers
- *
- * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
+#[SuppressWarnings(ExcessiveParameterList::class)]
 final class BatchAction
 {
     /**

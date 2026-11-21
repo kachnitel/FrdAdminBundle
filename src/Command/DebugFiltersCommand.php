@@ -18,11 +18,15 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\Design\CouplingBetweenObjects;
+use PHPMD\Rule\Design\ExcessiveClassComplexity;
 
 /**
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Debug commands require comprehensive output formatting
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Debug commands need access to multiple domain objects
+ * Debug commands require comprehensive output formatting and access to multiple domain objects.
  */
+#[SuppressWarnings(ExcessiveClassComplexity::class)]
+#[SuppressWarnings(CouplingBetweenObjects::class)]
 #[AsCommand(
     name: 'admin:debug:filters',
     description: 'Debug filter metadata for admin entities'

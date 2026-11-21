@@ -33,6 +33,12 @@ use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
 use Symfony\UX\TwigComponent\Attribute\PostMount;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\Design\CouplingBetweenObjects;
+use PHPMD\Rule\Design\ExcessiveClassComplexity;
+use PHPMD\Rule\ExcessivePublicCount;
+use PHPMD\Rule\Design\TooManyFields;
+use PHPMD\Rule\Design\TooManyPublicMethods;
 
 /**
  * LiveComponent for reactive entity lists — list state is bound to the URL.
@@ -44,13 +50,12 @@ use Symfony\UX\TwigComponent\Attribute\PostMount;
  * owner entity's collection. It is a non-writable LiveProp (signed — not
  * client-modifiable) and is authorized and translated by CollectionScopeResolver on
  * every query. See docs/COLLECTION_DIALOG.md.
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessivePublicCount)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.TooManyFields)
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
+#[SuppressWarnings(TooManyPublicMethods::class)]
+#[SuppressWarnings(ExcessivePublicCount::class)]
+#[SuppressWarnings(CouplingBetweenObjects::class)]
+#[SuppressWarnings(TooManyFields::class)]
+#[SuppressWarnings(ExcessiveClassComplexity::class)]
 #[AsLiveComponent('K:Admin:EntityList', template: '@KachnitelAdmin/components/EntityList.html.twig')]
 class EntityList
 {

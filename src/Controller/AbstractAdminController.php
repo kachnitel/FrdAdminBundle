@@ -13,6 +13,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use PHPMD\Attribute\SuppressWarnings;
+use PHPMD\Rule\UnusedFormalParameter;
 
 /**
  * Abstract base controller for entity CRUD operations.
@@ -193,8 +195,8 @@ abstract class AbstractAdminController extends AbstractController
     /**
      * Get the LiveComponent name for the form.
      * Override to use a custom form component for all entities in this controller.
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) Class is used in inherited controllers
      */
+    #[SuppressWarnings(UnusedFormalParameter::class)]
     protected function getFormComponentName(string $class): string
     {
         return 'K:Admin:EntityForm';
@@ -254,33 +256,25 @@ abstract class AbstractAdminController extends AbstractController
     }
 
     // Template resolution methods (can be overridden for custom template paths)
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter("class"))
-     */
+    #[SuppressWarnings(UnusedFormalParameter::class)]
     protected function getIndexTemplate(string $class): string
     {
         return '@KachnitelAdmin/admin/index.html.twig';
     }
 
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter("class"))
-     */
+    #[SuppressWarnings(UnusedFormalParameter::class)]
     protected function getShowTemplate(string $class): string
     {
         return '@KachnitelAdmin/admin/show.html.twig';
     }
 
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter("class"))
-     */
+    #[SuppressWarnings(UnusedFormalParameter::class)]
     protected function getEditTemplate(string $class): string
     {
         return '@KachnitelAdmin/admin/edit.html.twig';
     }
 
-    /**
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter("class"))
-     */
+    #[SuppressWarnings(UnusedFormalParameter::class)]
     protected function getNewTemplate(string $class): string
     {
         return '@KachnitelAdmin/admin/new.html.twig';
