@@ -59,7 +59,7 @@ class KachnitelAdminBundle extends AbstractBundle
                     ->defaultValue('ROLE_ADMIN')
                     ->info('Required role for accessing admin. Set to false to disable authentication.')
                     ->beforeNormalization()
-                        ->ifTrue(fn (mixed $v): bool => $v === false || $v === 'false')
+                        ->ifTrue(fn (mixed $val): bool => $val === false || $val === 'false')
                         ->then(fn (): ?string => null)
                     ->end()
                 ->end()

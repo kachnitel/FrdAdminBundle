@@ -2,9 +2,9 @@
 
 <!-- BADGES -->
 ![Tests](<https://img.shields.io/badge/tests-1875%20passed-brightgreen>)
-![Coverage](<https://img.shields.io/badge/coverage-95%25-brightgreen>)
+![Coverage](<https://img.shields.io/badge/coverage-86%25-brightgreen>)
 ![Assertions](<https://img.shields.io/badge/assertions-4394-blue>)
-![PHPStan](<https://img.shields.io/badge/PHPStan-10-brightgreen>)
+![PHPStan](<https://img.shields.io/badge/PHPStan-10-red>)
 ![PHPMD](<https://img.shields.io/badge/PHPMD-clean-brightgreen>)
 ![Code Style](<https://img.shields.io/badge/code%20style-clean-brightgreen>)
 ![Vitest](<https://img.shields.io/badge/vitest-37%20passed-brightgreen>)

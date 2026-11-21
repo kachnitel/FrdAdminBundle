@@ -16,6 +16,9 @@ composer.lock
 # PHP CS Fixer
 .php-cs-fixer.cache
 
+# PHP Mess Detector
+.phpmd.result-cache.php
+
 # Code coverage
 /.coverage/
 

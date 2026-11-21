@@ -1,0 +1,26 @@
+# PHPMD configuration, see https://phpmd.org/documentation/creating-a-ruleset.html
+name: FrdAdminBundle
+paths:
+  - .
+exclude-pattern:
+  - 'vendor/*'
+  - 'tests/*'
+  - 'var/*'
+cache: true
+rules:
+  - ref: rulesets/naming.xml/ShortVariable
+    properties:
+      exceptions: 'i,id,em,qb,po,io,a,b,to'
+  - ref: rulesets/naming.xml/LongVariable
+    properties:
+      maximum: 24
+      subtract-suffixes: 'Repo,StateMachine,Workflow'
+  - ref: rulesets/codesize.xml
+  - ref: rulesets/unusedcode.xml
+  - ref: rulesets/naming.xml
+    exclude:
+      - ShortVariable
+      - LongVariable
+  - ref: rulesets/design.xml
+  - ref: rulesets/controversial.xml
+
